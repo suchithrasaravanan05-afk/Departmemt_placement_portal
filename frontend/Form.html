@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GetHired - Login & Register</title>
+    <link rel="stylesheet" href="Form.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="logo">CSBS Placement Portal</div>
+        </div>
+        <div class="nav-right">
+            <button id="navToggleBtn" class="btn-outline" onclick="toggleForm()">Register</button>
+        </div>
+    </nav>
+
+    <main class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Welcome to RAMCO INSTIUTE OF TECHNOLOGY</h1>
+                <p>CSBS-Computer Science and Business Systems.  B.Tech undergraduate engineering program blending core computer science with essential business management skills, often developed with industry partners like TCS, to train engineers for roles at the intersection of tech and business, focusing on areas like AI, Cloud, Cybersecurity, and Data Analytics, aiming to bridge the gap between technical expertise and business acumen. </p>
+                <div class="illustration">
+                    <img src="img.png" alt="img">
+                    
+                </div>
+            </div>
+
+            <div class="form-container">
+                <div id="loginForm" class="form-box">
+                    <h2>Login</h2>
+                    <div class="input-group">
+                        <label>Enter Email ID/ Username</label>
+                        <input type="text" id="loginUser" placeholder="Enter Email">
+                        <span class="warning" id="error-loginUser">Email ID/ Username cannot be left blank</span>
+                    </div>
+                    <div class="input-group">
+                        <div class="label-row">
+                            <label>Password</label>
+                            <span class="toggle-text" onclick="togglePassword('loginPass')">Show</span>
+                        </div>
+                        <input type="password" id="loginPass" placeholder="Password">
+                        <span class="warning" id="error-loginPass">Password cannot be left blank</span>
+                        <a href="#" class="forgot-link">Forget password?</a>
+                    </div>
+                    <button class="btn-primary" onclick="validateLogin()">Login</button>
+                    <p class="switch-text">Are you a new user? <span onclick="toggleForm()">Register</span></p>
+                </div>
+
+                <div id="registerForm" class="form-box hidden">
+                    <h2>Create your profile at GetHired</h2>
+                    <div class="input-group">
+                        <label>Name</label>
+                        <input type="text" id="regName" placeholder="Full Name">
+                        <span class="warning" id="error-regName">Full name is required. Numeric and special characters other than space and '.' not allowed.</span>
+                    </div>
+                    <div class="input-group">
+                        <label>Register Number</label>
+                        <input type="registernumber" id="regregisternumber" placeholder="Register Number">
+                    </div>
+                    <div class="input-group">
+                        <label>Email Id</label>
+                        <input type="email" id="regEmail" placeholder="example@mail.com">
+                        <span class="warning" id="error-regEmail">Email ID is required. Please enter a valid email ID.</span>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="regPass" placeholder="Minimum 6 characters">
+                            <i class="fa-regular fa-eye" id="eyeIcon" onclick="togglePassword('regPass', 'eyeIcon')"></i>
+                        </div>
+                        <span class="warning" id="error-regPass">Password is required (min. 6 characters).</span>
+                        <small id="passSuggestion" class="suggestion"></small>
+                    </div>
+                    <div class="input-group">
+                        <label>Year</label>
+                        <select id="regYear">
+                            <option value="">Select Year</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Department</label>
+                        <select id="regDepartment">
+                            <option value="">Select Department</option>
+                            <option value="CSBS">Computer Science and Business Systems</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Phone no.</label>
+                        <input type="text" id="regPhone" placeholder="10-digit mobile number">
+                        <span class="warning" id="error-regPhone">Please enter your 10 digit Mobile Number.</span>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="validateRegister()">Register now</button>
+
+                    <p class="switch-text">Already have an account? <span onclick="toggleForm()">Login</span></p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="Form.js"></script>
+</body>
+</html>

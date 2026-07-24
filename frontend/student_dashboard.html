@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Registration Form</title>
+<link rel="stylesheet" href="student_dashboard.css">
+<style>
+
+:root {
+    --primary: #1d3853;
+    --secondary: #34495e;
+    --accent: #3498db;
+    --text: #333;
+    --light: #f4f7f6;
+    --white: #ffffff;
+    --footer-bg: #1a252f;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+body {
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    padding: 30px;
+    color: var(--text);
+}
+
+
+.college-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--white);
+    padding: 15px 30px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    gap: 20px;
+}
+
+.header-left {
+    display: flex;
+    gap: 10px;
+}
+
+.header-left img {
+    width: 80px;
+    border-radius: 6px;
+}
+
+.header-center {
+    text-align: center;
+}
+
+.header-center img {
+    width: 90px;
+    margin-bottom: 6px;
+}
+
+.header-center h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 4px 0;
+}
+
+.header-center p {
+    font-size: 13px;
+    margin: 2px 0;
+    color: var(--secondary);
+}
+
+.header-center .red {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+
+.dept-title {
+    background: var(--accent);
+    color: var(--white);
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    padding: 15px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+}
+
+
+.container {
+    max-width: 950px;
+    margin: auto;
+    background: var(--white);
+    padding: 35px 45px;
+    border-radius: 14px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 35px;
+    color: var(--primary);
+}
+
+.form-row {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 22px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--secondary);
+}
+
+input, select {
+    padding: 11px;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+    font-size: 14px;
+}
+
+input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 6px rgba(52, 152, 219, 0.5);
+    outline: none;
+}
+
+input[type="file"] {
+    padding: 6px;
+}
+
+
+.resume a {
+    margin-top: 6px;
+    display: inline-block;
+    text-decoration: none;
+    background: var(--accent);
+    color: var(--white);
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.resume a:hover {
+    background: var(--primary);
+}
+
+
+.form-actions {
+    text-align: center;
+    margin-top: 35px;
+}
+
+button {
+    padding: 12px 35px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0 10px;
+}
+
+.submit {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.reset {
+    background: var(--secondary);
+    color: var(--white);
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.hidden {
+    display: none;
+}
+
+
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+    }
+
+    .college-header {
+        flex-direction: column;
+    }
+
+    .dept-title {
+        font-size: 22px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="college-header">
+    <div class="header-left">
+        <img src="download 2.jpg" alt="Founder">
+        <img src="download 1.jpg" alt="Chairman">
+    </div>
+
+    <div class="header-center">
+        <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
+        <p>Approved by AICTE, New Delhi & Affiliated to Anna University</p>
+        <p class="red">NAAC Accredited & NBA Accredited Programs</p>
+    </div>
+</div>
+
+<div class="dept-title">
+    Department of Computer Science and Business Systems
+</div>
+
+<div class="dashboard-layout">
+
+    
+    <div class="left-form-panel">
+        <div class="container">
+
+    <h2>Student Registration Form</h2>
+
+    <form>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Year</label>
+                <select id="yearSelect" required>
+
+                    <option value="">Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Register number</label>
+                <select id="regSelect" required>
+                    <option value="">Select Register Number</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Student Name</label>
+                <select id="stdSelect" required>
+                    <option value=""> Select Student Name</option>
+                </select>
+                
+            </div>
+            <div class="form-group">
+                <label>Date of Birth</label>
+                <input type="date" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Personal Email ID</label>
+                <input type="email" required>
+            </div>
+            <div class="form-group">
+                <label>College Email ID</label>
+                <input type="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Domain Interested</label>
+                <input type="domain" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>10th Mark Percentage</label>
+                <input type="percentage" required>
+            </div>
+            <div class="form-group">
+                <label>12th Mark Percentage</label>
+                <input type="percentage" required>
+            </div>
+            <div class="form-group">
+                <label>Diploma Mark Percentage</label>
+                <input type="percentage" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Degree</label>
+                <select required>
+                    <option value="">Select degree</option>
+                    <option>B.E</option>
+                    <option>B.Tech</option>
+            </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Department</label>
+                <input type="department" required>
+            </div>
+        </div>
+
+       
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 1 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+
+                </div>
+                <div class="form-group">
+                    <label>Semester 2 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 3 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+                <div class="form-group">
+                    <label>Semester 4 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 5 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+                <div class="form-group">
+                    <label>Semester 6 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 7 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+                <div class="form-group">
+                    <label>Semester 8 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CGPA</label>
+                    <input type="text" id="cgpa" readonly placeholder="Auto Calculated">
+                </div>
+            </div>
+
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="phone"required>
+            </div>
+            <div class="form-group">
+                <label>WhatsApp Number</label>
+                <input type="whatsapp" required>
+            </div>
+        </div>
+        
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>History of arrears</label>
+            <select id="historyArrears">
+                <option value="">Select</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="historyBox">
+            <label>Number of History Arrears</label>
+            <input type="number" min="1">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Standing of arrears</label>
+            <select id="standingArrears">
+                <option value="">Select</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="standingBox">
+            <label>Number of Standing Arrears</label>
+            <input type="number" min="1">
+        </div>
+    </div>
+
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>LinkedIn Link</label>
+                <input type="link"required>
+            </div>
+            <div class="form-group">
+                <label>GitHub Link</label>
+                <input type="link" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Profile Photo Upload</label>
+                <input type="file" accept="image/*" required>
+            </div>
+            <div class="form-group resume">
+                <label>Model Resume</label>
+                <a href="Model Resume.docx" download>Download Resume Format</a>
+            </div>
+            <div class="form-group">
+                <label>Upload Resume</label>
+                <input type="file" accept="pdf/*" required>
+            </div>
+        </div>
+
+        
+
+        <div class="form-actions">
+            <button type="submit" class="submit">Submit</button>
+            <button type="reset" class="reset">Reset</button>
+        </div>
+        
+</div>
+
+
+
+</div>
+
+<div class="right-panel">
+
+    <h2 class="ref-title">References</h2>
+
+    <!-- Aptitude Download -->
+    <div class="ref-card">
+        <h3>Aptitude Questions</h3>
+        <p class="ref-instruction">
+            Download aptitude practice questions.
+        </p>
+        <a href="apttitude.txt" download class="download-btn">
+             Download Aptitude Questions
+        </a>
+    </div>
+
+    <!-- Java Core Download -->
+    <div class="ref-card">
+        <h3>Java Core Programs</h3>
+        <p class="ref-instruction">
+            Download Java core sample programs.
+        </p>
+        <a href="java.docx" download class="download-btn">
+             Download Java Core
+        </a>
+    </div>
+
+
+    <div class="ref-guidelines">
+        <h3>Instructions</h3>
+        <ul>
+            <li>Download the provided reference materials</li>
+            <li>Aptitude file is in PDF format</li>
+            <li>Java core programs are provided as ZIP</li>
+            <li>Use the files only for academic practice</li>
+        </ul>
+    </div>
+
+</div>
+
+
+<script src="student_dashboard.js"></script>
+
+
+</body>
+</html>
