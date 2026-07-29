@@ -40,8 +40,12 @@ app.get("*", (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`=======================================================`);
-    console.log(`🚀 RIT Placement Portal Backend running on http://localhost:${PORT}`);
-    console.log(`=======================================================`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`=======================================================`);
+        console.log(`🚀 RIT Placement Portal Backend running on http://localhost:${PORT}`);
+        console.log(`=======================================================`);
+    });
+}
+
+module.exports = app;
