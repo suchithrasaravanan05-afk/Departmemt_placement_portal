@@ -1,5 +1,4 @@
 const mysql = require("mysql2");
-const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcryptjs");
@@ -55,7 +54,8 @@ const db = {
                 });
             }
         } else {
-            if (callback) callback(new Error("No active database connection available"));
+            console.log("⚠️ DB query fallback notice (No active MySQL/SQLite pool):", sql.substring(0, 50));
+            if (callback) callback(null, []);
         }
     }
 };
@@ -236,17 +236,35 @@ const seedMySQLData = async (pool) => {
     });
 };
 
+let sqlite3 = null;
+try {
+    sqlite3 = require("sqlite3").verbose();
+} catch (e) {
+    console.log("⚠️ SQLite3 module optional load notice:", e.message);
+}
+
 const initSQLite = () => {
-    dbMode = "sqlite";
-    const dbPath = path.join(__dirname, "csbs_database.sqlite");
-    sqliteDb = new sqlite3.Database(dbPath, (err) => {
-        if (err) {
-            console.error("❌ Failed to initialize SQLite DB:", err);
-            return;
-        }
-        console.log("✅ SQLite Database connected at:", dbPath);
-        setupSQLiteTables();
-    });
+    if (!sqlite3) {
+        console.log("⚠️ SQLite3 native driver unavailable, skipping SQLite init.");
+        return;
+    }
+    try {
+        dbMode = "sqlite";
+        const dbPath = process.env.VERCEL
+            ? "/tmp/csbs_database.sqlite"
+            : path.join(__dirname, "csbs_database.sqlite");
+
+        sqliteDb = new sqlite3.Database(dbPath, (err) => {
+            if (err) {
+                console.error("❌ Failed to initialize SQLite DB:", err.message);
+                return;
+            }
+            console.log("✅ SQLite Database connected at:", dbPath);
+            setupSQLiteTables();
+        });
+    } catch (e) {
+        console.error("❌ SQLite init catch:", e.message);
+    }
 };
 
 const setupSQLiteTables = () => {
