@@ -1,0 +1,122 @@
+body{
+
+    font-family:Segoe UI,sans-serif;
+
+    background:#f4f6f9;
+
+    padding:30px;
+
+}
+
+h2{
+
+    color:#1d3853;
+
+}
+
+.controls{
+
+    margin-bottom:15px;
+
+}
+
+button{
+
+    padding:10px 16px;
+
+    background:#1d3853;
+
+    color:white;
+
+    border:none;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    margin-right:8px;
+
+}
+
+button:hover{
+
+    background:#2d5b86;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    background:white;
+
+}
+
+th,
+td{
+
+    padding:12px;
+
+    border:1px solid #ccc;
+
+    text-align:center;
+
+}
+
+th{
+
+    background:#1d3853;
+
+    color:white;
+
+}
+
+.reg{
+
+    color:#1d3853;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    text-decoration:underline;
+
+}
+
+.modal{
+
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.5);
+
+}
+
+.modal-content{
+
+    background:white;
+
+    width:650px;
+
+    margin:80px auto;
+
+    padding:25px;
+
+    border-radius:10px;
+
+}
+
+.close{
+
+    float:right;
+
+    font-size:24px;
+
+    cursor:pointer;
+
+}

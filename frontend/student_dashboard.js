@@ -1,56 +1,36 @@
+const API_BASE = "/api/student";
 
-const registerNumbers = {
-    1: ["953623241001", "953623241002", "953623241003"],
-    2: ["953624242004", "953624242005", "953624242006"],
-    3: ["953623243001", "953623243002", "953623243003", "953623244004", "953623244005", "953623244006", "953623244007", "953623244008", "953623244009", "953623244010", "953623244011", "953623244012", "953623244013", "953623244014", "953623244015", "953623244016", "953623244017", "953623244018", "953623244019", "953623244020", "953623244021", "953623244022", "953623244023", "953623244024", "953623244025", "953623244026", "953623244027", "953623244028", "953623244029", "953623244030", "953523244031", "953623244032", "953623244033", "953623244034", "953623244035", "953623244036", "953623244037", "953623244038", "953623244039", "953623244040", "953623244041", "953623244042", "953623244043", "953623244044", "953623244045", "953623244046", "953623244047", "953623244048", "953623244049", "953623244050", "953623244051", "953623244052", "953623244053", "953623244054", "953623244055", "953623244056", "953623244057", "953623244058", "953623244059", "953623244060", "953623244061", "953623244062"],
-    4: ["953622244001", "953622244002", "953622244003", "953622244004", "953622244005", "953622244006", "953622244007", "953622244008", "953622244009", "953622244010", "953622244011", "953622244012", "953622244013", "953622244014", "953622244015", "953622244016", "953622244017", "953622244018", "953622244019", "953622244020", "953622244021", "953622244022", "953622244023", "953622244024", "953622244025", "953622244026", "953622244027", "953622244028", "953622244029", "953622244030", "953622244031", "953622244032", "953622244033", "953622244034", "953622244035", "953622244036", "953622244037", "953622244038", "953622244039", "953622244040", "953622244041", "953622244042", "953622244043", "953622244044", "953622244045", "953622244046", "953622244047", "953622244048", "953622244049", "953622244050", "953622244051", "953622244052", "953622244053", "953622244054", "953622244055", "953622244056", "953622244057", "953622244058", "953622244059", "953622244060", "953622244061", "953622244062"]
-};
+// =========================================================
+// Guard: only a logged-in student gets to see this page.
+// (Set by Form.js on successful student login.)
+// =========================================================
+const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
-const yearSelect = document.getElementById("yearSelect");
-const regSelect = document.getElementById("regSelect");
+if (!currentUser || currentUser.role === "admin") {
+    alert("Please login first.");
+    window.location.href = "Form.html";
+}
 
-yearSelect.addEventListener("change", function () {
-    const selectedYear = this.value;
+function logout() {
+    localStorage.removeItem("user");
+    localStorage.removeItem("adminToken");
+    window.location.href = "Form.html";
+}
 
-    regSelect.innerHTML = '<option value="">Select Register Number</option>';
+window.logout = logout;
 
-    if (registerNumbers[selectedYear]) {
-        registerNumbers[selectedYear].forEach(function (regNo) {
-            const option = document.createElement("option");
-            option.value = regNo;
-            option.textContent = regNo;
-            regSelect.appendChild(option);
-        });
-    }
-});
+// =========================================================
+// Prefill read-only account fields from the logged-in user
+// =========================================================
+document.getElementById("yearDisplay").value = currentUser.year || "";
+document.getElementById("regDisplay").value = currentUser.register_number || "";
+document.getElementById("nameDisplay").value = currentUser.full_name || "";
+document.getElementById("departmentDisplay").value = currentUser.department_code || "";
+document.getElementById("collegeEmail").value = currentUser.email || "";
 
-const studentName = {
-    1: ["953623241001", "953623241002", "953623241003"],
-    2: ["953624242004", "953624242005", "953624242006"],
-    3: ["ABINESH KUMAR A", "AMRITHA MANIKANDAN", "ASHIN SREE P", "BALA VIGNESH S", "BAVANEESWARI R", "DHARSHINI A", "DIVYA K", "ESAKKIAMMAL M", "GAYATHRI DHEVI M.K", "GOWTHAM P", "HARI HARA SUDHAN R", "HARINI M", "HARI NISHAANTHAN N", "HARSETHA V", "JASON EZRA", "JASWANT P", "JAYADEEP R", "JAYAJOTHI S", "JESHAN DEV D", "KAAVYADHARSHINI G", "KATHIRVEL G", "KAVIYA N", "MANOJKUMAR M", "MARGRET PUNITHA A", "MOHAMMED SUHAIL N", "MUFRIN ASHIKA O J", "MUGESH PRABHU B", "MURUGALAKSHMI K", "MUTHU MARI G", "NAGARAJAN R", "NITHIKASREE K", "NITHISH KANNAN G", "PERUMAL DHARSHAN R", "POOJHA M", "PRDAEEP K", "RAJAKALEESWARAN S", "RAJA PANDIAN P", "RAMKUMAR R", "RAMYA S K", "RITHANYA S", "SANTHANAHARINI S", "SANTHOSH G", "SIVA PRIYA K R", "SIVA RANJANI P", "SRI BALAJI S", "SUBASH SELVAM K", "SUBRAJA U", "SUCHITHRA S", "SUGHAPRIYAN A R", "SURIYAKUMAR P", "SURIYAPRAKASH M", "SURYA LAKSHMI V", "THANALAKSHMI G", "THANUSHA K", "VAISHNAVI V", "VARSHINI C", "VENKATESH M", "VIGNESHWARAN V", "VINOTH KUMAR V", "VISHAL GANESH S", "YASHWIN V"],
-    4: ["953622244001", "953622244002", "953622244003", "953622244004", "953622244005", "953622244006", "953622244007", "953622244008", "953622244009", "953622244010", "953622244011", "953622244012", "953622244013", "953622244014", "953622244015", "953622244016", "953622244017", "953622244018", "953622244019", "953622244020", "953622244021", "953622244022", "953622244023", "953622244024", "953622244025", "953622244026", "953622244027", "953622244028", "953622244029", "953622244030", "953622244031", "953622244032", "953622244033", "953622244034", "953622244035", "953622244036", "953622244037", "953622244038", "953622244039", "953622244040", "953622244041", "953622244042", "953622244043", "953622244044", "953622244045", "953622244046", "953622244047", "953622244048", "953622244049", "953622244050", "953622244051", "953622244052", "953622244053", "953622244054", "953622244055", "953622244056", "953622244057", "953622244058", "953622244059", "953622244060", "953622244061", "953622244062"]
-};
-
-const YearSelect = document.getElementById("YearSelect");
-const stdSelect = document.getElementById("stdSelect");
-
-yearSelect.addEventListener("change", function () {
-    const selectedYear = this.value;
-
-    stdSelect.innerHTML = '<option value="">Select Student Name</option>';
-
-    if (studentName[selectedYear]) {
-        studentName[selectedYear].forEach(function (stdName) {
-            const option = document.createElement("option");
-            option.value = stdName;
-            option.textContent = stdName;
-            stdSelect.appendChild(option);
-        });
-    }
-});
-
-
-
+// =========================================================
+// Arrears show/hide
+// =========================================================
 document.addEventListener("DOMContentLoaded", function () {
 
     const history = document.getElementById("historyArrears");
@@ -69,87 +49,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
+// =========================================================
+// CGPA auto-calculation from whichever semester GPAs are filled
+// =========================================================
 const gpaInputs = document.querySelectorAll(".gpa");
+const cgpaField = document.getElementById("cgpa");
 
-yearSelect.addEventListener("change", function () {
-    const year = parseInt(this.value);
-
+function calculateCGPA() {
+    let total = 0;
+    let count = 0;
 
     gpaInputs.forEach(input => {
-        input.disabled = true;
-        input.value = "";
-    });
-
-    let enabledSemesters = 0;
-
-    if (year === 1) enabledSemesters = 2;
-    else if (year === 2) enabledSemesters = 4;
-    else if (year === 3) enabledSemesters = 6;
-    else if (year === 4) enabledSemesters = 8;
-
-
-    for (let i = 0; i < enabledSemesters; i++) {
-        gpaInputs[i].disabled = false;
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const gpaInputs = document.querySelectorAll(".gpa");
-    const cgpaField = document.getElementById("cgpa");
-
-    function calculateCGPA() {
-        let total = 0;
-        let count = 0;
-
-        gpaInputs.forEach(input => {
-            if (!input.disabled && input.value !== "") {
-                const gpa = parseFloat(input.value);
-                if (!isNaN(gpa)) {
-                    total += gpa;
-                    count++;
-                }
+        if (input.value !== "") {
+            const gpa = parseFloat(input.value);
+            if (!isNaN(gpa)) {
+                total += gpa;
+                count++;
             }
-        });
-
-        if (count > 0) {
-            cgpaField.value = (total / count).toFixed(2);
-        } else {
-            cgpaField.value = "";
         }
-    }
-
-   
-    gpaInputs.forEach(input => {
-        input.addEventListener("input", calculateCGPA);
     });
 
+    cgpaField.value = count > 0 ? (total / count).toFixed(2) : "";
+}
+
+gpaInputs.forEach(input => {
+    input.addEventListener("input", calculateCGPA);
 });
 
-
-
-yearSelect.addEventListener("change", function () {
-    const year = parseInt(this.value);
-
-    gpaInputs.forEach(input => {
-        input.disabled = true;
-        input.value = "";
-    });
-
-    let enabledSemesters = 0;
-
-    if (year === 1) enabledSemesters = 2;
-    else if (year === 2) enabledSemesters = 4;
-    else if (year === 3) enabledSemesters = 6;
-    else if (year === 4) enabledSemesters = 8;
-
-    for (let i = 0; i < enabledSemesters; i++) {
-        gpaInputs[i].disabled = false;
-    }
-
-    calculateCGPA();  
-});
-
+// =========================================================
+// File size guard (10 MB)
+// =========================================================
 document.querySelectorAll('input[type="file"]').forEach(input => {
     input.addEventListener("change", () => {
         if (input.files[0] && input.files[0].size > 10 * 1024 * 1024) {
@@ -159,93 +88,159 @@ document.querySelectorAll('input[type="file"]').forEach(input => {
     });
 });
 
-const form = document.querySelector("form");
+// =========================================================
+// View switching between the form and the submitted-details summary
+// =========================================================
+function showFormView() {
+    document.getElementById("detailsView").classList.add("hidden");
+    document.getElementById("formView").classList.remove("hidden");
+}
+
+function showDetailsView() {
+    document.getElementById("formView").classList.add("hidden");
+    document.getElementById("detailsView").classList.remove("hidden");
+}
+
+function renderDetails(p) {
+    const row = (label, value) => `<div><strong>${label}:</strong> ${value ?? "-"}</div>`;
+
+    document.getElementById("detailsContent").innerHTML = `
+        ${row("Name", p.full_name)}
+        ${row("Register No", p.register_number)}
+        ${row("Year", p.year)}
+        ${row("Date of Birth", p.dob ? p.dob.substring(0, 10) : null)}
+        ${row("Personal Email", p.personal_email)}
+        ${row("College Email", p.college_email || p.account_email)}
+        ${row("Domain Interested", p.domain_interested)}
+        ${row("Degree", p.degree)}
+        ${row("10th %", p.tenth_percentage)}
+        ${row("12th %", p.twelfth_percentage)}
+        ${row("Diploma %", p.diploma_percentage)}
+        ${row("CGPA", p.cgpa)}
+        ${row("Phone", p.phone_number)}
+        ${row("WhatsApp", p.whatsapp_number)}
+        ${row("History Arrears", p.history_of_arrears === "yes" ? p.history_arrears_count : "No")}
+        ${row("Standing Arrears", p.standing_of_arrears === "yes" ? p.standing_arrears_count : "No")}
+        ${row("LinkedIn", p.linkedin_link ? `<a href="${p.linkedin_link}" target="_blank">Link</a>` : "-")}
+        ${row("GitHub", p.github_link ? `<a href="${p.github_link}" target="_blank">Link</a>` : "-")}
+        ${row("Resume", p.resume_file ? `<a href="${API_BASE.replace("/api/student","")}/uploads/${p.resume_file}" target="_blank">Download</a>` : "Not uploaded")}
+        ${row("Photo", p.profile_photo ? `<a href="${API_BASE.replace("/api/student","")}/uploads/${p.profile_photo}" target="_blank">View</a>` : "Not uploaded")}
+    `;
+}
+
+function prefillForm(p) {
+    if (p.dob) document.getElementById("dob").value = p.dob.substring(0, 10);
+    if (p.personal_email) document.getElementById("personalEmail").value = p.personal_email;
+    if (p.domain_interested) document.getElementById("domainInterested").value = p.domain_interested;
+    if (p.tenth_percentage) document.getElementById("tenthPercentage").value = p.tenth_percentage;
+    if (p.twelfth_percentage) document.getElementById("twelfthPercentage").value = p.twelfth_percentage;
+    if (p.diploma_percentage) document.getElementById("diplomaPercentage").value = p.diploma_percentage;
+    if (p.degree) document.getElementById("degree").value = p.degree;
+    if (p.sem1_gpa) document.getElementById("sem1Gpa").value = p.sem1_gpa;
+    if (p.sem2_gpa) document.getElementById("sem2Gpa").value = p.sem2_gpa;
+    if (p.sem3_gpa) document.getElementById("sem3Gpa").value = p.sem3_gpa;
+    if (p.sem4_gpa) document.getElementById("sem4Gpa").value = p.sem4_gpa;
+    if (p.sem5_gpa) document.getElementById("sem5Gpa").value = p.sem5_gpa;
+    if (p.sem6_gpa) document.getElementById("sem6Gpa").value = p.sem6_gpa;
+    if (p.sem7_gpa) document.getElementById("sem7Gpa").value = p.sem7_gpa;
+    if (p.sem8_gpa) document.getElementById("sem8Gpa").value = p.sem8_gpa;
+    if (p.cgpa) document.getElementById("cgpa").value = p.cgpa;
+    if (p.phone_number) document.getElementById("phoneNumber").value = p.phone_number;
+    if (p.whatsapp_number) document.getElementById("whatsappNumber").value = p.whatsapp_number;
+    if (p.history_of_arrears) {
+        document.getElementById("historyArrears").value = p.history_of_arrears;
+        document.getElementById("historyBox").classList.toggle("hidden", p.history_of_arrears !== "yes");
+        document.getElementById("historyArrearsCount").value = p.history_arrears_count || "";
+    }
+    if (p.standing_of_arrears) {
+        document.getElementById("standingArrears").value = p.standing_of_arrears;
+        document.getElementById("standingBox").classList.toggle("hidden", p.standing_of_arrears !== "yes");
+        document.getElementById("standingArrearsCount").value = p.standing_arrears_count || "";
+    }
+    if (p.linkedin_link) document.getElementById("linkedinLink").value = p.linkedin_link;
+    if (p.github_link) document.getElementById("githubLink").value = p.github_link;
+}
+
+// Check on load whether this student already has a saved profile -
+// if so, prefill the form (for editing) and show the details view.
+fetch(`${API_BASE}/profile/${currentUser.id}`)
+    .then(async response => {
+        const data = await response.json();
+        if (data.success && data.profile && data.profile.user_id) {
+            prefillForm(data.profile);
+            renderDetails(data.profile);
+            showDetailsView();
+        }
+    })
+    .catch(error => console.error(error));
+
+// =========================================================
+// Submit profile
+// =========================================================
+const form = document.getElementById("profileForm");
 
 form.addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const studentData = {
-        name: document.getElementById("stdSelect").value,
-        reg: document.getElementById("regSelect").value,
-        year: document.getElementById("yearSelect").value,
-        cgpa: document.getElementById("cgpa").value
-    };
+    const formData = new FormData();
 
-    let students = JSON.parse(localStorage.getItem("students")) || [];
+    formData.append("user_id", currentUser.id);
+    formData.append("dob", document.getElementById("dob").value);
+    formData.append("personal_email", document.getElementById("personalEmail").value.trim());
+    formData.append("college_email", document.getElementById("collegeEmail").value.trim());
+    formData.append("domain_interested", document.getElementById("domainInterested").value.trim());
+    formData.append("tenth_percentage", document.getElementById("tenthPercentage").value);
+    formData.append("twelfth_percentage", document.getElementById("twelfthPercentage").value);
+    formData.append("diploma_percentage", document.getElementById("diplomaPercentage").value);
+    formData.append("degree", document.getElementById("degree").value);
+    formData.append("sem1_gpa", document.getElementById("sem1Gpa").value);
+    formData.append("sem2_gpa", document.getElementById("sem2Gpa").value);
+    formData.append("sem3_gpa", document.getElementById("sem3Gpa").value);
+    formData.append("sem4_gpa", document.getElementById("sem4Gpa").value);
+    formData.append("sem5_gpa", document.getElementById("sem5Gpa").value);
+    formData.append("sem6_gpa", document.getElementById("sem6Gpa").value);
+    formData.append("sem7_gpa", document.getElementById("sem7Gpa").value);
+    formData.append("sem8_gpa", document.getElementById("sem8Gpa").value);
+    formData.append("cgpa", document.getElementById("cgpa").value);
+    formData.append("phone_number", document.getElementById("phoneNumber").value.trim());
+    formData.append("whatsapp_number", document.getElementById("whatsappNumber").value.trim());
+    formData.append("history_of_arrears", document.getElementById("historyArrears").value);
+    formData.append("history_arrears_count", document.getElementById("historyArrearsCount").value || 0);
+    formData.append("standing_of_arrears", document.getElementById("standingArrears").value);
+    formData.append("standing_arrears_count", document.getElementById("standingArrearsCount").value || 0);
+    formData.append("linkedin_link", document.getElementById("linkedinLink").value.trim());
+    formData.append("github_link", document.getElementById("githubLink").value.trim());
 
-    students.push(studentData);
+    const photo = document.getElementById("profilePhoto").files[0];
+    const resume = document.getElementById("resumeFile").files[0];
 
-    localStorage.setItem("students", JSON.stringify(students));
+    if (photo) formData.append("profile_photo", photo);
+    if (resume) formData.append("resume_file", resume);
 
-    alert("Student registered successfully!");
-
-    form.reset();
-});
-
-
-
-form.addEventListener("reset", function () {
-
-    const inputs = form.querySelectorAll("input, select, textarea, button");
-
-    inputs.forEach(el => {
-        el.disabled = false;
-    });
-
-});
-
-function validateRegister() {
-    console.log("Register clicked");
-
-    fetch("http://localhost:5500/api/register", {
+    fetch(`${API_BASE}/profile`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            year: document.getElementById("year").value.trim(),
-            register_number: document.getElementById("regregisternumber").value.trim(),
-            std_name: document.getElementById("stdName").value.trim(),
-            dob: document.getElementById("dob").value.trim(),
-            personal_email: document.getElementById("regEmail").value.trim(),
-            college_email:document.getElementById("regEmail").value.trim(),
-            domain_interesed: document.getElementById("regDomain").value.trim(),
-            tenth_percentage: document.getElementById("regten").value.trim(),
-            twelth_pecentage: document.getElementById("regtwel").value.trim(),
-            diploma_percentage: document.getElementById("regDiploma").value.trim(),
-            degree: document.getElementById("regDegree").value.trim(),
-            department: document.getElementById("regDept").value.trim(),
-            sem1_gpa: document.getElementById("1gpa").value.trim(),
-            sem2_gpa: document.getElementById("2gpa").value.trim(),
-            sem3_gpa: document.getElementById("3gpa").value.trim(),
-            sem4_gpa: document.getElementById("4gpa").value.trim(),
-            sem5_gpa: document.getElementById("5gpa").value.trim(),
-            sem6_gpa: document.getElementById("6gpa").value.trim(),
-            sem7_gpa: document.getElementById("7gpa").value.trim(),
-            sem8_gpa: document.getElementById("8gpa").value.trim(),
-            cgpa: document.getElementById("cgpa").value.trim(),
-            phone_number: document.getElementById("regNo").value.trim(),
-            whatsapp_number: document.getElementById("regNo").value.trim(),
-            history_of_arrears: document.getElementById("Arrears").value.trim(),
-            history_arrears_count: document.getElementById("NoArrears").value.trim(),
-            standing_of_arrears: document.getElementById("Arrears").value.trim(),
-            standing_arrears_count: document.getElementById("NoArrears").value.trim(),
-            linkedin_link: document.getElementById("reglink").value.trim(),
-            github_link: document.getElementById("regGit").value.trim(),
-            profile_photo: document.getElementById("photo").value.trim(),
-            resume_file: document.getElementById("resume").value.trim(),
-            created_at: document.getElementById("created").value.trim()
-        })
+        body: formData
     })
-        .then(res => res.json())
-    .then(data => {
+    .then(async response => {
+        const data = await response.json();
         alert(data.message);
-        toggleForm(); 
+
+        if (data.success) {
+            // Refetch to get the freshly saved data (including file names)
+            // and show the summary view instead of leaving the form open.
+            fetch(`${API_BASE}/profile/${currentUser.id}`)
+                .then(async res2 => {
+                    const data2 = await res2.json();
+                    if (data2.success) {
+                        renderDetails(data2.profile);
+                        showDetailsView();
+                    }
+                })
+                .catch(err => console.error(err));
+        }
     })
-    .catch(err => {
-        console.error(err);
-        alert("Server not reachable");
+    .catch(error => {
+        console.error(error);
+        alert("Server not reachable.");
     });
-}
-
-
+});

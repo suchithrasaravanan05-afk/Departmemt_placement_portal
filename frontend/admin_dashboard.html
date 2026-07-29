@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Student Registration Form</title>
+<title>Admin Panel - Student Registration</title>
 
 <style>
 
@@ -10,6 +10,7 @@
     --primary: #1d3853;
     --secondary: #34495e;
     --accent: #3498db;
+    --danger: #e74c3c;
     --text: #333;
     --light: #f4f7f6;
     --white: #ffffff;
@@ -64,11 +65,25 @@ body {
     padding: 14px;
     border-radius: 10px;
     margin: 20px 0 30px;
+    position: relative;
 }
 
+.logout-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--danger);
+    color: var(--white);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
 
 .container {
-    max-width: 1000px;
+    max-width: 1100px;
     margin: auto;
     background: var(--white);
     padding: 35px 45px;
@@ -79,69 +94,34 @@ body {
 h2 {
     text-align: center;
     color: var(--primary);
-    margin-bottom: 30px;
-}
-
-
-.form-row {
-    display: flex;
-    gap: 20px;
     margin-bottom: 20px;
 }
 
-.form-group {
-    flex: 1;
+.toolbar {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
-label {
+.toolbar label {
     font-weight: 600;
     color: var(--secondary);
-    margin-bottom: 5px;
+    margin-right: 8px;
 }
 
-input, select {
-    padding: 11px;
+.toolbar select {
+    padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid #ccc;
 }
 
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--accent);
-}
-
-
-.form-actions {
-    text-align: center;
-    margin-top: 25px;
-}
-
-button {
-    padding: 12px 30px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    margin: 5px;
-}
-
-.submit {
-    background: var(--primary);
-    color: var(--white);
-}
-
-.reset {
-    background: var(--secondary);
-    color: var(--white);
-}
-
-
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 30px;
+    margin-top: 10px;
 }
 
 th, td {
@@ -155,26 +135,92 @@ th {
     color: var(--white);
 }
 
-.edit-btn {
-    background: var(--accent);
-    color: var(--white);
+.action-btn {
     border: none;
     padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
+    color: var(--white);
+    margin: 2px;
 }
 
+.edit-btn { background: var(--accent); }
+.delete-btn { background: var(--danger); }
 
-@media(max-width:768px) {
-    .form-row {
-        flex-direction: column;
-    }
+.empty-row td {
+    padding: 20px;
+    color: #888;
 }
+
+/* Edit modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-box {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 420px;
+}
+
+.modal-box h3 {
+    color: var(--primary);
+    margin-top: 0;
+    text-align: center;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.form-group input, .form-group select {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.modal-actions {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.modal-actions button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 4px;
+}
+
+.save-btn { background: var(--primary); color: var(--white); }
+.cancel-btn { background: #ccc; color: var(--text); }
+
 </style>
 </head>
 
 <body>
-
 
 <div class="college-header">
     <div class="header-left">
@@ -183,87 +229,202 @@ th {
     </div>
     <div class="header-center">
         <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
-        <p>Approved by AICTE,New Delhi & Affiliated to Anna University</p>
-        <p>NAAC & NBA Accredited with 'A+' Grade & Affiliated to Anna Univers</p>
+        <p>Approved by AICTE, New Delhi & Affiliated to Anna University</p>
+        <p>NAAC & NBA Accredited with 'A+' Grade</p>
     </div>
 </div>
 
 <div class="dept-title">
     Department of Computer Science and Business Systems
+    <button class="logout-btn" onclick="logout()">Logout</button>
 </div>
-
 
 <div class="container">
-<h2>Admin Panel</h2>
 
-<form id="studentForm">
-    
-        <div class="form-row">
-            <div class="form-group">
-                <label>Year</label>
-                <select id="yearSelect" required>
+    <h2>Admin Panel &mdash; Registered Students</h2>
 
-                    <option value="">Select Year</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Register number</label>
-                <select id="regSelect" required>
-                    <option value="">Select Register Number</option>
-                </select>
-            </div>
+    <div class="toolbar" style="border: 1px solid #ddd; border-radius: 8px; padding: 14px 18px; background: var(--light);">
+        <div>
+            <label for="eligibilityCutoff">Placement Eligibility Cutoff</label>
+            <select id="eligibilityCutoff">
+                <option value="">Select cutoff %</option>
+                <option value="65">65% and above</option>
+                <option value="70">70% and above</option>
+                <option value="75">75% and above</option>
+                <option value="80">80% and above</option>
+                <option value="85">85% and above</option>
+            </select>
         </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Student Name</label>
-                <select id="stdSelect" required>
-                    <option value=""> Select Student Name</option>
-                </select>
-                
-            </div>
-            <div class="form-group">
-                <label>Domain</label>
-                <input type="domain" required>
-                
-            </div>
-
-             
+        <div>
+            <button class="action-btn edit-btn" onclick="applyEligibilityFilter()">Show Eligible Students</button>
+            <button class="action-btn edit-btn" onclick="downloadEligibleExcel()">Download Excel</button>
         </div>
-
-
-    <div class="form-actions">
-        <button type="submit" class="submit">Save / Update</button>
-        <button type="reset" class="reset">Reset</button>
     </div>
-</form>
 
-<h2>Registered Students</h2>
+    <div id="eligibleResults" style="margin-top: 14px;"></div>
 
-<table>
-<thead>
-<tr>
-    <th>Year</th>
-    <th>Register No</th>
-    <th>Name</th>
-    <th>Domain</th>
-    <th>Action</th>
+    <div class="toolbar">
+        <div>
+            <label for="yearFilter">Filter by Year</label>
+            <select id="yearFilter">
+                <option value="">All Years</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+            </select>
+        </div>
+        <button class="action-btn edit-btn" onclick="loadStudents()">Refresh</button>
+    </div>
 
-</tr>
-</thead>
-<tbody id="studentTable"></tbody>
-</table>
+    <table>
+        <thead>
+        <tr>
+            <th>Year</th>
+            <th>Register No</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Phone</th>
+            <th>Profile</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="studentTable"></tbody>
+    </table>
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-box" style="max-width: 480px; max-height: 85vh; overflow-y: auto;">
+        <h3>Edit Student</h3>
+
+        <input type="hidden" id="editId">
+
+        <h4 style="color: var(--secondary); margin-bottom: 8px;">Account</h4>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="editName">
+        </div>
+
+        <div class="form-group">
+            <label>Register Number</label>
+            <input type="text" id="editReg">
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="editEmail">
+        </div>
+
+        <div class="form-group">
+            <label>Year</label>
+            <select id="editYear">
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Department</label>
+            <select id="editDepartment"></select>
+        </div>
+
+        <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="editPhone" maxlength="10">
+        </div>
+
+        <h4 style="color: var(--secondary); margin: 16px 0 8px;">Placement Profile</h4>
+
+        <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" id="editDob">
+        </div>
+
+        <div class="form-group">
+            <label>Personal Email</label>
+            <input type="email" id="editPersonalEmail">
+        </div>
+
+        <div class="form-group">
+            <label>Domain Interested</label>
+            <input type="text" id="editDomain">
+        </div>
+
+        <div class="form-group">
+            <label>Degree</label>
+            <select id="editDegree">
+                <option value="">Select degree</option>
+                <option value="B.E">B.E</option>
+                <option value="B.Tech">B.Tech</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>10th %</label>
+            <input type="number" step="0.01" id="editTenth">
+        </div>
+
+        <div class="form-group">
+            <label>12th %</label>
+            <input type="number" step="0.01" id="editTwelfth">
+        </div>
+
+        <div class="form-group">
+            <label>Diploma %</label>
+            <input type="number" step="0.01" id="editDiploma">
+        </div>
+
+        <div class="form-group">
+            <label>CGPA</label>
+            <input type="number" step="0.01" id="editCgpa">
+        </div>
+
+        <div class="form-group">
+            <label>History Arrears (count, 0 = none)</label>
+            <input type="number" min="0" id="editHistoryArrears">
+        </div>
+
+        <div class="form-group">
+            <label>Standing Arrears (count, 0 = none)</label>
+            <input type="number" min="0" id="editStandingArrears">
+        </div>
+
+        <div class="form-group">
+            <label>LinkedIn</label>
+            <input type="url" id="editLinkedin">
+        </div>
+
+        <div class="form-group">
+            <label>GitHub</label>
+            <input type="url" id="editGithub">
+        </div>
+
+        <div class="modal-actions">
+            <button class="save-btn" onclick="saveEdit()">Save</button>
+            <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal-overlay" id="viewModal">
+    <div class="modal-box" style="max-width: 520px; max-height: 80vh; overflow-y: auto;">
+        <h3>Student Profile</h3>
+        <div id="viewContent" style="font-size: 14px; line-height: 1.8;"></div>
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeViewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>  
 <script src="admin_dashboard.js"></script>
-
-
-
 
 </body>
 </html>

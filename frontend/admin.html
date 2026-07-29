@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>3rd Year Student Filter</title>
+
+    <link rel="stylesheet" href="admin.css">
+
+</head>
+
+<body>
+
+<h2>3rd Year Student List</h2>
+
+<div class="controls">
+
+    <button onclick="loadExcel('Above_60%.xlsx')">60% Above</button>
+
+    <button onclick="loadExcel('Above_70%.xlsx')">70% Above</button>
+
+    <button onclick="loadExcel('Above_80%.xlsx')">80% Above</button>
+
+    <button onclick="showAll()">Show All</button>
+
+    <button onclick="downloadFiltered()">Download List</button>
+
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Register Number</th>
+
+<th>Name</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+<!-- Modal -->
+
+<div class="modal" id="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeModal()">×</span>
+
+<h3>Student Details</h3>
+
+<div id="details"></div>
+
+</div>
+
+
+
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<script src="admin.js"></script>
+
+</body>
+
+</html>
+
