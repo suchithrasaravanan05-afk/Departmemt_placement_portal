@@ -1,4 +1,8 @@
-const API_BASE = "http://localhost:5500/api";
+const SERVER_BASE = (window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1"))
+    ? "http://localhost:5500"
+    : window.location.origin;
+
+const API_BASE = `${SERVER_BASE}/api`;
 
 let currentAdminToken = null;
 let currentAdminUser = null;
@@ -111,7 +115,7 @@ async function fetchStudentRoster() {
             const arrearsVal = s.standing_arrears_count !== null ? s.standing_arrears_count : 0;
             let resumeLink = `<span class="text-muted">Not Uploaded</span>`;
             if (s.resume_file) {
-                resumeLink = `<a href="http://localhost:5500${s.resume_file}" target="_blank" class="btn-success" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-download"></i> Resume</a>`;
+                resumeLink = `<a href="${SERVER_BASE}${s.resume_file}" target="_blank" class="btn-success" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-download"></i> Resume</a>`;
             }
 
             tbody.innerHTML += `

@@ -1,4 +1,8 @@
-const API_BASE = "http://localhost:5500/api";
+const SERVER_BASE = (window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1"))
+    ? "http://localhost:5500"
+    : window.location.origin;
+
+const API_BASE = `${SERVER_BASE}/api`;
 
 let currentUser = null;
 let currentToken = null;
@@ -207,7 +211,7 @@ function populateViewMode(p) {
 
     // Profile photo in avatar
     if (val(p.profile_photo)) {
-        document.getElementById("viewAvatar").innerHTML = `<img src="http://localhost:5500${p.profile_photo}" alt="Photo">`;
+        document.getElementById("viewAvatar").innerHTML = `<img src="${SERVER_BASE}${p.profile_photo}" alt="Photo">`;
     } else {
         const initials = (currentUser.full_name || "S").split(" ").map(w => w[0]).join("").toUpperCase().substring(0, 2);
         document.getElementById("viewAvatar").innerText = initials;
@@ -261,8 +265,8 @@ function populateViewMode(p) {
 
     document.getElementById("viewLinkedin").innerHTML = linkedin ? `<a href="${linkedin}" target="_blank"><i class="fa-brands fa-linkedin"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
     document.getElementById("viewGithub").innerHTML = github ? `<a href="${github}" target="_blank"><i class="fa-brands fa-github"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
-    document.getElementById("viewPhoto").innerHTML = photo ? `<a href="http://localhost:5500${photo}" target="_blank"><i class="fa-solid fa-image"></i> View Photo</a>` : "<span class='empty'>Not Uploaded</span>";
-    document.getElementById("viewResume").innerHTML = resume ? `<a href="http://localhost:5500${resume}" target="_blank"><i class="fa-solid fa-file-pdf"></i> View Resume</a>` : "<span class='empty'>Not Uploaded</span>";
+    document.getElementById("viewPhoto").innerHTML = photo ? `<a href="${SERVER_BASE}${photo}" target="_blank"><i class="fa-solid fa-image"></i> View Photo</a>` : "<span class='empty'>Not Uploaded</span>";
+    document.getElementById("viewResume").innerHTML = resume ? `<a href="${SERVER_BASE}${resume}" target="_blank"><i class="fa-solid fa-file-pdf"></i> View Resume</a>` : "<span class='empty'>Not Uploaded</span>";
 }
 
 function setDetailValue(id, value) {
@@ -308,8 +312,8 @@ function populateEditForm(p) {
     toggleArrearCounts();
     calculateCGPA();
 
-    if (p.profile_photo) document.getElementById("existingPhotoLink").innerHTML = `<a href="http://localhost:5500${p.profile_photo}" target="_blank">📷 View current photo</a>`;
-    if (p.resume_file) document.getElementById("existingResumeLink").innerHTML = `<a href="http://localhost:5500${p.resume_file}" target="_blank">📄 View current resume</a>`;
+    if (p.profile_photo) document.getElementById("existingPhotoLink").innerHTML = `<a href="${SERVER_BASE}${p.profile_photo}" target="_blank">📷 View current photo</a>`;
+    if (p.resume_file) document.getElementById("existingResumeLink").innerHTML = `<a href="${SERVER_BASE}${p.resume_file}" target="_blank">📄 View current resume</a>`;
 }
 
 // =====================================================
