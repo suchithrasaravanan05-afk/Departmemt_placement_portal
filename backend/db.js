@@ -4,6 +4,8 @@ const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcryptjs");
 
+const { supabase, supabaseAdmin, testSupabaseConnection } = require("./supabase");
+
 const MYSQL_CONFIG = {
     host: process.env.DB_HOST || "localhost",
     user: process.env.DB_USER || "root",
@@ -15,8 +17,18 @@ let dbMode = "mysql";
 let mysqlConn = null;
 let sqliteDb = null;
 
+// Initialize Supabase check on startup
+testSupabaseConnection().then(res => {
+    if (res.success) {
+        console.log("⚡ Supabase Cloud Connected successfully!");
+    } else {
+        console.log("⚠️ Supabase Notice:", res.error || res.message);
+    }
+});
+
 const db = {
     mode: () => dbMode,
+    supabase: supabaseAdmin || supabase,
     query: (sql, params, callback) => {
         if (typeof params === "function") {
             callback = params;
