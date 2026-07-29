@@ -1,178 +1,385 @@
+const API_BASE = "http://localhost:5500/api";
 
-const registerNumbers = {
-    1: ["953623241001", "953623241002", "953623241003"],
-    2: ["953624242004", "953624242005", "953624242006"],
-    3: ["953623243001", "953623243002", "953623243003", "953623244004", "953623244005", "953623244006", "953623244007", "953623244008", "953623244009", "953623244010", "953623244011", "953623244012", "953623244013", "953623244014", "953623244015", "953623244016", "953623244017", "953623244018", "953623244019", "953623244020", "953623244021", "953623244022", "953623244023", "953623244024", "953623244025", "953623244026", "953623244027", "953623244028", "953623244029", "953623244030", "953523244031", "953623244032", "953623244033", "953623244034", "953623244035", "953623244036", "953623244037", "953623244038", "953623244039", "953623244040", "953623244041", "953623244042", "953623244043", "953623244044", "953623244045", "953623244046", "953623244047", "953623244048", "953623244049", "953623244050", "953623244051", "953623244052", "953623244053", "953623244054", "953623244055", "953623244056", "953623244057", "953623244058", "953623244059", "953623244060", "953623244061", "953623244062"],
-    4: ["953622244001", "953622244002", "953622244003", "953622244004", "953622244005", "953622244006", "953622244007", "953622244008", "953622244009", "953622244010", "953622244011", "953622244012", "953622244013", "953622244014", "953622244015", "953622244016", "953622244017", "953622244018", "953622244019", "953622244020", "953622244021", "953622244022", "953622244023", "953622244024", "953622244025", "953622244026", "953622244027", "953622244028", "953622244029", "953622244030", "953622244031", "953622244032", "953622244033", "953622244034", "953622244035", "953622244036", "953622244037", "953622244038", "953622244039", "953622244040", "953622244041", "953622244042", "953622244043", "953622244044", "953622244045", "953622244046", "953622244047", "953622244048", "953622244049", "953622244050", "953622244051", "953622244052", "953622244053", "953622244054", "953622244055", "953622244056", "953622244057", "953622244058", "953622244059", "953622244060", "953622244061", "953622244062"]
-};
+let currentAdminToken = null;
+let currentAdminUser = null;
+let currentFetchedStudents = [];
 
-const yearSelect = document.getElementById("yearSelect");
-const regSelect = document.getElementById("regSelect");
+document.addEventListener("DOMContentLoaded", () => {
+    currentAdminToken = localStorage.getItem("token");
+    currentAdminUser = JSON.parse(localStorage.getItem("user") || "null");
 
-yearSelect.addEventListener("change", function () {
-    const selectedYear = this.value;
-
-    regSelect.innerHTML = '<option value="">Select Register Number</option>';
-
-    if (registerNumbers[selectedYear]) {
-        registerNumbers[selectedYear].forEach(function (regNo) {
-            const option = document.createElement("option");
-            option.value = regNo;
-            option.textContent = regNo;
-            regSelect.appendChild(option);
-        });
+    if (!currentAdminToken || !currentAdminUser || currentAdminUser.role !== "admin") {
+        window.location.href = "Form.html";
+        return;
     }
+
+    document.getElementById("adminUserName").innerText = currentAdminUser.full_name || "Placement Admin";
+
+    loadDashboardStats();
+    fetchStudentRoster();
 });
 
-const studentName = {
-    1: ["953623241001", "953623241002", "953623241003"],
-    2: ["953624242004", "953624242005", "953624242006"],
-    3: ["ABINESH KUMAR A", "AMRITHA MANIKANDAN", "ASHIN SREE P", "BALA VIGNESH S", "BAVANEESWARI R", "DHARSHINI A", "DIVYA K", "ESAKKIAMMAL M", "GAYATHRI DHEVI M.K", "GOWTHAM P", "HARI HARA SUDHAN R", "HARINI M", "HARI NISHAANTHAN N", "HARSETHA V", "JASON EZRA", "JASWANT P", "JAYADEEP R", "JAYAJOTHI S", "JESHAN DEV D", "KAAVYADHARSHINI G", "KATHIRVEL G", "KAVIYA N", "MANOJKUMAR M", "MARGRET PUNITHA A", "MOHAMMED SUHAIL N", "MUFRIN ASHIKA O J", "MUGESH PRABHU B", "MURUGALAKSHMI K", "MUTHU MARI G", "NAGARAJAN R", "NITHIKASREE K", "NITHISH KANNAN G", "PERUMAL DHARSHAN R", "POOJHA M", "PRDAEEP K", "RAJAKALEESWARAN S", "RAJA PANDIAN P", "RAMKUMAR R", "RAMYA S K", "RITHANYA S", "SANTHANAHARINI S", "SANTHOSH G", "SIVA PRIYA K R", "SIVA RANJANI P", "SRI BALAJI S", "SUBASH SELVAM K", "SUBRAJA U", "SUCHITHRA S", "SUGHAPRIYAN A R", "SURIYAKUMAR P", "SURIYAPRAKASH M", "SURYA LAKSHMI V", "THANALAKSHMI G", "THANUSHA K", "VAISHNAVI V", "VARSHINI C", "VENKATESH M", "VIGNESHWARAN V", "VINOTH KUMAR V", "VISHAL GANESH S", "YASHWIN V"],
-    4: ["953622244001", "953622244002", "953622244003", "953622244004", "953622244005", "953622244006", "953622244007", "953622244008", "953622244009", "953622244010", "953622244011", "953622244012", "953622244013", "953622244014", "953622244015", "953622244016", "953622244017", "953622244018", "953622244019", "953622244020", "953622244021", "953622244022", "953622244023", "953622244024", "953622244025", "953622244026", "953622244027", "953622244028", "953622244029", "953622244030", "953622244031", "953622244032", "953622244033", "953622244034", "953622244035", "953622244036", "953622244037", "953622244038", "953622244039", "953622244040", "953622244041", "953622244042", "953622244043", "953622244044", "953622244045", "953622244046", "953622244047", "953622244048", "953622244049", "953622244050", "953622244051", "953622244052", "953622244053", "953622244054", "953622244055", "953622244056", "953622244057", "953622244058", "953622244059", "953622244060", "953622244061", "953622244062"]
-};
-
-const YearSelect = document.getElementById("YearSelect");
-const stdSelect = document.getElementById("stdSelect");
-
-yearSelect.addEventListener("change", function () {
-    const selectedYear = this.value;
-
-    stdSelect.innerHTML = '<option value="">Select Student Name</option>';
-
-    if (studentName[selectedYear]) {
-        studentName[selectedYear].forEach(function (stdName) {
-            const option = document.createElement("option");
-            option.value = stdName;
-            option.textContent = stdName;
-            stdSelect.appendChild(option);
-        });
-    }
-});
-
-let students = JSON.parse(localStorage.getItem("students")) || [];
-let editIndex = -1;
-
-const form = document.getElementById("studentForm");
-const year = document.getElementById("yearSelect");
-const reg = document.getElementById("regSelect");
-const name = document.getElementById("stdSelect");
-const domain = document.getElementById("stdSelect");
-const table = document.getElementById("studentTable");
-
-function renderTable(filterYear = "") {
-    table.innerHTML = "";
-
-    students.forEach((s, i) => {
-
-        
-        if (filterYear !== "" && s.year !== filterYear) return;
-
-        table.innerHTML += `
-        <tr>
-            <td>${s.year}</td>
-            <td>${s.reg}</td>
-            <td>${s.name}</td>
-            <td>${s.domain}</td>
-            <td>
-                <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
-                <button class="edit-btn" onclick="deleteStudent(${i})" style="background:red;">Delete</button>
-            </td>
-        </tr>`;
-    });
+function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "Form.html";
 }
 
+function switchAdminTab(tabName) {
+    document.getElementById("adminTabStudents").classList.toggle("hidden", tabName !== "students");
+    document.getElementById("adminTabDrives").classList.toggle("hidden", tabName !== "drives");
+    document.getElementById("adminTabApplications").classList.toggle("hidden", tabName !== "applications");
 
-form.addEventListener("submit", function(e) {
-    e.preventDefault();
+    document.getElementById("tabBtnStudents").classList.toggle("active", tabName === "students");
+    document.getElementById("tabBtnPostDrive").classList.toggle("active", tabName === "drives");
+    document.getElementById("tabBtnApps").classList.toggle("active", tabName === "applications");
 
-    const data = {
-        year: year.value,
-        reg: reg.value,
-        name: name.value,
-        domain: domain.value
-    };
+    if (tabName === "students") fetchStudentRoster();
+    if (tabName === "drives") loadAdminDrives();
+    if (tabName === "applications") loadApplicationsList();
+}
 
-    if (editIndex === -1) {
-        students.push(data);
-    } else {
-        students[editIndex] = data;
-        editIndex = -1;
-    }
-
-    localStorage.setItem("students", JSON.stringify(students));
-    form.reset();
-
-    renderTable(year.value); 
-});
-
-
-function editStudent(i) {
-    editIndex = i;
-
-    const s = students[i];
-    year.value = s.year;
-    reg.value = s.reg;
-    name.value = s.name;
-    domain.value = s.domain;
-
+function showAdminAlert(message, isSuccess = false) {
+    const box = document.getElementById("adminAlert");
+    box.innerText = message;
+    box.style.backgroundColor = isSuccess ? "#dcfce7" : "#fee2e2";
+    box.style.color = isSuccess ? "#15803d" : "#b91c1c";
+    box.style.border = isSuccess ? "1px solid #bbf7d0" : "1px solid #fca5a5";
+    box.classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function deleteStudent(i) {
-    if (confirm("Delete this student?")) {
-        students.splice(i, 1);
-        localStorage.setItem("students", JSON.stringify(students));
-        renderTable(year.value);
+function hideAdminAlert() {
+    document.getElementById("adminAlert").classList.add("hidden");
+}
+
+async function loadDashboardStats() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/stats`, {
+            headers: { "Authorization": `Bearer ${currentAdminToken}` }
+        });
+        const data = await res.json();
+        if (data.success && data.stats) {
+            document.getElementById("statTotalStudents").innerText = data.stats.totalStudents || 0;
+            document.getElementById("statPlacedStudents").innerText = data.stats.placedStudents || 0;
+            document.getElementById("statActiveDrives").innerText = data.stats.activeDrives || 0;
+            document.getElementById("statTotalApps").innerText = data.stats.totalApplications || 0;
+        }
+    } catch (e) {
+        console.error("Stats load error:", e);
     }
 }
 
+async function fetchStudentRoster() {
+    const year = document.getElementById("filterYear").value;
+    const minCgpa = document.getElementById("filterMinCgpa").value;
+    const minTenth = document.getElementById("filterMinTenth") ? document.getElementById("filterMinTenth").value : "";
+    const minTwelth = document.getElementById("filterMinTwelth") ? document.getElementById("filterMinTwelth").value : "";
+    const maxArrears = document.getElementById("filterMaxArrears").value;
+    const search = document.getElementById("filterSearch").value.trim();
 
-window.editStudent = editStudent;
-window.deleteStudent = deleteStudent;
+    updateFilterChips();
 
-renderTable();
+    const query = new URLSearchParams();
+    if (year) query.append("year", year);
+    if (minCgpa) query.append("minCgpa", minCgpa);
+    if (minTenth) query.append("minTenth", minTenth);
+    if (minTwelth) query.append("minTwelth", minTwelth);
+    if (maxArrears !== "") query.append("maxArrears", maxArrears);
+    if (search) query.append("search", search);
 
-year.addEventListener("change", function () {
-    renderTable(year.value);
-});
+    try {
+        const res = await fetch(`${API_BASE}/admin/students?${query.toString()}`, {
+            headers: { "Authorization": `Bearer ${currentAdminToken}` }
+        });
+        const data = await res.json();
+        const tbody = document.getElementById("studentRosterTableBody");
+        tbody.innerHTML = "";
 
+        if (!data.success || !data.students || data.students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted" style="padding: 30px;">No student records found matching filters.</td></tr>`;
+            currentFetchedStudents = [];
+            return;
+        }
 
+        currentFetchedStudents = data.students;
 
-function downloadExcel() {
+        data.students.forEach(s => {
+            const cgpaVal = s.cgpa ? parseFloat(s.cgpa).toFixed(2) : "N/A";
+            const tenthVal = s.tenth_percentage ? `${parseFloat(s.tenth_percentage).toFixed(1)}%` : "N/A";
+            const twelthVal = s.twelth_percentage ? `${parseFloat(s.twelth_percentage).toFixed(1)}%` : "N/A";
+            const arrearsVal = s.standing_arrears_count !== null ? s.standing_arrears_count : 0;
+            let resumeLink = `<span class="text-muted">Not Uploaded</span>`;
+            if (s.resume_file) {
+                resumeLink = `<a href="http://localhost:5500${s.resume_file}" target="_blank" class="btn-success" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-download"></i> Resume</a>`;
+            }
 
-    const selectedYear = year.value;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${s.year ? s.year + 'th Year' : 'N/A'}</strong></td>
+                    <td>${s.register_number || 'N/A'}</td>
+                    <td><strong>${s.full_name}</strong></td>
+                    <td>${s.email}</td>
+                    <td><span style="font-weight: 600;">${tenthVal}</span></td>
+                    <td><span style="font-weight: 600;">${twelthVal}</span></td>
+                    <td><span style="color: var(--accent); font-weight: 700;">${cgpaVal}</span></td>
+                    <td><span class="badge ${arrearsVal > 0 ? 'badge-red' : 'badge-green'}">${arrearsVal} Arrears</span></td>
+                    <td>${s.domain_interest || 'General'}</td>
+                    <td>${resumeLink}</td>
+                </tr>
+            `;
+        });
+    } catch (e) {
+        console.error("Fetch roster error:", e);
+    }
+}
 
-    if (selectedYear === "") {
-        alert("Please select a year first!");
+function applySeventyFilter() {
+    document.getElementById("filterMinCgpa").value = "7.0";
+    document.getElementById("filterMinTenth").value = "70";
+    document.getElementById("filterMinTwelth").value = "70";
+    fetchStudentRoster();
+}
+
+function clearAllFilters() {
+    document.getElementById("filterYear").value = "";
+    document.getElementById("filterMinCgpa").value = "";
+    if (document.getElementById("filterMinTenth")) document.getElementById("filterMinTenth").value = "";
+    if (document.getElementById("filterMinTwelth")) document.getElementById("filterMinTwelth").value = "";
+    document.getElementById("filterMaxArrears").value = "";
+    document.getElementById("filterSearch").value = "";
+    fetchStudentRoster();
+}
+
+function updateFilterChips() {
+    const container = document.getElementById("activeFilterChips");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const chips = [];
+    const minCgpa = document.getElementById("filterMinCgpa").value;
+    const minTenth = document.getElementById("filterMinTenth") ? document.getElementById("filterMinTenth").value : "";
+    const minTwelth = document.getElementById("filterMinTwelth") ? document.getElementById("filterMinTwelth").value : "";
+    const year = document.getElementById("filterYear").value;
+    const maxArrears = document.getElementById("filterMaxArrears").value;
+
+    if (minTenth === "70" && minTwelth === "70" && minCgpa === "7.0") {
+        chips.push(`<span class="badge badge-blue" style="padding: 6px 12px; font-size: 12px;"><i class="fa-solid fa-star"></i> Quick Filter: 70%+ in 10th, 12th &amp; CGPA</span>`);
+    } else {
+        if (minCgpa) chips.push(`<span class="badge badge-blue">CGPA ≥ ${minCgpa}</span>`);
+        if (minTenth) chips.push(`<span class="badge badge-blue">10th ≥ ${minTenth}%</span>`);
+        if (minTwelth) chips.push(`<span class="badge badge-blue">12th ≥ ${minTwelth}%</span>`);
+    }
+
+    if (year) chips.push(`<span class="badge badge-blue">Year ${year}</span>`);
+    if (maxArrears !== "") chips.push(`<span class="badge badge-blue">Arrears ≤ ${maxArrears}</span>`);
+
+    container.innerHTML = chips.join(" ");
+}
+
+function downloadStudentExcel() {
+    if (!currentFetchedStudents || currentFetchedStudents.length === 0) {
+        alert("No student data available to export!");
         return;
     }
 
-    // Filter by selected year
-    const filtered = students
-        .filter(s => s.year === selectedYear)
-        .map(s => ({
-            year: s.year,
-            reg: s.reg,
-            name: s.name,
-            domain: s.domain
-        }));
+    const excelData = currentFetchedStudents.map(s => ({
+        "Year": s.year || "N/A",
+        "Register Number": s.register_number || "N/A",
+        "Student Name": s.full_name,
+        "Email ID": s.email,
+        "Phone": s.phone || "N/A",
+        "CGPA": s.cgpa || "N/A",
+        "10th %": s.tenth_percentage || "N/A",
+        "12th %": s.twelth_percentage || "N/A",
+        "Standing Arrears": s.standing_arrears_count || 0,
+        "Domain Interest": s.domain_interest || "N/A",
+        "LinkedIn": s.linkedin_link || "N/A",
+        "GitHub": s.github_link || "N/A"
+    }));
 
-    if (filtered.length === 0) {
-        alert("No student data found for selected year!");
-        return;
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(filtered);
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "CSBS Students");
 
-    XLSX.writeFile(workbook, `Year_${selectedYear}_Students.xlsx`);
+    const yearFilter = document.getElementById("filterYear").value || "All";
+    XLSX.writeFile(workbook, `CSBS_Students_Year_${yearFilter}_Roster.xlsx`);
 }
 
+async function handlePostDrive(e) {
+    e.preventDefault();
+    hideAdminAlert();
 
-const worksheet = XLSX.utils.json_to_sheet(students);
-const filtered = students.filter(s => s.year === year.value);
-const Worksheet = XLSX.utils.json_to_sheet(filtered);
+    const payload = {
+        company_name: document.getElementById("driveCompany").value.trim(),
+        job_role: document.getElementById("driveRole").value.trim(),
+        package_ctc: document.getElementById("drivePackage").value.trim(),
+        min_cgpa: document.getElementById("driveMinCgpa").value,
+        max_standing_arrears: document.getElementById("driveMaxArrears").value,
+        eligible_years: document.getElementById("driveYears").value,
+        job_location: document.getElementById("driveLocation").value.trim(),
+        deadline: document.getElementById("driveDeadline").value,
+        description: document.getElementById("driveDescription").value.trim()
+    };
 
+    try {
+        const res = await fetch(`${API_BASE}/admin/drives`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${currentAdminToken}`
+            },
+            body: JSON.stringify(payload)
+        });
 
+        const data = await res.json();
+        if (data.success) {
+            showAdminAlert("Placement Drive posted successfully!", true);
+            document.getElementById("postDriveForm").reset();
+            loadAdminDrives();
+            loadDashboardStats();
+        } else {
+            showAdminAlert(data.message || "Failed to post drive.");
+        }
+    } catch (e) {
+        console.error(e);
+        showAdminAlert("Server error posting drive.");
+    }
+}
 
+async function loadAdminDrives() {
+    try {
+        const res = await fetch(`${API_BASE}/student/drives/0`);
+        const data = await res.json();
+        const container = document.getElementById("adminDrivesContainer");
+        container.innerHTML = "";
+
+        if (!data.success || !data.drives || data.drives.length === 0) {
+            container.innerHTML = `<p class="text-muted">No placement drives posted yet.</p>`;
+            return;
+        }
+
+        data.drives.forEach(drive => {
+            const card = document.createElement("div");
+            card.className = "drive-card";
+
+            card.innerHTML = `
+                <div>
+                    <div class="drive-header">
+                        <div class="company-title">${drive.company_name}</div>
+                        <button class="btn-logout" style="background: rgba(239, 68, 68, 0.1); border-color: #ef4444;" onclick="deleteDrive(${drive.id})">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                    <div class="job-role-text">${drive.job_role}</div>
+                    <p style="font-size: 13px; color: var(--text-secondary);">${drive.description || ''}</p>
+                    <div class="drive-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Package CTC</span>
+                            <span class="meta-val" style="color: var(--success);">${drive.package_ctc}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Min CGPA</span>
+                            <span class="meta-val">${drive.min_cgpa || '0.0'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Max Arrears</span>
+                            <span class="meta-val">${drive.max_standing_arrears !== null ? drive.max_standing_arrears : 'Any'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Deadline</span>
+                            <span class="meta-val">${drive.deadline || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        console.error("Load admin drives error:", e);
+    }
+}
+
+async function deleteDrive(driveId) {
+    if (!confirm("Are you sure you want to delete this placement drive?")) return;
+    try {
+        const res = await fetch(`${API_BASE}/admin/drives/${driveId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${currentAdminToken}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showAdminAlert("Drive deleted successfully.", true);
+            loadAdminDrives();
+            loadDashboardStats();
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function loadApplicationsList() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/applications`, {
+            headers: { "Authorization": `Bearer ${currentAdminToken}` }
+        });
+        const data = await res.json();
+        const tbody = document.getElementById("applicationsTableBody");
+        tbody.innerHTML = "";
+
+        if (!data.success || !data.applications || data.applications.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No student applications received yet.</td></tr>`;
+            return;
+        }
+
+        data.applications.forEach(app => {
+            let badgeClass = "badge-blue";
+            if (app.status === "Selected") badgeClass = "badge-green";
+            if (app.status === "Shortlisted") badgeClass = "badge-yellow";
+            if (app.status === "Rejected") badgeClass = "badge-red";
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${app.company_name}</strong><br><small class="text-muted">${app.job_role}</small></td>
+                    <td><strong>${app.full_name}</strong></td>
+                    <td>${app.register_number || 'N/A'}</td>
+                    <td>${app.year ? app.year + 'th' : 'N/A'}</td>
+                    <td><span style="color: var(--accent); font-weight: 700;">${app.cgpa ? parseFloat(app.cgpa).toFixed(2) : 'N/A'}</span></td>
+                    <td>${app.standing_arrears_count || 0}</td>
+                    <td><span class="badge ${badgeClass}">${app.status}</span></td>
+                    <td>
+                        <select class="form-control" style="padding: 4px 8px; font-size: 12px;" onchange="updateAppStatus(${app.app_id}, this.value)">
+                            <option value="Applied" ${app.status === 'Applied' ? 'selected' : ''}>Applied</option>
+                            <option value="Shortlisted" ${app.status === 'Shortlisted' ? 'selected' : ''}>Shortlist</option>
+                            <option value="Selected" ${app.status === 'Selected' ? 'selected' : ''}>Select / Hired</option>
+                            <option value="Rejected" ${app.status === 'Rejected' ? 'selected' : ''}>Reject</option>
+                        </select>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (e) {
+        console.error("Load applications error:", e);
+    }
+}
+
+async function updateAppStatus(appId, newStatus) {
+    try {
+        const res = await fetch(`${API_BASE}/admin/applications/status`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${currentAdminToken}`
+            },
+            body: JSON.stringify({ application_id: appId, status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showAdminAlert(`Candidate status updated to '${newStatus}'`, true);
+            loadApplicationsList();
+            loadDashboardStats();
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}

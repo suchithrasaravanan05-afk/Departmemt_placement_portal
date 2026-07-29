@@ -1,251 +1,479 @@
+const API_BASE = "http://localhost:5500/api";
 
-const registerNumbers = {
-    1: ["953623241001", "953623241002", "953623241003"],
-    2: ["953624242004", "953624242005", "953624242006"],
-    3: ["953623243001", "953623243002", "953623243003", "953623244004", "953623244005", "953623244006", "953623244007", "953623244008", "953623244009", "953623244010", "953623244011", "953623244012", "953623244013", "953623244014", "953623244015", "953623244016", "953623244017", "953623244018", "953623244019", "953623244020", "953623244021", "953623244022", "953623244023", "953623244024", "953623244025", "953623244026", "953623244027", "953623244028", "953623244029", "953623244030", "953523244031", "953623244032", "953623244033", "953623244034", "953623244035", "953623244036", "953623244037", "953623244038", "953623244039", "953623244040", "953623244041", "953623244042", "953623244043", "953623244044", "953623244045", "953623244046", "953623244047", "953623244048", "953623244049", "953623244050", "953623244051", "953623244052", "953623244053", "953623244054", "953623244055", "953623244056", "953623244057", "953623244058", "953623244059", "953623244060", "953623244061", "953623244062"],
-    4: ["953622244001", "953622244002", "953622244003", "953622244004", "953622244005", "953622244006", "953622244007", "953622244008", "953622244009", "953622244010", "953622244011", "953622244012", "953622244013", "953622244014", "953622244015", "953622244016", "953622244017", "953622244018", "953622244019", "953622244020", "953622244021", "953622244022", "953622244023", "953622244024", "953622244025", "953622244026", "953622244027", "953622244028", "953622244029", "953622244030", "953622244031", "953622244032", "953622244033", "953622244034", "953622244035", "953622244036", "953622244037", "953622244038", "953622244039", "953622244040", "953622244041", "953622244042", "953622244043", "953622244044", "953622244045", "953622244046", "953622244047", "953622244048", "953622244049", "953622244050", "953622244051", "953622244052", "953622244053", "953622244054", "953622244055", "953622244056", "953622244057", "953622244058", "953622244059", "953622244060", "953622244061", "953622244062"]
-};
+let currentUser = null;
+let currentToken = null;
+let currentProfile = null;
+let isNewUser = false; // true if no profile data saved yet
 
-const yearSelect = document.getElementById("yearSelect");
-const regSelect = document.getElementById("regSelect");
+// =====================================================
+// BOOT: auth check + load profile
+// =====================================================
+document.addEventListener("DOMContentLoaded", () => {
+    currentToken = localStorage.getItem("token");
+    currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
-yearSelect.addEventListener("change", function () {
-    const selectedYear = this.value;
-
-    regSelect.innerHTML = '<option value="">Select Register Number</option>';
-
-    if (registerNumbers[selectedYear]) {
-        registerNumbers[selectedYear].forEach(function (regNo) {
-            const option = document.createElement("option");
-            option.value = regNo;
-            option.textContent = regNo;
-            regSelect.appendChild(option);
-        });
-    }
-});
-
-const studentName = {
-    1: ["953623241001", "953623241002", "953623241003"],
-    2: ["953624242004", "953624242005", "953624242006"],
-    3: ["ABINESH KUMAR A", "AMRITHA MANIKANDAN", "ASHIN SREE P", "BALA VIGNESH S", "BAVANEESWARI R", "DHARSHINI A", "DIVYA K", "ESAKKIAMMAL M", "GAYATHRI DHEVI M.K", "GOWTHAM P", "HARI HARA SUDHAN R", "HARINI M", "HARI NISHAANTHAN N", "HARSETHA V", "JASON EZRA", "JASWANT P", "JAYADEEP R", "JAYAJOTHI S", "JESHAN DEV D", "KAAVYADHARSHINI G", "KATHIRVEL G", "KAVIYA N", "MANOJKUMAR M", "MARGRET PUNITHA A", "MOHAMMED SUHAIL N", "MUFRIN ASHIKA O J", "MUGESH PRABHU B", "MURUGALAKSHMI K", "MUTHU MARI G", "NAGARAJAN R", "NITHIKASREE K", "NITHISH KANNAN G", "PERUMAL DHARSHAN R", "POOJHA M", "PRDAEEP K", "RAJAKALEESWARAN S", "RAJA PANDIAN P", "RAMKUMAR R", "RAMYA S K", "RITHANYA S", "SANTHANAHARINI S", "SANTHOSH G", "SIVA PRIYA K R", "SIVA RANJANI P", "SRI BALAJI S", "SUBASH SELVAM K", "SUBRAJA U", "SUCHITHRA S", "SUGHAPRIYAN A R", "SURIYAKUMAR P", "SURIYAPRAKASH M", "SURYA LAKSHMI V", "THANALAKSHMI G", "THANUSHA K", "VAISHNAVI V", "VARSHINI C", "VENKATESH M", "VIGNESHWARAN V", "VINOTH KUMAR V", "VISHAL GANESH S", "YASHWIN V"],
-    4: ["953622244001", "953622244002", "953622244003", "953622244004", "953622244005", "953622244006", "953622244007", "953622244008", "953622244009", "953622244010", "953622244011", "953622244012", "953622244013", "953622244014", "953622244015", "953622244016", "953622244017", "953622244018", "953622244019", "953622244020", "953622244021", "953622244022", "953622244023", "953622244024", "953622244025", "953622244026", "953622244027", "953622244028", "953622244029", "953622244030", "953622244031", "953622244032", "953622244033", "953622244034", "953622244035", "953622244036", "953622244037", "953622244038", "953622244039", "953622244040", "953622244041", "953622244042", "953622244043", "953622244044", "953622244045", "953622244046", "953622244047", "953622244048", "953622244049", "953622244050", "953622244051", "953622244052", "953622244053", "953622244054", "953622244055", "953622244056", "953622244057", "953622244058", "953622244059", "953622244060", "953622244061", "953622244062"]
-};
-
-const YearSelect = document.getElementById("YearSelect");
-const stdSelect = document.getElementById("stdSelect");
-
-yearSelect.addEventListener("change", function () {
-    const selectedYear = this.value;
-
-    stdSelect.innerHTML = '<option value="">Select Student Name</option>';
-
-    if (studentName[selectedYear]) {
-        studentName[selectedYear].forEach(function (stdName) {
-            const option = document.createElement("option");
-            option.value = stdName;
-            option.textContent = stdName;
-            stdSelect.appendChild(option);
-        });
-    }
-});
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const history = document.getElementById("historyArrears");
-    const historyBox = document.getElementById("historyBox");
-
-    const standing = document.getElementById("standingArrears");
-    const standingBox = document.getElementById("standingBox");
-
-    history.addEventListener("change", function () {
-        historyBox.classList.toggle("hidden", this.value !== "yes");
-    });
-
-    standing.addEventListener("change", function () {
-        standingBox.classList.toggle("hidden", this.value !== "yes");
-    });
-
-});
-
-const gpaInputs = document.querySelectorAll(".gpa");
-
-yearSelect.addEventListener("change", function () {
-    const year = parseInt(this.value);
-
-
-    gpaInputs.forEach(input => {
-        input.disabled = true;
-        input.value = "";
-    });
-
-    let enabledSemesters = 0;
-
-    if (year === 1) enabledSemesters = 2;
-    else if (year === 2) enabledSemesters = 4;
-    else if (year === 3) enabledSemesters = 6;
-    else if (year === 4) enabledSemesters = 8;
-
-
-    for (let i = 0; i < enabledSemesters; i++) {
-        gpaInputs[i].disabled = false;
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const gpaInputs = document.querySelectorAll(".gpa");
-    const cgpaField = document.getElementById("cgpa");
-
-    function calculateCGPA() {
-        let total = 0;
-        let count = 0;
-
-        gpaInputs.forEach(input => {
-            if (!input.disabled && input.value !== "") {
-                const gpa = parseFloat(input.value);
-                if (!isNaN(gpa)) {
-                    total += gpa;
-                    count++;
-                }
-            }
-        });
-
-        if (count > 0) {
-            cgpaField.value = (total / count).toFixed(2);
-        } else {
-            cgpaField.value = "";
-        }
+    if (!currentToken || !currentUser || currentUser.role !== "student") {
+        window.location.href = "Form.html";
+        return;
     }
 
-   
-    gpaInputs.forEach(input => {
+    document.getElementById("displayUserName").innerText = currentUser.full_name || "Student";
+    document.getElementById("displayUserReg").innerText = `Reg No: ${currentUser.register_number || "N/A"}`;
+    document.getElementById("regNumberInput").value = currentUser.register_number || "";
+    document.getElementById("stdNameInput").value = currentUser.full_name || "";
+    document.getElementById("collegeEmailInput").value = currentUser.email || "";
+
+    document.querySelectorAll(".gpa-field").forEach(input => {
         input.addEventListener("input", calculateCGPA);
     });
 
+    handleYearChange();
+    loadStudentProfile();
+    loadPlacementDrives();
 });
 
-
-
-yearSelect.addEventListener("change", function () {
-    const year = parseInt(this.value);
-
-    gpaInputs.forEach(input => {
-        input.disabled = true;
-        input.value = "";
-    });
-
-    let enabledSemesters = 0;
-
-    if (year === 1) enabledSemesters = 2;
-    else if (year === 2) enabledSemesters = 4;
-    else if (year === 3) enabledSemesters = 6;
-    else if (year === 4) enabledSemesters = 8;
-
-    for (let i = 0; i < enabledSemesters; i++) {
-        gpaInputs[i].disabled = false;
-    }
-
-    calculateCGPA();  
-});
-
-document.querySelectorAll('input[type="file"]').forEach(input => {
-    input.addEventListener("change", () => {
-        if (input.files[0] && input.files[0].size > 10 * 1024 * 1024) {
-            alert("File size must be under 10 MB");
-            input.value = "";
-        }
-    });
-});
-
-const form = document.querySelector("form");
-
-form.addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const studentData = {
-        name: document.getElementById("stdSelect").value,
-        reg: document.getElementById("regSelect").value,
-        year: document.getElementById("yearSelect").value,
-        cgpa: document.getElementById("cgpa").value
-    };
-
-    let students = JSON.parse(localStorage.getItem("students")) || [];
-
-    students.push(studentData);
-
-    localStorage.setItem("students", JSON.stringify(students));
-
-    alert("Student registered successfully!");
-
-    form.reset();
-});
-
-
-
-form.addEventListener("reset", function () {
-
-    const inputs = form.querySelectorAll("input, select, textarea, button");
-
-    inputs.forEach(el => {
-        el.disabled = false;
-    });
-
-});
-
-function validateRegister() {
-    console.log("Register clicked");
-
-    fetch("http://localhost:5500/api/register", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            year: document.getElementById("year").value.trim(),
-            register_number: document.getElementById("regregisternumber").value.trim(),
-            std_name: document.getElementById("stdName").value.trim(),
-            dob: document.getElementById("dob").value.trim(),
-            personal_email: document.getElementById("regEmail").value.trim(),
-            college_email:document.getElementById("regEmail").value.trim(),
-            domain_interesed: document.getElementById("regDomain").value.trim(),
-            tenth_percentage: document.getElementById("regten").value.trim(),
-            twelth_pecentage: document.getElementById("regtwel").value.trim(),
-            diploma_percentage: document.getElementById("regDiploma").value.trim(),
-            degree: document.getElementById("regDegree").value.trim(),
-            department: document.getElementById("regDept").value.trim(),
-            sem1_gpa: document.getElementById("1gpa").value.trim(),
-            sem2_gpa: document.getElementById("2gpa").value.trim(),
-            sem3_gpa: document.getElementById("3gpa").value.trim(),
-            sem4_gpa: document.getElementById("4gpa").value.trim(),
-            sem5_gpa: document.getElementById("5gpa").value.trim(),
-            sem6_gpa: document.getElementById("6gpa").value.trim(),
-            sem7_gpa: document.getElementById("7gpa").value.trim(),
-            sem8_gpa: document.getElementById("8gpa").value.trim(),
-            cgpa: document.getElementById("cgpa").value.trim(),
-            phone_number: document.getElementById("regNo").value.trim(),
-            whatsapp_number: document.getElementById("regNo").value.trim(),
-            history_of_arrears: document.getElementById("Arrears").value.trim(),
-            history_arrears_count: document.getElementById("NoArrears").value.trim(),
-            standing_of_arrears: document.getElementById("Arrears").value.trim(),
-            standing_arrears_count: document.getElementById("NoArrears").value.trim(),
-            linkedin_link: document.getElementById("reglink").value.trim(),
-            github_link: document.getElementById("regGit").value.trim(),
-            profile_photo: document.getElementById("photo").value.trim(),
-            resume_file: document.getElementById("resume").value.trim(),
-            created_at: document.getElementById("created").value.trim()
-        })
-    })
-        .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        toggleForm(); 
-    })
-    .catch(err => {
-        console.error(err);
-        alert("Server not reachable");
-    });
+// =====================================================
+// AUTH
+// =====================================================
+function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "Form.html";
 }
 
+// =====================================================
+// TAB NAVIGATION
+// =====================================================
+function switchTab(tabName) {
+    ["profile", "drives", "applications"].forEach(t => {
+        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle("hidden", t !== tabName);
+        document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle("active", t === tabName);
+    });
+    if (tabName === "drives") loadPlacementDrives();
+    if (tabName === "applications") loadAppliedDrivesTable();
+}
 
+// =====================================================
+// ALERT
+// =====================================================
+function showStudentAlert(message, isSuccess = false) {
+    const box = document.getElementById("studentAlert");
+    box.innerText = message;
+    box.style.backgroundColor = isSuccess ? "#dcfce7" : "#fee2e2";
+    box.style.color = isSuccess ? "#15803d" : "#b91c1c";
+    box.style.border = isSuccess ? "1px solid #bbf7d0" : "1px solid #fca5a5";
+    box.classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => box.classList.add("hidden"), 6000);
+}
+
+// =====================================================
+// VIEW / EDIT MODE TOGGLES
+// =====================================================
+function enterEditMode() {
+    document.getElementById("profileViewMode").classList.add("hidden");
+    document.getElementById("profileEditMode").classList.remove("hidden");
+
+    // Hide cancel button if new user (they haven't saved yet, nothing to cancel to)
+    const cancelBtn = document.getElementById("cancelEditBtn");
+    const cancelBtn2 = document.getElementById("cancelEditBtn2");
+    if (isNewUser) {
+        if (cancelBtn) cancelBtn.classList.add("hidden");
+        if (cancelBtn2) cancelBtn2.classList.add("hidden");
+    } else {
+        if (cancelBtn) cancelBtn.classList.remove("hidden");
+        if (cancelBtn2) cancelBtn2.classList.remove("hidden");
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function exitEditMode() {
+    if (isNewUser) return; // can't go back if no profile exists yet
+    document.getElementById("profileEditMode").classList.add("hidden");
+    document.getElementById("profileViewMode").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// =====================================================
+// YEAR → GPA FIELDS ENABLE/DISABLE
+// =====================================================
+function handleYearChange() {
+    const year = parseInt(document.getElementById("yearSelect").value || "3");
+    const enabledSems = year * 2;
+
+    for (let i = 1; i <= 8; i++) {
+        const field = document.getElementById(`sem${i}Gpa`);
+        if (!field) continue;
+        if (i <= enabledSems) {
+            field.disabled = false;
+            field.parentElement.style.opacity = "1";
+        } else {
+            field.disabled = true;
+            field.value = "";
+            field.parentElement.style.opacity = "0.4";
+        }
+    }
+    calculateCGPA();
+}
+
+// =====================================================
+// CGPA AUTO CALCULATION
+// =====================================================
+function calculateCGPA() {
+    let total = 0, count = 0;
+    for (let i = 1; i <= 8; i++) {
+        const f = document.getElementById(`sem${i}Gpa`);
+        if (f && !f.disabled && f.value !== "") {
+            const v = parseFloat(f.value);
+            if (!isNaN(v) && v >= 0) { total += v; count++; }
+        }
+    }
+    const cgpaField = document.getElementById("calculatedCgpa");
+    if (count > 0) {
+        cgpaField.value = (total / count).toFixed(2);
+    } else {
+        cgpaField.value = "";
+    }
+}
+
+// =====================================================
+// ARREARS TOGGLE
+// =====================================================
+function toggleArrearCounts() {
+    const hv = document.getElementById("historyArrearsSelect").value;
+    const sv = document.getElementById("standingArrearsSelect").value;
+    document.getElementById("grpHistoryCount").classList.toggle("hidden", hv !== "yes");
+    document.getElementById("grpStandingCount").classList.toggle("hidden", sv !== "yes");
+}
+
+// =====================================================
+// LOAD PROFILE FROM API
+// =====================================================
+async function loadStudentProfile() {
+    document.getElementById("profileLoading").classList.remove("hidden");
+    document.getElementById("profileViewContent").classList.add("hidden");
+    document.getElementById("noProfileState").classList.add("hidden");
+
+    try {
+        const res = await fetch(`${API_BASE}/student/profile/${currentUser.id}`, {
+            headers: { "Authorization": `Bearer ${currentToken}` }
+        });
+        const data = await res.json();
+
+        document.getElementById("profileLoading").classList.add("hidden");
+
+        if (data.success && data.profile && data.profile.dob) {
+            // Profile exists — populate view and form
+            currentProfile = data.profile;
+            isNewUser = false;
+            populateViewMode(data.profile);
+            populateEditForm(data.profile);
+            // Show read-only view
+            document.getElementById("profileViewContent").classList.remove("hidden");
+            document.getElementById("profileEditMode").classList.add("hidden");
+            document.getElementById("profileViewMode").classList.remove("hidden");
+        } else {
+            // New user — no profile saved
+            isNewUser = true;
+            document.getElementById("noProfileState").classList.remove("hidden");
+            // Auto-open edit mode for new users
+            setTimeout(() => {
+                enterEditMode();
+            }, 500);
+        }
+    } catch (e) {
+        console.error("Load profile error:", e);
+        document.getElementById("profileLoading").classList.add("hidden");
+        isNewUser = true;
+        document.getElementById("noProfileState").classList.remove("hidden");
+        setTimeout(() => enterEditMode(), 500);
+    }
+}
+
+// =====================================================
+// POPULATE READ-ONLY VIEW
+// =====================================================
+function populateViewMode(p) {
+    const val = (v) => (v && String(v).trim() !== "") ? v : null;
+
+    // Header
+    document.getElementById("viewName").innerText = currentUser.full_name || p.full_name || "---";
+    document.getElementById("viewReg").innerText = `Register No: ${currentUser.register_number || "---"} | Year: ${p.year || currentUser.year || "---"}`;
+
+    // CGPA
+    const cgpa = val(p.cgpa);
+    document.getElementById("viewCgpaNum").innerText = cgpa ? parseFloat(cgpa).toFixed(2) : "--";
+
+    // Profile photo in avatar
+    if (val(p.profile_photo)) {
+        document.getElementById("viewAvatar").innerHTML = `<img src="http://localhost:5500${p.profile_photo}" alt="Photo">`;
+    } else {
+        const initials = (currentUser.full_name || "S").split(" ").map(w => w[0]).join("").toUpperCase().substring(0, 2);
+        document.getElementById("viewAvatar").innerText = initials;
+    }
+
+    // Personal
+    setDetailValue("viewDob", val(p.dob));
+    setDetailValue("viewYear", val(p.year) ? `Year ${p.year}` : null);
+    setDetailValue("viewPersonalEmail", val(p.personal_email));
+    setDetailValue("viewCollegeEmail", val(p.college_email));
+    setDetailValue("viewPhone", val(p.phone_number));
+    setDetailValue("viewWhatsapp", val(p.whatsapp_number));
+    setDetailValue("viewDomain", val(p.domain_interest));
+
+    // Academic
+    setDetailValue("viewTenth", val(p.tenth_percentage) ? `${p.tenth_percentage}%` : null);
+    setDetailValue("viewTwelth", val(p.twelth_percentage) ? `${p.twelth_percentage}%` : null);
+    setDetailValue("viewDiploma", val(p.diploma_percentage) ? `${p.diploma_percentage}%` : "Not Applicable");
+    setDetailValue("viewDegree", val(p.degree) || "B.Tech");
+
+    // GPA chips
+    const gpaGrid = document.getElementById("viewGpaGrid");
+    gpaGrid.innerHTML = "";
+    const year = parseInt(p.year || currentUser.year || 3);
+    const enabledSems = year * 2;
+    for (let i = 1; i <= 8; i++) {
+        const gpaVal = p[`sem${i}_gpa`];
+        const hasVal = gpaVal && parseFloat(gpaVal) > 0;
+        const chip = document.createElement("div");
+        chip.className = `gpa-chip${i > enabledSems ? " disabled" : ""}`;
+        chip.innerHTML = `
+            <div class="sem-label">Sem ${i}</div>
+            <div class="sem-val">${i <= enabledSems ? (hasVal ? parseFloat(gpaVal).toFixed(1) : "--") : "N/A"}</div>
+        `;
+        gpaGrid.appendChild(chip);
+    }
+
+    // Arrears
+    const ha = val(p.history_of_arrears) || "no";
+    const sa = val(p.standing_of_arrears) || "no";
+    document.getElementById("viewHistoryArrears").innerHTML = `<span class="arrears-badge ${ha === "yes" ? "arrears-has" : "arrears-none}">${ha === "yes" ? "Yes" : "No Arrears"}</span>`;
+    document.getElementById("viewHistoryCount").innerText = ha === "yes" ? (p.history_arrears_count || 0) : "—";
+    document.getElementById("viewStandingArrears").innerHTML = `<span class="arrears-badge ${sa === "yes" ? "arrears-has" : "arrears-none}">${sa === "yes" ? "Yes" : "No Arrears"}</span>`;
+    document.getElementById("viewStandingCount").innerText = sa === "yes" ? (p.standing_arrears_count || 0) : "—";
+
+    // Links & files
+    const linkedin = val(p.linkedin_link);
+    const github = val(p.github_link);
+    const photo = val(p.profile_photo);
+    const resume = val(p.resume_file);
+
+    document.getElementById("viewLinkedin").innerHTML = linkedin ? `<a href="${linkedin}" target="_blank"><i class="fa-brands fa-linkedin"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
+    document.getElementById("viewGithub").innerHTML = github ? `<a href="${github}" target="_blank"><i class="fa-brands fa-github"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
+    document.getElementById("viewPhoto").innerHTML = photo ? `<a href="http://localhost:5500${photo}" target="_blank"><i class="fa-solid fa-image"></i> View Photo</a>` : "<span class='empty'>Not Uploaded</span>";
+    document.getElementById("viewResume").innerHTML = resume ? `<a href="http://localhost:5500${resume}" target="_blank"><i class="fa-solid fa-file-pdf"></i> View Resume</a>` : "<span class='empty'>Not Uploaded</span>";
+}
+
+function setDetailValue(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (value) {
+        el.innerText = value;
+        el.classList.remove("empty");
+    } else {
+        el.innerText = "Not provided";
+        el.classList.add("empty");
+    }
+}
+
+// =====================================================
+// POPULATE EDIT FORM WITH EXISTING DATA
+// =====================================================
+function populateEditForm(p) {
+    if (p.year) { document.getElementById("yearSelect").value = p.year; handleYearChange(); }
+    if (p.dob) document.getElementById("dobInput").value = p.dob;
+    if (p.personal_email) document.getElementById("personalEmailInput").value = p.personal_email;
+    if (p.college_email) document.getElementById("collegeEmailInput").value = p.college_email;
+    if (p.domain_interest) document.getElementById("domainInput").value = p.domain_interest;
+    if (p.tenth_percentage) document.getElementById("tenthInput").value = p.tenth_percentage;
+    if (p.twelth_percentage) document.getElementById("twelthInput").value = p.twelth_percentage;
+    if (p.diploma_percentage) document.getElementById("diplomaInput").value = p.diploma_percentage;
+    if (p.degree) document.getElementById("degreeInput").value = p.degree;
+
+    for (let i = 1; i <= 8; i++) {
+        const el = document.getElementById(`sem${i}Gpa`);
+        if (el && !el.disabled && p[`sem${i}_gpa`]) el.value = p[`sem${i}_gpa`];
+    }
+
+    if (p.phone_number) document.getElementById("phoneInput").value = p.phone_number;
+    if (p.whatsapp_number) document.getElementById("whatsappInput").value = p.whatsapp_number;
+    if (p.history_of_arrears) document.getElementById("historyArrearsSelect").value = p.history_of_arrears;
+    if (p.history_arrears_count) document.getElementById("historyArrearsCount").value = p.history_arrears_count;
+    if (p.standing_of_arrears) document.getElementById("standingArrearsSelect").value = p.standing_of_arrears;
+    if (p.standing_arrears_count) document.getElementById("standingArrearsCount").value = p.standing_arrears_count;
+    if (p.linkedin_link) document.getElementById("linkedinInput").value = p.linkedin_link;
+    if (p.github_link) document.getElementById("githubInput").value = p.github_link;
+
+    toggleArrearCounts();
+    calculateCGPA();
+
+    if (p.profile_photo) document.getElementById("existingPhotoLink").innerHTML = `<a href="http://localhost:5500${p.profile_photo}" target="_blank">📷 View current photo</a>`;
+    if (p.resume_file) document.getElementById("existingResumeLink").innerHTML = `<a href="http://localhost:5500${p.resume_file}" target="_blank">📄 View current resume</a>`;
+}
+
+// =====================================================
+// SAVE PROFILE
+// =====================================================
+async function saveStudentProfile(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("user_id", currentUser.id);
+    formData.append("dob", document.getElementById("dobInput").value);
+    formData.append("personal_email", document.getElementById("personalEmailInput").value);
+    formData.append("college_email", document.getElementById("collegeEmailInput").value);
+    formData.append("domain_interest", document.getElementById("domainInput").value);
+    formData.append("tenth_percentage", document.getElementById("tenthInput").value);
+    formData.append("twelth_percentage", document.getElementById("twelthInput").value);
+    formData.append("diploma_percentage", document.getElementById("diplomaInput").value);
+    formData.append("degree", document.getElementById("degreeInput").value);
+    formData.append("department", "CSBS");
+
+    for (let i = 1; i <= 8; i++) {
+        const f = document.getElementById(`sem${i}Gpa`);
+        formData.append(`sem${i}_gpa`, (f && !f.disabled) ? (f.value || "") : "");
+    }
+
+    formData.append("cgpa", document.getElementById("calculatedCgpa").value);
+    formData.append("phone_number", document.getElementById("phoneInput").value);
+    formData.append("whatsapp_number", document.getElementById("whatsappInput").value);
+
+    const hv = document.getElementById("historyArrearsSelect").value;
+    const sv = document.getElementById("standingArrearsSelect").value;
+    formData.append("history_of_arrears", hv);
+    formData.append("history_arrears_count", hv === "yes" ? (document.getElementById("historyArrearsCount").value || 0) : 0);
+    formData.append("standing_of_arrears", sv);
+    formData.append("standing_arrears_count", sv === "yes" ? (document.getElementById("standingArrearsCount").value || 0) : 0);
+
+    formData.append("linkedin_link", document.getElementById("linkedinInput").value);
+    formData.append("github_link", document.getElementById("githubInput").value);
+
+    const photoFile = document.getElementById("photoUpload").files[0];
+    const resumeFile = document.getElementById("resumeUpload").files[0];
+    if (photoFile) formData.append("profile_photo", photoFile);
+    if (resumeFile) formData.append("resume_file", resumeFile);
+
+    try {
+        const response = await fetch(`${API_BASE}/student/profile/save`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${currentToken}` },
+            body: formData
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            isNewUser = false;
+            showStudentAlert("✅ Profile saved successfully!", true);
+            // Reload profile and switch to view mode
+            await loadStudentProfile();
+        } else {
+            showStudentAlert("❌ " + (data.message || "Failed to save profile."));
+        }
+    } catch (e) {
+        console.error(e);
+        showStudentAlert("❌ Server error. Please try again.");
+    }
+}
+
+// =====================================================
+// PLACEMENT DRIVES
+// =====================================================
+async function loadPlacementDrives() {
+    try {
+        const res = await fetch(`${API_BASE}/student/drives/${currentUser.id}`);
+        const data = await res.json();
+        const container = document.getElementById("drivesGridContainer");
+        container.innerHTML = "";
+
+        if (!data.success || !data.drives || data.drives.length === 0) {
+            container.innerHTML = `<p style="color: var(--text-muted);">No placement drives posted currently.</p>`;
+            return;
+        }
+
+        data.drives.forEach(drive => {
+            const appliedStatus = drive.app_status;
+            let statusBadge = appliedStatus
+                ? `<span class="badge badge-green"><i class="fa-solid fa-check-circle"></i> ${appliedStatus}</span>`
+                : `<span class="badge badge-blue">Open</span>`;
+            let btnAction = appliedStatus
+                ? `<button class="btn-success" disabled><i class="fa-solid fa-check"></i> Applied</button>`
+                : `<button class="btn-primary" onclick="applyForDrive(${drive.id})"><i class="fa-solid fa-paper-plane"></i> Apply Now</button>`;
+
+            const card = document.createElement("div");
+            card.className = "drive-card";
+            card.innerHTML = `
+                <div>
+                    <div class="drive-header">
+                        <div class="company-title">${drive.company_name}</div>
+                        ${statusBadge}
+                    </div>
+                    <div class="job-role-text">${drive.job_role}</div>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">${drive.description || ""}</p>
+                    <div class="drive-meta">
+                        <div class="meta-item"><span class="meta-label">Package CTC</span><span class="meta-val" style="color: var(--success);">${drive.package_ctc}</span></div>
+                        <div class="meta-item"><span class="meta-label">Min CGPA</span><span class="meta-val">${drive.min_cgpa || "None"}</span></div>
+                        <div class="meta-item"><span class="meta-label">Max Arrears</span><span class="meta-val">${drive.max_standing_arrears ?? "Any"}</span></div>
+                        <div class="meta-item"><span class="meta-label">Location</span><span class="meta-val">${drive.job_location || "Flexible"}</span></div>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                    <span style="font-size: 12px; color: var(--text-muted);">Deadline: ${drive.deadline || "N/A"}</span>
+                    ${btnAction}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        console.error("Load drives error:", e);
+    }
+}
+
+async function applyForDrive(driveId) {
+    try {
+        const res = await fetch(`${API_BASE}/student/drives/apply`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentToken}` },
+            body: JSON.stringify({ drive_id: driveId, user_id: currentUser.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showStudentAlert(data.message, true);
+            loadPlacementDrives();
+        } else {
+            showStudentAlert(data.message);
+        }
+    } catch (e) {
+        showStudentAlert("Error applying for drive.");
+    }
+}
+
+async function loadAppliedDrivesTable() {
+    try {
+        const res = await fetch(`${API_BASE}/student/drives/${currentUser.id}`);
+        const data = await res.json();
+        const tbody = document.getElementById("appliedDrivesTableBody");
+        tbody.innerHTML = "";
+
+        const applied = (data.drives || []).filter(d => d.app_status);
+        if (applied.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">You haven't applied to any drives yet.</td></tr>`;
+            return;
+        }
+
+        applied.forEach(d => {
+            const badgeClass = { Selected: "badge-green", Shortlisted: "badge-yellow", Rejected: "badge-red" }[d.app_status] || "badge-blue";
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${d.company_name}</strong></td>
+                    <td>${d.job_role}</td>
+                    <td style="color: var(--success); font-weight: 700;">${d.package_ctc}</td>
+                    <td>${d.applied_at ? new Date(d.applied_at).toLocaleDateString() : "Recently"}</td>
+                    <td><span class="badge ${badgeClass}">${d.app_status}</span></td>
+                </tr>
+            `;
+        });
+    } catch (e) {
+        console.error("Load applied drives error:", e);
+    }
+}
