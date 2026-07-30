@@ -250,7 +250,8 @@ async function querySupabase(sql, params = [], callback) {
                 profile_photo, resume_file, user_id
             ] = params;
 
-            const updateObj = {
+            const upsertObj = {
+                user_id,
                 dob, personal_email, college_email, domain_interest,
                 tenth_percentage, twelth_percentage, diploma_percentage,
                 degree, department,
@@ -261,13 +262,22 @@ async function querySupabase(sql, params = [], callback) {
                 standing_of_arrears, standing_arrears_count,
                 linkedin_link, github_link
             };
-            if (profile_photo) updateObj.profile_photo = profile_photo;
-            if (resume_file) updateObj.resume_file = resume_file;
 
-            const { data, error } = await client.from("student_profiles").update(updateObj).eq("user_id", user_id);
-            if (error) return callback(error, null);
+            // Only update file fields if new files were uploaded (COALESCE equivalent)
+            if (profile_photo) upsertObj.profile_photo = profile_photo;
+            if (resume_file) upsertObj.resume_file = resume_file;
+
+            // Use upsert: if row exists update it, if not create it
+            const { data, error } = await client
+                .from("student_profiles")
+                .upsert(upsertObj, { onConflict: "user_id" });
+            if (error) {
+                console.error("Supabase upsert student_profiles error:", error);
+                return callback(error, null);
+            }
             return callback(null, { affectedRows: 1 });
         }
+
 
         // ----------------------------------------------------
         // 4. PLACEMENT DRIVES QUERIES

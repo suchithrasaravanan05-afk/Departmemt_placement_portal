@@ -6,13 +6,24 @@ const fs = require("fs");
 const db = require("../db");
 
 // Configure file upload storage
-const uploadDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+// On Vercel (Lambda), only /tmp is writable. Use /tmp/uploads there, local path elsewhere.
+const isVercel = !!process.env.VERCEL;
+const uploadDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "../uploads");
+
+try {
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+} catch (e) {
+    console.warn("⚠️ Could not create upload directory:", e.message);
 }
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        // Ensure dir exists before writing
+        try {
+            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+        } catch (e) { /* ignore */ }
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {

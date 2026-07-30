@@ -16,7 +16,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static uploaded files (resumes, photos)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// On Vercel, files are written to /tmp/uploads — serve from there
+const uploadServePath = process.env.VERCEL
+    ? "/tmp/uploads"
+    : path.join(__dirname, "uploads");
+app.use("/uploads", express.static(uploadServePath));
+
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, "../frontend")));
 
@@ -32,6 +37,18 @@ app.get("/api/health", (req, res) => {
         message: "🎓 Ramco Institute of Technology - CSBS Placement Portal Backend Operating Normally",
         dbMode: db.mode()
     });
+});
+
+// Global JSON Error Handler — ensures API routes NEVER return HTML on error
+app.use((err, req, res, next) => {
+    console.error("❌ Unhandled server error:", err.message || err);
+    if (req.path.startsWith("/api/")) {
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Internal Server Error"
+        });
+    }
+    next(err);
 });
 
 // Fallback to frontend index/login page
