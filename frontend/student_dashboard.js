@@ -252,9 +252,9 @@ function populateViewMode(p) {
     // Arrears
     const ha = val(p.history_of_arrears) || "no";
     const sa = val(p.standing_of_arrears) || "no";
-    document.getElementById("viewHistoryArrears").innerHTML = `<span class="arrears-badge ${ha === "yes" ? "arrears-has" : "arrears-none}">${ha === "yes" ? "Yes" : "No Arrears"}</span>`;
+    document.getElementById("viewHistoryArrears").innerHTML = `<span class="arrears-badge ${ha === "yes" ? "arrears-has" : "arrears-none"}">${ha === "yes" ? "Yes" : "No Arrears"}</span>`;
     document.getElementById("viewHistoryCount").innerText = ha === "yes" ? (p.history_arrears_count || 0) : "—";
-    document.getElementById("viewStandingArrears").innerHTML = `<span class="arrears-badge ${sa === "yes" ? "arrears-has" : "arrears-none}">${sa === "yes" ? "Yes" : "No Arrears"}</span>`;
+    document.getElementById("viewStandingArrears").innerHTML = `<span class="arrears-badge ${sa === "yes" ? "arrears-has" : "arrears-none"}">${sa === "yes" ? "Yes" : "No Arrears"}</span>`;
     document.getElementById("viewStandingCount").innerText = sa === "yes" ? (p.standing_arrears_count || 0) : "—";
 
     // Links & files
