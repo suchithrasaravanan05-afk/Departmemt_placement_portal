@@ -1,41 +1,45 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const db = require("../db");
+const { supabaseAdmin } = require("../supabase");
 
-// Configure file upload storage
-// On Vercel (Lambda), only /tmp is writable. Use /tmp/uploads there, local path elsewhere.
-const isVercel = !!process.env.VERCEL;
-const uploadDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "../uploads");
-
-try {
-    if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-    }
-} catch (e) {
-    console.warn("⚠️ Could not create upload directory:", e.message);
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Ensure dir exists before writing
-        try {
-            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-        } catch (e) { /* ignore */ }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
+// ==========================================
+// Multer: memory storage (no disk writes)
+// Files go directly to Supabase Storage
+// ==========================================
 const upload = multer({
-    storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
+
+const BUCKET = "resume"; // Your Supabase bucket name
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://xdcctmnqmlvcibuhlcvx.supabase.co";
+
+// Helper: upload a file buffer to Supabase Storage and return the public URL
+async function uploadToSupabase(fileBuffer, originalName, fieldName, userId) {
+    const ext = originalName.split(".").pop();
+    const fileName = `${fieldName}_${userId}_${Date.now()}.${ext}`;
+    const filePath = `uploads/${fileName}`;
+
+    const { error } = await supabaseAdmin.storage
+        .from(BUCKET)
+        .upload(filePath, fileBuffer, {
+            contentType: "application/octet-stream",
+            upsert: true
+        });
+
+    if (error) {
+        throw new Error(`Supabase upload failed: ${error.message}`);
+    }
+
+    // Return the public URL
+    const { data } = supabaseAdmin.storage
+        .from(BUCKET)
+        .getPublicUrl(filePath);
+
+    return data.publicUrl;
+}
 
 // Middleware to parse JSON or form data
 router.use(express.json());
@@ -70,13 +74,14 @@ router.get("/profile/:userId", (req, res) => {
 
 // ==========================================
 // SAVE / UPDATE STUDENT PROFILE
+// Uploads files to Supabase Storage 'resume' bucket
 // ==========================================
 const cpUpload = upload.fields([
     { name: "profile_photo", maxCount: 1 },
     { name: "resume_file", maxCount: 1 }
 ]);
 
-router.post("/profile/save", cpUpload, (req, res) => {
+router.post("/profile/save", cpUpload, async (req, res) => {
     try {
         const b = req.body;
         const userId = b.user_id;
@@ -85,14 +90,32 @@ router.post("/profile/save", cpUpload, (req, res) => {
             return res.status(400).json({ success: false, message: "User ID is required" });
         }
 
-        let photoPath = b.existing_profile_photo || null;
-        let resumePath = b.existing_resume_file || null;
+        // Start with existing URLs from form (preserved if no new file uploaded)
+        let photoUrl = b.existing_profile_photo || null;
+        let resumeUrl = b.existing_resume_file || null;
 
-        if (req.files && req.files.profile_photo) {
-            photoPath = "/uploads/" + req.files.profile_photo[0].filename;
+        // Upload profile photo to Supabase if provided
+        if (req.files && req.files.profile_photo && req.files.profile_photo[0]) {
+            const file = req.files.profile_photo[0];
+            try {
+                photoUrl = await uploadToSupabase(file.buffer, file.originalname, "photo", userId);
+                console.log("✅ Photo uploaded to Supabase:", photoUrl);
+            } catch (uploadErr) {
+                console.error("❌ Photo upload failed:", uploadErr.message);
+                return res.status(500).json({ success: false, message: "Photo upload to storage failed: " + uploadErr.message });
+            }
         }
-        if (req.files && req.files.resume_file) {
-            resumePath = "/uploads/" + req.files.resume_file[0].filename;
+
+        // Upload resume to Supabase if provided
+        if (req.files && req.files.resume_file && req.files.resume_file[0]) {
+            const file = req.files.resume_file[0];
+            try {
+                resumeUrl = await uploadToSupabase(file.buffer, file.originalname, "resume", userId);
+                console.log("✅ Resume uploaded to Supabase:", resumeUrl);
+            } catch (uploadErr) {
+                console.error("❌ Resume upload failed:", uploadErr.message);
+                return res.status(500).json({ success: false, message: "Resume upload to storage failed: " + uploadErr.message });
+            }
         }
 
         // Calculate CGPA from provided sem GPAs
@@ -106,7 +129,7 @@ router.post("/profile/save", cpUpload, (req, res) => {
         });
         const calculatedCgpa = count > 0 ? (total / count).toFixed(2) : (b.cgpa || 0);
 
-        // First check if profile row exists
+        // Check if profile row exists
         db.query("SELECT * FROM student_profiles WHERE user_id = ?", [userId], (err, existing) => {
             if (err) {
                 console.error("Profile query error:", err);
@@ -141,7 +164,7 @@ router.post("/profile/save", cpUpload, (req, res) => {
                     b.history_of_arrears || "no", b.history_arrears_count || 0,
                     b.standing_of_arrears || "no", b.standing_arrears_count || 0,
                     b.linkedin_link || null, b.github_link || null,
-                    photoPath, resumePath, userId
+                    photoUrl, resumeUrl, userId
                 ], (err2) => {
                     if (err2) {
                         console.error("Error updating profile:", err2);
@@ -170,7 +193,7 @@ router.post("/profile/save", cpUpload, (req, res) => {
                     calculatedCgpa, b.phone_number || null, b.whatsapp_number || null,
                     b.history_of_arrears || "no", b.history_arrears_count || 0,
                     b.standing_of_arrears || "no", b.standing_arrears_count || 0,
-                    b.linkedin_link || null, b.github_link || null, photoPath, resumePath
+                    b.linkedin_link || null, b.github_link || null, photoUrl, resumeUrl
                 ], (err2) => {
                     if (err2) {
                         console.error("Error inserting profile:", err2);

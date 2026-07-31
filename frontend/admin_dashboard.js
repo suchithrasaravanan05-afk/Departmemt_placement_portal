@@ -187,27 +187,153 @@ function downloadStudentExcel() {
         return;
     }
 
-    const excelData = currentFetchedStudents.map(s => ({
-        "Year": s.year || "N/A",
-        "Register Number": s.register_number || "N/A",
-        "Student Name": s.full_name,
-        "Email ID": s.email,
-        "Phone": s.phone || "N/A",
-        "CGPA": s.cgpa || "N/A",
-        "10th %": s.tenth_percentage || "N/A",
-        "12th %": s.twelth_percentage || "N/A",
-        "Standing Arrears": s.standing_arrears_count || 0,
-        "Domain Interest": s.domain_interest || "N/A",
-        "LinkedIn": s.linkedin_link || "N/A",
-        "GitHub": s.github_link || "N/A"
-    }));
+    // Column headers (Row 3 in sheet)
+    const headers = [
+        "Year", "Register No", "Name", "Email", "Department",
+        "10th %", "12th %", "CGPA", "Domain Interest", "Phone"
+    ];
+    const numCols = headers.length;
+    const lastCol = String.fromCharCode(64 + numCols); // e.g. "J" for 10 cols
 
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    // Build worksheet data array-of-arrays
+    const aoa = [];
+
+    // Row 1: College name (merged)
+    aoa.push(["RAMCO INSTITUTE OF TECHNOLOGY", ...Array(numCols - 1).fill("")]);
+
+    // Row 2: Department name (merged)
+    aoa.push(["Department of Computer Science and Business Systems", ...Array(numCols - 1).fill("")]);
+
+    // Row 3: Column headers
+    aoa.push(headers);
+
+    // Rows 4+: Student data
+    currentFetchedStudents.forEach(s => {
+        aoa.push([
+            s.year || "N/A",
+            s.register_number || "N/A",
+            s.full_name || "N/A",
+            s.email || "N/A",
+            s.department || "Computer Science and Business Systems",
+            s.tenth_percentage || "N/A",
+            s.twelth_percentage || "N/A",
+            s.cgpa || "N/A",
+            s.domain_interest || "N/A",
+            s.phone || "N/A"
+        ]);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+
+    // --- Merge cells for Row 1 and Row 2 ---
+    worksheet["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }, // Row 1 merge
+        { s: { r: 1, c: 0 }, e: { r: 1, c: numCols - 1 } }  // Row 2 merge
+    ];
+
+    // --- Column widths ---
+    worksheet["!cols"] = [
+        { wch: 6 },  // Year
+        { wch: 16 }, // Register No
+        { wch: 22 }, // Name
+        { wch: 28 }, // Email
+        { wch: 38 }, // Department
+        { wch: 8 },  // 10th %
+        { wch: 8 },  // 12th %
+        { wch: 7 },  // CGPA
+        { wch: 20 }, // Domain Interest
+        { wch: 14 }  // Phone
+    ];
+
+    // --- Row heights ---
+    worksheet["!rows"] = [
+        { hpt: 28 }, // Row 1 height
+        { hpt: 22 }, // Row 2 height
+        { hpt: 18 }  // Row 3 (headers) height
+    ];
+
+    // --- Apply styles using SheetJS cell properties ---
+    // Row 1: Dark navy background, white bold centered text
+    const collegeNameStyle = {
+        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "1A2E44" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+            top: { style: "thin", color: { rgb: "2E8B7A" } },
+            bottom: { style: "thin", color: { rgb: "2E8B7A" } },
+            left: { style: "thin", color: { rgb: "2E8B7A" } },
+            right: { style: "thin", color: { rgb: "2E8B7A" } }
+        }
+    };
+    // Row 2: Teal background, dark bold centered text
+    const deptNameStyle = {
+        font: { bold: true, sz: 12, color: { rgb: "1A2E44" } },
+        fill: { fgColor: { rgb: "2E8B7A" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+            top: { style: "thin", color: { rgb: "1A2E44" } },
+            bottom: { style: "thin", color: { rgb: "1A2E44" } },
+            left: { style: "thin", color: { rgb: "1A2E44" } },
+            right: { style: "thin", color: { rgb: "1A2E44" } }
+        }
+    };
+    // Row 3: Header row style
+    const headerStyle = {
+        font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "2E4057" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+            top: { style: "thin", color: { rgb: "AAAAAA" } },
+            bottom: { style: "thin", color: { rgb: "AAAAAA" } },
+            left: { style: "thin", color: { rgb: "AAAAAA" } },
+            right: { style: "thin", color: { rgb: "AAAAAA" } }
+        }
+    };
+    // Data rows: subtle alternating style
+    const dataStyle = {
+        font: { sz: 10 },
+        alignment: { horizontal: "left", vertical: "center" },
+        border: {
+            top: { style: "thin", color: { rgb: "CCCCCC" } },
+            bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+            left: { style: "thin", color: { rgb: "CCCCCC" } },
+            right: { style: "thin", color: { rgb: "CCCCCC" } }
+        }
+    };
+    const dataStyleAlt = {
+        font: { sz: 10 },
+        fill: { fgColor: { rgb: "EAF4F1" } },
+        alignment: { horizontal: "left", vertical: "center" },
+        border: {
+            top: { style: "thin", color: { rgb: "CCCCCC" } },
+            bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+            left: { style: "thin", color: { rgb: "CCCCCC" } },
+            right: { style: "thin", color: { rgb: "CCCCCC" } }
+        }
+    };
+
+    // Apply styles cell by cell
+    for (let R = 0; R < aoa.length; R++) {
+        for (let C = 0; C < numCols; C++) {
+            const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!worksheet[cellAddr]) worksheet[cellAddr] = { v: "", t: "s" };
+            if (R === 0) {
+                worksheet[cellAddr].s = collegeNameStyle;
+            } else if (R === 1) {
+                worksheet[cellAddr].s = deptNameStyle;
+            } else if (R === 2) {
+                worksheet[cellAddr].s = headerStyle;
+            } else {
+                worksheet[cellAddr].s = (R % 2 === 0) ? dataStyleAlt : dataStyle;
+            }
+        }
+    }
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "CSBS Students");
 
     const yearFilter = document.getElementById("filterYear").value || "All";
-    XLSX.writeFile(workbook, `CSBS_Students_Year_${yearFilter}_Roster.xlsx`);
+    XLSX.writeFile(workbook, `CSBS_Students_Year_${yearFilter}_Roster.xlsx`, { bookType: "xlsx", cellStyles: true });
 }
 
 async function handlePostDrive(e) {

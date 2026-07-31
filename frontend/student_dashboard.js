@@ -209,9 +209,9 @@ function populateViewMode(p) {
     const cgpa = val(p.cgpa);
     document.getElementById("viewCgpaNum").innerText = cgpa ? parseFloat(cgpa).toFixed(2) : "--";
 
-    // Profile photo in avatar
+    // Profile photo in avatar (Supabase public URL — no SERVER_BASE prefix needed)
     if (val(p.profile_photo)) {
-        document.getElementById("viewAvatar").innerHTML = `<img src="${SERVER_BASE}${p.profile_photo}" alt="Photo">`;
+        document.getElementById("viewAvatar").innerHTML = `<img src="${p.profile_photo}" alt="Photo">`;
     } else {
         const initials = (currentUser.full_name || "S").split(" ").map(w => w[0]).join("").toUpperCase().substring(0, 2);
         document.getElementById("viewAvatar").innerText = initials;
@@ -265,8 +265,9 @@ function populateViewMode(p) {
 
     document.getElementById("viewLinkedin").innerHTML = linkedin ? `<a href="${linkedin}" target="_blank"><i class="fa-brands fa-linkedin"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
     document.getElementById("viewGithub").innerHTML = github ? `<a href="${github}" target="_blank"><i class="fa-brands fa-github"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
-    document.getElementById("viewPhoto").innerHTML = photo ? `<a href="${SERVER_BASE}${photo}" target="_blank"><i class="fa-solid fa-image"></i> View Photo</a>` : "<span class='empty'>Not Uploaded</span>";
-    document.getElementById("viewResume").innerHTML = resume ? `<a href="${SERVER_BASE}${resume}" target="_blank"><i class="fa-solid fa-file-pdf"></i> View Resume</a>` : "<span class='empty'>Not Uploaded</span>";
+    // Supabase public URLs — use directly without SERVER_BASE prefix
+    document.getElementById("viewPhoto").innerHTML = photo ? `<a href="${photo}" target="_blank"><i class="fa-solid fa-image"></i> View Photo</a>` : "<span class='empty'>Not Uploaded</span>";
+    document.getElementById("viewResume").innerHTML = resume ? `<a href="${resume}" target="_blank"><i class="fa-solid fa-file-pdf"></i> View Resume</a>` : "<span class='empty'>Not Uploaded</span>";
 }
 
 function setDetailValue(id, value) {
@@ -312,8 +313,9 @@ function populateEditForm(p) {
     toggleArrearCounts();
     calculateCGPA();
 
-    if (p.profile_photo) document.getElementById("existingPhotoLink").innerHTML = `<a href="${SERVER_BASE}${p.profile_photo}" target="_blank">📷 View current photo</a>`;
-    if (p.resume_file) document.getElementById("existingResumeLink").innerHTML = `<a href="${SERVER_BASE}${p.resume_file}" target="_blank">📄 View current resume</a>`;
+    // Supabase public URLs — use directly without SERVER_BASE prefix
+    if (p.profile_photo) document.getElementById("existingPhotoLink").innerHTML = `<a href="${p.profile_photo}" target="_blank">📷 View current photo</a>`;
+    if (p.resume_file) document.getElementById("existingResumeLink").innerHTML = `<a href="${p.resume_file}" target="_blank">📄 View current resume</a>`;
 }
 
 // =====================================================
@@ -355,6 +357,15 @@ async function saveStudentProfile(e) {
 
     const photoFile = document.getElementById("photoUpload").files[0];
     const resumeFile = document.getElementById("resumeUpload").files[0];
+
+    // Pass existing Supabase URLs so backend preserves them if no new file is chosen
+    if (currentProfile && currentProfile.profile_photo) {
+        formData.append("existing_profile_photo", currentProfile.profile_photo);
+    }
+    if (currentProfile && currentProfile.resume_file) {
+        formData.append("existing_resume_file", currentProfile.resume_file);
+    }
+
     if (photoFile) formData.append("profile_photo", photoFile);
     if (resumeFile) formData.append("resume_file", resumeFile);
 

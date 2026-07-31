@@ -110,3 +110,4 @@ VALUES
 ('Zoho Corporation', 'Software Development Engineer', '8.5 - 12.0 LPA', 7.00, 0, '3,4', 'Tenkasi / Chennai', '2026-09-15', 'Full-stack software developer role. Programming test focusing on problem solving & DSA.'),
 ('Cognizant (CTS)', 'GenC Next & Elevate', '6.75 LPA', 6.00, 1, '4', 'Coimbatore / Chennai', '2026-09-01', 'Role in Cloud, AI, and Full Stack development.')
 ON CONFLICT DO NOTHING;
+        

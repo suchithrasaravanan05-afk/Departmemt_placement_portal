@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -136,7 +137,9 @@
             word-break: break-all;
         }
 
-        .detail-value a:hover { text-decoration: underline; }
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
 
         .gpa-grid {
             display: grid;
@@ -270,15 +273,29 @@
             font-weight: 700;
         }
 
-        .arrears-none { background: #dcfce7; color: #15803d; }
-        .arrears-has { background: #fee2e2; color: #b91c1c; }
+        .arrears-none {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .arrears-has {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
 
         @media(max-width: 640px) {
-            .gpa-grid { grid-template-columns: repeat(2, 1fr); }
-            .profile-header-actions { margin-left: 0; width: 100%; }
+            .gpa-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .profile-header-actions {
+                margin-left: 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- College Header -->
@@ -323,7 +340,8 @@
         </nav>
 
         <!-- Alert Box -->
-        <div id="studentAlert" class="hidden" style="padding: 14px 20px; border-radius: 8px; font-weight: 600; margin-bottom: 20px;"></div>
+        <div id="studentAlert" class="hidden"
+            style="padding: 14px 20px; border-radius: 8px; font-weight: 600; margin-bottom: 20px;"></div>
 
         <!-- ============================================================ -->
         <!-- TAB 1: PROFILE TAB (contains VIEW and EDIT modes)            -->
@@ -367,24 +385,37 @@
                         </div>
 
                         <!-- Personal Info -->
-                        <div class="profile-section-title"><i class="fa-solid fa-user-circle"></i> Personal Information</div>
+                        <div class="profile-section-title"><i class="fa-solid fa-user-circle"></i> Personal Information
+                        </div>
                         <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">Date of Birth</span><span class="detail-value" id="viewDob">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Year</span><span class="detail-value" id="viewYear">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Personal Email</span><span class="detail-value" id="viewPersonalEmail">--</span></div>
-                            <div class="detail-item"><span class="detail-label">College Email</span><span class="detail-value" id="viewCollegeEmail">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Mobile</span><span class="detail-value" id="viewPhone">--</span></div>
-                            <div class="detail-item"><span class="detail-label">WhatsApp</span><span class="detail-value" id="viewWhatsapp">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Domain Interest</span><span class="detail-value" id="viewDomain">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Date of Birth</span><span
+                                    class="detail-value" id="viewDob">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Year</span><span class="detail-value"
+                                    id="viewYear">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Personal Email</span><span
+                                    class="detail-value" id="viewPersonalEmail">--</span></div>
+                            <div class="detail-item"><span class="detail-label">College Email</span><span
+                                    class="detail-value" id="viewCollegeEmail">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Mobile</span><span class="detail-value"
+                                    id="viewPhone">--</span></div>
+                            <div class="detail-item"><span class="detail-label">WhatsApp</span><span
+                                    class="detail-value" id="viewWhatsapp">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Domain Interest</span><span
+                                    class="detail-value" id="viewDomain">--</span></div>
                         </div>
 
                         <!-- Academic Marks -->
-                        <div class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> Academic Marks</div>
+                        <div class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> Academic Marks
+                        </div>
                         <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">10th %</span><span class="detail-value" id="viewTenth">--</span></div>
-                            <div class="detail-item"><span class="detail-label">12th %</span><span class="detail-value" id="viewTwelth">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Diploma %</span><span class="detail-value" id="viewDiploma">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Degree</span><span class="detail-value" id="viewDegree">B.Tech</span></div>
+                            <div class="detail-item"><span class="detail-label">10th %</span><span class="detail-value"
+                                    id="viewTenth">--</span></div>
+                            <div class="detail-item"><span class="detail-label">12th %</span><span class="detail-value"
+                                    id="viewTwelth">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Diploma %</span><span
+                                    class="detail-value" id="viewDiploma">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Degree</span><span class="detail-value"
+                                    id="viewDegree">B.Tech</span></div>
                         </div>
 
                         <!-- Semester GPAs -->
@@ -394,7 +425,8 @@
                         </div>
 
                         <!-- Arrears -->
-                        <div class="profile-section-title"><i class="fa-solid fa-file-circle-check"></i> Arrears Status</div>
+                        <div class="profile-section-title"><i class="fa-solid fa-file-circle-check"></i> Arrears Status
+                        </div>
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <span class="detail-label">History of Arrears</span>
@@ -415,7 +447,8 @@
                         </div>
 
                         <!-- Professional Links -->
-                        <div class="profile-section-title"><i class="fa-solid fa-link"></i> Professional Profiles & Resume</div>
+                        <div class="profile-section-title"><i class="fa-solid fa-link"></i> Professional Profiles &
+                            Resume</div>
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <span class="detail-label">LinkedIn</span>
@@ -491,15 +524,18 @@
                             </div>
                             <div class="form-group">
                                 <label>Personal Email ID</label>
-                                <input type="email" id="personalEmailInput" class="form-control" placeholder="personal@gmail.com" required>
+                                <input type="email" id="personalEmailInput" class="form-control"
+                                    placeholder="personal@gmail.com" required>
                             </div>
                             <div class="form-group">
                                 <label>College Email ID</label>
-                                <input type="email" id="collegeEmailInput" class="form-control" placeholder="student@rit.ac.in" required>
+                                <input type="email" id="collegeEmailInput" class="form-control"
+                                    placeholder="student@rit.ac.in" required>
                             </div>
                             <div class="form-group">
                                 <label>Domain Interest</label>
-                                <input type="text" id="domainInput" class="form-control" placeholder="e.g. AI/ML, Full Stack, Cloud" required>
+                                <input type="text" id="domainInput" class="form-control"
+                                    placeholder="e.g. AI/ML, Full Stack, Cloud" required>
                             </div>
                             <div class="form-group">
                                 <label>Mobile Number</label>
@@ -515,15 +551,18 @@
                         <div class="form-grid mb-4">
                             <div class="form-group">
                                 <label>10th Marks (%)</label>
-                                <input type="number" step="0.01" max="100" id="tenthInput" class="form-control" placeholder="e.g. 92.5" required>
+                                <input type="number" step="0.01" max="100" id="tenthInput" class="form-control"
+                                    placeholder="e.g. 92.5" required>
                             </div>
                             <div class="form-group">
                                 <label>12th Marks (%)</label>
-                                <input type="number" step="0.01" max="100" id="twelthInput" class="form-control" placeholder="e.g. 88.0">
+                                <input type="number" step="0.01" max="100" id="twelthInput" class="form-control"
+                                    placeholder="e.g. 88.0">
                             </div>
                             <div class="form-group">
                                 <label>Diploma Marks (%) — If applicable</label>
-                                <input type="number" step="0.01" max="100" id="diplomaInput" class="form-control" placeholder="Optional">
+                                <input type="number" step="0.01" max="100" id="diplomaInput" class="form-control"
+                                    placeholder="Optional">
                             </div>
                             <div class="form-group">
                                 <label>Degree</label>
@@ -536,18 +575,29 @@
 
                         <div class="edit-section-heading">Semester GPA & CGPA</div>
                         <div class="form-grid mb-4">
-                            <div class="form-group"><label>Sem 1 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem1Gpa"></div>
-                            <div class="form-group"><label>Sem 2 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem2Gpa"></div>
-                            <div class="form-group"><label>Sem 3 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem3Gpa"></div>
-                            <div class="form-group"><label>Sem 4 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem4Gpa"></div>
-                            <div class="form-group"><label>Sem 5 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem5Gpa"></div>
-                            <div class="form-group"><label>Sem 6 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem6Gpa"></div>
-                            <div class="form-group"><label>Sem 7 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem7Gpa"></div>
-                            <div class="form-group"><label>Sem 8 GPA</label><input type="number" step="0.01" min="0" max="10" class="form-control gpa-field" id="sem8Gpa"></div>
+                            <div class="form-group"><label>Sem 1 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem1Gpa"></div>
+                            <div class="form-group"><label>Sem 2 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem2Gpa"></div>
+                            <div class="form-group"><label>Sem 3 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem3Gpa"></div>
+                            <div class="form-group"><label>Sem 4 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem4Gpa"></div>
+                            <div class="form-group"><label>Sem 5 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem5Gpa"></div>
+                            <div class="form-group"><label>Sem 6 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem6Gpa"></div>
+                            <div class="form-group"><label>Sem 7 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem7Gpa"></div>
+                            <div class="form-group"><label>Sem 8 GPA</label><input type="number" step="0.01" min="0"
+                                    max="10" class="form-control gpa-field" id="sem8Gpa"></div>
                         </div>
-                        <div class="form-group mb-4" style="background: #f1f5f9; padding: 16px; border-radius: var(--radius-sm);">
+                        <div class="form-group mb-4"
+                            style="background: #f1f5f9; padding: 16px; border-radius: var(--radius-sm);">
                             <label style="font-weight: 700; color: var(--primary);">Calculated CGPA (Auto)</label>
-                            <input type="text" id="calculatedCgpa" class="form-control" style="font-size: 20px; font-weight: 800; color: var(--accent); background: #fff;" readonly placeholder="Auto-calculated from active semesters">
+                            <input type="text" id="calculatedCgpa" class="form-control"
+                                style="font-size: 20px; font-weight: 800; color: var(--accent); background: #fff;"
+                                readonly placeholder="Auto-calculated from active semesters">
                         </div>
 
                         <div class="edit-section-heading">Arrears Details</div>
@@ -580,11 +630,13 @@
                         <div class="form-grid mb-4">
                             <div class="form-group">
                                 <label>LinkedIn Profile URL</label>
-                                <input type="url" id="linkedinInput" class="form-control" placeholder="https://linkedin.com/in/username">
+                                <input type="url" id="linkedinInput" class="form-control"
+                                    placeholder="https://linkedin.com/in/username">
                             </div>
                             <div class="form-group">
                                 <label>GitHub Profile URL</label>
-                                <input type="url" id="githubInput" class="form-control" placeholder="https://github.com/username">
+                                <input type="url" id="githubInput" class="form-control"
+                                    placeholder="https://github.com/username">
                             </div>
                             <div class="form-group">
                                 <label>Upload Profile Photo (JPG/PNG, max 10MB)</label>
@@ -598,7 +650,8 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                        <div
+                            style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
                             <button type="button" class="btn-cancel" id="cancelEditBtn2" onclick="exitEditMode()">
                                 <i class="fa-solid fa-xmark"></i> Cancel
                             </button>
@@ -617,7 +670,8 @@
         <div id="tabDrives" class="tab-content hidden">
             <div class="panel-card">
                 <div class="panel-title">
-                    <span><i class="fa-solid fa-building" style="color: var(--accent);"></i> Campus Placement Drive Opportunities</span>
+                    <span><i class="fa-solid fa-building" style="color: var(--accent);"></i> Campus Placement Drive
+                        Opportunities</span>
                 </div>
                 <div id="drivesGridContainer" class="drives-grid"></div>
             </div>
@@ -629,7 +683,8 @@
         <div id="tabApplications" class="tab-content hidden">
             <div class="panel-card">
                 <div class="panel-title">
-                    <span><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent);"></i> Applied Drives & Recruitment Status</span>
+                    <span><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent);"></i> Applied Drives &
+                        Recruitment Status</span>
                 </div>
                 <div class="table-responsive">
                     <table class="data-table">
@@ -652,4 +707,5 @@
 
     <script src="student_dashboard.js"></script>
 </body>
+
 </html>
