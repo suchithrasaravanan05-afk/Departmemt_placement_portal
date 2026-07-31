@@ -145,6 +145,42 @@ router.delete("/drives/:id", (req, res) => {
 });
 
 // ==========================================
+// DELETE STUDENT (admin only)
+// Removes: applications → student_profile → user
+// ==========================================
+router.delete("/students/:id", (req, res) => {
+    const userId = req.params.id;
+
+    // Step 1: Delete applications
+    db.query("DELETE FROM applications WHERE user_id = ?", [userId], (err1) => {
+        if (err1) {
+            console.error("Error deleting student applications:", err1);
+            return res.status(500).json({ success: false, message: "Failed to delete student applications" });
+        }
+
+        // Step 2: Delete student profile
+        db.query("DELETE FROM student_profiles WHERE user_id = ?", [userId], (err2) => {
+            if (err2) {
+                console.error("Error deleting student profile:", err2);
+                return res.status(500).json({ success: false, message: "Failed to delete student profile" });
+            }
+
+            // Step 3: Delete user account
+            db.query("DELETE FROM users WHERE id = ? AND role = 'student'", [userId], (err3, result) => {
+                if (err3) {
+                    console.error("Error deleting student user:", err3);
+                    return res.status(500).json({ success: false, message: "Failed to delete student" });
+                }
+                if (!result || result.affectedRows === 0) {
+                    return res.status(404).json({ success: false, message: "Student not found or cannot be deleted" });
+                }
+                res.json({ success: true, message: "Student deleted successfully" });
+            });
+        });
+    });
+});
+
+// ==========================================
 // GET ALL APPLICATIONS
 // ==========================================
 router.get("/applications", (req, res) => {

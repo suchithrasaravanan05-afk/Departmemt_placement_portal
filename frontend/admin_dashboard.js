@@ -101,7 +101,7 @@ async function fetchStudentRoster() {
         tbody.innerHTML = "";
 
         if (!data.success || !data.students || data.students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted" style="padding: 30px;">No student records found matching filters.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted" style="padding: 30px;">No student records found matching filters.</td></tr>`;
             currentFetchedStudents = [];
             return;
         }
@@ -132,11 +132,45 @@ async function fetchStudentRoster() {
                     <td><span class="badge ${arrearsVal > 0 ? 'badge-red' : 'badge-green'}">${arrearsVal} Arrears</span></td>
                     <td>${s.domain_interest || 'General'}</td>
                     <td>${resumeLink}</td>
+                    <td>
+                        <button
+                            onclick="deleteStudent(${s.user_id}, '${s.full_name.replace(/'/g, "\\'")}')"
+                            style="background: #ef4444; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+                            title="Delete student">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
                 </tr>
             `;
         });
     } catch (e) {
         console.error("Fetch roster error:", e);
+    }
+}
+
+// ==========================================
+// DELETE STUDENT
+// ==========================================
+async function deleteStudent(userId, studentName) {
+    if (!confirm(`⚠️ Are you sure you want to DELETE student "${studentName}"?\n\nThis will permanently remove their account, profile, and all applications. This action CANNOT be undone.`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/students/${userId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${currentAdminToken}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showAdminAlert(`✅ Student "${studentName}" has been deleted.`, true);
+            loadStudentRoster(); // refresh the table
+        } else {
+            showAdminAlert(`❌ Failed to delete: ${data.message}`);
+        }
+    } catch (e) {
+        console.error("Delete student error:", e);
+        showAdminAlert("❌ Server error while deleting student.");
     }
 }
 
