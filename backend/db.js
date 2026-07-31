@@ -334,6 +334,40 @@ async function querySupabase(sql, params = [], callback) {
             return callback(null, { affectedRows: 1 });
         }
 
+        if (cleanSql.includes("DELETE FROM applications")) {
+            let q = client.from("applications").delete();
+            if (cleanSql.includes("user_id = ?")) {
+                q = q.eq("user_id", params[0]);
+            } else if (cleanSql.includes("id = ?")) {
+                q = q.eq("id", params[0]);
+            }
+            const { error } = await q;
+            if (error) return callback(error, null);
+            return callback(null, { affectedRows: 1 });
+        }
+
+        if (cleanSql.includes("DELETE FROM student_profiles")) {
+            let q = client.from("student_profiles").delete();
+            if (cleanSql.includes("user_id = ?")) {
+                q = q.eq("user_id", params[0]);
+            } else if (cleanSql.includes("id = ?")) {
+                q = q.eq("id", params[0]);
+            }
+            const { error } = await q;
+            if (error) return callback(error, null);
+            return callback(null, { affectedRows: 1 });
+        }
+
+        if (cleanSql.includes("DELETE FROM users")) {
+            let q = client.from("users").delete();
+            if (cleanSql.includes("id = ?")) {
+                q = q.eq("id", params[0]);
+            }
+            const { error } = await q;
+            if (error) return callback(error, null);
+            return callback(null, { affectedRows: 1 });
+        }
+
         // ----------------------------------------------------
         // 5. APPLICATIONS QUERIES
         // ----------------------------------------------------
