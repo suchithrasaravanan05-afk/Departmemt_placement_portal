@@ -115,7 +115,9 @@ async function fetchStudentRoster() {
             const arrearsVal = s.standing_arrears_count !== null ? s.standing_arrears_count : 0;
             let resumeLink = `<span class="text-muted">Not Uploaded</span>`;
             if (s.resume_file) {
-                resumeLink = `<a href="${SERVER_BASE}${s.resume_file}" target="_blank" class="btn-success" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-download"></i> Resume</a>`;
+                // resume_file is a full Supabase public URL — use it directly
+                const resumeUrl = s.resume_file.startsWith("http") ? s.resume_file : `${SERVER_BASE}${s.resume_file}`;
+                resumeLink = `<a href="${resumeUrl}" target="_blank" class="btn-success" style="padding: 4px 10px; font-size: 11px;"><i class="fa-solid fa-download"></i> Resume</a>`;
             }
 
             tbody.innerHTML += `
