@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPA & CGPA Calculator - RIT CSBS</title>
+    <link rel="stylesheet" href="gpa.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div class="container">
+
+    <a href="student_dashboard.html" class="back-link">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
+        <p>Department of Computer Science and Business Systems</p>
+    </div>
+
+    <!-- Mode Tabs: GPA vs CGPA -->
+    <div class="calc-tabs">
+        <button type="button" class="calc-tab-btn active" id="tabModeGpa" onclick="switchCalcMode('gpa')">
+            <i class="fa-solid fa-calculator"></i> Semester GPA Calculator
+        </button>
+        <button type="button" class="calc-tab-btn" id="tabModeCgpa" onclick="switchCalcMode('cgpa')">
+            <i class="fa-solid fa-chart-line"></i> Overall CGPA Calculator
+        </button>
+    </div>
+
+    <!-- SECTION 1: SEMESTER GPA CALCULATOR CARD -->
+    <div class="card" id="gpaCalcSection">
+
+        <h2>Semester GPA Calculator</h2>
+
+        <!-- Regulation -->
+        <div class="form-group">
+            <label for="regulation">Choose Regulation</label>
+            <select id="regulation">
+                <option value="">Select Regulation</option>
+                <option value="2025">Regulation 2025</option>
+                <option value="2021">Regulation 2021</option>
+            </select>
+        </div>
+
+        <!-- Department -->
+        <div class="form-group">
+            <label for="department">Choose Department</label>
+            <select id="department">
+                <option value="">Select Department</option>
+                <option value="CSBS">CSBS — Computer Science & Business Systems</option>
+            </select>
+        </div>
+
+        <!-- Semester -->
+        <div class="form-group">
+            <label for="semester">Semester</label>
+            <select id="semester">
+                <option value="">Select Semester</option>
+                <option value="Semester 1">Semester 1</option>
+                <option value="Semester 2">Semester 2</option>
+                <option value="Semester 3">Semester 3</option>
+                <option value="Semester 4">Semester 4</option>
+                <option value="Semester 5">Semester 5</option>
+                <option value="Semester 6">Semester 6</option>
+                <option value="Semester 7">Semester 7</option>
+                <option value="Semester 8">Semester 8</option>
+            </select>
+        </div> 
+
+        <!-- Course Type -->
+        <div id="courseTypeSection" style="display:none;">
+            <div class="form-group">
+                <label for="courseType">Course Type</label>
+                <select id="courseType">
+                    <option value="">Select Course Type</option>
+                    <option value="Regular">Regular Course</option>
+                    <option value="Honours">Honours Course</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Subject Area -->
+        <div id="subjectsContainer"></div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+            <button type="button" id="calculateBtn">
+                <i class="fa-solid fa-calculator"></i> Calculate GPA
+            </button>
+            <button type="button" id="resetBtn">
+                <i class="fa-solid fa-rotate-right"></i> Reset
+            </button>
+        </div>
+
+        <!-- Result -->
+        <div class="result">
+            <h3>Your Semester GPA</h3>
+            <h1 id="gpaResult">0.00</h1>
+            <div id="gpaBadge" class="result-badge"></div>
+        </div>
+
+    </div>
+
+    <!-- SECTION 2: OVERALL CGPA CALCULATOR CARD -->
+    <div class="card hidden" id="cgpaCalcSection">
+
+        <h2>Overall CGPA Calculator</h2>
+        <p style="text-align: center; color: var(--secondary); margin-bottom: 20px; font-size: 14px;">
+            Enter your GPA for each completed semester (1 to 8) to calculate your cumulative CGPA.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div class="form-group">
+                <label>Semester 1 GPA</label>
+                <input type="number" id="cgpaSem1" step="0.01" min="0" max="10" placeholder="e.g. 8.5">
+            </div>
+            <div class="form-group">
+                <label>Semester 2 GPA</label>
+                <input type="number" id="cgpaSem2" step="0.01" min="0" max="10" placeholder="e.g. 8.2">
+            </div>
+            <div class="form-group">
+                <label>Semester 3 GPA</label>
+                <input type="number" id="cgpaSem3" step="0.01" min="0" max="10" placeholder="e.g. 8.7">
+            </div>
+            <div class="form-group">
+                <label>Semester 4 GPA</label>
+                <input type="number" id="cgpaSem4" step="0.01" min="0" max="10" placeholder="e.g. 8.4">
+            </div>
+            <div class="form-group">
+                <label>Semester 5 GPA</label>
+                <input type="number" id="cgpaSem5" step="0.01" min="0" max="10" placeholder="e.g. 8.6">
+            </div>
+            <div class="form-group">
+                <label>Semester 6 GPA</label>
+                <input type="number" id="cgpaSem6" step="0.01" min="0" max="10" placeholder="e.g. 8.8">
+            </div>
+            <div class="form-group">
+                <label>Semester 7 GPA</label>
+                <input type="number" id="cgpaSem7" step="0.01" min="0" max="10" placeholder="e.g. 9.0">
+            </div>
+            <div class="form-group">
+                <label>Semester 8 GPA</label>
+                <input type="number" id="cgpaSem8" step="0.01" min="0" max="10" placeholder="e.g. 9.2">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="button" id="calculateCgpaBtn" class="btn-primary">
+                <i class="fa-solid fa-calculator"></i> Calculate Cumulative CGPA
+            </button>
+            <button type="button" id="resetCgpaBtn" class="btn-secondary">
+                <i class="fa-solid fa-rotate-right"></i> Reset CGPA
+            </button>
+        </div>
+
+        <div class="result">
+            <h3>Your Overall CGPA</h3>
+            <h1 id="cgpaResult">0.00</h1>
+            <div id="cgpaBadge" class="result-badge"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="gpa.js"></script>
+
+</body>
+</html>

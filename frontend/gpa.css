@@ -1,0 +1,292 @@
+:root {
+    --primary: #1d3853;
+    --secondary: #34495e;
+    --accent: #3498db;
+    --accent-hover: #2980b9;
+    --text: #333333;
+    --light: #f4f7f6;
+    --white: #ffffff;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --border: #dddddd;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 30px 15px;
+    color: var(--text);
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: opacity 0.2s;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+    opacity: 0.9;
+}
+
+.header {
+    background: var(--white);
+    border-radius: 15px;
+    padding: 25px 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.header h1 {
+    color: var(--primary);
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.header p {
+    color: var(--secondary);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.calc-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 6px;
+    border-radius: 12px;
+}
+
+.calc-tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calc-tab-btn.active {
+    background: var(--white);
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card {
+    background: var(--white);
+    border-radius: 15px;
+    padding: 35px 40px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    margin-bottom: 25px;
+}
+
+.card h2 {
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 25px;
+    font-size: 22px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--secondary);
+}
+
+input,
+select {
+    width: 100%;
+    padding: 11px 14px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 6px rgba(52, 152, 219, 0.5);
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+
+button {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#calculateBtn, .btn-primary {
+    background: var(--primary);
+    color: var(--white);
+}
+
+#calculateBtn:hover, .btn-primary:hover {
+    background: #14273b;
+}
+
+#resetBtn, .btn-secondary {
+    background: var(--secondary);
+    color: var(--white);
+}
+
+#resetBtn:hover, .btn-secondary:hover {
+    background: #2c3e50;
+}
+
+.btn-apply {
+    background: #27ae60;
+    color: var(--white);
+}
+
+.btn-apply:hover {
+    background: #219150;
+}
+
+.subject-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.subjectCode,
+.credit,
+.grade {
+    width: 100%;
+}
+
+.result {
+    margin-top: 30px;
+    text-align: center;
+    background: var(--light);
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #e2e8ec;
+}
+
+.result h3 {
+    color: var(--secondary);
+    margin-bottom: 10px;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#gpaResult, #cgpaResult {
+    color: var(--primary);
+    font-size: 42px;
+    font-weight: 800;
+}
+
+.result-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.result-badge.pass {
+    background: #d4edda;
+    color: #155724;
+}
+
+.result-badge.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* CGPA Calculator specific styles */
+.cgpa-sem-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #f9fbfd;
+    border-radius: 8px;
+    border: 1px solid #e8ecef;
+}
+
+@media (max-width: 700px) {
+    body {
+        padding: 15px 10px;
+    }
+    
+    .card {
+        padding: 25px 20px;
+    }
+
+    .subject-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .cgpa-sem-row {
+        grid-template-columns: 1fr;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+}

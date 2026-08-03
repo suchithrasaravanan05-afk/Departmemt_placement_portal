@@ -49,12 +49,15 @@ function handleLogout() {
 // TAB NAVIGATION
 // =====================================================
 function switchTab(tabName) {
-    ["profile", "drives", "applications"].forEach(t => {
-        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle("hidden", t !== tabName);
-        document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle("active", t === tabName);
+    ["profile", "drives", "applications", "gpa"].forEach(t => {
+        const tabEl = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btnEl = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (tabEl) tabEl.classList.toggle("hidden", t !== tabName);
+        if (btnEl) btnEl.classList.toggle("active", t === tabName);
     });
     if (tabName === "drives") loadPlacementDrives();
     if (tabName === "applications") loadAppliedDrivesTable();
+    if (tabName === "gpa" && typeof loadSubjects === "function") loadSubjects();
 }
 
 // =====================================================
