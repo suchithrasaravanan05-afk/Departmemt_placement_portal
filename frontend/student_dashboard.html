@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <title>Student Registration Form</title>
@@ -86,97 +87,22 @@ body {
     padding: 15px;
     margin-bottom: 30px;
     border-radius: 10px;
-    position: relative;
-}
-
-.logout-btn {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--primary);
-    color: var(--white);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.tools-card {
-    max-width: 900px;
-    margin: 0 auto 20px;
-    background: var(--white);
-    padding: 20px 30px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.tools-card-text h3 {
-    color: var(--primary);
-    font-size: 17px;
-    margin-bottom: 4px;
-}
-
-.tools-card-text p {
-    color: var(--secondary);
-    font-size: 13px;
-}
-
-.tools-card-btn {
-    display: inline-block;
-    text-decoration: none;
-    background: var(--accent);
-    color: var(--white);
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.tools-card-btn:hover {
-    background: var(--primary);
 }
 
 
 .container {
-    max-width: 900px;
-    margin: 0 auto 40px;
+    max-width: 950px;
+    margin: auto;
     background: var(--white);
-    padding: 40px 50px;
+    padding: 35px 45px;
     border-radius: 14px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
 }
 
 h2 {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 35px;
     color: var(--primary);
-}
-
-.form-subtitle {
-    text-align: center;
-    color: var(--secondary);
-    font-size: 14px;
-    margin-bottom: 30px;
-}
-
-.section-title {
-    color: var(--primary);
-    font-size: 17px;
-    font-weight: 700;
-    margin: 30px 0 18px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--accent);
-}
-
-.section-title:first-of-type {
-    margin-top: 0;
 }
 
 .form-row {
@@ -195,7 +121,6 @@ label {
     font-weight: 600;
     margin-bottom: 6px;
     color: var(--secondary);
-    font-size: 14px;
 }
 
 input, select {
@@ -209,11 +134,6 @@ input:focus, select:focus {
     border-color: var(--accent);
     box-shadow: 0 0 6px rgba(52, 152, 219, 0.5);
     outline: none;
-}
-
-input[readonly] {
-    background: var(--light);
-    color: var(--secondary);
 }
 
 input[type="file"] {
@@ -237,27 +157,10 @@ input[type="file"] {
     background: var(--primary);
 }
 
-.resume-link-btn {
-    display: inline-block;
-    text-decoration: none;
-    background: var(--accent);
-    color: var(--white);
-    padding: 10px 16px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.resume-link-btn:hover {
-    background: var(--primary);
-}
-
 
 .form-actions {
     text-align: center;
     margin-top: 35px;
-    padding-top: 25px;
-    border-top: 1px solid #eee;
 }
 
 button {
@@ -301,238 +204,372 @@ button:hover {
     .dept-title {
         font-size: 22px;
     }
-
-    .container {
-        padding: 25px 20px;
-    }
 }
 </style>
 </head>
 
 <body>
 
-<div class="college-header">
-    <div class="header-left">
-        <img src="download 2.jpg" alt="Founder">
-        <img src="download 1.jpg" alt="Chairman">
+    <!-- College Header -->
+    <header class="college-header-wrapper">
+        <div class="college-header">
+            <div class="college-logo-group">
+                <i class="fa-solid fa-graduation-cap fa-2x" style="color: #60a5fa;"></i>
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 800; color: #fff;">RAMCO INSTITUTE OF TECHNOLOGY</h2>
+                    <p style="font-size: 12px; color: #94a3b8;">Department Placement Portal</p>
+                </div>
+            </div>
+            <div class="nav-user-pill">
+                <div class="nav-user-info">
+                    <div class="nav-user-name" id="displayUserName">Student Name</div>
+                    <div class="nav-user-role" id="displayUserReg">Reg No: ---</div>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dept-banner">
+        Department of Computer Science and Business Systems (CSBS)
     </div>
 
-    <div class="header-center">
-        <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
-        <p>Approved by AICTE, New Delhi & Affiliated to Anna University</p>
-        <p class="red">NAAC Accredited & NBA Accredited Programs</p>
-    </div>
-</div>
+    <div class="app-container">
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" id="tabBtnProfile" onclick="switchTab('profile')">
+                <i class="fa-solid fa-id-card"></i> My Profile
+            </button>
+            <button class="tab-btn" id="tabBtnDrives" onclick="switchTab('drives')">
+                <i class="fa-solid fa-briefcase"></i> Placement Drives
+            </button>
+            <button class="tab-btn" id="tabBtnApplications" onclick="switchTab('applications')">
+                <i class="fa-solid fa-list-check"></i> Applied Drives
+            </button>
+            <button class="tab-btn" id="tabBtnGpa" onclick="switchTab('gpa')">
+                <i class="fa-solid fa-calculator"></i> GPA & CGPA Calculator
+            </button>
+        </nav>
+
+        <!-- Alert Box -->
+        <div id="studentAlert" class="hidden"
+            style="padding: 14px 20px; border-radius: 8px; font-weight: 600; margin-bottom: 20px;"></div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 1: PROFILE TAB (contains VIEW and EDIT modes)            -->
+        <!-- ============================================================ -->
+        <div id="tabProfile" class="tab-content">
+
+            <!-- ---- VIEW MODE ---- -->
+            <div id="profileViewMode">
+
+                <!-- Skeleton shown while loading -->
+                <div id="profileLoading" class="profile-view-card" style="text-align: center; padding: 60px;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #94a3b8;"></i>
+                    <p style="margin-top: 12px; color: var(--text-muted);">Loading your profile...</p>
+                </div>
+
+                <!-- Shown when profile exists -->
+                <div id="profileViewContent" class="hidden">
+                    <div class="profile-view-card">
+                        <!-- Header -->
+                        <div class="profile-view-header">
+                            <div class="profile-avatar" id="viewAvatar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="profile-header-info">
+                                <h2 id="viewName">---</h2>
+                                <div class="reg-tag" id="viewReg">---</div>
+                                <span class="dept-tag">CSBS — Computer Science & Business Systems</span>
+                            </div>
+                            <div class="profile-header-actions">
+                                <div id="viewCgpaBadge" class="cgpa-highlight">
+                                    <div>
+                                        <div class="cgpa-label">CGPA</div>
+                                        <div class="cgpa-num" id="viewCgpaNum">--</div>
+                                    </div>
+                                    <i class="fa-solid fa-star"></i>
+                                </div>
+                                <button class="btn-primary" onclick="enterEditMode()">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Personal Info -->
+                        <div class="profile-section-title"><i class="fa-solid fa-user-circle"></i> Personal Information
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item"><span class="detail-label">Date of Birth</span><span
+                                    class="detail-value" id="viewDob">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Year</span><span class="detail-value"
+                                    id="viewYear">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Personal Email</span><span
+                                    class="detail-value" id="viewPersonalEmail">--</span></div>
+                            <div class="detail-item"><span class="detail-label">College Email</span><span
+                                    class="detail-value" id="viewCollegeEmail">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Mobile</span><span class="detail-value"
+                                    id="viewPhone">--</span></div>
+                            <div class="detail-item"><span class="detail-label">WhatsApp</span><span
+                                    class="detail-value" id="viewWhatsapp">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Domain Interest</span><span
+                                    class="detail-value" id="viewDomain">--</span></div>
+                        </div>
+
+                        <!-- Academic Marks -->
+                        <div class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> Academic Marks
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item"><span class="detail-label">10th %</span><span class="detail-value"
+                                    id="viewTenth">--</span></div>
+                            <div class="detail-item"><span class="detail-label">12th %</span><span class="detail-value"
+                                    id="viewTwelth">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Diploma %</span><span
+                                    class="detail-value" id="viewDiploma">--</span></div>
+                            <div class="detail-item"><span class="detail-label">Degree</span><span class="detail-value"
+                                    id="viewDegree">B.Tech</span></div>
+                        </div>
+
+                        <!-- Semester GPAs -->
+                        <div class="profile-section-title"><i class="fa-solid fa-chart-bar"></i> Semester GPA</div>
+                        <div class="gpa-grid" id="viewGpaGrid">
+                            <!-- Generated by JS -->
+                        </div>
+
+                        <!-- Arrears -->
+                        <div class="profile-section-title"><i class="fa-solid fa-file-circle-check"></i> Arrears Status
+                        </div>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">History of Arrears</span>
+                                <span class="detail-value" id="viewHistoryArrears">--</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">History Count</span>
+                                <span class="detail-value" id="viewHistoryCount">--</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Standing Arrears</span>
+                                <span class="detail-value" id="viewStandingArrears">--</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Standing Count</span>
+                                <span class="detail-value" id="viewStandingCount">--</span>
+                            </div>
+                        </div>
 
 <div class="dept-title">
     Department of Computer Science and Business Systems
-    <button class="logout-btn" onclick="logout()">Logout</button>
 </div>
 
-<!-- Quick Tools card - always visible on the dashboard, independent
-     of whether the form or the submitted-details view is showing -->
-<div class="tools-card">
-    <div class="tools-card-text">
-        <h3>GPA Calculator</h3>
-        <p>Quickly calculate your semester GPA before entering it in your profile.</p>
-    </div>
-    <a href="gpa.html" target="_blank" class="tools-card-btn">Open GPA Calculator</a>
-</div>
+<div class="dashboard-layout">
 
-<div class="container" id="formView">
+    
+    <div class="left-form-panel">
+        <div class="container">
 
-    <h2>Student Placement Registration Form</h2>
-    <p class="form-subtitle">Please fill in all details accurately - this information will be used for placement eligibility.</p>
+    <h2>Student Registration Form</h2>
 
-    <form id="profileForm">
-
-        <div class="section-title">Account Details</div>
-
+    <form>
         <div class="form-row">
             <div class="form-group">
                 <label>Year</label>
-                <input type="text" id="yearDisplay" readonly>
+                <select id="yearSelect" required>
+
+                    <option value="">Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
             </div>
             <div class="form-group">
-                <label>Register Number</label>
-                <input type="text" id="regDisplay" readonly>
-            </div>
-            <div class="form-group">
-                <label>Department</label>
-                <input type="text" id="departmentDisplay" readonly>
+                <label>Register number</label>
+                <select id="regSelect" required>
+                    <option value="">Select Register Number</option>
+                </select>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
                 <label>Student Name</label>
-                <input type="text" id="nameDisplay" readonly>
+                <select id="stdSelect" required>
+                    <option value=""> Select Student Name</option>
+                </select>
+                
             </div>
             <div class="form-group">
                 <label>Date of Birth</label>
-                <input type="date" id="dob" required>
+                <input type="date" required>
             </div>
         </div>
-
-
-        <div class="section-title">Contact Details</div>
 
         <div class="form-row">
             <div class="form-group">
                 <label>Personal Email ID</label>
-                <input type="email" id="personalEmail" required>
+                <input type="email" required>
             </div>
             <div class="form-group">
                 <label>College Email ID</label>
-                <input type="email" id="collegeEmail" required>
+                <input type="email" required>
             </div>
-        </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text" id="phoneNumber" maxlength="10" required>
-            </div>
-            <div class="form-group">
-                <label>WhatsApp Number</label>
-                <input type="text" id="whatsappNumber" maxlength="10" required>
-            </div>
-        </div>
-
-
-        <div class="section-title">Academic Details</div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Degree</label>
-                <select id="degree" required>
-                    <option value="">Select degree</option>
-                    <option>B.E</option>
-                    <option>B.Tech</option>
-                </select>
-            </div>
             <div class="form-group">
                 <label>Domain Interested</label>
-                <input type="text" id="domainInterested" required>
+                <input type="domain" required>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
                 <label>10th Mark Percentage</label>
-                <input type="number" step="0.01" min="0" max="100" id="tenthPercentage" required>
+                <input type="percentage" required>
             </div>
             <div class="form-group">
                 <label>12th Mark Percentage</label>
-                <input type="number" step="0.01" min="0" max="100" id="twelfthPercentage" required>
+                <input type="percentage" required>
             </div>
             <div class="form-group">
                 <label>Diploma Mark Percentage</label>
-                <input type="number" step="0.01" min="0" max="100" id="diplomaPercentage">
-            </div>
-        </div>
-
-
-        <div class="section-title">Semester GPA</div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Semester 1 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem1Gpa">
-            </div>
-            <div class="form-group">
-                <label>Semester 2 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem2Gpa">
-            </div>
-            <div class="form-group">
-                <label>Semester 3 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem3Gpa">
-            </div>
-            <div class="form-group">
-                <label>Semester 4 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem4Gpa">
+                <input type="percentage" required>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label>Semester 5 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem5Gpa">
+                <label>Degree</label>
+                <select required>
+                    <option value="">Select degree</option>
+                    <option>B.E</option>
+                    <option>B.Tech</option>
+            </select>
             </div>
+            
             <div class="form-group">
-                <label>Semester 6 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem6Gpa">
-            </div>
-            <div class="form-group">
-                <label>Semester 7 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem7Gpa">
-            </div>
-            <div class="form-group">
-                <label>Semester 8 GPA</label>
-                <input type="number" step="0.01" min="0" max="10" class="gpa" id="sem8Gpa">
+                <label>Department</label>
+                <input type="department" required>
             </div>
         </div>
+
+       
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 1 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+
+                </div>
+                <div class="form-group">
+                    <label>Semester 2 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 3 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+                <div class="form-group">
+                    <label>Semester 4 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 5 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+                <div class="form-group">
+                    <label>Semester 6 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Semester 7 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+                <div class="form-group">
+                    <label>Semester 8 GPA</label>
+                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CGPA</label>
+                    <input type="text" id="cgpa" readonly placeholder="Auto Calculated">
+                </div>
+            </div>
+
 
         <div class="form-row">
-            <div class="form-group" style="max-width: 220px;">
-                <label>CGPA</label>
-                <input type="text" id="cgpa" readonly placeholder="Auto Calculated">
-            </div>
-        </div>
-
-
-        <div class="section-title">Academic Standing</div>
-
-        <div class="form-row">
             <div class="form-group">
-                <label>History of arrears</label>
-                <select id="historyArrears">
-                    <option value="">Select</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                </select>
+                <label>Phone Number</label>
+                <input type="phone"required>
             </div>
-
-            <div class="form-group hidden" id="historyBox">
-                <label>Number of History Arrears</label>
-                <input type="number" min="1" id="historyArrearsCount">
-            </div>
-        </div>
-
-        <div class="form-row">
             <div class="form-group">
-                <label>Standing of arrears</label>
-                <select id="standingArrears">
-                    <option value="">Select</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                </select>
-            </div>
-
-            <div class="form-group hidden" id="standingBox">
-                <label>Number of Standing Arrears</label>
-                <input type="number" min="1" id="standingArrearsCount">
+                <label>WhatsApp Number</label>
+                <input type="whatsapp" required>
             </div>
         </div>
+        
 
+    <div class="form-row">
+        <div class="form-group">
+            <label>History of arrears</label>
+            <select id="historyArrears">
+                <option value="">Select</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
 
-        <div class="section-title">Profile Links & Documents</div>
+        <div class="form-group hidden" id="historyBox">
+            <label>Number of History Arrears</label>
+            <input type="number" min="1">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Standing of arrears</label>
+            <select id="standingArrears">
+                <option value="">Select</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="standingBox">
+            <label>Number of Standing Arrears</label>
+            <input type="number" min="1">
+        </div>
+    </div>
+
 
         <div class="form-row">
             <div class="form-group">
                 <label>LinkedIn Link</label>
-                <input type="url" id="linkedinLink" required>
+                <input type="link"required>
             </div>
             <div class="form-group">
                 <label>GitHub Link</label>
-                <input type="url" id="githubLink" required>
+                <input type="link" required>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
                 <label>Profile Photo Upload</label>
-                <input type="file" id="profilePhoto" accept="image/*" required>
+                <input type="file" accept="image/*" required>
             </div>
             <div class="form-group resume">
                 <label>Model Resume</label>
@@ -540,64 +577,66 @@ button:hover {
             </div>
             <div class="form-group">
                 <label>Upload Resume</label>
-                <input type="file" id="resumeFile" accept="application/pdf" required>
+                <input type="file" accept="pdf/*" required>
             </div>
         </div>
 
+        
 
         <div class="form-actions">
             <button type="submit" class="submit">Submit</button>
             <button type="reset" class="reset">Reset</button>
         </div>
+        
+</div>
 
-    </form>
+
 
 </div>
 
-<!-- Shown after a successful submission, or immediately if the
-     student has already submitted before -->
-<div class="container hidden" id="detailsView">
+<div class="right-panel">
 
-    <h2>Your Submitted Details</h2>
-    <p class="form-subtitle">This is what's on record for you. Click "Edit Details" to make changes.</p>
+    <h2 class="ref-title">References</h2>
 
-    <div id="detailsContent" style="font-size: 14px; line-height: 2;"></div>
-
-    <div class="form-actions">
-        <button type="button" class="submit" onclick="showFormView()">Edit Details</button>
+    <!-- Aptitude Download -->
+    <div class="ref-card">
+        <h3>Aptitude Questions</h3>
+        <p class="ref-instruction">
+            Download aptitude practice questions.
+        </p>
+        <a href="apttitude.txt" download class="download-btn">
+             Download Aptitude Questions
+        </a>
     </div>
 
-    <div class="section-title">Practice Materials</div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label>Aptitude Questions</label>
-            <p style="font-size: 13px; color: var(--secondary); margin: 4px 0 8px;">
-                View aptitude practice questions.
-            </p>
-            <a href="aptitude.pdf" target="_blank" class="resume-link-btn">Open Aptitude Questions</a>
-        </div>
-        <div class="form-group">
-            <label>Java Core Programs</label>
-            <p style="font-size: 13px; color: var(--secondary); margin: 4px 0 8px;">
-                View Java core sample programs.
-            </p>
-            <a href="java.pdf" target="_blank" class="resume-link-btn">Open Java Core</a>
-        </div>
+    <!-- Java Core Download -->
+    <div class="ref-card">
+        <h3>Java Core Programs</h3>
+        <p class="ref-instruction">
+            Download Java core sample programs.
+        </p>
+        <a href="java.docx" download class="download-btn">
+             Download Java Core
+        </a>
     </div>
 
-    <div class="form-row">
-        <div class="form-group">
-            <ul style="margin: 0; padding-left: 20px; color: var(--secondary); font-size: 13px;">
-                <li>Download the provided reference materials</li>
-                <li>Use the files only for academic practice</li>
-            </ul>
-        </div>
+
+    <div class="ref-guidelines">
+        <h3>Instructions</h3>
+        <ul>
+            <li>Download the provided reference materials</li>
+            <li>Aptitude file is in PDF format</li>
+            <li>Java core programs are provided as ZIP</li>
+            <li>Use the files only for academic practice</li>
+        </ul>
     </div>
 
 </div>
+
 
 <script src="student_dashboard.js"></script>
 
+
 </body>
+
 </html>

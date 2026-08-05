@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
 <meta charset="UTF-8">
 <title>Admin Panel - Student Registration</title>
 
@@ -218,10 +219,17 @@ th {
 .cancel-btn { background: #ccc; color: var(--text); }
 
 </style>
+=======
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Cell Admin - RIT CSBS</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+>>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
 </head>
-
 <body>
 
+<<<<<<< HEAD
 <div class="college-header">
     <div class="header-left">
         <img src="chapht1.png" alt="Founder">
@@ -426,5 +434,277 @@ th {
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>  
 <script src="admin_dashboard.js"></script>
 
+=======
+    <!-- College Header -->
+    <header class="college-header-wrapper">
+        <div class="college-header">
+            <div class="college-logo-group">
+                <i class="fa-solid fa-user-shield fa-2x" style="color: #60a5fa;"></i>
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 800; color: #fff;">RAMCO INSTITUTE OF TECHNOLOGY</h2>
+                    <p style="font-size: 12px; color: #94a3b8;">Placement Cell Administration Panel</p>
+                </div>
+            </div>
+            
+            <div class="nav-user-pill">
+                <div class="nav-user-info">
+                    <div class="nav-user-name" id="adminUserName">Placement Coordinator</div>
+                    <div class="nav-user-role">Administrator</div>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dept-banner">
+        Department of Computer Science and Business Systems (CSBS)
+    </div>
+
+    <div class="app-container">
+
+        <!-- STATS OVERVIEW CARDS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div class="stat-val" id="statTotalStudents">0</div>
+                    <div class="stat-lbl">Registered Students</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-user-check"></i></div>
+                <div>
+                    <div class="stat-val" id="statPlacedStudents">0</div>
+                    <div class="stat-lbl">Placed Students</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fa-solid fa-building"></i></div>
+                <div>
+                    <div class="stat-val" id="statActiveDrives">0</div>
+                    <div class="stat-lbl">Placement Drives</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fa-solid fa-file-signature"></i></div>
+                <div>
+                    <div class="stat-val" id="statTotalApps">0</div>
+                    <div class="stat-lbl">Total Applications</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" id="tabBtnStudents" onclick="switchAdminTab('students')">
+                <i class="fa-solid fa-users-viewfinder"></i> Student Database Roster
+            </button>
+            <button class="tab-btn" id="tabBtnPostDrive" onclick="switchAdminTab('drives')">
+                <i class="fa-solid fa-plus-circle"></i> Post & Manage Drives
+            </button>
+            <button class="tab-btn" id="tabBtnApps" onclick="switchAdminTab('applications')">
+                <i class="fa-solid fa-list-check"></i> Applications & Selections
+            </button>
+        </nav>
+
+        <div id="adminAlert" class="hidden" style="padding: 14px 20px; border-radius: 8px; font-weight: 600; margin-bottom: 20px;"></div>
+
+        <!-- ================= TAB 1: STUDENT ROSTER ================= -->
+        <div id="adminTabStudents" class="tab-content">
+            <div class="panel-card">
+                <div class="panel-title">
+                    <span><i class="fa-solid fa-filter" style="color: var(--accent);"></i> Department Student Roster & Filters</span>
+                    <button class="btn-success" onclick="downloadStudentExcel()">
+                        <i class="fa-solid fa-file-excel"></i> Export Filtered Roster to Excel
+                    </button>
+                </div>
+
+                <!-- FILTER BAR -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+
+                    <!-- Quick Filter Button -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <span style="font-size: 13px; font-weight: 700; color: #64748b;"><i class="fa-solid fa-sliders"></i> Filter Students</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="btn70Filter" class="btn-primary" onclick="applySeventyFilter()" style="font-size: 12px; padding: 8px 16px;">
+                                <i class="fa-solid fa-star"></i> 70% Above (10th, 12th &amp; CGPA)
+                            </button>
+                            <button onclick="clearAllFilters()" style="font-size: 12px; padding: 8px 16px; background: transparent; border: 1px solid #cbd5e1; border-radius: 6px; color: #64748b; cursor: pointer; font-weight: 600;">
+                                <i class="fa-solid fa-xmark"></i> Clear Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Filter by Year</label>
+                            <select id="filterYear" class="form-control" onchange="fetchStudentRoster()">
+                                <option value="">All Academic Years</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Min CGPA Cutoff <small style="color:#94a3b8;">(out of 10)</small></label>
+                            <input type="number" step="0.1" min="0" max="10" id="filterMinCgpa" class="form-control" placeholder="e.g. 7.0" oninput="fetchStudentRoster()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Min 10th Marks <small style="color:#94a3b8;">(%)</small></label>
+                            <input type="number" step="0.1" min="0" max="100" id="filterMinTenth" class="form-control" placeholder="e.g. 70" oninput="fetchStudentRoster()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Min 12th Marks <small style="color:#94a3b8;">(%)</small></label>
+                            <input type="number" step="0.1" min="0" max="100" id="filterMinTwelth" class="form-control" placeholder="e.g. 70" oninput="fetchStudentRoster()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Max Standing Arrears</label>
+                            <input type="number" min="0" id="filterMaxArrears" class="form-control" placeholder="e.g. 0" oninput="fetchStudentRoster()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Search Name / Reg No / Email</label>
+                            <input type="text" id="filterSearch" class="form-control" placeholder="Type to search..." oninput="fetchStudentRoster()">
+                        </div>
+                    </div>
+
+                    <!-- Active filter chips -->
+                    <div id="activeFilterChips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Register No</th>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>10th %</th>
+                                <th>12th %</th>
+                                <th>CGPA</th>
+                                <th>Standing Arrears</th>
+                                <th>Domain Interest</th>
+                                <th>Resume</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentRosterTableBody">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: POST & MANAGE DRIVES ================= -->
+        <div id="adminTabDrives" class="tab-content hidden">
+            <div class="panel-card mb-4">
+                <div class="panel-title">
+                    <span><i class="fa-solid fa-square-plus" style="color: var(--accent);"></i> Post New Placement Drive Opportunity</span>
+                </div>
+
+                <form id="postDriveForm" onsubmit="handlePostDrive(event)">
+                    <div class="form-grid mb-4">
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" id="driveCompany" class="form-control" placeholder="e.g. TCS / Zoho / Cognizant" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Job Designation / Role</label>
+                            <input type="text" id="driveRole" class="form-control" placeholder="e.g. Software Engineer" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Package CTC (LPA)</label>
+                            <input type="text" id="drivePackage" class="form-control" placeholder="e.g. 7.5 LPA" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid mb-4">
+                        <div class="form-group">
+                            <label>Minimum Required CGPA</label>
+                            <input type="number" step="0.01" id="driveMinCgpa" class="form-control" value="6.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Standing Arrears Allowed</label>
+                            <input type="number" id="driveMaxArrears" class="form-control" value="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Eligible Batches / Years</label>
+                            <input type="text" id="driveYears" class="form-control" value="3,4" placeholder="e.g. 3,4" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Job Location</label>
+                            <input type="text" id="driveLocation" class="form-control" placeholder="e.g. Chennai / Remote">
+                        </div>
+                        <div class="form-group">
+                            <label>Application Deadline</label>
+                            <input type="date" id="driveDeadline" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label>Job Description & Hiring Details</label>
+                        <textarea id="driveDescription" class="form-control" placeholder="Key responsibilities, interview rounds, and criteria..."></textarea>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <button type="submit" class="btn-primary">
+                            <i class="fa-solid fa-paper-plane"></i> Publish Placement Drive
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">Active Placement Drives</div>
+                <div id="adminDrivesContainer" class="drives-grid">
+                    <!-- Dynamic Drive Cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: APPLICATIONS & SELECTION ================= -->
+        <div id="adminTabApplications" class="tab-content hidden">
+            <div class="panel-card">
+                <div class="panel-title">
+                    <span><i class="fa-solid fa-clipboard-check" style="color: var(--accent);"></i> Student Placement Applications</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Company & Role</th>
+                                <th>Student Name</th>
+                                <th>Reg No</th>
+                                <th>Year</th>
+                                <th>CGPA</th>
+                                <th>Arrears</th>
+                                <th>Current Status</th>
+                                <th>Update Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicationsTableBody">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SheetJS with Style Support (xlsx-js-style) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="admin_dashboard.js"></script>
+>>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
 </body>
 </html>
