@@ -11,16 +11,6 @@
   "license": "ISC",
   "description": "Department Placement Portal Backend API",
   "dependencies": {
-<<<<<<< HEAD
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "multer": "^2.2.0",
-    "mysql2": "^3.23.1",
-    "nodemailer": "^8.0.1"
-=======
     "@supabase/supabase-js": "^2.111.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -30,7 +20,6 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.9.7",
     "sqlite3": "^5.1.7"
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

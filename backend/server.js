@@ -1,12 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-<<<<<<< HEAD
-const db = require("./db"); // Connects to MySQL
-=======
 
 const db = require("./db");
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
 const authRoutes = require("./routes/auth");
 const studentRoutes = require("./routes/student");
 const adminRoutes = require("./routes/admin");
@@ -43,22 +39,6 @@ app.get("/api/health", (req, res) => {
     });
 });
 
-<<<<<<< HEAD
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/student", require("./routes/student"));
-app.use("/api/admin", require("./routes/admin"));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// Serve the frontend (Form.html, admin_dashboard.html, student_dashboard.html, etc.)
-// Adjust "../frontend" if your frontend folder lives somewhere else relative to backend/
-app.use(express.static(path.join(__dirname, "..", "frontend")));
-
-// Start Server
-app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
-});
-=======
 // Global JSON Error Handler — ensures API routes NEVER return HTML on error
 app.use((err, req, res, next) => {
     console.error("❌ Unhandled server error:", err.message || err);
@@ -86,4 +66,3 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
 }
 
 module.exports = app;
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
