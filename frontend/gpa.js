@@ -251,6 +251,7 @@ const syllabus = {
                 { code: "CW3551", credit: 3 },
                 { code: "CCS335", credit: 3 },
                 { code: "CCW332", credit: 3 },
+                { code: "CW3511", credit: 2 },
                 { code: "MX3084", credit: 0 }
                 
                  
