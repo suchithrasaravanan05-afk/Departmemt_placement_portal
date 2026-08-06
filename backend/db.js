@@ -1,4 +1,9 @@
-const mysql = require("mysql2");
+let mysql = null;
+try {
+    mysql = require("mysql2");
+} catch (e) {
+    console.log("⚠️ mysql2 module optional load notice:", e.message);
+}
 const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcryptjs");

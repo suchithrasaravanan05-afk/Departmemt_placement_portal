@@ -56,8 +56,8 @@ app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/Form.html"));
 });
 
-// Start Server
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+// Start Server — never listen() on Vercel (it uses serverless handler instead)
+if (!process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`=======================================================`);
         console.log(`🚀 RIT Placement Portal Backend running on http://localhost:${PORT}`);
