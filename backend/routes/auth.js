@@ -6,6 +6,14 @@ const db = require("../db");
 
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
 
+function issueAdminToken() {
+    return jwt.sign(
+        { id: 0, email: "admin@rit.ac.in", role: "admin", full_name: "CSBS Placement Admin" },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+}
+
 // =========================
 // REGISTER USER (Student or Admin)
 // =========================

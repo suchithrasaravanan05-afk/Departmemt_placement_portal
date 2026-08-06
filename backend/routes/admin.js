@@ -225,4 +225,3 @@ router.post("/applications/status", (req, res) => {
 });
 
 module.exports = router;
-module.exports.issueAdminToken = issueAdminToken;
