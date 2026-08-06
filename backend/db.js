@@ -17,7 +17,7 @@ const MYSQL_CONFIG = {
     database: process.env.DB_NAME || "csbs"
 };
 
-let dbMode = "mysql";
+let dbMode = "supabase";
 let mysqlConn = null;
 let sqliteDb = null;
 
@@ -25,9 +25,7 @@ let sqliteDb = null;
 testSupabaseConnection().then(res => {
     if (res.success) {
         console.log("⚡ Supabase Cloud Connected successfully!");
-        if (process.env.VERCEL || !mysqlConn) {
-            dbMode = "supabase";
-        }
+        dbMode = "supabase";
     } else {
         console.log("⚠️ Supabase Notice:", res.error || res.message);
     }
@@ -489,13 +487,17 @@ const db = {
 };
 
 const initMySQL = () => {
-    if (process.env.VERCEL && (supabaseAdmin || supabase)) {
-        console.log("⚡ Vercel Environment detected: Using Supabase Database");
+    if ((supabaseAdmin || supabase) && process.env.USE_LOCAL_MYSQL !== "true") {
+        console.log("⚡ Cloud Mode active: Using Supabase Database directly");
         dbMode = "supabase";
         return;
     }
 
     try {
+        if (!mysql) {
+            dbMode = "supabase";
+            return;
+        }
         const pool = mysql.createConnection(MYSQL_CONFIG);
         pool.connect((err) => {
             if (err) {
