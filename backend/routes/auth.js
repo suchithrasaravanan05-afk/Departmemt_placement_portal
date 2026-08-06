@@ -114,7 +114,6 @@ router.post("/register", async (req, res) => {
 // LOGIN USER
 // =========================
 router.post("/login", (req, res) => {
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
     const { email, password } = req.body;
     const identifier = (email || "").trim();
 
@@ -138,13 +137,7 @@ router.post("/login", (req, res) => {
     // ==========================
     // STUDENT LOGIN
     // ==========================
-
-<<<<<<< HEAD
-    db.query(
-        "SELECT * FROM users WHERE register_number = ? OR email = ?",
-        [identifier, identifier],
-        async (err, results) => {
-=======
+   
     if (!email || !password) {
         return res.status(400).json({ success: false, message: "Email and password are required." });
     }

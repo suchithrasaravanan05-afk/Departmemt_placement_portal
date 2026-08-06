@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPA & CGPA Calculator - RAMCO INSTITUTE OF TECHNOLOGY</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="gpa.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- College Header Banner -->
+    <header class="college-header-wrapper">
+        <div class="college-header">
+            <div class="college-logo-group">
+                <img src="logopage.png" alt="RAMCO INSTITUTE OF TECHNOLOGY Banner" class="college-banner-img">
+            </div>
+            <div class="college-info">
+                <span class="college-badge"><i class="fa-solid fa-calculator"></i> GPA & CGPA Calculator</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dept-banner">
+        Department of Computer Science and Business Systems (CSBS)
+    </div>
+
+    <div class="app-container" style="max-width: 900px; margin: 30px auto; padding: 0 20px;">
+
+        <a href="student_dashboard.html" class="back-link" style="display: inline-block; margin-bottom: 20px; color: var(--accent); font-weight: 600; text-decoration: none;">
+            &larr; Back to Dashboard
+        </a>
+
+        <!-- GPA Calculator Card -->
+        <div class="card" style="background: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+            <h2 style="color: var(--primary); margin-bottom: 20px; font-weight: 800;">Semester GPA & CGPA Calculator</h2>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">Choose Regulation</label>
+                <select id="regulation" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <option value="">Select Regulation</option>
+                    <option value="2025">Regulation 2025</option>
+                    <option value="2021" selected>Regulation 2021</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">Choose Semester</label>
+                <select id="semester" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <option value="">Select Semester</option>
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option>
+                    <option value="4">Semester 4</option>
+                    <option value="5">Semester 5</option>
+                    <option value="6">Semester 6</option>
+                    <option value="7">Semester 7</option>
+                    <option value="8">Semester 8</option>
+                </select>
+            </div>
+
+            <div id="subjects" style="margin: 20px 0;"></div>
+
+            <div class="button-group" style="display: flex; gap: 12px; margin-top: 20px;">
+                <button type="button" id="calculateBtn" class="btn-primary" style="padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                    Calculate GPA
+                </button>
+                <button type="button" id="resetBtn" class="btn-secondary" style="padding: 12px 24px; background: #e2e8f0; color: #334155; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    Reset
+                </button>
+            </div>
+
+            <div id="resultBox" class="result" style="margin-top: 30px; text-align: center; display: none; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                <h3>Your Semester GPA</h3>
+                <h1 id="gpaResult" style="font-size: 42px; color: #2563eb; margin: 10px 0;">0.00</h1>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="gpa.js"></script>
+</body>
+</html>
