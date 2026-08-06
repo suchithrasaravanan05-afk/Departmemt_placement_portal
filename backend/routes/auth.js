@@ -6,14 +6,6 @@ const db = require("../db");
 
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
 
-function issueAdminToken() {
-    return jwt.sign(
-        { id: 0, email: "admin@rit.ac.in", role: "admin", full_name: "CSBS Placement Admin" },
-        JWT_SECRET,
-        { expiresIn: "7d" }
-    );
-}
-
 // =========================
 // REGISTER USER (Student or Admin)
 // =========================
@@ -122,6 +114,7 @@ router.post("/register", async (req, res) => {
 // LOGIN USER
 // =========================
 router.post("/login", (req, res) => {
+>>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
     const { email, password } = req.body;
     const identifier = (email || "").trim();
 
@@ -145,7 +138,13 @@ router.post("/login", (req, res) => {
     // ==========================
     // STUDENT LOGIN
     // ==========================
-   
+
+<<<<<<< HEAD
+    db.query(
+        "SELECT * FROM users WHERE register_number = ? OR email = ?",
+        [identifier, identifier],
+        async (err, results) => {
+=======
     if (!email || !password) {
         return res.status(400).json({ success: false, message: "Email and password are required." });
     }
