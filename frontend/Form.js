@@ -1,10 +1,7 @@
 console.log("Form.js loaded");
 
-const SERVER_BASE = (window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1"))
-    ? "http://localhost:5500"
-    : window.location.origin;
-
-const API_BASE = `${SERVER_BASE}/api`;
+// Always use the current origin — works on Vercel, custom domain, etc.
+const API_BASE = `${window.location.origin}/api`;
 
 let selectedRole = "student"; // 'student' or 'admin'
 let isRegisterMode = false;
