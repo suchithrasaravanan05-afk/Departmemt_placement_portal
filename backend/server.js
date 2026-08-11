@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const multer = require("multer");
+const multer = require(require.resolve("multer", { paths: [process.cwd()] }));
 
 const db = require("./db");
 const authRoutes = require("./routes/auth");

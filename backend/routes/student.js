@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
+const multer = require(require.resolve("multer", { paths: [process.cwd()] }));
 const db = require("../db");
 const { supabaseAdmin } = require("../supabase");
 

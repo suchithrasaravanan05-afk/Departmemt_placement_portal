@@ -3,7 +3,7 @@ let initError = null;
 
 try {
     // Pre-load core dependencies at root level to populate require.cache
-    require("multer");
+    require(require.resolve("multer", { paths: [process.cwd()] }));
     require("express");
     require("cors");
     require("@supabase/supabase-js");
