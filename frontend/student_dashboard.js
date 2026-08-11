@@ -155,43 +155,54 @@ function toggleArrearCounts() {
 // LOAD PROFILE FROM API
 // =====================================================
 async function loadStudentProfile() {
-    document.getElementById("profileLoading").classList.remove("hidden");
-    document.getElementById("profileViewContent").classList.add("hidden");
-    document.getElementById("noProfileState").classList.add("hidden");
+    const loadingEl = document.getElementById("profileLoading");
+    const viewContentEl = document.getElementById("profileViewContent");
+    const noProfileEl = document.getElementById("noProfileState");
+
+    if (loadingEl) loadingEl.classList.remove("hidden");
+    if (viewContentEl) viewContentEl.classList.add("hidden");
+    if (noProfileEl) noProfileEl.classList.add("hidden");
 
     try {
+        console.log("Profile API URL:", `${API_BASE}/student/profile/${currentUser.id}`);
         const res = await fetch(`${API_BASE}/student/profile/${currentUser.id}`, {
             headers: { "Authorization": `Bearer ${currentToken}` }
         });
+        console.log("Profile response status:", res.status);
         const data = await res.json();
+        console.log("Profile response data:", data);
 
-        document.getElementById("profileLoading").classList.add("hidden");
+        if (loadingEl) loadingEl.classList.add("hidden");
 
-        if (data.success && data.profile && data.profile.dob) {
-            // Profile exists ΓÇö populate view and form
+        if (data.success && data.profile) {
+            // Profile exists — populate view and form
             currentProfile = data.profile;
             isNewUser = false;
             populateViewMode(data.profile);
             populateEditForm(data.profile);
             // Show read-only view
-            document.getElementById("profileViewContent").classList.remove("hidden");
-            document.getElementById("profileEditMode").classList.add("hidden");
-            document.getElementById("profileViewMode").classList.remove("hidden");
+            if (viewContentEl) viewContentEl.classList.remove("hidden");
+            const editEl = document.getElementById("profileEditMode");
+            const viewEl = document.getElementById("profileViewMode");
+            if (editEl) editEl.classList.add("hidden");
+            if (viewEl) viewEl.classList.remove("hidden");
         } else {
-            // New user ΓÇö no profile saved
+            // New user — no profile saved yet
             isNewUser = true;
-            document.getElementById("noProfileState").classList.remove("hidden");
-            // Auto-open edit mode for new users
+            if (noProfileEl) noProfileEl.classList.remove("hidden");
             setTimeout(() => {
                 enterEditMode();
             }, 500);
         }
     } catch (e) {
         console.error("Load profile error:", e);
-        document.getElementById("profileLoading").classList.add("hidden");
-        isNewUser = true;
-        document.getElementById("noProfileState").classList.remove("hidden");
-        setTimeout(() => enterEditMode(), 500);
+        if (loadingEl) loadingEl.classList.add("hidden");
+        if (viewContentEl) viewContentEl.classList.remove("hidden");
+        const editEl = document.getElementById("profileEditMode");
+        const viewEl = document.getElementById("profileViewMode");
+        if (editEl) editEl.classList.add("hidden");
+        if (viewEl) viewEl.classList.remove("hidden");
+        showStudentAlert("Unable to load complete profile. Displaying available account information.");
     }
 }
 
@@ -202,19 +213,26 @@ function populateViewMode(p) {
     const val = (v) => (v && String(v).trim() !== "") ? v : null;
 
     // Header
-    document.getElementById("viewName").innerText = currentUser.full_name || p.full_name || "---";
-    document.getElementById("viewReg").innerText = `Register No: ${currentUser.register_number || "---"} | Year: ${p.year || currentUser.year || "---"}`;
+    const nameEl = document.getElementById("viewName");
+    const regEl = document.getElementById("viewReg");
+    const cgpaEl = document.getElementById("viewCgpaNum");
+    const avatarEl = document.getElementById("viewAvatar");
+
+    if (nameEl) nameEl.innerText = (currentUser && currentUser.full_name) || p.full_name || "---";
+    if (regEl) regEl.innerText = `Register No: ${(currentUser && currentUser.register_number) || p.register_number || "---"} | Year: ${p.year || (currentUser && currentUser.year) || "---"}`;
 
     // CGPA
     const cgpa = val(p.cgpa);
-    document.getElementById("viewCgpaNum").innerText = cgpa ? parseFloat(cgpa).toFixed(2) : "--";
+    if (cgpaEl) cgpaEl.innerText = cgpa ? parseFloat(cgpa).toFixed(2) : "--";
 
-    // Profile photo in avatar (Supabase public URL ΓÇö no SERVER_BASE prefix needed)
-    if (val(p.profile_photo)) {
-        document.getElementById("viewAvatar").innerHTML = `<img src="${p.profile_photo}" alt="Photo">`;
-    } else {
-        const initials = (currentUser.full_name || "S").split(" ").map(w => w[0]).join("").toUpperCase().substring(0, 2);
-        document.getElementById("viewAvatar").innerText = initials;
+    // Profile photo in avatar
+    if (avatarEl) {
+        if (val(p.profile_photo)) {
+            avatarEl.innerHTML = `<img src="${p.profile_photo}" alt="Photo">`;
+        } else {
+            const initials = ((currentUser && currentUser.full_name) || p.full_name || "S").split(" ").map(w => w[0]).join("").toUpperCase().substring(0, 2);
+            avatarEl.innerText = initials;
+        }
     }
 
     // Personal
@@ -234,40 +252,51 @@ function populateViewMode(p) {
 
     // GPA chips
     const gpaGrid = document.getElementById("viewGpaGrid");
-    gpaGrid.innerHTML = "";
-    const year = parseInt(p.year || currentUser.year || 3);
-    const enabledSems = year * 2;
-    for (let i = 1; i <= 8; i++) {
-        const gpaVal = p[`sem${i}_gpa`];
-        const hasVal = gpaVal && parseFloat(gpaVal) > 0;
-        const chip = document.createElement("div");
-        chip.className = `gpa-chip${i > enabledSems ? " disabled" : ""}`;
-        chip.innerHTML = `
-            <div class="sem-label">Sem ${i}</div>
-            <div class="sem-val">${i <= enabledSems ? (hasVal ? parseFloat(gpaVal).toFixed(1) : "--") : "N/A"}</div>
-        `;
-        gpaGrid.appendChild(chip);
+    if (gpaGrid) {
+        gpaGrid.innerHTML = "";
+        const year = parseInt(p.year || (currentUser && currentUser.year) || 3);
+        const enabledSems = year * 2;
+        for (let i = 1; i <= 8; i++) {
+            const gpaVal = p[`sem${i}_gpa`];
+            const hasVal = gpaVal && parseFloat(gpaVal) > 0;
+            const chip = document.createElement("div");
+            chip.className = `gpa-chip${i > enabledSems ? " disabled" : ""}`;
+            chip.innerHTML = `
+                <div class="sem-label">Sem ${i}</div>
+                <div class="sem-val">${i <= enabledSems ? (hasVal ? parseFloat(gpaVal).toFixed(1) : "--") : "N/A"}</div>
+            `;
+            gpaGrid.appendChild(chip);
+        }
     }
 
     // Arrears
     const ha = val(p.history_of_arrears) || "no";
     const sa = val(p.standing_of_arrears) || "no";
-    document.getElementById("viewHistoryArrears").innerHTML = `<span class="arrears-badge ${ha === "yes" ? "arrears-has" : "arrears-none"}">${ha === "yes" ? "Yes" : "No Arrears"}</span>`;
-    document.getElementById("viewHistoryCount").innerText = ha === "yes" ? (p.history_arrears_count || 0) : "ΓÇö";
-    document.getElementById("viewStandingArrears").innerHTML = `<span class="arrears-badge ${sa === "yes" ? "arrears-has" : "arrears-none"}">${sa === "yes" ? "Yes" : "No Arrears"}</span>`;
-    document.getElementById("viewStandingCount").innerText = sa === "yes" ? (p.standing_arrears_count || 0) : "ΓÇö";
+    const haEl = document.getElementById("viewHistoryArrears");
+    const hcEl = document.getElementById("viewHistoryCount");
+    const saEl = document.getElementById("viewStandingArrears");
+    const scEl = document.getElementById("viewStandingCount");
 
-    // Links & files
+    if (haEl) haEl.innerHTML = `<span class="arrears-badge ${ha === "yes" ? "arrears-has" : "arrears-none"}">${ha === "yes" ? "Yes" : "No Arrears"}</span>`;
+    if (hcEl) hcEl.innerText = ha === "yes" ? (p.history_arrears_count || 0) : "—";
+    if (saEl) saEl.innerHTML = `<span class="arrears-badge ${sa === "yes" ? "arrears-has" : "arrears-none"}">${sa === "yes" ? "Yes" : "No Arrears"}</span>`;
+    if (scEl) scEl.innerText = sa === "yes" ? (p.standing_arrears_count || 0) : "—";
+
+    // Links & files (optional elements)
     const linkedin = val(p.linkedin_link);
     const github = val(p.github_link);
     const photo = val(p.profile_photo);
     const resume = val(p.resume_file);
 
-    document.getElementById("viewLinkedin").innerHTML = linkedin ? `<a href="${linkedin}" target="_blank"><i class="fa-brands fa-linkedin"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
-    document.getElementById("viewGithub").innerHTML = github ? `<a href="${github}" target="_blank"><i class="fa-brands fa-github"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
-    // Supabase public URLs ΓÇö use directly without SERVER_BASE prefix
-    document.getElementById("viewPhoto").innerHTML = photo ? `<a href="${photo}" target="_blank"><i class="fa-solid fa-image"></i> View Photo</a>` : "<span class='empty'>Not Uploaded</span>";
-    document.getElementById("viewResume").innerHTML = resume ? `<a href="${resume}" target="_blank"><i class="fa-solid fa-file-pdf"></i> View Resume</a>` : "<span class='empty'>Not Uploaded</span>";
+    const linkedinEl = document.getElementById("viewLinkedin");
+    const githubEl = document.getElementById("viewGithub");
+    const photoEl = document.getElementById("viewPhoto");
+    const resumeEl = document.getElementById("viewResume");
+
+    if (linkedinEl) linkedinEl.innerHTML = linkedin ? `<a href="${linkedin}" target="_blank"><i class="fa-brands fa-linkedin"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
+    if (githubEl) githubEl.innerHTML = github ? `<a href="${github}" target="_blank"><i class="fa-brands fa-github"></i> View Profile</a>` : "<span class='empty'>Not Added</span>";
+    if (photoEl) photoEl.innerHTML = photo ? `<a href="${photo}" target="_blank"><i class="fa-solid fa-image"></i> View Photo</a>` : "<span class='empty'>Not Uploaded</span>";
+    if (resumeEl) resumeEl.innerHTML = resume ? `<a href="${resume}" target="_blank"><i class="fa-solid fa-file-pdf"></i> View Resume</a>` : "<span class='empty'>Not Uploaded</span>";
 }
 
 function setDetailValue(id, value) {
