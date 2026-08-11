@@ -2,6 +2,12 @@ let app;
 let initError = null;
 
 try {
+    // Pre-load core dependencies at root level to populate require.cache
+    require("multer");
+    require("express");
+    require("cors");
+    require("@supabase/supabase-js");
+
     app = require("../backend/server");
 } catch (err) {
     console.error("❌ FATAL SERVERLESS STARTUP ERROR:", err);
