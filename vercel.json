@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "frontend/**"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -15,8 +10,12 @@
       "destination": "/api"
     },
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "source": "/",
+      "destination": "/frontend/Form.html"
+    },
+    {
+      "source": "/:path((?!api/|uploads/).*)",
+      "destination": "/frontend/:path"
     }
   ]
 }
