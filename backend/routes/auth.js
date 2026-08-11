@@ -114,44 +114,39 @@ router.post("/register", async (req, res) => {
 // LOGIN USER
 // =========================
 router.post("/login", (req, res) => {
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
     const { email, password } = req.body;
     const identifier = (email || "").trim();
 
-    // ==========================
-    // ADMIN LOGIN
-    // ==========================
+    if (!identifier || !password) {
+        return res.status(400).json({ success: false, message: "Email/Register No and password are required." });
+    }
 
-    if (identifier === "admin" && password === "admin123") {
-
-        const adminToken = issueAdminToken();
-
+    // Default Admin Login shortcut
+    if ((identifier === "admin" || identifier === "admin@rit.ac.in") && password === "admin123") {
+        const token = jwt.sign(
+            { id: 0, email: "admin@rit.ac.in", role: "admin", full_name: "Placement Admin" },
+            JWT_SECRET,
+            { expiresIn: "7d" }
+        );
         return res.status(200).json({
             success: true,
-            role: "admin",
-            adminToken,
-            message: "Admin Login Successful"
+            message: "Admin Login Successful!",
+            token,
+            adminToken: token,
+            user: {
+                id: 0,
+                full_name: "Placement Admin",
+                register_number: "ADMIN",
+                email: "admin@rit.ac.in",
+                role: "admin"
+            }
         });
-
     }
 
-    // ==========================
-    // STUDENT LOGIN
-    // ==========================
-
-<<<<<<< HEAD
-    db.query(
-        "SELECT * FROM users WHERE register_number = ? OR email = ?",
-        [identifier, identifier],
-        async (err, results) => {
-=======
-    if (!email || !password) {
-        return res.status(400).json({ success: false, message: "Email and password are required." });
-    }
-
+    // Database lookup for Student or registered Admin
     db.query(
         "SELECT * FROM users WHERE email = ? OR register_number = ?",
-        [email, email],
+        [identifier, identifier],
         async (err, results) => {
             if (err) {
                 console.error("Login DB Error:", err);
@@ -179,10 +174,10 @@ router.post("/login", (req, res) => {
             );
 
             res.status(200).json({
-
                 success: true,
                 message: "Login successful!",
                 token,
+                adminToken: user.role === "admin" ? token : undefined,
                 user: {
                     id: user.id,
                     full_name: user.full_name,
@@ -190,13 +185,11 @@ router.post("/login", (req, res) => {
                     email: user.email,
                     role: user.role || "student",
                     year: user.year,
-                    department_code: user.department_code,
+                    department: user.department,
                     phone: user.phone
                 }
-
             });
         }
-
     );
 });
 

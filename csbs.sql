@@ -1,72 +1,18 @@
-<<<<<<< HEAD
--- ============================================================
--- CSBS Placement Portal - Full Database Schema
--- ============================================================
-=======
 -- =========================================================
 -- DEPARTMENT PLACEMENT PORTAL - RAMCO INSTITUTE OF TECHNOLOGY
--- Database Schema for MySQL
+-- Database Schema for MySQL / Supabase reference
 -- =========================================================
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
 
 CREATE DATABASE IF NOT EXISTS csbs;
 USE csbs;
 
-<<<<<<< HEAD
--- ============================================================
--- departments
--- ============================================================
-CREATE TABLE IF NOT EXISTS departments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    dept_code VARCHAR(10) UNIQUE NOT NULL,
-    dept_name VARCHAR(100) NOT NULL
-);
-
-INSERT INTO departments (dept_code, dept_name)
-VALUES ('CSBS', 'Computer Science and Business Systems')
-ON DUPLICATE KEY UPDATE dept_name = VALUES(dept_name);
-
--- ============================================================
--- users  (students who register through Form.html)
--- ============================================================
-=======
 -- 1. Users Table (Auth & Accounts)
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     register_number VARCHAR(30) UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-<<<<<<< HEAD
-    year TINYINT NOT NULL CHECK (year BETWEEN 1 AND 4),
-    department_code VARCHAR(10) NOT NULL,
-    phone VARCHAR(10) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_department
-        FOREIGN KEY (department_code) REFERENCES departments(dept_code)
-);
-
--- ============================================================
--- placement_notifications (used by sendNotification.js)
--- ============================================================
-CREATE TABLE IF NOT EXISTS placement_notifications (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    company_name VARCHAR(150) NOT NULL,
-    description TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- ============================================================
--- Verify
--- ============================================================
-SHOW TABLES;
-DESC departments;
-DESC users;
-DESC placement_notifications;
-SELECT * FROM departments;
-SELECT * FROM users;
-=======
     role ENUM('student', 'admin') DEFAULT 'student',
     year TINYINT CHECK (year BETWEEN 1 AND 4),
     department VARCHAR(100) DEFAULT 'Computer Science and Business Systems',
@@ -149,7 +95,6 @@ CREATE TABLE IF NOT EXISTS study_materials (
 );
 
 -- Default Admin Account (Password: admin123)
--- Hash below corresponds to bcrypt hash of 'admin123'
 INSERT INTO users (full_name, register_number, email, password, role, year, department, phone)
 VALUES ('CSBS Placement Admin', 'ADMIN001', 'admin@rit.ac.in', '$2a$10$7vN1E7eP.8uN0G1x1N3Wze2/84XwN0bJp.z9O0B1T8m1k9l0m1n2o', 'admin', 4, 'CSBS', '9876543210')
 ON DUPLICATE KEY UPDATE email=email;
@@ -161,4 +106,3 @@ VALUES
 ('Zoho Corporation', 'Software Development Engineer', '8.5 - 12.0 LPA', 7.00, 0, '3,4', 'Tenkasi / Chennai', '2026-09-15', 'Full-stack software developer role. Programming test focusing on problem solving & DSA.'),
 ('Cognizant (CTS)', 'GenC Next & Elevate', '6.75 LPA', 6.00, 1, '4', 'Coimbatore / Chennai', '2026-09-01', 'Role in Cloud, AI, and Full Stack development.')
 ON DUPLICATE KEY UPDATE company_name=company_name;
->>>>>>> b6367ee5a7b6d8eb22c3b3c345ff00270a1433c0
