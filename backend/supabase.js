@@ -4,7 +4,7 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const supabaseUrl = process.env.SUPABASE_URL || "https://xdcctmnqmlvcibuhlcvx.supabase.co";
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkY2N0bW5xbWx2Y2lidWhsY3Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyOTYzMzIsImV4cCI6MjEwMDg3MjMzMn0.KnDvm6ClLNMoH840tIqyFSAIk6YVOKWwXue-Aa_o4wQ";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkY2N0bW5xbWx2Y2lidWhsY3Z4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTI5NjMzMiwiZXhwIjoyMTAwODcyMzMyfQ.Aj27NDNfoiFSqaz6gxGTOZWcQfl2N6H099vHR46ozKM";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkY2N0bW5xbWx2Y2lidWhsY3Z4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTI5NjMzMiwiZXhwIjoyMTAwODcyMzMyfQ.Aj27NDNfoiFSqaz6gxGTOZWcQfl2N6H099vHR46ozKM";
 
 let supabase = null;
 let supabaseAdmin = null;

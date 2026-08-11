@@ -148,47 +148,56 @@ router.post("/login", (req, res) => {
         "SELECT * FROM users WHERE email = ? OR register_number = ?",
         [identifier, identifier],
         async (err, results) => {
-            if (err) {
-                console.error("Login DB Error:", err);
-                return res.status(500).json({ success: false, message: "Database Error" });
-            }
-
-            if (!results || results.length === 0) {
-                return res.status(404).json({ success: false, message: "User not found with provided credentials." });
-            }
-
-            const user = results[0];
-
-            // Verify Password using bcrypt
-            const match = await bcrypt.compare(password, user.password);
-
-            if (!match) {
-                return res.status(401).json({ success: false, message: "Invalid Password" });
-            }
-
-            // Generate JWT token
-            const token = jwt.sign(
-                { id: user.id, email: user.email, role: user.role, full_name: user.full_name },
-                JWT_SECRET,
-                { expiresIn: "7d" }
-            );
-
-            res.status(200).json({
-                success: true,
-                message: "Login successful!",
-                token,
-                adminToken: user.role === "admin" ? token : undefined,
-                user: {
-                    id: user.id,
-                    full_name: user.full_name,
-                    register_number: user.register_number,
-                    email: user.email,
-                    role: user.role || "student",
-                    year: user.year,
-                    department: user.department,
-                    phone: user.phone
+            try {
+                if (err) {
+                    console.error("Login DB Error:", err.message || err);
+                    return res.status(500).json({ success: false, message: "Database Error: " + (err.message || "Query failed") });
                 }
-            });
+
+                if (!results || results.length === 0) {
+                    return res.status(404).json({ success: false, message: "User not found with provided credentials." });
+                }
+
+                const user = results[0];
+
+                if (!user || !user.password) {
+                    return res.status(401).json({ success: false, message: "Account has no password set. Please reset your password." });
+                }
+
+                // Verify Password using bcrypt
+                const match = await bcrypt.compare(password, user.password);
+
+                if (!match) {
+                    return res.status(401).json({ success: false, message: "Invalid Password" });
+                }
+
+                // Generate JWT token
+                const token = jwt.sign(
+                    { id: user.id, email: user.email, role: user.role, full_name: user.full_name },
+                    JWT_SECRET,
+                    { expiresIn: "7d" }
+                );
+
+                res.status(200).json({
+                    success: true,
+                    message: "Login successful!",
+                    token,
+                    adminToken: user.role === "admin" ? token : undefined,
+                    user: {
+                        id: user.id,
+                        full_name: user.full_name,
+                        register_number: user.register_number,
+                        email: user.email,
+                        role: user.role || "student",
+                        year: user.year,
+                        department: user.department,
+                        phone: user.phone
+                    }
+                });
+            } catch (loginError) {
+                console.error("Login Processing Error:", loginError);
+                return res.status(500).json({ success: false, message: "Login processing error: " + (loginError.message || "Internal Error") });
+            }
         }
     );
 });
