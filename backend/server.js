@@ -25,13 +25,13 @@ app.use("/uploads", express.static(uploadServePath));
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/student", studentRoutes);
-app.use("/api/admin", adminRoutes);
+// API Routes (Support both /api/* and root paths for Vercel serverless rewrites)
+app.use(["/api/auth", "/auth"], authRoutes);
+app.use(["/api/student", "/student"], studentRoutes);
+app.use(["/api/admin", "/admin"], adminRoutes);
 
 // Root Route
-app.get("/api/health", (req, res) => {
+app.get(["/api/health", "/health"], (req, res) => {
     res.json({
         status: "Online",
         message: "🎓 Ramco Institute of Technology - CSBS Placement Portal Backend Operating Normally",
@@ -42,7 +42,7 @@ app.get("/api/health", (req, res) => {
 // Global JSON Error Handler — ensures API routes NEVER return HTML on error
 app.use((err, req, res, next) => {
     console.error("❌ Unhandled server error:", err.message || err);
-    if (req.path.startsWith("/api/")) {
+    if (req.path.startsWith("/api/") || req.path.startsWith("/auth/") || req.path.startsWith("/student/") || req.path.startsWith("/admin/")) {
         return res.status(500).json({
             success: false,
             message: err.message || "Internal Server Error"

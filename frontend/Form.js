@@ -85,7 +85,16 @@ async function handleLogin(e) {
             body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        const contentType = response.headers.get("content-type");
+        let data = {};
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            console.error("Non-JSON API response:", response.status, text);
+            showAlert(`Server error (${response.status}). Please check backend status.`);
+            return;
+        }
 
         if (!response.ok || !data.success) {
             showAlert(data.message || "Invalid credentials. Please try again.");
@@ -108,7 +117,7 @@ async function handleLogin(e) {
 
     } catch (err) {
         console.error("Login fetch error:", err);
-        showAlert("Server connection failed. Please check network/backend status.");
+        showAlert("Unable to connect to server. Please check your network connection.");
     }
 }
 
@@ -138,7 +147,16 @@ async function handleRegister(e) {
             })
         });
 
-        const data = await response.json();
+        const contentType = response.headers.get("content-type");
+        let data = {};
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            console.error("Non-JSON API response:", response.status, text);
+            showAlert(`Server error (${response.status}). Please check backend status.`);
+            return;
+        }
 
         if (!response.ok || !data.success) {
             showAlert(data.message || "Registration failed. Please check details.");
@@ -160,6 +178,6 @@ async function handleRegister(e) {
 
     } catch (err) {
         console.error("Register fetch error:", err);
-        showAlert("Server connection error. Please try again.");
+        showAlert("Unable to connect to server. Please try again.");
     }
 }
