@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Check if user is already logged in
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "null");
-
+ 
     if (token && user) {
         if (user.role === "admin") {
             window.location.href = "admin_dashboard.html";
