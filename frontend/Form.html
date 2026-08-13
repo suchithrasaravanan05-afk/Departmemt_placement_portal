@@ -1,127 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GetHired - RIT CSBS Placement Portal Login & Register</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RIT CSBS Placement Portal — Login & Register</title>
+  <meta name="description" content="Login or register to the Ramco Institute of Technology CSBS Department Placement Portal.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="Form.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="form-auth-bg">
 
-    <!-- College Header Banner -->
-    <header class="college-header-wrapper">
-        <div class="college-header">
-            <div class="college-logo-group">
-                <i class="fa-solid fa-graduation-cap fa-2x" style="color: #60a5fa;"></i>
-                <div>
-                    <h2 style="font-size: 18px; font-weight: 800; color: #fff;">RAMCO INSTITUTE OF TECHNOLOGY</h2>
-                    <p style="font-size: 12px; color: #94a3b8;">Approved by AICTE, New Delhi & Affiliated to Anna University</p>
-                </div>
-            </div>
-            <div class="college-info">
-                <span class="college-badge"><i class="fa-solid fa-award"></i> NAAC Accredited & NBA Accredited</span>
-            </div>
+  <!-- College Header -->
+  <header class="form-header-wrapper">
+    <div class="form-header">
+      <div class="form-logo-group">
+        <div class="form-logo-icon">
+          <i class="fa-solid fa-graduation-cap"></i>
         </div>
-    </header>
-
-    <div class="dept-banner">
-        Department of Computer Science and Business Systems (CSBS)
+        <div class="form-logo-text">
+          <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
+          <p>Approved by AICTE, New Delhi &amp; Affiliated to Anna University</p>
+        </div>
+      </div>
+      <div>
+        <span class="form-college-badge">
+          <i class="fa-solid fa-award"></i> NAAC &amp; NBA Accredited
+        </span>
+      </div>
     </div>
+  </header>
 
-    <!-- Main Auth Card Section -->
-    <main class="auth-wrapper">
-        <div class="auth-card">
-            
-            <div class="auth-header">
-                <h2 id="formTitle">Student & Faculty Login</h2>
-                <p id="formSub">Welcome to RIT Department Placement Portal</p>
-            </div>
+  <div class="form-dept-banner">
+    Department of Computer Science and Business Systems (CSBS) — Placement Portal
+  </div>
 
-            <!-- Role Selector -->
-            <div class="role-selector">
-                <button class="role-btn active" id="btnRoleStudent" onclick="setRole('student')">
-                    <i class="fa-solid fa-user-graduate"></i> Student
-                </button>
-                <button class="role-btn" id="btnRoleAdmin" onclick="setRole('admin')">
-                    <i class="fa-solid fa-user-shield"></i> Placement Admin
-                </button>
-            </div>
+  <!-- Auth Section -->
+  <main class="form-auth-wrapper">
+    <div class="form-bg-circle c1"></div>
+    <div class="form-bg-circle c2"></div>
+    <div class="form-bg-circle c3"></div>
 
-            <!-- ALERT MESSAGE CONTAINER -->
-            <div id="authAlert" class="hidden" style="padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 16px;"></div>
-
-            <!-- LOGIN FORM -->
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group mb-4">
-                    <label id="lblLoginEmail">Email Address or Register No.</label>
-                    <input type="text" id="loginEmail" class="form-control" placeholder="Enter your email or register no." required>
-                </div>
-
-                <div class="form-group mb-4">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required>
-                </div>
-
-                <button type="submit" class="btn-primary" style="width: 100%;">
-                    <i class="fa-solid fa-right-to-bracket"></i> Login to Portal
-                </button>
-
-                <p class="auth-switch">
-                    New user? <span onclick="toggleAuthMode()">Create an account</span>
-                </p>
-            </form>
-
-            <!-- REGISTER FORM -->
-            <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
-                <div class="form-group mb-4">
-                    <label>Full Name</label>
-                    <input type="text" id="regFullName" class="form-control" placeholder="e.g. Anand Kumar S" required>
-                </div>
-
-                <div class="form-group mb-4" id="grpRegisterNo">
-                    <label>Register Number (12-digit)</label>
-                    <input type="text" id="regRegisterNo" class="form-control" placeholder="e.g. 953623244001">
-                </div>
-
-                <div class="form-group mb-4">
-                    <label>Email Address</label>
-                    <input type="email" id="regEmail" class="form-control" placeholder="e.g. student@rit.ac.in" required>
-                </div>
-
-                <div class="form-group mb-4">
-                    <label>Password (min 6 chars)</label>
-                    <input type="password" id="regPassword" class="form-control" placeholder="Create a strong password" required minlength="6">
-                </div>
-
-                <div class="form-grid mb-4" id="grpStudentDetails">
-                    <div class="form-group">
-                        <label>Academic Year</label>
-                        <select id="regYear" class="form-control">
-                            <option value="1">1st Year</option>
-                            <option value="2">2nd Year</option>
-                            <option value="3" selected>3rd Year</option>
-                            <option value="4">4th Year</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="tel" id="regPhone" class="form-control" placeholder="10-digit mobile">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-primary" style="width: 100%;">
-                    <i class="fa-solid fa-user-plus"></i> Register Account
-                </button>
-
-                <p class="auth-switch">
-                    Already registered? <span onclick="toggleAuthMode()">Back to Login</span>
-                </p>
-            </form>
-
+    <div class="form-auth-card">
+      <div class="form-auth-header">
+        <div class="form-auth-logo-wrap">
+          <i class="fa-solid fa-briefcase"></i>
         </div>
-    </main>
+        <h2 id="formTitle">Welcome Back</h2>
+        <p id="formSub">Sign in to your placement portal account</p>
+      </div>
 
-    <script src="Form.js"></script>
+      <!-- Role Selector -->
+      <div class="form-role-selector">
+        <button class="form-role-btn active" id="btnRoleStudent" onclick="setRole('student')">
+          <i class="fa-solid fa-user-graduate"></i> Student
+        </button>
+        <button class="form-role-btn" id="btnRoleAdmin" onclick="setRole('admin')">
+          <i class="fa-solid fa-user-shield"></i> Placement Admin
+        </button>
+      </div>
+
+      <!-- Alert Box -->
+      <div id="authAlert" class="form-hidden"></div>
+
+      <!-- ===== LOGIN FORM ===== -->
+      <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+        <div class="form-field-group">
+          <label id="lblLoginEmail">
+            <i class="fa-solid fa-envelope" style="margin-right:4px;"></i>
+            Email Address or Register No.
+          </label>
+          <div class="form-input-wrapper">
+            <i class="fa-solid fa-user form-input-icon"></i>
+            <input
+              type="text"
+              id="loginEmail"
+              class="form-input-control"
+              placeholder="Enter your email or register no."
+              required
+              autocomplete="username"
+            >
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label>
+            <i class="fa-solid fa-lock" style="margin-right:4px;"></i>
+            Password
+          </label>
+          <div class="form-password-wrapper">
+            <input
+              type="password"
+              id="loginPassword"
+              class="form-input-control"
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            >
+            <button type="button" class="form-toggle-pw" onclick="togglePw('loginPassword', this)">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="form-submit-btn" id="loginBtn">
+          <i class="fa-solid fa-right-to-bracket"></i> Login to Portal
+        </button>
+
+        <p class="form-auth-switch">
+          New user? <span onclick="toggleAuthMode()">Create an account</span>
+        </p>
+
+        <div id="adminHint" class="form-admin-hint form-hidden">
+          <i class="fa-solid fa-circle-info"></i>
+          Default Admin — Email: <strong>admin@rit.ac.in</strong> &nbsp;|&nbsp; Password: <strong>admin123</strong>
+        </div>
+      </form>
+
+      <!-- ===== REGISTER FORM ===== -->
+      <form id="registerForm" class="form-hidden" onsubmit="handleRegister(event)" novalidate>
+        <div class="form-field-group">
+          <label>
+            <i class="fa-solid fa-user" style="margin-right:4px;"></i>
+            Full Name
+          </label>
+          <div class="form-input-wrapper">
+            <i class="fa-solid fa-user form-input-icon"></i>
+            <input type="text" id="regFullName" class="form-input-control" placeholder="e.g. Anand Kumar S" required autocomplete="name">
+          </div>
+        </div>
+
+        <div class="form-field-group" id="grpRegisterNo">
+          <label>
+            <i class="fa-solid fa-id-badge" style="margin-right:4px;"></i>
+            Register Number <span style="color:#94a3b8;font-weight:500;">(12-digit)</span>
+          </label>
+          <div class="form-input-wrapper">
+            <i class="fa-solid fa-hashtag form-input-icon"></i>
+            <input type="text" id="regRegisterNo" class="form-input-control" placeholder="e.g. 953623244001" maxlength="12" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label>
+            <i class="fa-solid fa-envelope" style="margin-right:4px;"></i>
+            Email Address
+          </label>
+          <div class="form-input-wrapper">
+            <i class="fa-solid fa-envelope form-input-icon"></i>
+            <input type="email" id="regEmail" class="form-input-control" placeholder="e.g. student@rit.ac.in" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label>
+            <i class="fa-solid fa-lock" style="margin-right:4px;"></i>
+            Password <span style="color:#94a3b8;font-weight:500;">(min 6 chars)</span>
+          </label>
+          <div class="form-password-wrapper">
+            <input type="password" id="regPassword" class="form-input-control" placeholder="Create a strong password" required minlength="6" autocomplete="new-password">
+            <button type="button" class="form-toggle-pw" onclick="togglePw('regPassword', this)">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-grid-row" id="grpStudentDetails">
+          <div class="form-field-group" style="margin-bottom:0;">
+            <label>Academic Year</label>
+            <select id="regYear" class="form-input-control" style="padding-left:14px;">
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3" selected>3rd Year</option>
+              <option value="4">4th Year</option>
+            </select>
+          </div>
+          <div class="form-field-group" style="margin-bottom:0;">
+            <label>Phone Number</label>
+            <div class="form-input-wrapper">
+              <i class="fa-solid fa-phone form-input-icon"></i>
+              <input type="tel" id="regPhone" class="form-input-control" placeholder="10-digit mobile" maxlength="10" autocomplete="tel">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="form-submit-btn" id="registerBtn">
+          <i class="fa-solid fa-user-plus"></i> Register Account
+        </button>
+
+        <p class="form-auth-switch">
+          Already registered? <span onclick="toggleAuthMode()">Back to Login</span>
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script src="Form.js"></script>
 </body>
 </html>

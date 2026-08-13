@@ -1,0 +1,119 @@
+/* =============================================
+   GPA.CSS — Dedicated Styles for GPA Calculator Page
+   Unique Namespace: .gpa-
+   ============================================= */
+
+.gpa-calc-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.gpa-calc-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gpa-calc-header i { font-size: 26px; color: #60a5fa; }
+.gpa-calc-header h3 { font-size: 18px; font-weight: 800; color: #ffffff; margin: 0; }
+.gpa-calc-header p  { font-size: 12px; color: #94a3b8; margin: 2px 0 0; }
+
+.gpa-result-box {
+  background: linear-gradient(135deg, #2563eb, #6366f1);
+  border-radius: 18px;
+  padding: 22px;
+  text-align: center;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.gpa-result-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.8; }
+.gpa-result-value { font-size: 52px; font-weight: 800; line-height: 1.1; }
+.gpa-result-out   { font-size: 14px; opacity: 0.7; font-weight: 600; }
+
+.gpa-sem-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.gpa-sem-tab-btn {
+  padding: 7px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #ffffff;
+  color: #475569;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.gpa-sem-tab-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+.gpa-sem-tab-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.gpa-subjects-table { width: 100%; border-collapse: collapse; }
+.gpa-subjects-table th, .gpa-subjects-table td { padding: 10px 12px; }
+.gpa-subjects-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #94a3b8;
+  border-bottom: 2px solid #e2e8f0;
+  text-align: left;
+}
+.gpa-subjects-table tbody td { border-bottom: 1px solid #f1f5f9; }
+
+.gpa-grade-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #0f172a;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+}
+
+.gpa-grade-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.gpa-summary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.gpa-summary-item { text-align: center; flex: 1; min-width: 80px; }
+.gpa-summary-item .val { font-size: 20px; font-weight: 800; color: #2563eb; }
+.gpa-summary-item .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; }
+
+/* Responsive Rules */
+@media (max-width: 640px) {
+  .gpa-calc-header { padding: 16px; flex-direction: column; text-align: center; }
+  .gpa-sem-tabs { padding: 12px; justify-content: center; }
+}

@@ -13,32 +13,56 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
-const BUCKET = "resume"; // Your Supabase bucket name
-const SUPABASE_URL = process.env.SUPABASE_URL || "https://xdcctmnqmlvcibuhlcvx.supabase.co";
+const fs = require("fs");
+const path = require("path");
 
-// Helper: upload a file buffer to Supabase Storage and return the public URL
+const BUCKET = "resume";
+const uploadServePath = process.env.VERCEL
+    ? "/tmp/uploads"
+    : path.join(__dirname, "../uploads");
+
+// Helper: upload a file buffer to Supabase Storage or fallback to local disk
 async function uploadToSupabase(fileBuffer, originalName, fieldName, userId) {
     const ext = originalName.split(".").pop();
     const fileName = `${fieldName}_${userId}_${Date.now()}.${ext}`;
-    const filePath = `uploads/${fileName}`;
 
-    const { error } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .upload(filePath, fileBuffer, {
-            contentType: "application/octet-stream",
-            upsert: true
-        });
+    // Try Supabase Storage first if available
+    if (supabaseAdmin && supabaseAdmin.storage) {
+        try {
+            const filePath = `uploads/${fileName}`;
+            const { error } = await supabaseAdmin.storage
+                .from(BUCKET)
+                .upload(filePath, fileBuffer, {
+                    contentType: "application/octet-stream",
+                    upsert: true
+                });
 
-    if (error) {
-        throw new Error(`Supabase upload failed: ${error.message}`);
+            if (!error) {
+                const { data } = supabaseAdmin.storage
+                    .from(BUCKET)
+                    .getPublicUrl(filePath);
+                if (data && data.publicUrl) return data.publicUrl;
+            } else {
+                console.warn("⚠️ Supabase Storage Upload Warning:", error.message);
+            }
+        } catch (supaErr) {
+            console.warn("⚠️ Supabase Storage Exception:", supaErr.message);
+        }
     }
 
-    // Return the public URL
-    const { data } = supabaseAdmin.storage
-        .from(BUCKET)
-        .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    // Fallback: Save file buffer locally to uploadServePath
+    try {
+        if (!fs.existsSync(uploadServePath)) {
+            fs.mkdirSync(uploadServePath, { recursive: true });
+        }
+        const localFilePath = path.join(uploadServePath, fileName);
+        fs.writeFileSync(localFilePath, fileBuffer);
+        console.log("✅ File saved to local storage:", localFilePath);
+        return `/uploads/${fileName}`;
+    } catch (diskErr) {
+        console.error("❌ Disk storage fallback failed:", diskErr.message);
+        throw new Error(`File storage failed: ${diskErr.message}`);
+    }
 }
 
 // Middleware to parse JSON or form data

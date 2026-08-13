@@ -1,183 +1,273 @@
+// =============================================
+// FORM.JS — RIT CSBS Placement Portal Auth
+// =============================================
+
 const API_BASE = `${window.location.origin}/api`;
 
-let selectedRole = "student"; // 'student' or 'admin'
+let selectedRole = 'student';
 let isRegisterMode = false;
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Check if user is already logged in
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user") || "null");
- 
-    if (token && user) {
-        if (user.role === "admin") {
-            window.location.href = "admin_dashboard.html";
-        } else {
-            window.location.href = "student_dashboard.html";
-        }
-    }
+// ---- Boot: redirect if already logged in ----
+document.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('token');
+  const user  = safeParseUser();
+
+  if (token && user) {
+    redirect(user.role);
+    return;
+  }
+
+  updateUI();
 });
 
+// =============================================
+// HELPERS
+// =============================================
+function safeParseUser() {
+  try { return JSON.parse(localStorage.getItem('user') || 'null'); }
+  catch { return null; }
+}
+
+function redirect(role) {
+  window.location.href = role === 'admin' ? 'admin_dashboard.html' : 'student_dashboard.html';
+}
+
+// =============================================
+// ROLE TOGGLE
+// =============================================
 function setRole(role) {
-    selectedRole = role;
-    const btnStudent = document.getElementById("btnRoleStudent");
-    const btnAdmin = document.getElementById("btnRoleAdmin");
-    if (btnStudent) btnStudent.classList.toggle("active", role === "student");
-    if (btnAdmin) btnAdmin.classList.toggle("active", role === "admin");
+  selectedRole = role;
 
-    const grpRegisterNo = document.getElementById("grpRegisterNo");
-    const grpStudentDetails = document.getElementById("grpStudentDetails");
+  document.getElementById('btnRoleStudent').classList.toggle('active', role === 'student');
+  document.getElementById('btnRoleAdmin').classList.toggle('active', role === 'admin');
 
-    if (role === "admin") {
-        if (grpRegisterNo) grpRegisterNo.classList.add("hidden");
-        if (grpStudentDetails) grpStudentDetails.classList.add("hidden");
-        const formTitle = document.getElementById("formTitle");
-        const lblEmail = document.getElementById("lblLoginEmail");
-        if (formTitle) formTitle.innerText = isRegisterMode ? "Admin Registration" : "Placement Admin Login";
-        if (lblEmail) lblEmail.innerText = "Admin Email";
-    } else {
-        if (grpRegisterNo) grpRegisterNo.classList.remove("hidden");
-        if (grpStudentDetails) grpStudentDetails.classList.remove("hidden");
-        const formTitle = document.getElementById("formTitle");
-        const lblEmail = document.getElementById("lblLoginEmail");
-        if (formTitle) formTitle.innerText = isRegisterMode ? "Student Registration" : "Student Login";
-        if (lblEmail) lblEmail.innerText = "Email Address or Register No.";
-    }
+  updateUI();
+  hideAlert();
 }
 
+function updateUI() {
+  const isAdmin = selectedRole === 'admin';
+
+  // Hint box
+  const adminHint = document.getElementById('adminHint');
+  if (adminHint) {
+    adminHint.classList.toggle('form-hidden', !(isAdmin && !isRegisterMode));
+    adminHint.classList.toggle('hidden', !(isAdmin && !isRegisterMode));
+  }
+
+  // Register/Login specific labels
+  document.getElementById('formTitle').innerText =
+    isAdmin
+      ? (isRegisterMode ? 'Admin Registration' : 'Placement Admin Login')
+      : (isRegisterMode ? 'Student Registration' : 'Welcome Back');
+
+  document.getElementById('formSub').innerText =
+    isAdmin
+      ? 'Sign in with your admin credentials'
+      : 'Sign in to your placement portal account';
+
+  const lblEmail = document.getElementById('lblLoginEmail');
+  if (lblEmail) lblEmail.innerHTML = isAdmin
+    ? '<i class="fa-solid fa-envelope" style="margin-right:4px;"></i> Admin Email'
+    : '<i class="fa-solid fa-envelope" style="margin-right:4px;"></i> Email Address or Register No.';
+
+  const grpReg = document.getElementById('grpRegisterNo');
+  const grpDetails = document.getElementById('grpStudentDetails');
+  if (grpReg) { grpReg.classList.toggle('form-hidden', isAdmin); grpReg.classList.toggle('hidden', isAdmin); }
+  if (grpDetails) { grpDetails.classList.toggle('form-hidden', isAdmin); grpDetails.classList.toggle('hidden', isAdmin); }
+}
+
+// =============================================
+// FORM MODE TOGGLE
+// =============================================
 function toggleAuthMode() {
-    isRegisterMode = !isRegisterMode;
-    const loginForm = document.getElementById("loginForm");
-    const registerForm = document.getElementById("registerForm");
+  isRegisterMode = !isRegisterMode;
 
-    if (loginForm) loginForm.classList.toggle("hidden", isRegisterMode);
-    if (registerForm) registerForm.classList.toggle("hidden", !isRegisterMode);
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  if (loginForm) { loginForm.classList.toggle('form-hidden', isRegisterMode); loginForm.classList.toggle('hidden', isRegisterMode); }
+  if (registerForm) { registerForm.classList.toggle('form-hidden', !isRegisterMode); registerForm.classList.toggle('hidden', !isRegisterMode); }
 
-    setRole(selectedRole);
-    hideAlert();
+  updateUI();
+  hideAlert();
 }
 
+// =============================================
+// PASSWORD VISIBILITY TOGGLE
+// =============================================
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isText = input.type === 'text';
+  input.type = isText ? 'password' : 'text';
+  const icon = btn.querySelector('i');
+  if (icon) { icon.className = isText ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'; }
+}
+
+// =============================================
+// ALERT DISPLAY
+// =============================================
 function showAlert(message, isSuccess = false) {
-    const alertBox = document.getElementById("authAlert");
-    if (!alertBox) return;
-    alertBox.innerText = message;
-    alertBox.style.backgroundColor = isSuccess ? "#dcfce7" : "#fee2e2";
-    alertBox.style.color = isSuccess ? "#15803d" : "#b91c1c";
-    alertBox.style.border = isSuccess ? "1px solid #bbf7d0" : "1px solid #fca5a5";
-    alertBox.classList.remove("hidden");
+  const box = document.getElementById('authAlert');
+  if (!box) return;
+
+  const icon = isSuccess
+    ? '<i class="fa-solid fa-circle-check"></i>'
+    : '<i class="fa-solid fa-circle-xmark"></i>';
+
+  box.innerHTML = `${icon} ${message}`;
+  box.style.cssText = isSuccess
+    ? 'background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7;padding:14px 18px;border-radius:8px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:10px;margin-bottom:18px;animation:slideDown .3s ease;'
+    : 'background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5;padding:14px 18px;border-radius:8px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:10px;margin-bottom:18px;animation:slideDown .3s ease;';
+  box.classList.remove('hidden');
 }
 
 function hideAlert() {
-    const alertBox = document.getElementById("authAlert");
-    if (alertBox) alertBox.classList.add("hidden");
+  const box = document.getElementById('authAlert');
+  if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
 }
 
+// =============================================
+// BUTTON LOADING STATE
+// =============================================
+function setLoading(btnId, loading, text, icon) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Please wait...';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = `<i class="${icon}"></i> ${text}`;
+  }
+}
+
+// =============================================
+// LOGIN HANDLER
+// =============================================
 async function handleLogin(e) {
-    e.preventDefault();
-    hideAlert();
+  e.preventDefault();
+  hideAlert();
 
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
 
-    try {
-        const response = await fetch(`${API_BASE}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
+  if (!email || !password) {
+    showAlert('Please enter both email / register number and password.');
+    return;
+  }
 
-        const contentType = response.headers.get("content-type");
-        let data = {};
-        if (contentType && contentType.includes("application/json")) {
-            data = await response.json();
-        } else {
-            const text = await response.text();
-            console.error("Non-JSON API response:", response.status, text);
-            showAlert(`Server error (${response.status}). Please check backend status.`);
-            return;
-        }
+  setLoading('loginBtn', true);
 
-        if (!response.ok || !data.success) {
-            showAlert(data.message || "Invalid credentials. Please try again.");
-            return;
-        }
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password })
+    });
 
-        // Store Token & User in localStorage
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        showAlert("Login successful! Redirecting...", true);
-
-        setTimeout(() => {
-            if (data.user && data.user.role === "admin") {
-                window.location.href = "admin_dashboard.html";
-            } else {
-                window.location.href = "student_dashboard.html";
-            }
-        }, 800);
-
-    } catch (err) {
-        console.error("Login fetch error:", err);
-        showAlert("Unable to connect to server. Please check your network connection.");
+    let data = {};
+    const ct = response.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error('Non-JSON response:', response.status, text.slice(0, 200));
+      showAlert(`Server error (${response.status}). Please check backend is running.`);
+      setLoading('loginBtn', false, 'Login to Portal', 'fa-solid fa-right-to-bracket');
+      return;
     }
+
+    if (!response.ok || !data.success) {
+      showAlert(data.message || 'Invalid credentials. Please try again.');
+      setLoading('loginBtn', false, 'Login to Portal', 'fa-solid fa-right-to-bracket');
+      return;
+    }
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    showAlert('Login successful! Redirecting...', true);
+
+    setTimeout(() => redirect(data.user?.role), 900);
+
+  } catch (err) {
+    console.error('Login error:', err);
+    showAlert('Unable to connect to the server. Check your network connection.');
+    setLoading('loginBtn', false, 'Login to Portal', 'fa-solid fa-right-to-bracket');
+  }
 }
 
+// =============================================
+// REGISTER HANDLER
+// =============================================
 async function handleRegister(e) {
-    e.preventDefault();
-    hideAlert();
+  e.preventDefault();
+  hideAlert();
 
-    const full_name = document.getElementById("regFullName").value.trim();
-    const register_number = document.getElementById("regRegisterNo") ? document.getElementById("regRegisterNo").value.trim() : "";
-    const email = document.getElementById("regEmail").value.trim();
-    const password = document.getElementById("regPassword").value;
-    const year = document.getElementById("regYear") ? document.getElementById("regYear").value : "3";
-    const phone = document.getElementById("regPhone") ? document.getElementById("regPhone").value.trim() : "";
+  const full_name       = document.getElementById('regFullName').value.trim();
+  const register_number = document.getElementById('regRegisterNo')?.value.trim() || '';
+  const email           = document.getElementById('regEmail').value.trim();
+  const password        = document.getElementById('regPassword').value;
+  const year            = document.getElementById('regYear')?.value || '3';
+  const phone           = document.getElementById('regPhone')?.value.trim() || '';
 
-    try {
-        const response = await fetch(`${API_BASE}/auth/register`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                full_name,
-                register_number: selectedRole === "student" ? register_number : null,
-                email,
-                password,
-                role: selectedRole,
-                year: selectedRole === "student" ? parseInt(year) : null,
-                phone
-            })
-        });
+  if (!full_name || !email || !password) {
+    showAlert('Please fill in all required fields.');
+    return;
+  }
 
-        const contentType = response.headers.get("content-type");
-        let data = {};
-        if (contentType && contentType.includes("application/json")) {
-            data = await response.json();
-        } else {
-            const text = await response.text();
-            console.error("Non-JSON API response:", response.status, text);
-            showAlert(`Server error (${response.status}). Please check backend status.`);
-            return;
-        }
+  if (password.length < 6) {
+    showAlert('Password must be at least 6 characters long.');
+    return;
+  }
 
-        if (!response.ok || !data.success) {
-            showAlert(data.message || "Registration failed. Please check details.");
-            return;
-        }
+  setLoading('registerBtn', true);
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+  try {
+    const payload = {
+      full_name,
+      register_number: selectedRole === 'student' ? register_number : null,
+      email,
+      password,
+      role: selectedRole,
+      year: selectedRole === 'student' ? parseInt(year) : null,
+      phone: phone || null
+    };
 
-        showAlert("Registered successfully! Redirecting to Dashboard...", true);
+    const response = await fetch(`${API_BASE}/auth/register`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    });
 
-        setTimeout(() => {
-            if (data.user && data.user.role === "admin") {
-                window.location.href = "admin_dashboard.html";
-            } else {
-                window.location.href = "student_dashboard.html";
-            }
-        }, 1000);
-
-    } catch (err) {
-        console.error("Register fetch error:", err);
-        showAlert("Unable to connect to server. Please try again.");
+    let data = {};
+    const ct = response.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error('Non-JSON response:', response.status, text.slice(0, 200));
+      showAlert(`Server error (${response.status}). Please check backend is running.`);
+      setLoading('registerBtn', false, 'Register Account', 'fa-solid fa-user-plus');
+      return;
     }
+
+    if (!response.ok || !data.success) {
+      showAlert(data.message || 'Registration failed. Please check details and try again.');
+      setLoading('registerBtn', false, 'Register Account', 'fa-solid fa-user-plus');
+      return;
+    }
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    showAlert('Account created! Redirecting to dashboard...', true);
+    setTimeout(() => redirect(data.user?.role), 1000);
+
+  } catch (err) {
+    console.error('Register error:', err);
+    showAlert('Unable to connect to the server. Please try again.');
+    setLoading('registerBtn', false, 'Register Account', 'fa-solid fa-user-plus');
+  }
 }

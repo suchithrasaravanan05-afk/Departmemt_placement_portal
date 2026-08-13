@@ -1,642 +1,676 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<meta charset="UTF-8">
-<title>Student Registration Form</title>
-<link rel="stylesheet" href="student_dashboard.css">
-<style>
-
-:root {
-    --primary: #1d3853;
-    --secondary: #34495e;
-    --accent: #3498db;
-    --text: #333;
-    --light: #f4f7f6;
-    --white: #ffffff;
-    --footer-bg: #1a252f;
-}
-
-* {
-    box-sizing: border-box;
-    font-family: "Segoe UI", Tahoma, sans-serif;
-}
-
-body {
-    background: linear-gradient(to right, var(--primary), var(--secondary));
-    padding: 30px;
-    color: var(--text);
-}
-
-
-.college-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--white);
-    padding: 15px 30px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    gap: 20px;
-}
-
-.header-left {
-    display: flex;
-    gap: 10px;
-}
-
-.header-left img {
-    width: 80px;
-    border-radius: 6px;
-}
-
-.header-center {
-    text-align: center;
-}
-
-.header-center img {
-    width: 90px;
-    margin-bottom: 6px;
-}
-
-.header-center h1 {
-    font-size: 24px;
-    font-weight: 800;
-    color: var(--primary);
-    margin: 4px 0;
-}
-
-.header-center p {
-    font-size: 13px;
-    margin: 2px 0;
-    color: var(--secondary);
-}
-
-.header-center .red {
-    color: var(--accent);
-    font-weight: 600;
-}
-
-
-.dept-title {
-    background: var(--accent);
-    color: var(--white);
-    text-align: center;
-    font-size: 26px;
-    font-weight: 700;
-    padding: 15px;
-    margin-bottom: 30px;
-    border-radius: 10px;
-}
-
-
-.container {
-    max-width: 950px;
-    margin: auto;
-    background: var(--white);
-    padding: 35px 45px;
-    border-radius: 14px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-}
-
-h2 {
-    text-align: center;
-    margin-bottom: 35px;
-    color: var(--primary);
-}
-
-.form-row {
-    display: flex;
-    gap: 25px;
-    margin-bottom: 22px;
-}
-
-.form-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-label {
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: var(--secondary);
-}
-
-input, select {
-    padding: 11px;
-    border-radius: 6px;
-    border: 1px solid #bbb;
-    font-size: 14px;
-}
-
-input:focus, select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 6px rgba(52, 152, 219, 0.5);
-    outline: none;
-}
-
-input[type="file"] {
-    padding: 6px;
-}
-
-
-.resume a {
-    margin-top: 6px;
-    display: inline-block;
-    text-decoration: none;
-    background: var(--accent);
-    color: var(--white);
-    padding: 10px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.resume a:hover {
-    background: var(--primary);
-}
-
-
-.form-actions {
-    text-align: center;
-    margin-top: 35px;
-}
-
-button {
-    padding: 12px 35px;
-    border: none;
-    border-radius: 6px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    margin: 0 10px;
-}
-
-.submit {
-    background: var(--primary);
-    color: var(--white);
-}
-
-.reset {
-    background: var(--secondary);
-    color: var(--white);
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-.hidden {
-    display: none;
-}
-
-
-@media (max-width: 768px) {
-    .form-row {
-        flex-direction: column;
-    }
-
-    .college-header {
-        flex-direction: column;
-    }
-
-    .dept-title {
-        font-size: 22px;
-    }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard — RIT CSBS Placement Portal</title>
+  <meta name="description" content="Student placement dashboard for RIT CSBS Department.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="student_dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<body class="student-body">
 
-<body>
+<!-- ===== HEADER ===== -->
+<header class="student-header-wrapper">
+  <div class="student-college-header">
+    <div class="student-logo-group">
+      <div class="student-logo-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="student-logo-text">
+        <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
+        <p>Department Placement Portal — CSBS</p>
+      </div>
+    </div>
+    <div class="student-nav-user-pill">
+      <div class="student-nav-user-avatar" id="navAvatar">
+        <span id="navAvatarInitial">S</span>
+      </div>
+      <div class="student-nav-user-info">
+        <div class="student-nav-user-name" id="displayUserName">Student Name</div>
+        <div class="student-nav-user-role" id="displayUserReg">Reg No: ---</div>
+      </div>
+      <button class="student-btn-logout" onclick="handleLogout()">
+        <i class="fa-solid fa-power-off"></i> Logout
+      </button>
+    </div>
+  </div>
+</header>
+<div class="student-dept-banner">
+  Department of Computer Science and Business Systems (CSBS)
+</div>
 
-    <!-- College Header -->
-    <header class="college-header-wrapper">
-        <div class="college-header">
-            <div class="college-logo-group">
-                <i class="fa-solid fa-graduation-cap fa-2x" style="color: #60a5fa;"></i>
+<!-- ===== MAIN CONTENT ===== -->
+<div class="student-app-container">
+
+  <!-- Tab Navigation -->
+  <nav class="student-tab-navigation">
+    <button class="student-tab-btn active" id="tabBtnProfile" onclick="switchTab('profile')">
+      <i class="fa-solid fa-id-card"></i> My Profile
+    </button>
+    <button class="student-tab-btn" id="tabBtnDrives" onclick="switchTab('drives')">
+      <i class="fa-solid fa-briefcase"></i> Placement Drives
+    </button>
+    <button class="student-tab-btn" id="tabBtnApplications" onclick="switchTab('applications')">
+      <i class="fa-solid fa-list-check"></i> Applied Drives
+    </button>
+    <button class="student-tab-btn" id="tabBtnGpa" onclick="switchTab('gpa')">
+      <i class="fa-solid fa-calculator"></i> GPA Calculator
+    </button>
+    <button class="student-tab-btn" id="tabBtnResources" onclick="switchTab('resources')">
+      <i class="fa-solid fa-book-open"></i> Resources
+    </button>
+  </nav>
+
+  <!-- Global Alert -->
+  <div id="studentAlert" class="hidden"></div>
+
+  <!-- ============================================================
+       TAB 1: MY PROFILE
+       ============================================================ -->
+  <div id="tabProfile" class="student-tab-content">
+
+    <!-- ---- VIEW MODE ---- -->
+    <div id="profileViewMode">
+      <!-- Loading skeleton -->
+      <div id="profileLoading" class="student-panel-card">
+        <div class="spinner-box">
+          <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#94a3b8;"></i>
+          <p>Loading your profile...</p>
+        </div>
+      </div>
+
+      <!-- No profile yet -->
+      <div id="noProfileState" class="hidden student-panel-card">
+        <div class="empty-state">
+          <i class="fa-solid fa-user-plus" style="color:#2563eb;"></i>
+          <p style="font-size:18px;color:#0f172a;margin-bottom:8px;">Complete Your Profile</p>
+          <p style="margin-bottom:20px;color:#64748b;">Fill in your details to start applying for placement drives.</p>
+          <button class="btn btn-primary btn-lg" onclick="enterEditMode()">
+            <i class="fa-solid fa-pen-to-square"></i> Fill Profile Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile content -->
+      <div id="profileViewContent" class="hidden">
+        <div class="student-profile-view-card">
+          <!-- Header -->
+          <div class="student-profile-view-header">
+            <div class="student-profile-avatar" id="viewAvatar">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="student-profile-header-info">
+              <h2 id="viewName">---</h2>
+              <div class="student-reg-tag" id="viewReg">Register No: ---</div>
+              <span class="student-dept-tag">CSBS — Computer Science &amp; Business Systems</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+              <div class="student-cgpa-highlight" id="viewCgpaBadge">
                 <div>
-                    <h2 style="font-size: 18px; font-weight: 800; color: #fff;">RAMCO INSTITUTE OF TECHNOLOGY</h2>
-                    <p style="font-size: 12px; color: #94a3b8;">Department Placement Portal</p>
+                  <div class="student-cgpa-label">CGPA</div>
+                  <div class="student-cgpa-num" id="viewCgpaNum">--</div>
                 </div>
+                <i class="fa-solid fa-star" style="font-size:18px;color:#fbbf24;"></i>
+              </div>
+              <button class="btn btn-primary" onclick="enterEditMode()">
+                <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+              </button>
             </div>
-            <div class="nav-user-pill">
-                <div class="nav-user-info">
-                    <div class="nav-user-name" id="displayUserName">Student Name</div>
-                    <div class="nav-user-role" id="displayUserReg">Reg No: ---</div>
-                </div>
-                <button class="btn-logout" onclick="handleLogout()">
-                    <i class="fa-solid fa-power-off"></i> Logout
-                </button>
-            </div>
-        </div>
-    </header>
+          </div>
 
-    <div class="dept-banner">
-        Department of Computer Science and Business Systems (CSBS)
+          <div class="student-profile-body">
+            <!-- Social Links -->
+            <div class="profile-links" id="viewLinks"></div>
+
+            <!-- Personal Info -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-user-circle"></i> Personal Information
+            </div>
+            <div class="student-detail-grid">
+              <div class="student-detail-item">
+                <span class="student-detail-label">Date of Birth</span>
+                <span class="student-detail-value" id="viewDob">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Academic Year</span>
+                <span class="student-detail-value" id="viewYear">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Personal Email</span>
+                <span class="student-detail-value" id="viewPersonalEmail">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">College Email</span>
+                <span class="student-detail-value" id="viewCollegeEmail">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Mobile</span>
+                <span class="student-detail-value" id="viewPhone">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">WhatsApp</span>
+                <span class="student-detail-value" id="viewWhatsapp">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Domain Interest</span>
+                <span class="student-detail-value" id="viewDomain">--</span>
+              </div>
+            </div>
+
+            <!-- Academic Marks -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-graduation-cap"></i> Academic Marks
+            </div>
+            <div class="student-detail-grid">
+              <div class="student-detail-item">
+                <span class="student-detail-label">10th Percentage</span>
+                <span class="student-detail-value" id="viewTenth">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">12th Percentage</span>
+                <span class="student-detail-value" id="viewTwelth">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Diploma %</span>
+                <span class="student-detail-value" id="viewDiploma">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Degree</span>
+                <span class="student-detail-value" id="viewDegree">B.Tech</span>
+              </div>
+            </div>
+
+            <!-- Semester GPAs -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-chart-bar"></i> Semester GPA
+            </div>
+            <div class="student-gpa-grid" id="viewGpaGrid">
+              <!-- Filled by JS -->
+            </div>
+
+            <!-- Arrears -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-file-circle-check"></i> Arrears Status
+            </div>
+            <div class="student-detail-grid">
+              <div class="student-detail-item">
+                <span class="student-detail-label">History of Arrears</span>
+                <span class="student-detail-value" id="viewHistoryArrears">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">History Count</span>
+                <span class="student-detail-value" id="viewHistoryCount">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Standing Arrears</span>
+                <span class="student-detail-value" id="viewStandingArrears">--</span>
+              </div>
+              <div class="student-detail-item">
+                <span class="student-detail-label">Standing Count</span>
+                <span class="student-detail-value" id="viewStandingCount">--</span>
+              </div>
+            </div>
+
+            <!-- Resume -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-file-pdf"></i> Documents
+            </div>
+            <div class="profile-links" id="viewDocLinks"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="app-container">
-
-        <!-- Navigation Tabs -->
-        <nav class="tab-navigation">
-            <button class="tab-btn active" id="tabBtnProfile" onclick="switchTab('profile')">
-                <i class="fa-solid fa-id-card"></i> My Profile
+    <!-- ---- EDIT MODE ---- -->
+    <div id="profileEditMode" class="hidden">
+      <div class="student-panel-card">
+        <div class="student-panel-header">
+          <div class="student-panel-title">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Student Profile
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-outline btn-sm" id="cancelEditBtn" onclick="exitEditMode()">
+              <i class="fa-solid fa-xmark"></i> Cancel
             </button>
-            <button class="tab-btn" id="tabBtnDrives" onclick="switchTab('drives')">
-                <i class="fa-solid fa-briefcase"></i> Placement Drives
-            </button>
-            <button class="tab-btn" id="tabBtnApplications" onclick="switchTab('applications')">
-                <i class="fa-solid fa-list-check"></i> Applied Drives
-            </button>
-            <button class="tab-btn" id="tabBtnGpa" onclick="switchTab('gpa')">
-                <i class="fa-solid fa-calculator"></i> GPA & CGPA Calculator
-            </button>
-        </nav>
-
-        <!-- Alert Box -->
-        <div id="studentAlert" class="hidden"
-            style="padding: 14px 20px; border-radius: 8px; font-weight: 600; margin-bottom: 20px;"></div>
-
-        <!-- ============================================================ -->
-        <!-- TAB 1: PROFILE TAB (contains VIEW and EDIT modes)            -->
-        <!-- ============================================================ -->
-        <div id="tabProfile" class="tab-content">
-
-            <!-- ---- VIEW MODE ---- -->
-            <div id="profileViewMode">
-
-                <!-- Skeleton shown while loading -->
-                <div id="profileLoading" class="profile-view-card" style="text-align: center; padding: 60px;">
-                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #94a3b8;"></i>
-                    <p style="margin-top: 12px; color: var(--text-muted);">Loading your profile...</p>
-                </div>
-
-                <!-- Shown when profile exists -->
-                <div id="profileViewContent" class="hidden">
-                    <div class="profile-view-card">
-                        <!-- Header -->
-                        <div class="profile-view-header">
-                            <div class="profile-avatar" id="viewAvatar">
-                                <i class="fa-solid fa-user"></i>
-                            </div>
-                            <div class="profile-header-info">
-                                <h2 id="viewName">---</h2>
-                                <div class="reg-tag" id="viewReg">---</div>
-                                <span class="dept-tag">CSBS — Computer Science & Business Systems</span>
-                            </div>
-                            <div class="profile-header-actions">
-                                <div id="viewCgpaBadge" class="cgpa-highlight">
-                                    <div>
-                                        <div class="cgpa-label">CGPA</div>
-                                        <div class="cgpa-num" id="viewCgpaNum">--</div>
-                                    </div>
-                                    <i class="fa-solid fa-star"></i>
-                                </div>
-                                <button class="btn-primary" onclick="enterEditMode()">
-                                    <i class="fa-solid fa-pen-to-square"></i> Edit Profile
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Personal Info -->
-                        <div class="profile-section-title"><i class="fa-solid fa-user-circle"></i> Personal Information
-                        </div>
-                        <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">Date of Birth</span><span
-                                    class="detail-value" id="viewDob">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Year</span><span class="detail-value"
-                                    id="viewYear">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Personal Email</span><span
-                                    class="detail-value" id="viewPersonalEmail">--</span></div>
-                            <div class="detail-item"><span class="detail-label">College Email</span><span
-                                    class="detail-value" id="viewCollegeEmail">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Mobile</span><span class="detail-value"
-                                    id="viewPhone">--</span></div>
-                            <div class="detail-item"><span class="detail-label">WhatsApp</span><span
-                                    class="detail-value" id="viewWhatsapp">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Domain Interest</span><span
-                                    class="detail-value" id="viewDomain">--</span></div>
-                        </div>
-
-                        <!-- Academic Marks -->
-                        <div class="profile-section-title"><i class="fa-solid fa-graduation-cap"></i> Academic Marks
-                        </div>
-                        <div class="detail-grid">
-                            <div class="detail-item"><span class="detail-label">10th %</span><span class="detail-value"
-                                    id="viewTenth">--</span></div>
-                            <div class="detail-item"><span class="detail-label">12th %</span><span class="detail-value"
-                                    id="viewTwelth">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Diploma %</span><span
-                                    class="detail-value" id="viewDiploma">--</span></div>
-                            <div class="detail-item"><span class="detail-label">Degree</span><span class="detail-value"
-                                    id="viewDegree">B.Tech</span></div>
-                        </div>
-
-                        <!-- Semester GPAs -->
-                        <div class="profile-section-title"><i class="fa-solid fa-chart-bar"></i> Semester GPA</div>
-                        <div class="gpa-grid" id="viewGpaGrid">
-                            <!-- Generated by JS -->
-                        </div>
-
-                        <!-- Arrears -->
-                        <div class="profile-section-title"><i class="fa-solid fa-file-circle-check"></i> Arrears Status
-                        </div>
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">History of Arrears</span>
-                                <span class="detail-value" id="viewHistoryArrears">--</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">History Count</span>
-                                <span class="detail-value" id="viewHistoryCount">--</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Standing Arrears</span>
-                                <span class="detail-value" id="viewStandingArrears">--</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Standing Count</span>
-                                <span class="detail-value" id="viewStandingCount">--</span>
-                            </div>
-                        </div>
-
-<div class="dept-title">
-    Department of Computer Science and Business Systems
-</div>
-
-<div class="dashboard-layout">
-
-    
-    <div class="left-form-panel">
-        <div class="container">
-
-    <h2>Student Registration Form</h2>
-
-    <form>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Year</label>
-                <select id="yearSelect" required>
-
-                    <option value="">Select Year</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Register number</label>
-                <select id="regSelect" required>
-                    <option value="">Select Register Number</option>
-                </select>
-            </div>
+          </div>
         </div>
+        <div class="student-panel-body">
+          <form id="profileForm" onsubmit="saveStudentProfile(event)" enctype="multipart/form-data">
+            <input type="hidden" id="regNumberInput">
+            <input type="hidden" id="stdNameInput">
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>Student Name</label>
-                <select id="stdSelect" required>
-                    <option value=""> Select Student Name</option>
-                </select>
-                
+            <!-- Section: Personal Info -->
+            <div class="student-section-title" style="margin-top:0;">
+              <i class="fa-solid fa-user-circle"></i> Personal Information
             </div>
-            <div class="form-group">
+            <div class="form-grid form-grid-3 mb-4">
+              <div class="form-group">
                 <label>Date of Birth</label>
-                <input type="date" required>
+                <input type="date" id="dobInput" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Academic Year</label>
+                <select id="yearSelect" class="form-control" onchange="handleYearChange()">
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3" selected>3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Domain Interest</label>
+                <select id="domainSelect" class="form-control">
+                  <option value="">Select Domain</option>
+                  <option>Web Development</option>
+                  <option>Mobile Development</option>
+                  <option>Data Science / AI</option>
+                  <option>Cloud Computing</option>
+                  <option>Cybersecurity</option>
+                  <option>DevOps</option>
+                  <option>Business Analytics</option>
+                  <option>Full Stack Development</option>
+                  <option>Embedded Systems</option>
+                  <option>General IT</option>
+                </select>
+              </div>
             </div>
-        </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>Personal Email ID</label>
-                <input type="email" required>
-            </div>
-            <div class="form-group">
-                <label>College Email ID</label>
-                <input type="email" required>
-            </div>
-
-            <div class="form-group">
-                <label>Domain Interested</label>
-                <input type="domain" required>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>10th Mark Percentage</label>
-                <input type="percentage" required>
-            </div>
-            <div class="form-group">
-                <label>12th Mark Percentage</label>
-                <input type="percentage" required>
-            </div>
-            <div class="form-group">
-                <label>Diploma Mark Percentage</label>
-                <input type="percentage" required>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Degree</label>
-                <select required>
-                    <option value="">Select degree</option>
-                    <option>B.E</option>
-                    <option>B.Tech</option>
-            </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Department</label>
-                <input type="department" required>
-            </div>
-        </div>
-
-       
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Semester 1 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
-
+            <div class="form-grid form-grid-2 mb-4">
+              <div class="form-group">
+                <label>Personal Email</label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-envelope input-icon"></i>
+                  <input type="email" id="personalEmailInput" class="form-control" placeholder="personal@gmail.com">
                 </div>
-                <div class="form-group">
-                    <label>Semester 2 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+              </div>
+              <div class="form-group">
+                <label>College Email</label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-envelope input-icon"></i>
+                  <input type="email" id="collegeEmailInput" class="form-control" placeholder="student@rit.ac.in" readonly>
                 </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Semester 3 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
+              </div>
+              <div class="form-group">
+                <label>Mobile Number</label>
+                <div class="input-with-icon">
+                  <i class="fa-solid fa-phone input-icon"></i>
+                  <input type="tel" id="phoneInput" class="form-control" placeholder="10-digit number" maxlength="10">
                 </div>
-                <div class="form-group">
-                    <label>Semester 4 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Semester 5 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
-                </div>
-                <div class="form-group">
-                    <label>Semester 6 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Semester 7 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
-                </div>
-                <div class="form-group">
-                    <label>Semester 8 GPA</label>
-                    <input type="number" step="0.01" min="0" max="10" class="gpa">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>CGPA</label>
-                    <input type="text" id="cgpa" readonly placeholder="Auto Calculated">
-                </div>
-            </div>
-
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="phone"required>
-            </div>
-            <div class="form-group">
+              </div>
+              <div class="form-group">
                 <label>WhatsApp Number</label>
-                <input type="whatsapp" required>
+                <div class="input-with-icon">
+                  <i class="fa-brands fa-whatsapp input-icon"></i>
+                  <input type="tel" id="whatsappInput" class="form-control" placeholder="10-digit number" maxlength="10">
+                </div>
+              </div>
             </div>
-        </div>
-        
 
-    <div class="form-row">
-        <div class="form-group">
-            <label>History of arrears</label>
-            <select id="historyArrears">
-                <option value="">Select</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
+            <!-- Section: Academic Marks -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-graduation-cap"></i> Academic Marks
+            </div>
+            <div class="form-grid form-grid-3 mb-4">
+              <div class="form-group">
+                <label>10th Percentage (%)</label>
+                <input type="number" step="0.01" min="0" max="100" id="tenthInput" class="form-control" placeholder="e.g. 88.5">
+              </div>
+              <div class="form-group">
+                <label>12th Percentage (%)</label>
+                <input type="number" step="0.01" min="0" max="100" id="twelthInput" class="form-control" placeholder="e.g. 82.0">
+              </div>
+              <div class="form-group">
+                <label>Diploma Percentage (%)</label>
+                <input type="number" step="0.01" min="0" max="100" id="diplomaInput" class="form-control" placeholder="If applicable">
+              </div>
+              <div class="form-group">
+                <label>Degree</label>
+                <select id="degreeInput" class="form-control">
+                  <option value="B.Tech">B.Tech</option>
+                  <option value="B.E">B.E</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <input type="text" id="deptInput" class="form-control" value="Computer Science and Business Systems" readonly>
+              </div>
+            </div>
+
+            <!-- Section: Semester GPAs -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-chart-bar"></i> Semester GPA
+              <span style="font-size:11px;font-weight:500;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;">— enter GPAs for completed semesters</span>
+            </div>
+            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr);" id="gpaInputGrid">
+              <div class="form-group">
+                <label>Sem 1 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem1Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+              <div class="form-group">
+                <label>Sem 2 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem2Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+              <div class="form-group">
+                <label>Sem 3 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem3Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+              <div class="form-group">
+                <label>Sem 4 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem4Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+              <div class="form-group">
+                <label>Sem 5 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem5Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+              <div class="form-group">
+                <label>Sem 6 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem6Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+              <div class="form-group">
+                <label>Sem 7 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem7Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+              <div class="form-group">
+                <label>Sem 8 GPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="sem8Gpa" class="form-control gpa-field" placeholder="0.00" oninput="calculateCGPA()">
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label>Calculated CGPA (Auto)</label>
+              <input type="text" id="calculatedCgpa" class="form-control" readonly placeholder="Will auto-calculate" style="font-weight:800;color:#2563eb;font-size:18px;">
+            </div>
+
+            <!-- Section: Arrears -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-file-circle-check"></i> Arrears Status
+            </div>
+            <div class="form-grid form-grid-2 mb-4">
+              <div class="form-group">
+                <label>History of Arrears</label>
+                <select id="historyArrearsSelect" class="form-control" onchange="toggleArrearCounts()">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div class="form-group hidden" id="grpHistoryCount">
+                <label>Number of History Arrears</label>
+                <input type="number" min="0" id="historyCountInput" class="form-control" placeholder="e.g. 2">
+              </div>
+              <div class="form-group">
+                <label>Standing Arrears (Current)</label>
+                <select id="standingArrearsSelect" class="form-control" onchange="toggleArrearCounts()">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div class="form-group hidden" id="grpStandingCount">
+                <label>Number of Standing Arrears</label>
+                <input type="number" min="0" id="standingCountInput" class="form-control" placeholder="e.g. 1">
+              </div>
+            </div>
+
+            <!-- Section: Social & Links -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-link"></i> Online Profiles
+            </div>
+            <div class="form-grid form-grid-2 mb-4">
+              <div class="form-group">
+                <label>LinkedIn Profile URL</label>
+                <div class="input-with-icon">
+                  <i class="fa-brands fa-linkedin input-icon"></i>
+                  <input type="url" id="linkedinInput" class="form-control" placeholder="https://linkedin.com/in/...">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>GitHub Profile URL</label>
+                <div class="input-with-icon">
+                  <i class="fa-brands fa-github input-icon"></i>
+                  <input type="url" id="githubInput" class="form-control" placeholder="https://github.com/...">
+                </div>
+              </div>
+            </div>
+
+            <!-- Section: Documents -->
+            <div class="student-section-title">
+              <i class="fa-solid fa-upload"></i> Documents Upload
+            </div>
+            <div class="form-grid form-grid-2 mb-4">
+              <div class="form-group">
+                <label>Profile Photo</label>
+                <input type="file" id="profilePhotoInput" class="form-control" accept="image/*">
+                <div id="existingPhotoInfo" style="font-size:12px;color:#64748b;margin-top:4px;"></div>
+              </div>
+              <div class="form-group">
+                <label>Resume (PDF or DOCX)</label>
+                <input type="file" id="resumeFileInput" class="form-control" accept=".pdf,.doc,.docx">
+                <div id="existingResumeInfo" style="font-size:12px;color:#64748b;margin-top:4px;"></div>
+              </div>
+            </div>
+
+            <!-- Hidden fields for existing URLs -->
+            <input type="hidden" id="existingPhotoUrl">
+            <input type="hidden" id="existingResumeUrl">
+
+            <!-- Form Actions -->
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+              <button type="button" class="btn btn-outline" id="cancelEditBtn2" onclick="exitEditMode()">
+                <i class="fa-solid fa-xmark"></i> Cancel
+              </button>
+              <button type="submit" class="btn btn-primary btn-lg" id="saveProfileBtn">
+                <i class="fa-solid fa-floppy-disk"></i> Save Profile
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 2: PLACEMENT DRIVES
+       ============================================================ -->
+  <div id="tabDrives" class="student-tab-content hidden">
+    <div class="student-panel-card">
+      <div class="student-panel-header">
+        <div class="student-panel-title">
+          <i class="fa-solid fa-briefcase"></i> Active Placement Drives
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadPlacementDrives()">
+          <i class="fa-solid fa-rotate-right"></i> Refresh
+        </button>
+      </div>
+
+      <div class="student-panel-body">
+        <div id="drivesContainer">
+          <div class="spinner-box">
+            <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#94a3b8;"></i>
+            <p>Loading placement drives...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 3: APPLIED DRIVES
+       ============================================================ -->
+  <div id="tabApplications" class="student-tab-content hidden">
+    <div class="student-panel-card">
+      <div class="student-panel-header">
+        <div class="student-panel-title">
+          <i class="fa-solid fa-list-check"></i> My Applications
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadAppliedDrivesTable()">
+          <i class="fa-solid fa-rotate-right"></i> Refresh
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Role</th>
+              <th>Package</th>
+              <th>Applied On</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsTableBody">
+            <tr>
+              <td colspan="5" class="text-center text-muted" style="padding:40px;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 4: GPA CALCULATOR
+       ============================================================ -->
+  <div id="tabGpa" class="student-tab-content hidden">
+    <div class="gpa-calculator-card">
+      <div class="gpa-calc-header">
+        <i class="fa-solid fa-calculator"></i>
+        <div>
+          <h3>GPA &amp; CGPA Calculator</h3>
+          <p>Calculate your semester GPA based on subjects and grades</p>
+        </div>
+      </div>
+
+      <!-- Semester selector -->
+      <div class="sem-tabs" id="semTabs"></div>
+
+      <!-- GPA Results -->
+      <div style="padding:20px 24px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div class="gpa-result-box">
+            <div class="gpa-result-label">Current Semester GPA</div>
+            <div class="gpa-result-value" id="calcCurrentGpa">--</div>
+            <div class="gpa-result-out">out of 10.0</div>
+          </div>
+          <div class="gpa-result-box" style="background:linear-gradient(135deg,#059669,#34d399);">
+            <div class="gpa-result-label">Overall CGPA</div>
+            <div class="gpa-result-value" id="calcOverallCgpa">--</div>
+            <div class="gpa-result-out">out of 10.0</div>
+          </div>
         </div>
 
-        <div class="form-group hidden" id="historyBox">
-            <label>Number of History Arrears</label>
-            <input type="number" min="1">
+        <!-- Subjects table -->
+        <div id="subjectsTableWrap"></div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="addSubjectRow()">
+            <i class="fa-solid fa-plus"></i> Add Subject
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="resetGpaCalc()">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Reset
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="syncGpaToProfile()">
+            <i class="fa-solid fa-floppy-disk"></i> Sync to Profile
+          </button>
         </div>
+      </div>
+
+      <!-- All semesters CGPA summary -->
+      <div class="cgpa-summary" id="cgpaSummaryBar"></div>
     </div>
 
-    <div class="form-row">
-        <div class="form-group">
-            <label>Standing of arrears</label>
-            <select id="standingArrears">
-                <option value="">Select</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
+    <!-- Grade Reference Card -->
+    <div class="student-panel-card">
+      <div class="student-panel-header">
+        <div class="student-panel-title"><i class="fa-solid fa-table"></i> Anna University Grade Reference</div>
+      </div>
+      <div class="student-panel-body">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Grade</th>
+                <th>Grade Point</th>
+                <th>Marks Range</th>
+                <th>Performance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>O</strong></td><td><span class="badge badge-green">10</span></td><td>91–100</td><td>Outstanding</td></tr>
+              <tr><td><strong>A+</strong></td><td><span class="badge badge-blue">9</span></td><td>81–90</td><td>Excellent</td></tr>
+              <tr><td><strong>A</strong></td><td><span class="badge badge-blue">8</span></td><td>71–80</td><td>Very Good</td></tr>
+              <tr><td><strong>B+</strong></td><td><span class="badge badge-gray">7</span></td><td>61–70</td><td>Good</td></tr>
+              <tr><td><strong>B</strong></td><td><span class="badge badge-gray">6</span></td><td>50–60</td><td>Average</td></tr>
+              <tr><td><strong>RA</strong></td><td><span class="badge badge-red">0</span></td><td>Below 50</td><td>Reappear</td></tr>
+            </tbody>
+          </table>
         </div>
-
-        <div class="form-group hidden" id="standingBox">
-            <label>Number of Standing Arrears</label>
-            <input type="number" min="1">
-        </div>
+      </div>
     </div>
+  </div>
 
+  <!-- ============================================================
+       TAB 5: RESOURCES
+       ============================================================ -->
+  <div id="tabResources" class="student-tab-content hidden">
+    <div class="student-panel-card mb-4">
+      <div class="student-panel-header">
+        <div class="student-panel-title"><i class="fa-solid fa-book-open"></i> Learning &amp; Placement Resources</div>
+      </div>
+      <div class="student-panel-body">
+        <div class="resources-grid">
+          <div class="resource-card">
+            <div class="resource-card-icon" style="background:#eff6ff;color:#2563eb;">
+              <i class="fa-solid fa-file-pdf"></i>
+            </div>
+            <h4>Aptitude Questions</h4>
+            <p>Curated aptitude practice questions covering quantitative, verbal, and logical reasoning.</p>
+            <a href="aptitude.pdf" download class="resource-download">
+              <i class="fa-solid fa-download"></i> Download PDF
+            </a>
+          </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label>LinkedIn Link</label>
-                <input type="link"required>
+          <div class="resource-card">
+            <div class="resource-card-icon" style="background:#ecfdf5;color:#059669;">
+              <i class="fa-brands fa-java"></i>
             </div>
-            <div class="form-group">
-                <label>GitHub Link</label>
-                <input type="link" required>
+            <h4>Java Core Programs</h4>
+            <p>Sample Java programs covering core concepts, data structures, and interview patterns.</p>
+            <a href="java.pdf" download class="resource-download">
+              <i class="fa-solid fa-download"></i> Download PDF
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <div class="resource-card-icon" style="background:#f5f3ff;color:#7c3aed;">
+              <i class="fa-solid fa-file-word"></i>
             </div>
+            <h4>Model Resume Template</h4>
+            <p>Department-approved resume format for campus placements. Follow this structure.</p>
+            <a href="Model Resume.docx" download class="resource-download">
+              <i class="fa-solid fa-download"></i> Download DOCX
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <div class="resource-card-icon" style="background:#fff7ed;color:#ea580c;">
+              <i class="fa-solid fa-chart-simple"></i>
+            </div>
+            <h4>Placement Statistics</h4>
+            <p>Past year placement trends, package details, and company-wise information for CSBS.</p>
+            <span class="resource-download" style="color:#94a3b8;cursor:default;">
+              <i class="fa-solid fa-clock"></i> Coming Soon
+            </span>
+          </div>
         </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Profile Photo Upload</label>
-                <input type="file" accept="image/*" required>
-            </div>
-            <div class="form-group resume">
-                <label>Model Resume</label>
-                <a href="Model Resume.docx" download>Download Resume Format</a>
-            </div>
-            <div class="form-group">
-                <label>Upload Resume</label>
-                <input type="file" accept="pdf/*" required>
-            </div>
-        </div>
-
-        
-
-        <div class="form-actions">
-            <button type="submit" class="submit">Submit</button>
-            <button type="reset" class="reset">Reset</button>
-        </div>
-        
-</div>
-
-
-
-</div>
-
-<div class="right-panel">
-
-    <h2 class="ref-title">References</h2>
-
-    <!-- Aptitude Download -->
-    <div class="ref-card">
-        <h3>Aptitude Questions</h3>
-        <p class="ref-instruction">
-            Download aptitude practice questions.
-        </p>
-        <a href="apttitude.txt" download class="download-btn">
-             Download Aptitude Questions
-        </a>
+      </div>
     </div>
+  </div>
 
-    <!-- Java Core Download -->
-    <div class="ref-card">
-        <h3>Java Core Programs</h3>
-        <p class="ref-instruction">
-            Download Java core sample programs.
-        </p>
-        <a href="java.docx" download class="download-btn">
-             Download Java Core
-        </a>
-    </div>
-
-
-    <div class="ref-guidelines">
-        <h3>Instructions</h3>
-        <ul>
-            <li>Download the provided reference materials</li>
-            <li>Aptitude file is in PDF format</li>
-            <li>Java core programs are provided as ZIP</li>
-            <li>Use the files only for academic practice</li>
-        </ul>
-    </div>
-
-</div>
-
+</div><!-- /student-app-container -->
 
 <script src="student_dashboard.js"></script>
-
-
 </body>
-
 </html>
