@@ -114,15 +114,18 @@ router.post("/register", async (req, res) => {
 // LOGIN USER
 // =========================
 router.post("/login", (req, res) => {
-    const { email, password } = req.body;
-    const identifier = (email || "").trim();
+    const { email, identifier: customId, password } = req.body;
+    const identifier = (customId || email || "").trim();
 
     if (!identifier || !password) {
-        return res.status(400).json({ success: false, message: "Email/Register No and password are required." });
+        return res.status(400).json({ success: false, message: "Register Number / Admin ID and password are required." });
     }
 
+    const idLower = identifier.toLowerCase();
+    const idUpper = identifier.toUpperCase();
+
     // Default Admin Login shortcut
-    if ((identifier === "admin" || identifier === "admin@rit.ac.in") && password === "admin123") {
+    if ((idLower === "admin" || idUpper === "ADMIN001" || idLower === "admin@rit.ac.in") && password === "admin123") {
         const token = jwt.sign(
             { id: 0, email: "admin@rit.ac.in", role: "admin", full_name: "Placement Admin" },
             JWT_SECRET,
@@ -136,7 +139,7 @@ router.post("/login", (req, res) => {
             user: {
                 id: 0,
                 full_name: "Placement Admin",
-                register_number: "ADMIN",
+                register_number: "ADMIN001",
                 email: "admin@rit.ac.in",
                 role: "admin"
             }
@@ -145,8 +148,8 @@ router.post("/login", (req, res) => {
 
     // Database lookup for Student or registered Admin
     db.query(
-        "SELECT * FROM users WHERE email = ? OR register_number = ?",
-        [identifier, identifier],
+        "SELECT * FROM users WHERE register_number = ? OR email = ? OR (role = 'admin' AND (register_number = ? OR email = ?))",
+        [identifier, identifier, identifier, identifier],
         async (err, results) => {
             try {
                 if (err) {

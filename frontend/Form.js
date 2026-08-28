@@ -48,28 +48,37 @@ function setRole(role) {
 function updateUI() {
   const isAdmin = selectedRole === 'admin';
 
-  // Hint box
-  const adminHint = document.getElementById('adminHint');
-  if (adminHint) {
-    adminHint.classList.toggle('form-hidden', !(isAdmin && !isRegisterMode));
-    adminHint.classList.toggle('hidden', !(isAdmin && !isRegisterMode));
+  // Register/Login specific labels
+  const formTitle = document.getElementById('formTitle');
+  if (formTitle) {
+    formTitle.innerText = isAdmin
+      ? (isRegisterMode ? 'Admin Registration' : 'Placement Admin Login')
+      : (isRegisterMode ? 'Student Registration' : 'Student Login');
   }
 
-  // Register/Login specific labels
-  document.getElementById('formTitle').innerText =
-    isAdmin
-      ? (isRegisterMode ? 'Admin Registration' : 'Placement Admin Login')
-      : (isRegisterMode ? 'Student Registration' : 'Welcome Back');
-
-  document.getElementById('formSub').innerText =
-    isAdmin
-      ? 'Sign in with your admin credentials'
-      : 'Sign in to your placement portal account';
+  const formSub = document.getElementById('formSub');
+  if (formSub) {
+    formSub.innerText = isAdmin
+      ? (isRegisterMode ? 'Create admin placement portal account' : 'Sign in with your admin ID')
+      : (isRegisterMode ? 'Create student placement portal account' : 'Sign in with your register number');
+  }
 
   const lblEmail = document.getElementById('lblLoginEmail');
-  if (lblEmail) lblEmail.innerHTML = isAdmin
-    ? '<i class="fa-solid fa-envelope" style="margin-right:4px;"></i> Admin Email'
-    : '<i class="fa-solid fa-envelope" style="margin-right:4px;"></i> Email Address or Register No.';
+  if (lblEmail) {
+    lblEmail.innerHTML = isAdmin
+      ? '<i class="fa-solid fa-user-shield" style="margin-right:4px;"></i> ADMIN ID'
+      : '<i class="fa-solid fa-id-card" style="margin-right:4px;"></i> REGISTER NUMBER';
+  }
+
+  const loginInput = document.getElementById('loginEmail');
+  const loginIcon = document.getElementById('loginInputIcon');
+  if (loginInput) {
+    loginInput.placeholder = isAdmin ? 'Enter your admin ID' : 'Enter your register number';
+    loginInput.setAttribute('autocomplete', isAdmin ? 'username' : 'off');
+  }
+  if (loginIcon) {
+    loginIcon.className = isAdmin ? 'fa-solid fa-user-shield form-input-icon' : 'fa-solid fa-hashtag form-input-icon';
+  }
 
   const grpReg = document.getElementById('grpRegisterNo');
   const grpDetails = document.getElementById('grpStudentDetails');
@@ -149,11 +158,13 @@ async function handleLogin(e) {
   e.preventDefault();
   hideAlert();
 
-  const email    = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
+  const identifier = document.getElementById('loginEmail').value.trim();
+  const password   = document.getElementById('loginPassword').value;
 
-  if (!email || !password) {
-    showAlert('Please enter both email / register number and password.');
+  if (!identifier || !password) {
+    showAlert(selectedRole === 'admin' 
+      ? 'Please enter your Admin ID and password.' 
+      : 'Please enter your Register Number and password.');
     return;
   }
 
@@ -163,7 +174,7 @@ async function handleLogin(e) {
     const response = await fetch(`${API_BASE}/auth/login`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email, password })
+      body:    JSON.stringify({ email: identifier, identifier, password, role: selectedRole })
     });
 
     let data = {};

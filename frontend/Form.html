@@ -32,7 +32,14 @@
   </header>
 
   <div class="form-dept-banner">
-    Department of Computer Science and Business Systems (CSBS) — Placement Portal
+    <div class="form-dept-banner-inner">
+      <div class="form-dept-badge">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <h2 class="form-dept-title">DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS (CSBS)</h2>
+      <span class="form-dept-divider">•</span>
+      <span class="form-dept-tag">PLACEMENT PORTAL</span>
+    </div>
   </div>
 
   <!-- Auth Section -->
@@ -46,8 +53,8 @@
         <div class="form-auth-logo-wrap">
           <i class="fa-solid fa-briefcase"></i>
         </div>
-        <h2 id="formTitle">Welcome Back</h2>
-        <p id="formSub">Sign in to your placement portal account</p>
+        <h2 id="formTitle">Student Login</h2>
+        <p id="formSub">Sign in with your register number</p>
       </div>
 
       <!-- Role Selector -->
@@ -67,18 +74,18 @@
       <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
         <div class="form-field-group">
           <label id="lblLoginEmail">
-            <i class="fa-solid fa-envelope" style="margin-right:4px;"></i>
-            Email Address or Register No.
+            <i class="fa-solid fa-id-card" style="margin-right:4px;"></i>
+            Register Number
           </label>
           <div class="form-input-wrapper">
-            <i class="fa-solid fa-user form-input-icon"></i>
+            <i class="fa-solid fa-hashtag form-input-icon" id="loginInputIcon"></i>
             <input
               type="text"
               id="loginEmail"
               class="form-input-control"
-              placeholder="Enter your email or register no."
+              placeholder="Enter your register number"
               required
-              autocomplete="username"
+              autocomplete="off"
             >
           </div>
         </div>
@@ -110,11 +117,6 @@
         <p class="form-auth-switch">
           New user? <span onclick="toggleAuthMode()">Create an account</span>
         </p>
-
-        <div id="adminHint" class="form-admin-hint form-hidden">
-          <i class="fa-solid fa-circle-info"></i>
-          Default Admin — Email: <strong>admin@rit.ac.in</strong> &nbsp;|&nbsp; Password: <strong>admin123</strong>
-        </div>
       </form>
 
       <!-- ===== REGISTER FORM ===== -->
