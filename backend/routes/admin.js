@@ -96,6 +96,7 @@ router.post("/drives", (req, res) => {
         min_cgpa,
         max_standing_arrears,
         eligible_years,
+        target_batch,
         job_location,
         deadline,
         description
@@ -108,8 +109,8 @@ router.post("/drives", (req, res) => {
     const sql = `
         INSERT INTO placement_drives (
             company_name, job_role, package_ctc, min_cgpa, max_standing_arrears,
-            eligible_years, job_location, deadline, description
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            eligible_years, job_location, deadline, description, target_batch
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.query(sql, [
@@ -121,7 +122,8 @@ router.post("/drives", (req, res) => {
         eligible_years || "3,4",
         job_location || "Flexible",
         deadline || null,
-        description || ""
+        description || "",
+        target_batch || "All Batches"
     ], (err, result) => {
         if (err) {
             console.error("Error creating placement drive:", err);
@@ -132,16 +134,46 @@ router.post("/drives", (req, res) => {
 });
 
 // ==========================================
-// DELETE PLACEMENT DRIVE
+// DELETE / ARCHIVE PLACEMENT DRIVE
+// Soft delete for students by default, permanent delete if ?action=permanent
 // ==========================================
 router.delete("/drives/:id", (req, res) => {
     const driveId = req.params.id;
+    const action = req.query.action;
 
-    db.query("DELETE FROM placement_drives WHERE id = ?", [driveId], (err) => {
+    if (action === "permanent") {
+        db.query("DELETE FROM placement_drives WHERE id = ?", [driveId], (err) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: "Failed to permanently delete drive" });
+            }
+            res.json({ success: true, message: "Placement drive permanently deleted" });
+        });
+    } else {
+        // Soft delete: Hide from students, keep in admin panel & DB
+        db.query("UPDATE placement_drives SET is_deleted_for_students = 1 WHERE id = ?", [1, driveId], (err) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: "Failed to update drive status" });
+            }
+            res.json({ success: true, message: "Placement drive hidden from students. Preserved in admin database." });
+        });
+    }
+});
+
+// ==========================================
+// TOGGLE DRIVE VISIBILITY FOR STUDENTS
+// ==========================================
+router.post("/drives/:id/toggle-visibility", (req, res) => {
+    const driveId = req.params.id;
+    const { is_deleted_for_students } = req.body;
+
+    db.query("UPDATE placement_drives SET is_deleted_for_students = ? WHERE id = ?", [is_deleted_for_students ? 1 : 0, driveId], (err) => {
         if (err) {
-            return res.status(500).json({ success: false, message: "Failed to delete drive" });
+            return res.status(500).json({ success: false, message: "Failed to toggle drive visibility" });
         }
-        res.json({ success: true, message: "Placement drive deleted successfully" });
+        res.json({
+            success: true,
+            message: is_deleted_for_students ? "Drive hidden from student dashboard" : "Drive restored for student dashboard"
+        });
     });
 });
 

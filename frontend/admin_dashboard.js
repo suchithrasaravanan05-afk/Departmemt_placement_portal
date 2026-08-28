@@ -352,6 +352,7 @@ async function handlePostDrive(e) {
   const minCgpa     = el('driveMinCgpa')?.value || '6.00';
   const maxArrears  = el('driveMaxArrears')?.value || '0';
   const years       = el('driveYears')?.value || '3,4';
+  const batch       = el('driveBatch')?.value || 'All Batches';
   const location    = el('driveLocation')?.value.trim() || 'Flexible';
   const deadline    = el('driveDeadline')?.value || null;
   const description = el('driveDescription')?.value.trim() || '';
@@ -376,6 +377,7 @@ async function handlePostDrive(e) {
         min_cgpa:            parseFloat(minCgpa),
         max_standing_arrears: parseInt(maxArrears),
         eligible_years:      years,
+        target_batch:        batch,
         job_location:        location,
         deadline:            deadline,
         description:         description
@@ -391,6 +393,7 @@ async function handlePostDrive(e) {
       el('driveMinCgpa').value   = '6.00';
       el('driveMaxArrears').value = '0';
       el('driveYears').value     = '3,4';
+      if (el('driveBatch')) el('driveBatch').value = '2023-2027';
       loadAdminDrives();
       loadDashboardStats();
     } else {
@@ -410,6 +413,8 @@ async function loadAdminDrives() {
   const container = el('adminDrivesContainer');
   if (!container) return;
 
+  const batchFilter = el('filterDriveBatch')?.value || '';
+
   container.innerHTML = `
     <div class="spinner-box">
       <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#94a3b8;"></i>
@@ -417,7 +422,6 @@ async function loadAdminDrives() {
     </div>`;
 
   try {
-    // Reuse student drives endpoint to get all drives (as admin, use user_id=0)
     const res  = await fetch(`${API_BASE}/student/drives/0`, {
       headers: { Authorization: `Bearer ${currentAdminToken}` }
     });
@@ -432,9 +436,25 @@ async function loadAdminDrives() {
       return;
     }
 
+    let drivesToRender = data.drives;
+    if (batchFilter) {
+      drivesToRender = data.drives.filter(d =>
+        !d.target_batch || d.target_batch === 'All Batches' || d.target_batch === batchFilter
+      );
+    }
+
+    if (drivesToRender.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-filter" style="color:#94a3b8;"></i>
+          <p>No placement drives found for batch "${batchFilter}".</p>
+        </div>`;
+      return;
+    }
+
     container.innerHTML = `
       <div class="drives-grid">
-        ${data.drives.map(d => buildAdminDriveCard(d)).join('')}
+        ${drivesToRender.map(d => buildAdminDriveCard(d)).join('')}
       </div>`;
   } catch (err) {
     console.error('Load drives error:', err);
@@ -443,57 +463,109 @@ async function loadAdminDrives() {
 }
 
 function buildAdminDriveCard(d) {
-  const deadlineStr = d.deadline ? fmtDate(d.deadline) : 'Open';
-  const isExpired   = d.deadline && new Date(d.deadline) < new Date();
+  const deadlineStr  = d.deadline ? fmtDate(d.deadline) : 'Open';
+  const isExpired    = d.deadline && new Date(d.deadline) < new Date();
+  const isHidden     = d.is_deleted_for_students == 1 || d.is_deleted_for_students === true;
+  const batchLabel   = d.target_batch || 'All Batches';
 
   return `
-  <div class="drive-card" style="border-left:4px solid ${isExpired ? '#ef4444' : '#2563eb'};">
-    <div>
-      <div class="drive-company">${d.company_name}</div>
-      <div class="drive-role" style="margin-top:2px;">${d.job_role}</div>
+  <div class="drive-card ${isHidden ? 'is-archived-card' : ''}" style="border-left:4px solid ${isHidden ? '#94a3b8' : (isExpired ? '#ef4444' : '#2563eb')};position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+      <div>
+        <div class="drive-company">${d.company_name}</div>
+        <div class="drive-role" style="margin-top:2px;">${d.job_role}</div>
+      </div>
+      <div class="admin-card-actions">
+        <button class="admin-action-icon-btn ${isHidden ? 'restored' : 'deleted'}"
+                onclick="toggleStudentVisibility(${d.id}, '${d.company_name.replace(/'/g, "\\'")}', ${isHidden ? 1 : 0})"
+                title="${isHidden ? 'Restore for Students (Unhide)' : 'Delete / Hide for Students (Preserve in Admin)'}">
+          <i class="fa-solid ${isHidden ? 'fa-eye' : 'fa-trash-can'}"></i>
+        </button>
+        ${isHidden ? `
+          <button class="admin-action-icon-btn perm-delete"
+                  onclick="permanentlyDeleteDrive(${d.id}, '${d.company_name.replace(/'/g, "\\'")}')"
+                  title="Permanently Delete from Database">
+            <i class="fa-solid fa-xmark"></i>
+          </button>` : ''}
+      </div>
     </div>
-    <div class="drive-meta">
+
+    <div class="drive-meta" style="margin-top:10px;">
       <span class="badge badge-blue"><i class="fa-solid fa-indian-rupee-sign"></i> ${d.package_ctc}</span>
+      <span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;"><i class="fa-solid fa-graduation-cap"></i> ${batchLabel}</span>
       <span class="badge badge-gray"><i class="fa-solid fa-location-dot"></i> ${d.job_location || 'Flexible'}</span>
       <span class="badge ${isExpired ? 'badge-red' : 'badge-yellow'}">
         <i class="fa-solid fa-calendar"></i> ${deadlineStr}
       </span>
+      ${isHidden ? `<span class="badge badge-red" style="background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;font-weight:700;"><i class="fa-solid fa-eye-slash"></i> Hidden for Students</span>` : ''}
     </div>
-    <div style="font-size:12px;color:#64748b;">
+
+    <div style="font-size:12px;color:#64748b;margin-top:6px;">
       Min CGPA: <strong>${parseFloat(d.min_cgpa || 0).toFixed(1)}</strong> &nbsp;|&nbsp;
       Max Arrears: <strong>${d.max_standing_arrears || 0}</strong> &nbsp;|&nbsp;
       Years: <strong>${d.eligible_years || 'All'}</strong>
     </div>
-    ${d.description ? `<p style="font-size:12px;color:#64748b;line-height:1.5;border-top:1px solid #f1f5f9;padding-top:8px;">${d.description.slice(0,120)}${d.description.length > 120 ? '…' : ''}</p>` : ''}
-    <div style="margin-top:auto;text-align:right;">
-      <button class="btn btn-danger btn-sm" onclick="deleteDrive(${d.id}, '${d.company_name.replace(/'/g, "\\'")}')">
-        <i class="fa-solid fa-trash"></i> Delete Drive
-      </button>
-    </div>
+
+    ${d.description ? `<p style="font-size:12px;color:#64748b;line-height:1.5;border-top:1px solid #f1f5f9;padding-top:8px;margin-top:6px;">${d.description.slice(0,120)}${d.description.length > 120 ? '…' : ''}</p>` : ''}
   </div>`;
 }
 
 // ============================================================
-// DELETE DRIVE
+// TOGGLE STUDENT VISIBILITY (SOFT DELETE / RESTORE)
 // ============================================================
-async function deleteDrive(driveId, companyName) {
-  if (!confirm(`Delete the placement drive for ${companyName}?\n\nAll applications for this drive will also be removed.`)) return;
+async function toggleStudentVisibility(driveId, companyName, isCurrentlyHidden) {
+  const willHide = !isCurrentlyHidden;
+
+  const promptMsg = willHide
+    ? `🗑️ Hide placement drive for "${companyName}" from students?\n\nThis drive will be removed from the Student Dashboard, but will REMAIN visible in the Admin Panel and Database for your batch records.`
+    : `👁️ Restore placement drive for "${companyName}"?\n\nThis drive will become visible to students again in their dashboard.`;
+
+  if (!confirm(promptMsg)) return;
 
   try {
-    const res  = await fetch(`${API_BASE}/admin/drives/${driveId}`, {
+    const res  = await fetch(`${API_BASE}/admin/drives/${driveId}/toggle-visibility`, {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization:  `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ is_deleted_for_students: willHide ? 1 : 0 })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert(data.message, true);
+      loadAdminDrives();
+      loadDashboardStats();
+    } else {
+      showAdminAlert(data.message || 'Failed to update drive visibility.');
+    }
+  } catch (err) {
+    console.error('Toggle visibility error:', err);
+    showAdminAlert('Server error while updating drive status.');
+  }
+}
+
+// ============================================================
+// PERMANENTLY DELETE DRIVE (ADMIN HARD DELETE)
+// ============================================================
+async function permanentlyDeleteDrive(driveId, companyName) {
+  if (!confirm(`⚠️ PERMANENT DELETE: Delete placement drive for "${companyName}" permanently from Database?\n\nThis will remove all stored record of this drive. This action CANNOT be undone.`)) return;
+
+  try {
+    const res  = await fetch(`${API_BASE}/admin/drives/${driveId}?action=permanent`, {
       method:  'DELETE',
       headers: { Authorization: `Bearer ${currentAdminToken}` }
     });
     const data = await res.json();
     if (data.success) {
-      showAdminAlert(`Drive for "${companyName}" deleted.`, true);
+      showAdminAlert(`Drive for "${companyName}" permanently deleted.`, true);
       loadAdminDrives();
       loadDashboardStats();
     } else {
       showAdminAlert(data.message || 'Failed to delete drive.');
     }
   } catch (err) {
-    console.error('Delete drive error:', err);
+    console.error('Permanent delete drive error:', err);
     showAdminAlert('Server error while deleting drive.');
   }
 }

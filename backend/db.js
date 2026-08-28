@@ -270,13 +270,20 @@ async function querySupabase(sql, params = [], callback) {
         // ----------------------------------------------------
         if (cleanSql.includes("FROM placement_drives pd") && cleanSql.includes("app.user_id = ?")) {
             const userId = params[0];
+            const filterDeletedForStudent = cleanSql.includes("is_deleted_for_students = 0") || (userId !== 0 && userId !== "0");
+
             const { data: drives, error: dErr } = await client.from("placement_drives").select("*").order("created_at", { ascending: false });
             if (dErr) return callback(dErr, null);
+
+            let filteredDrives = drives || [];
+            if (filterDeletedForStudent) {
+                filteredDrives = filteredDrives.filter(d => !d.is_deleted_for_students || d.is_deleted_for_students == 0);
+            }
 
             const { data: apps } = await client.from("applications").select("*").eq("user_id", userId);
             const appMap = new Map((apps || []).map(a => [a.drive_id, a]));
 
-            const results = (drives || []).map(d => {
+            const results = filteredDrives.map(d => {
                 const app = appMap.get(d.id);
                 return {
                     ...d,
@@ -302,16 +309,26 @@ async function querySupabase(sql, params = [], callback) {
         if (cleanSql.startsWith("INSERT INTO placement_drives")) {
             const [
                 company_name, job_role, package_ctc, min_cgpa, max_standing_arrears,
-                eligible_years, job_location, deadline, description
+                eligible_years, job_location, deadline, description, target_batch
             ] = params;
 
             const { data, error } = await client.from("placement_drives").insert([{
                 company_name, job_role, package_ctc, min_cgpa, max_standing_arrears,
-                eligible_years, job_location, deadline, description
+                eligible_years, job_location, deadline, description,
+                target_batch: target_batch || "All Batches",
+                is_deleted_for_students: 0
             }]).select();
             if (error) return callback(error, null);
             const inserted = data && data[0] ? data[0] : {};
             return callback(null, { insertId: inserted.id, affectedRows: 1 });
+        }
+
+        if (cleanSql.includes("UPDATE placement_drives SET is_deleted_for_students =")) {
+            const isDel = params[0];
+            const driveId = params[1];
+            const { data, error } = await client.from("placement_drives").update({ is_deleted_for_students: isDel }).eq("id", driveId);
+            if (error) return callback(error, null);
+            return callback(null, { affectedRows: 1 });
         }
 
         if (cleanSql.startsWith("DELETE FROM placement_drives WHERE id = ?")) {

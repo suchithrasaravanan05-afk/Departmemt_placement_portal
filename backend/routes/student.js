@@ -239,11 +239,12 @@ router.post("/profile/save", cpUpload, async (req, res) => {
 router.get("/drives/:userId", (req, res) => {
     const userId = req.params.userId;
 
-    // Get drives along with application status for this student
+    // Get active drives (excluding ones deleted/archived for students)
     const sql = `
         SELECT pd.*, app.status as app_status, app.applied_at
         FROM placement_drives pd
         LEFT JOIN applications app ON pd.id = app.drive_id AND app.user_id = ?
+        WHERE (pd.is_deleted_for_students = 0 OR pd.is_deleted_for_students IS NULL)
         ORDER BY pd.created_at DESC
     `;
 

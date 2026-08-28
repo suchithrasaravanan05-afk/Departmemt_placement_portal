@@ -240,6 +240,68 @@
   overflow-y: auto;
 }
 
+/* Action Icon Buttons & Drive Archiving */
+.admin-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-action-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.admin-action-icon-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.admin-action-icon-btn.restored {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.admin-action-icon-btn.restored:hover {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.admin-action-icon-btn.perm-delete {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.admin-action-icon-btn.perm-delete:hover {
+  background: #475569;
+  color: #ffffff;
+  border-color: #475569;
+  box-shadow: 0 4px 14px rgba(71, 85, 105, 0.35);
+}
+
+.is-archived-card {
+  background: #f8fafc !important;
+  opacity: 0.88;
+}
+
 /* Responsive Mobile Rules */
 @media (max-width: 768px) {
   .admin-college-header { padding: 12px 16px; flex-direction: column; text-align: center; }
