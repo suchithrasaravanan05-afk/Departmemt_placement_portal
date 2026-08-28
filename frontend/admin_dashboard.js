@@ -181,11 +181,13 @@ function renderStudentRoster(students, tbody) {
       </a>`;
     }
 
-    const yearSuffix = ['','st','nd','rd','th'][s.year] || '';
+    const yearStr = (s.year == 5 || String(s.year).toLowerCase().includes('passed'))
+      ? '<span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;">Passed Out</span>'
+      : (s.year ? `<span class="badge badge-blue">${s.year}${['','st','nd','rd','th'][s.year] || ''} Yr</span>` : '—');
 
     return `
     <tr>
-      <td><span class="badge badge-blue">${s.year ? s.year + yearSuffix + ' Yr' : '—'}</span></td>
+      <td>${yearStr}</td>
       <td style="font-family:monospace;font-size:12px;">${s.register_number || '—'}</td>
       <td><strong>${s.full_name}</strong></td>
       <td style="font-size:12px;color:#64748b;">${s.email}</td>
@@ -250,7 +252,7 @@ function updateFilterChips() {
   const maxArr    = el('filterMaxArrears')?.value;
   const search    = el('filterSearch')?.value;
 
-  if (year)     chips.push(`Year: ${year}`);
+  if (year)     chips.push(`Year: ${year == 5 ? 'Passed Out' : year}`);
   if (minCgpa)  chips.push(`Min CGPA ≥ ${minCgpa}`);
   if (minTenth) chips.push(`10th ≥ ${minTenth}%`);
   if (minTwelth) chips.push(`12th ≥ ${minTwelth}%`);
@@ -295,11 +297,12 @@ function viewStudentModal(student) {
   const tenth = student.tenth_percentage ? `${parseFloat(student.tenth_percentage).toFixed(1)}%` : '—';
   const twelth = student.twelth_percentage ? `${parseFloat(student.twelth_percentage).toFixed(1)}%` : '—';
   const arrears = student.standing_arrears_count !== null ? student.standing_arrears_count : 0;
+  const yearText = (student.year == 5 || String(student.year).toLowerCase().includes('passed')) ? 'Passed Out' : (student.year ? student.year + ' Year' : '—');
 
   el('studentModalBody').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div class="detail-item"><span class="detail-label">Register No</span><span class="detail-value">${student.register_number || '—'}</span></div>
-      <div class="detail-item"><span class="detail-label">Year</span><span class="detail-value">${student.year ? student.year + ' Year' : '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Year</span><span class="detail-value">${yearText}</span></div>
       <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value" style="font-size:12px;">${student.email}</span></div>
       <div class="detail-item"><span class="detail-label">Phone</span><span class="detail-value">${student.phone || '—'}</span></div>
       <div class="detail-item"><span class="detail-label">CGPA</span><span class="detail-value" style="color:#2563eb;font-weight:800;font-size:18px;">${cgpa}</span></div>

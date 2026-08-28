@@ -147,8 +147,9 @@ function exitEditMode() {
 // ============================================================
 function handleYearChange() {
   const yearEl = el('yearSelect');
-  const year   = parseInt(yearEl?.value || '3');
-  const enabled = year * 2;
+  const rawYear = yearEl?.value || '3';
+  const year   = parseInt(rawYear);
+  const enabled = (year === 5 || rawYear === '5') ? 8 : (year * 2);
 
   for (let i = 1; i <= 8; i++) {
     const field = el(`sem${i}Gpa`);
@@ -273,7 +274,7 @@ function populateViewMode(p) {
 
   // Personal
   set('viewDob',          fmtDate(p.dob));
-  set('viewYear',         p.year ? `${p.year}${['','st','nd','rd','th'][p.year]} Year` : '--');
+  set('viewYear',         (p.year == 5 || String(p.year).toLowerCase().includes('passed')) ? 'Passed Out' : (p.year ? `${p.year}${['','st','nd','rd','th'][p.year]} Year` : '--'));
   set('viewPersonalEmail', p.personal_email);
   set('viewCollegeEmail',  p.college_email || p.email);
   set('viewPhone',         p.phone_number || p.phone);
