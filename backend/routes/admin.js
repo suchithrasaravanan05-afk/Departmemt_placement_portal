@@ -2,6 +2,8 @@ const express = require("express");
 const crypto = require("crypto");
 const router = express.Router();
 const db = require("../db");
+const { supabaseAdmin, supabase } = require("../supabase");
+
 
 // ==========================================
 // ADMIN DASHBOARD OVERVIEW METRICS
@@ -136,7 +138,7 @@ router.post("/drives", (req, res) => {
 // ==========================================
 // UPDATE PLACEMENT DRIVE DETAILS (EDIT)
 // ==========================================
-const handleUpdateDrive = (req, res) => {
+const handleUpdateDrive = async (req, res) => {
     const driveId = req.params.id;
     const {
         company_name,
@@ -154,50 +156,49 @@ const handleUpdateDrive = (req, res) => {
     if (!company_name || !job_role || !package_ctc) {
         return res.status(400).json({ success: false, message: "Company Name, Job Role, and Package CTC are required." });
     }
-    console.log('handleUpdateDrive payload:', req.body, 'driveId:', driveId);
 
-    const sql = `
-        UPDATE placement_drives SET
-            company_name = ?,
-            job_role = ?,
-            package_ctc = ?,
-            min_cgpa = ?,
-            max_standing_arrears = ?,
-            eligible_years = ?,
-            job_location = ?,
-            deadline = ?,
-            description = ?,
-            target_batch = ?
-        WHERE id = ?
-    `;
+    console.log('[handleUpdateDrive] driveId:', driveId, '| payload:', req.body);
 
-    db.query(sql, [
-        company_name,
-        job_role,
-        package_ctc,
-        parseFloat(min_cgpa) || 0.00,
-        parseInt(max_standing_arrears) || 0,
-        eligible_years || "3,4",
-        job_location || "Flexible",
-        deadline || null,
-        description || "",
-        target_batch || "2023-2027",
-        driveId
-    ], (err, result) => {
-        if (err) {
-            console.error("Error updating placement drive:", err);
-            return res.status(500).json({ success: false, message: "Failed to update placement drive" });
+    try {
+        const client = supabaseAdmin || supabase;
+        if (!client) {
+            return res.status(500).json({ success: false, message: "Database client not available" });
         }
-        // Fetch the updated drive to return
-        db.query(`SELECT * FROM placement_drives WHERE id = ?`, [driveId], (err2, updated) => {
-            if (err2) {
-                console.error('Error fetching updated drive:', err2);
-                return res.status(500).json({ success: false, message: 'Failed to fetch updated drive' });
-            }
-            res.json({ success: true, message: "Placement Drive details updated successfully!", drive: updated[0] });
-        });
-    });
+
+        const updateObj = {
+            company_name,
+            job_role,
+            package_ctc,
+            min_cgpa: parseFloat(min_cgpa) || 0.00,
+            max_standing_arrears: parseInt(max_standing_arrears) || 0,
+            eligible_years: eligible_years || "3,4",
+            job_location: job_location || "Flexible",
+            deadline: deadline || null,
+            description: description || "",
+            target_batch: target_batch || "2023-2027"
+        };
+
+        console.log('[handleUpdateDrive] updateObj:', updateObj);
+
+        const { data, error } = await client
+            .from("placement_drives")
+            .update(updateObj)
+            .eq("id", driveId)
+            .select();
+
+        if (error) {
+            console.error("[handleUpdateDrive] Supabase error:", error);
+            return res.status(500).json({ success: false, message: error.message || "Failed to update placement drive" });
+        }
+
+        console.log('[handleUpdateDrive] Updated data:', data);
+        res.json({ success: true, message: "Placement Drive updated successfully!", drive: data && data[0] ? data[0] : null });
+    } catch (ex) {
+        console.error("[handleUpdateDrive] Exception:", ex);
+        res.status(500).json({ success: false, message: ex.message || "Server error while updating placement drive" });
+    }
 };
+
 
 router.put("/drives/:id", handleUpdateDrive);
 router.post("/drives/:id", handleUpdateDrive);
