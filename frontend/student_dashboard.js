@@ -84,6 +84,15 @@ function safe(val, fallback = '--') {
   return (val !== null && val !== undefined && val !== '') ? val : fallback;
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // ============================================================
 // ALERT
 // ============================================================
@@ -460,6 +469,7 @@ async function loadPlacementDrives() {
     const data = await res.json();
 
     if (!data.success || !data.drives || data.drives.length === 0) {
+      renderDriveNotifications([]);
       container.innerHTML = `
         <div class="empty-state">
           <i class="fa-solid fa-briefcase" style="color:#94a3b8;"></i>
@@ -468,6 +478,8 @@ async function loadPlacementDrives() {
         </div>`;
       return;
     }
+
+    renderDriveNotifications(data.drives);
 
     const studentCgpa  = parseFloat(currentProfile?.cgpa || 0);
     const standingArr  = parseInt(currentProfile?.standing_arrears_count || 0);
@@ -482,6 +494,150 @@ async function loadPlacementDrives() {
       </div>`;
   }
 }
+
+let cachedStudentDrives = [];
+
+// ============================================================
+// DRIVE NOTIFICATIONS LOGIC
+// ============================================================
+function getReadDriveIds() {
+  try {
+    const key = `rit_read_drives_${currentUser?.id || 'default'}`;
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveReadDriveIds(ids) {
+  try {
+    const key = `rit_read_drives_${currentUser?.id || 'default'}`;
+    localStorage.setItem(key, JSON.stringify(ids));
+  } catch (e) {
+    console.error('Failed to save read drive IDs:', e);
+  }
+}
+
+function renderDriveNotifications(drives) {
+  cachedStudentDrives = drives || [];
+  const listEl = el('notifList');
+  const badgeEl = el('notifBadge');
+  if (!listEl) return;
+
+  if (!drives || drives.length === 0) {
+    listEl.innerHTML = `
+      <div style="padding:28px 16px;text-align:center;color:#94a3b8;">
+        <i class="fa-regular fa-bell-slash" style="font-size:26px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
+        <p style="font-size:13px;font-weight:600;color:#64748b;">No drive announcements yet.</p>
+        <p style="font-size:11px;margin-top:2px;">New placement drives posted by admin will appear here.</p>
+      </div>`;
+    if (badgeEl) badgeEl.classList.add('hidden');
+    return;
+  }
+
+  const readIds = new Set(getReadDriveIds());
+  const unreadCount = drives.filter(d => !readIds.has(d.id)).length;
+
+  if (badgeEl) {
+    if (unreadCount > 0) {
+      badgeEl.innerText = unreadCount > 99 ? '99+' : unreadCount;
+      badgeEl.classList.remove('hidden');
+    } else {
+      badgeEl.classList.add('hidden');
+    }
+  }
+
+  listEl.innerHTML = drives.map(d => {
+    const isUnread = !readIds.has(d.id);
+    const deadlineStr = d.deadline ? fmtDate(d.deadline) : 'Open';
+    const isExpired = d.deadline && new Date(d.deadline) < new Date();
+    const applied = !!d.app_status;
+
+    let statusPill = '';
+    if (applied) {
+      statusPill = `<span class="badge badge-purple" style="font-size:10px;padding:2px 6px;"><i class="fa-solid fa-check"></i> Applied (${d.app_status})</span>`;
+    } else if (isUnread) {
+      statusPill = `<span class="badge badge-green" style="font-size:10px;padding:2px 6px;background:#dcfce7;color:#15803d;border:1px solid #86efac;"><i class="fa-solid fa-sparkles"></i> NEW</span>`;
+    }
+
+    return `
+    <div class="student-notif-item ${isUnread ? 'is-unread' : ''}" onclick="handleNotificationClick(${d.id})">
+      <div class="student-notif-item-icon">
+        <i class="fa-solid fa-building"></i>
+      </div>
+      <div class="student-notif-item-content">
+        <div class="student-notif-item-company">
+          <span>${escapeHtml(d.company_name)}</span>
+          ${statusPill}
+        </div>
+        <div class="student-notif-item-role">${escapeHtml(d.job_role)} • <strong style="color:#2563eb;">${escapeHtml(d.package_ctc)}</strong></div>
+        <div class="student-notif-item-meta">
+          <span><i class="fa-regular fa-calendar-days" style="color:${isExpired ? '#ef4444' : '#64748b'};margin-right:3px;"></i>${isExpired ? 'Closed' : 'Deadline: ' + deadlineStr}</span>
+          <span>•</span>
+          <span><i class="fa-solid fa-location-dot" style="margin-right:2px;"></i>${escapeHtml(d.job_location || 'Flexible')}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function handleNotificationClick(driveId) {
+  const readIds = new Set(getReadDriveIds());
+  readIds.add(driveId);
+  saveReadDriveIds(Array.from(readIds));
+
+  // Update badge and notif list
+  renderDriveNotifications(cachedStudentDrives);
+
+  // Close dropdown
+  el('notifDropdown')?.classList.add('hidden');
+
+  // Switch to drives tab
+  switchTab('drives');
+
+  // Highlight/scroll to drive card if on screen
+  setTimeout(() => {
+    const driveCard = document.querySelector(`.drive-card[data-drive-id="${driveId}"]`);
+    if (driveCard) {
+      driveCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      driveCard.style.outline = '3px solid #2563eb';
+      driveCard.style.boxShadow = '0 0 25px rgba(37,99,235,0.45)';
+      setTimeout(() => {
+        driveCard.style.transition = 'all 1s ease';
+        driveCard.style.outline = 'none';
+        driveCard.style.boxShadow = '';
+      }, 2500);
+    }
+  }, 200);
+}
+
+function toggleNotifDropdown(e) {
+  if (e) e.stopPropagation();
+  const dropdown = el('notifDropdown');
+  if (dropdown) dropdown.classList.toggle('hidden');
+}
+
+function markAllNotificationsRead(e) {
+  if (e) e.stopPropagation();
+  const allIds = (cachedStudentDrives || []).map(d => d.id);
+  saveReadDriveIds(allIds);
+  renderDriveNotifications(cachedStudentDrives);
+  showStudentAlert('All notifications marked as read.', true);
+}
+
+function viewAllDrivesFromNotif() {
+  el('notifDropdown')?.classList.add('hidden');
+  switchTab('drives');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  const notifWrapper = document.querySelector('.student-notif-wrapper');
+  if (notifWrapper && !notifWrapper.contains(e.target)) {
+    el('notifDropdown')?.classList.add('hidden');
+  }
+});
 
 function buildDriveCard(d, studentCgpa, standingArr) {
   const minCgpa       = parseFloat(d.min_cgpa || 0);
@@ -506,7 +662,7 @@ function buildDriveCard(d, studentCgpa, standingArr) {
   const isExpired   = d.deadline && new Date(d.deadline) < new Date();
 
   return `
-  <div class="drive-card ${statusClass}">
+  <div class="drive-card ${statusClass}" data-drive-id="${d.id}">
     <div>
       <div class="drive-company">${d.company_name}</div>
       <div class="drive-role" style="margin-top:3px;">${d.job_role}</div>

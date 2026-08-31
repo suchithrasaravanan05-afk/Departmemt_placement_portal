@@ -23,17 +23,50 @@
         <p>Department Placement Portal — CSBS</p>
       </div>
     </div>
-    <div class="student-nav-user-pill">
-      <div class="student-nav-user-avatar" id="navAvatar">
-        <span id="navAvatarInitial">S</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <!-- Notification Bell -->
+      <div class="student-notif-wrapper">
+        <button id="notifBellBtn" class="student-notif-btn" onclick="toggleNotifDropdown(event)" title="Placement Drive Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span id="notifBadge" class="student-notif-badge hidden">0</span>
+        </button>
+
+        <!-- Notification Dropdown Menu -->
+        <div id="notifDropdown" class="student-notif-dropdown hidden">
+          <div class="student-notif-header">
+            <div class="student-notif-title">
+              <i class="fa-solid fa-bell" style="color:#2563eb;"></i> Drive Announcements
+            </div>
+            <button class="student-notif-clear-btn" onclick="markAllNotificationsRead(event)" title="Mark all notifications as read">
+              <i class="fa-solid fa-check-double"></i> Mark read
+            </button>
+          </div>
+          <div id="notifList" class="student-notif-list">
+            <div style="padding:24px;text-align:center;color:#94a3b8;font-size:13px;">
+              <i class="fa-solid fa-spinner fa-spin"></i> Loading drive notifications...
+            </div>
+          </div>
+          <div class="student-notif-footer">
+            <button class="btn btn-primary btn-sm" style="width:100%;font-size:12px;padding:7px 12px;border-radius:8px;" onclick="viewAllDrivesFromNotif()">
+              <i class="fa-solid fa-briefcase"></i> View All Placement Drives
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="student-nav-user-info">
-        <div class="student-nav-user-name" id="displayUserName">Student Name</div>
-        <div class="student-nav-user-role" id="displayUserReg">Reg No: ---</div>
+
+      <!-- User Profile Pill -->
+      <div class="student-nav-user-pill">
+        <div class="student-nav-user-avatar" id="navAvatar">
+          <span id="navAvatarInitial">S</span>
+        </div>
+        <div class="student-nav-user-info">
+          <div class="student-nav-user-name" id="displayUserName">Student Name</div>
+          <div class="student-nav-user-role" id="displayUserReg">Reg No: ---</div>
+        </div>
+        <button class="student-btn-logout" onclick="handleLogout()">
+          <i class="fa-solid fa-power-off"></i> Logout
+        </button>
       </div>
-      <button class="student-btn-logout" onclick="handleLogout()">
-        <i class="fa-solid fa-power-off"></i> Logout
-      </button>
     </div>
   </div>
 </header>
