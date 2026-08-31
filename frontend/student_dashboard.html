@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Dashboard — RIT CSBS Placement Portal</title>
   <meta name="description" content="Student placement dashboard for RIT CSBS Department.">
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="student_dashboard.css">
+  <link rel="stylesheet" href="css/styles.css?v=2.0">
+  <link rel="stylesheet" href="student_dashboard.css?v=2.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="student-body">
@@ -95,6 +95,9 @@
       <i class="fa-solid fa-book-open"></i> Resources
     </button>
   </nav>
+
+  <!-- Floating Toast Notifications for Real-Time Drive Announcements -->
+  <div id="studentToastContainer" class="student-toast-container"></div>
 
   <!-- Global Alert -->
   <div id="studentAlert" class="hidden"></div>
@@ -508,13 +511,37 @@
        ============================================================ -->
   <div id="tabDrives" class="student-tab-content hidden">
     <div class="student-panel-card">
-      <div class="student-panel-header">
+      <div class="student-panel-header student-drives-panel-header">
         <div class="student-panel-title">
-          <i class="fa-solid fa-briefcase"></i> Active Placement Drives
+          <i class="fa-solid fa-briefcase"></i> Placement Drives
         </div>
-        <button class="btn btn-outline btn-sm" onclick="loadPlacementDrives()">
-          <i class="fa-solid fa-rotate-right"></i> Refresh
-        </button>
+        <div class="student-drives-toolbar">
+          <!-- Dropdown Filter: Eligible Drives (Default) -->
+          <div class="student-filter-group">
+            <label for="driveFilterSelect" class="student-filter-label">
+              <i class="fa-solid fa-sliders"></i> Filter:
+            </label>
+            <div class="student-filter-select-wrapper">
+              <select id="driveFilterSelect" class="student-drive-select" onchange="handleDriveFilterChange(this.value)">
+                <option value="eligible" selected>🎯 Eligible Drives (Loading...)</option>
+                <option value="not_eligible">⚠️ Not Eligible Drives (0)</option>
+                <option value="all">📋 All Placement Drives (0)</option>
+                <option value="applied">✅ Applied Drives (0)</option>
+              </select>
+              <i class="fa-solid fa-chevron-down student-select-chevron"></i>
+            </div>
+          </div>
+
+          <!-- Live Sync Indicator -->
+          <div class="student-live-indicator" id="drivesLiveIndicator" title="Live Auto-Sync Active: new drives and updates appear automatically without manual refresh">
+            <span class="live-pulse-dot"></span>
+            <span class="live-text">Live Sync</span>
+          </div>
+
+          <button class="btn btn-outline btn-sm student-manual-refresh-btn" onclick="loadPlacementDrives(false)" title="Check for updates manually">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
       </div>
 
       <div class="student-panel-body">
@@ -705,6 +732,6 @@
 
 </div><!-- /student-app-container -->
 
-<script src="student_dashboard.js"></script>
+<script src="student_dashboard.js?v=2.0"></script>
 </body>
 </html>

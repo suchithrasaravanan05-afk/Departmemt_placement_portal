@@ -52,9 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Init GPA calc sems
   initGpaCalcSems();
 
-  // Load data
-  loadStudentProfile();
-  loadPlacementDrives();
+  // Load data & start live sync
+  loadStudentProfile().finally(() => {
+    loadPlacementDrives(false);
+    startDrivesAutoSync();
+  });
 });
 
 // ============================================================
@@ -229,6 +231,11 @@ async function loadStudentProfile() {
       viewContentEl?.classList.remove('hidden');
       el('profileEditMode')?.classList.add('hidden');
       el('profileViewMode')?.classList.remove('hidden');
+
+      if (cachedStudentDrives && cachedStudentDrives.length > 0) {
+        renderDriveNotifications(cachedStudentDrives);
+        renderDrivesWithFilter();
+      }
     } else {
       isNewUser = true;
       noProfileEl?.classList.remove('hidden');
@@ -450,199 +457,274 @@ async function saveStudentProfile(e) {
 }
 
 // ============================================================
-// LOAD PLACEMENT DRIVES
+// PLACEMENT DRIVES STATE & ELIGIBILITY
 // ============================================================
-async function loadPlacementDrives() {
+let currentDriveFilter = 'eligible'; // Default view: Eligible Drives
+let cachedStudentDrives = [];
+let previousDriveIds = new Set();
+let autoSyncTimer = null;
+let isInitialDrivesLoad = true;
+
+/**
+ * Evaluates whether a student meets the criteria for a given placement drive.
+ */
+function evaluateDriveEligibility(d, profile) {
+  const studentCgpa = parseFloat(profile?.cgpa || 0);
+  const minCgpa = parseFloat(d.min_cgpa || 0);
+  const standingArr = parseInt(profile?.standing_arrears_count || 0);
+  const maxArrears = parseInt(d.max_standing_arrears || 0);
+  const isExpired = !!(d.deadline && new Date(d.deadline) < new Date());
+
+  const reasons = [];
+  let isEligible = true;
+
+  // If student profile is missing or has no CGPA yet
+  if (!profile || isNaN(studentCgpa) || studentCgpa <= 0) {
+    return {
+      isEligible: false,
+      reasons: ['Complete your student profile with CGPA to check eligibility'],
+      isExpired,
+      studentCgpa,
+      standingArr
+    };
+  }
+
+  // Check CGPA
+  if (studentCgpa < minCgpa) {
+    isEligible = false;
+    reasons.push(`Min CGPA required: ${minCgpa.toFixed(1)} (Your CGPA: ${studentCgpa.toFixed(2)})`);
+  }
+
+  // Check Standing Arrears
+  if (standingArr > maxArrears) {
+    isEligible = false;
+    reasons.push(`Max Standing Arrears allowed: ${maxArrears} (Your Arrears: ${standingArr})`);
+  }
+
+  // Check Academic Year if restricted by company
+  if (d.eligible_years && profile?.year) {
+    const rawYears = String(d.eligible_years).split(',').map(y => y.trim().toLowerCase());
+    const studentYearStr = String(profile.year).toLowerCase();
+    const matchesYear = rawYears.some(yr => {
+      return yr === studentYearStr ||
+             yr.includes(`${studentYearStr}st`) ||
+             yr.includes(`${studentYearStr}nd`) ||
+             yr.includes(`${studentYearStr}rd`) ||
+             yr.includes(`${studentYearStr}th`);
+    });
+
+    if (!matchesYear && rawYears.length > 0) {
+      isEligible = false;
+      reasons.push(`Open only for Year(s): ${d.eligible_years} (You are in Year ${profile.year})`);
+    }
+  }
+
+  return {
+    isEligible,
+    reasons,
+    isExpired,
+    studentCgpa,
+    standingArr
+  };
+}
+
+// ============================================================
+// LOAD PLACEMENT DRIVES (WITH LIVE SILENT SYNC)
+// ============================================================
+async function loadPlacementDrives(silent = false) {
   const container = el('drivesContainer');
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="spinner-box">
-      <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#94a3b8;"></i>
-      <p>Loading placement drives...</p>
-    </div>`;
+  if (!silent) {
+    container.innerHTML = `
+      <div class="spinner-box">
+        <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#94a3b8;"></i>
+        <p>Loading placement drives...</p>
+      </div>`;
+  }
 
   try {
-    const res  = await fetch(`${API_BASE}/student/drives/${currentUser.id}`, {
+    const res = await fetch(`${API_BASE}/student/drives/${currentUser.id}`, {
       headers: { Authorization: `Bearer ${currentToken}` }
     });
     const data = await res.json();
 
-    if (!data.success || !data.drives || data.drives.length === 0) {
-      renderDriveNotifications([]);
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fa-solid fa-briefcase" style="color:#94a3b8;"></i>
-          <p>No placement drives available right now.</p>
-          <p style="font-size:12px;margin-top:4px;">Check back later or contact the placement cell.</p>
-        </div>`;
+    if (!data.success || !data.drives) {
+      if (!silent) {
+        renderDriveNotifications([]);
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-briefcase" style="color:#94a3b8;"></i>
+            <p>No placement drives available right now.</p>
+            <p style="font-size:12px;margin-top:4px;">Check back later or contact the placement cell.</p>
+          </div>`;
+      }
       return;
     }
 
-    renderDriveNotifications(data.drives);
+    const newDrives = data.drives || [];
 
-    const studentCgpa  = parseFloat(currentProfile?.cgpa || 0);
-    const standingArr  = parseInt(currentProfile?.standing_arrears_count || 0);
+    // Detect newly uploaded drives during live browsing (after initial load)
+    if (!isInitialDrivesLoad && previousDriveIds.size > 0) {
+      newDrives.forEach(drive => {
+        if (!previousDriveIds.has(drive.id)) {
+          showDriveLiveToast(drive);
+        }
+      });
+    }
 
-    container.innerHTML = `<div class="drives-grid">${data.drives.map(d => buildDriveCard(d, studentCgpa, standingArr)).join('')}</div>`;
+    // Update tracked drive IDs
+    previousDriveIds = new Set(newDrives.map(d => d.id));
+    cachedStudentDrives = newDrives;
+    isInitialDrivesLoad = false;
+
+    // Render Notifications & Drives List with Filter
+    renderDriveNotifications(cachedStudentDrives);
+    renderDrivesWithFilter();
+
+    // Update Live Indicator status text
+    const liveInd = el('drivesLiveIndicator');
+    if (liveInd) {
+      liveInd.title = `Last synced: ${new Date().toLocaleTimeString('en-IN')}`;
+    }
   } catch (err) {
     console.error('Load drives error:', err);
+    if (!silent) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
+          <p>Failed to load drives. Check network and try again.</p>
+        </div>`;
+    }
+  }
+}
+
+// ============================================================
+// RENDER DRIVES WITH DROPDOWN FILTER (ELIGIBLE FIRST)
+// ============================================================
+function renderDrivesWithFilter() {
+  const container = el('drivesContainer');
+  const selectEl = el('driveFilterSelect');
+  if (!container) return;
+
+  const drives = cachedStudentDrives || [];
+  if (drives.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
-        <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
-        <p>Failed to load drives. Check network and try again.</p>
+        <i class="fa-solid fa-briefcase" style="color:#94a3b8;"></i>
+        <p>No active placement drives found.</p>
+        <p style="font-size:12px;margin-top:4px;">Check back later or contact the CSBS placement cell.</p>
       </div>`;
-  }
-}
-
-let cachedStudentDrives = [];
-
-// ============================================================
-// DRIVE NOTIFICATIONS LOGIC
-// ============================================================
-function getReadDriveIds() {
-  try {
-    const key = `rit_read_drives_${currentUser?.id || 'default'}`;
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveReadDriveIds(ids) {
-  try {
-    const key = `rit_read_drives_${currentUser?.id || 'default'}`;
-    localStorage.setItem(key, JSON.stringify(ids));
-  } catch (e) {
-    console.error('Failed to save read drive IDs:', e);
-  }
-}
-
-function renderDriveNotifications(drives) {
-  cachedStudentDrives = drives || [];
-  const listEl = el('notifList');
-  const badgeEl = el('notifBadge');
-  if (!listEl) return;
-
-  if (!drives || drives.length === 0) {
-    listEl.innerHTML = `
-      <div style="padding:28px 16px;text-align:center;color:#94a3b8;">
-        <i class="fa-regular fa-bell-slash" style="font-size:26px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
-        <p style="font-size:13px;font-weight:600;color:#64748b;">No drive announcements yet.</p>
-        <p style="font-size:11px;margin-top:2px;">New placement drives posted by admin will appear here.</p>
-      </div>`;
-    if (badgeEl) badgeEl.classList.add('hidden');
+    if (selectEl) {
+      selectEl.innerHTML = `
+        <option value="eligible" selected>🎯 Eligible Drives (0)</option>
+        <option value="not_eligible">⚠️ Not Eligible Drives (0)</option>
+        <option value="all">📋 All Placement Drives (0)</option>
+        <option value="applied">✅ Applied Drives (0)</option>
+      `;
+    }
     return;
   }
 
-  const readIds = new Set(getReadDriveIds());
-  const unreadCount = drives.filter(d => !readIds.has(d.id)).length;
+  // Pre-evaluate eligibility for all drives
+  const evaluatedDrives = drives.map(d => ({
+    drive: d,
+    evalRes: evaluateDriveEligibility(d, currentProfile)
+  }));
 
-  if (badgeEl) {
-    if (unreadCount > 0) {
-      badgeEl.innerText = unreadCount > 99 ? '99+' : unreadCount;
-      badgeEl.classList.remove('hidden');
-    } else {
-      badgeEl.classList.add('hidden');
-    }
+  const eligibleList     = evaluatedDrives.filter(item => item.evalRes.isEligible);
+  const notEligibleList  = evaluatedDrives.filter(item => !item.evalRes.isEligible);
+  const appliedList      = evaluatedDrives.filter(item => !!item.drive.app_status);
+  const allList          = evaluatedDrives;
+
+  // Update Dropdown Filter Select Options with Live Counters
+  if (selectEl) {
+    selectEl.innerHTML = `
+      <option value="eligible" ${currentDriveFilter === 'eligible' ? 'selected' : ''}>🎯 Eligible Drives (${eligibleList.length})</option>
+      <option value="not_eligible" ${currentDriveFilter === 'not_eligible' ? 'selected' : ''}>⚠️ Not Eligible Drives (${notEligibleList.length})</option>
+      <option value="all" ${currentDriveFilter === 'all' ? 'selected' : ''}>📋 All Placement Drives (${allList.length})</option>
+      <option value="applied" ${currentDriveFilter === 'applied' ? 'selected' : ''}>✅ Applied Drives (${appliedList.length})</option>
+    `;
+    selectEl.value = currentDriveFilter;
   }
 
-  listEl.innerHTML = drives.map(d => {
-    const isUnread = !readIds.has(d.id);
-    const deadlineStr = d.deadline ? fmtDate(d.deadline) : 'Open';
-    const isExpired = d.deadline && new Date(d.deadline) < new Date();
-    const applied = !!d.app_status;
+  // Determine current active list based on dropdown selection
+  let displayList = [];
+  let filterTitle = '';
+  let emptyMessage = '';
+  let emptySubtext = '';
+  let emptyActionBtn = '';
 
-    let statusPill = '';
-    if (applied) {
-      statusPill = `<span class="badge badge-purple" style="font-size:10px;padding:2px 6px;"><i class="fa-solid fa-check"></i> Applied (${d.app_status})</span>`;
-    } else if (isUnread) {
-      statusPill = `<span class="badge badge-green" style="font-size:10px;padding:2px 6px;background:#dcfce7;color:#15803d;border:1px solid #86efac;"><i class="fa-solid fa-sparkles"></i> NEW</span>`;
-    }
+  if (currentDriveFilter === 'eligible') {
+    displayList = eligibleList;
+    filterTitle = `Eligible Placement Drives (${eligibleList.length})`;
+    emptyMessage = 'No eligible placement drives matching your profile at the moment.';
+    const stdCgpa = parseFloat(currentProfile?.cgpa || 0).toFixed(2);
+    const stdArr  = currentProfile?.standing_arrears_count || 0;
+    emptySubtext = `Your Current Profile — CGPA: <strong>${stdCgpa}</strong>, Standing Arrears: <strong>${stdArr}</strong>.`;
+    emptyActionBtn = notEligibleList.length > 0
+      ? `<button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="handleDriveFilterChange('not_eligible')">
+          <i class="fa-solid fa-eye"></i> View Other Drives (${notEligibleList.length})
+         </button>`
+      : '';
+  } else if (currentDriveFilter === 'not_eligible') {
+    displayList = notEligibleList;
+    filterTitle = `Not Eligible Placement Drives (${notEligibleList.length})`;
+    emptyMessage = 'Great news! You have zero ineligible drives.';
+    emptySubtext = 'You meet the eligibility criteria for all active drives posted.';
+    emptyActionBtn = `<button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="handleDriveFilterChange('eligible')">
+        <i class="fa-solid fa-check"></i> View Eligible Drives (${eligibleList.length})
+      </button>`;
+  } else if (currentDriveFilter === 'applied') {
+    displayList = appliedList;
+    filterTitle = `Applied Placement Drives (${appliedList.length})`;
+    emptyMessage = 'You haven’t applied for any placement drives yet.';
+    emptySubtext = 'Check out the eligible drives and submit your application.';
+    emptyActionBtn = `<button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="handleDriveFilterChange('eligible')">
+        <i class="fa-solid fa-briefcase"></i> View Eligible Drives (${eligibleList.length})
+      </button>`;
+  } else {
+    displayList = allList;
+    filterTitle = `All Placement Drives (${allList.length})`;
+    emptyMessage = 'No placement drives found.';
+    emptySubtext = 'Check back later for new drive announcements.';
+  }
 
-    return `
-    <div class="student-notif-item ${isUnread ? 'is-unread' : ''}" onclick="handleNotificationClick(${d.id})">
-      <div class="student-notif-item-icon">
-        <i class="fa-solid fa-building"></i>
-      </div>
-      <div class="student-notif-item-content">
-        <div class="student-notif-item-company">
-          <span>${escapeHtml(d.company_name)}</span>
-          ${statusPill}
-        </div>
-        <div class="student-notif-item-role">${escapeHtml(d.job_role)} • <strong style="color:#2563eb;">${escapeHtml(d.package_ctc)}</strong></div>
-        <div class="student-notif-item-meta">
-          <span><i class="fa-regular fa-calendar-days" style="color:${isExpired ? '#ef4444' : '#64748b'};margin-right:3px;"></i>${isExpired ? 'Closed' : 'Deadline: ' + deadlineStr}</span>
-          <span>•</span>
-          <span><i class="fa-solid fa-location-dot" style="margin-right:2px;"></i>${escapeHtml(d.job_location || 'Flexible')}</span>
-        </div>
-      </div>
+  // Render Empty State if no drives match the chosen filter
+  if (displayList.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding:48px 24px;">
+        <i class="fa-solid fa-filter-circle-xmark" style="font-size:36px;color:#94a3b8;margin-bottom:12px;"></i>
+        <p style="font-size:15px;font-weight:700;color:#334155;">${emptyMessage}</p>
+        <p style="font-size:13px;color:#64748b;margin-top:6px;">${emptySubtext}</p>
+        ${emptyActionBtn}
+      </div>`;
+    return;
+  }
+
+  // Render Grid of Drive Cards
+  container.innerHTML = `
+    <div class="drives-grid">
+      ${displayList.map(item => buildDriveCard(item.drive, item.evalRes)).join('')}
     </div>`;
-  }).join('');
 }
 
-function handleNotificationClick(driveId) {
-  const readIds = new Set(getReadDriveIds());
-  readIds.add(driveId);
-  saveReadDriveIds(Array.from(readIds));
-
-  // Update badge and notif list
-  renderDriveNotifications(cachedStudentDrives);
-
-  // Close dropdown
-  el('notifDropdown')?.classList.add('hidden');
-
-  // Switch to drives tab
-  switchTab('drives');
-
-  // Highlight/scroll to drive card if on screen
-  setTimeout(() => {
-    const driveCard = document.querySelector(`.drive-card[data-drive-id="${driveId}"]`);
-    if (driveCard) {
-      driveCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      driveCard.style.outline = '3px solid #2563eb';
-      driveCard.style.boxShadow = '0 0 25px rgba(37,99,235,0.45)';
-      setTimeout(() => {
-        driveCard.style.transition = 'all 1s ease';
-        driveCard.style.outline = 'none';
-        driveCard.style.boxShadow = '';
-      }, 2500);
-    }
-  }, 200);
+/**
+ * Handles dropdown filter change from the UI.
+ */
+function handleDriveFilterChange(newFilter) {
+  currentDriveFilter = newFilter || 'eligible';
+  renderDrivesWithFilter();
 }
 
-function toggleNotifDropdown(e) {
-  if (e) e.stopPropagation();
-  const dropdown = el('notifDropdown');
-  if (dropdown) dropdown.classList.toggle('hidden');
-}
-
-function markAllNotificationsRead(e) {
-  if (e) e.stopPropagation();
-  const allIds = (cachedStudentDrives || []).map(d => d.id);
-  saveReadDriveIds(allIds);
-  renderDriveNotifications(cachedStudentDrives);
-  showStudentAlert('All notifications marked as read.', true);
-}
-
-function viewAllDrivesFromNotif() {
-  el('notifDropdown')?.classList.add('hidden');
-  switchTab('drives');
-}
-
-// Close dropdown on outside click
-document.addEventListener('click', (e) => {
-  const notifWrapper = document.querySelector('.student-notif-wrapper');
-  if (notifWrapper && !notifWrapper.contains(e.target)) {
-    el('notifDropdown')?.classList.add('hidden');
-  }
-});
-
-function buildDriveCard(d, studentCgpa, standingArr) {
+/**
+ * Builds the HTML markup for a single placement drive card.
+ */
+function buildDriveCard(d, evalRes) {
   const minCgpa       = parseFloat(d.min_cgpa || 0);
   const maxArrears    = parseInt(d.max_standing_arrears || 0);
-  const isEligible    = studentCgpa >= minCgpa && standingArr <= maxArrears;
+  const isEligible    = evalRes.isEligible;
+  const isExpired     = evalRes.isExpired;
   const alreadyApplied = !!d.app_status;
 
   let statusClass = '';
@@ -650,7 +732,9 @@ function buildDriveCard(d, studentCgpa, standingArr) {
 
   if (alreadyApplied) {
     statusClass = 'applied';
-    eligibilityBadge = `<span class="status-pill status-${(d.app_status || 'applied').toLowerCase().replace(' ', '-')}">${d.app_status}</span>`;
+    eligibilityBadge = `<span class="status-pill status-${(d.app_status || 'applied').toLowerCase().replace(/\s+/g, '-')}">
+      <i class="fa-solid fa-circle-check"></i> ${escapeHtml(d.app_status)}
+    </span>`;
   } else if (!isEligible) {
     statusClass = 'not-eligible';
     eligibilityBadge = `<span class="badge badge-red"><i class="fa-solid fa-xmark"></i> Not Eligible</span>`;
@@ -658,43 +742,56 @@ function buildDriveCard(d, studentCgpa, standingArr) {
     eligibilityBadge = `<span class="badge badge-green"><i class="fa-solid fa-check"></i> Eligible</span>`;
   }
 
-  const deadlineStr = d.deadline ? new Date(d.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Open';
-  const isExpired   = d.deadline && new Date(d.deadline) < new Date();
+  const deadlineStr = d.deadline ? fmtDate(d.deadline) : 'Open';
+
+  // Ineligible reason message banner
+  let ineligibleBanner = '';
+  if (!isEligible && !alreadyApplied && evalRes.reasons.length > 0) {
+    ineligibleBanner = `
+      <div class="drive-ineligible-banner">
+        <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px;flex-shrink:0;"></i>
+        <div>
+          <strong>Reason:</strong> ${evalRes.reasons.map(r => escapeHtml(r)).join('; ')}
+        </div>
+      </div>`;
+  }
 
   return `
   <div class="drive-card ${statusClass}" data-drive-id="${d.id}">
     <div>
-      <div class="drive-company">${d.company_name}</div>
-      <div class="drive-role" style="margin-top:3px;">${d.job_role}</div>
+      <div class="drive-company">${escapeHtml(d.company_name)}</div>
+      <div class="drive-role" style="margin-top:3px;">${escapeHtml(d.job_role)}</div>
     </div>
 
     <div class="drive-meta">
-      <span class="badge badge-blue"><i class="fa-solid fa-indian-rupee-sign"></i> ${d.package_ctc}</span>
-      <span class="badge badge-gray"><i class="fa-solid fa-location-dot"></i> ${d.job_location || 'Flexible'}</span>
+      <span class="badge badge-blue"><i class="fa-solid fa-indian-rupee-sign"></i> ${escapeHtml(d.package_ctc)}</span>
+      <span class="badge badge-gray"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(d.job_location || 'Flexible')}</span>
       <span class="badge ${isExpired ? 'badge-red' : 'badge-yellow'}">
-        <i class="fa-solid fa-calendar-days"></i> ${isExpired ? 'Closed' : deadlineStr}
+        <i class="fa-solid fa-calendar-days"></i> ${isExpired ? 'Closed' : 'Deadline: ' + deadlineStr}
       </span>
     </div>
 
-    <div style="font-size:12px;color:#64748b;line-height:1.5;">
+    <div style="font-size:12px;color:#64748b;line-height:1.5;margin-top:4px;">
       <span><strong>Min CGPA:</strong> ${minCgpa.toFixed(1)} &nbsp;|&nbsp;</span>
       <span><strong>Max Arrears:</strong> ${maxArrears}</span>
-      ${d.eligible_years ? `&nbsp;|&nbsp;<span><strong>Years:</strong> ${d.eligible_years}</span>` : ''}
+      ${d.eligible_years ? `&nbsp;|&nbsp;<span><strong>Years:</strong> ${escapeHtml(d.eligible_years)}</span>` : ''}
     </div>
 
-    ${d.description ? `<p style="font-size:12px;color:#64748b;line-height:1.5;border-top:1px solid #f1f5f9;padding-top:10px;">${d.description.slice(0, 120)}${d.description.length > 120 ? '…' : ''}</p>` : ''}
+    ${ineligibleBanner}
 
-    <div class="drive-actions" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    ${d.description ? `<p style="font-size:12px;color:#64748b;line-height:1.5;border-top:1px solid #f1f5f9;padding-top:10px;margin-top:8px;">${escapeHtml(d.description.slice(0, 130))}${d.description.length > 130 ? '…' : ''}</p>` : ''}
+
+    <div class="drive-actions" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid #f8fafc;">
       ${eligibilityBadge}
       ${alreadyApplied
-        ? `<span class="badge badge-gray"><i class="fa-solid fa-circle-check"></i> Applied ${fmtDate(d.applied_at)}</span>`
+        ? `<span class="badge badge-gray" style="font-size:11px;"><i class="fa-solid fa-circle-check"></i> Applied ${fmtDate(d.applied_at)}</span>`
         : isExpired
-          ? `<span class="badge badge-red">Drive Closed</span>`
+          ? `<span class="badge badge-red"><i class="fa-solid fa-lock"></i> Drive Closed</span>`
           : isEligible
-            ? `<button class="btn btn-primary btn-sm" onclick="applyForDrive(${d.id}, '${d.company_name.replace(/'/g, "\\'")}')">
+            ? `<button class="btn btn-primary btn-sm" onclick="applyForDrive(${d.id}, '${escapeHtml(d.company_name).replace(/'/g, "\\'")}')">
                 <i class="fa-solid fa-paper-plane"></i> Apply Now
                </button>`
-            : `<button class="btn btn-outline btn-sm" disabled style="opacity:.5;cursor:not-allowed;">
+            : `<button class="btn btn-outline btn-sm" disabled style="opacity:.55;cursor:not-allowed;" title="You do not meet company eligibility criteria">
                 <i class="fa-solid fa-ban"></i> Not Eligible
                </button>`
       }
