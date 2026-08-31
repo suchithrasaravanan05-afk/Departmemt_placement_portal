@@ -7,6 +7,7 @@
   <meta name="description" content="Student placement dashboard for RIT CSBS Department.">
   <link rel="stylesheet" href="css/styles.css?v=2.0">
   <link rel="stylesheet" href="student_dashboard.css?v=2.0">
+  <link rel="stylesheet" href="gpa.css?v=2.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="student-body">
@@ -595,81 +596,7 @@
        TAB 4: GPA CALCULATOR
        ============================================================ -->
   <div id="tabGpa" class="student-tab-content hidden">
-    <div class="gpa-calculator-card">
-      <div class="gpa-calc-header">
-        <i class="fa-solid fa-calculator"></i>
-        <div>
-          <h3>GPA &amp; CGPA Calculator</h3>
-          <p>Calculate your semester GPA based on subjects and grades</p>
-        </div>
-      </div>
-
-      <!-- Semester selector -->
-      <div class="sem-tabs" id="semTabs"></div>
-
-      <!-- GPA Results -->
-      <div style="padding:20px 24px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-          <div class="gpa-result-box">
-            <div class="gpa-result-label">Current Semester GPA</div>
-            <div class="gpa-result-value" id="calcCurrentGpa">--</div>
-            <div class="gpa-result-out">out of 10.0</div>
-          </div>
-          <div class="gpa-result-box" style="background:linear-gradient(135deg,#059669,#34d399);">
-            <div class="gpa-result-label">Overall CGPA</div>
-            <div class="gpa-result-value" id="calcOverallCgpa">--</div>
-            <div class="gpa-result-out">out of 10.0</div>
-          </div>
-        </div>
-
-        <!-- Subjects table -->
-        <div id="subjectsTableWrap"></div>
-
-        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap;">
-          <button class="btn btn-outline btn-sm" onclick="addSubjectRow()">
-            <i class="fa-solid fa-plus"></i> Add Subject
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="resetGpaCalc()">
-            <i class="fa-solid fa-arrow-rotate-left"></i> Reset
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="syncGpaToProfile()">
-            <i class="fa-solid fa-floppy-disk"></i> Sync to Profile
-          </button>
-        </div>
-      </div>
-
-      <!-- All semesters CGPA summary -->
-      <div class="cgpa-summary" id="cgpaSummaryBar"></div>
-    </div>
-
-    <!-- Grade Reference Card -->
-    <div class="student-panel-card">
-      <div class="student-panel-header">
-        <div class="student-panel-title"><i class="fa-solid fa-table"></i> Anna University Grade Reference</div>
-      </div>
-      <div class="student-panel-body">
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Grade</th>
-                <th>Grade Point</th>
-                <th>Marks Range</th>
-                <th>Performance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td><strong>O</strong></td><td><span class="badge badge-green">10</span></td><td>91–100</td><td>Outstanding</td></tr>
-              <tr><td><strong>A+</strong></td><td><span class="badge badge-blue">9</span></td><td>81–90</td><td>Excellent</td></tr>
-              <tr><td><strong>A</strong></td><td><span class="badge badge-blue">8</span></td><td>71–80</td><td>Very Good</td></tr>
-              <tr><td><strong>B+</strong></td><td><span class="badge badge-gray">7</span></td><td>61–70</td><td>Good</td></tr>
-              <tr><td><strong>B</strong></td><td><span class="badge badge-gray">6</span></td><td>50–60</td><td>Average</td></tr>
-              <tr><td><strong>RA</strong></td><td><span class="badge badge-red">0</span></td><td>Below 50</td><td>Reappear</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <div id="gpaDashboardContainer"></div>
   </div>
 
   <!-- ============================================================
@@ -732,6 +659,7 @@
 
 </div><!-- /student-app-container -->
 
+<script src="gpa.js?v=2.0"></script>
 <script src="student_dashboard.js?v=2.0"></script>
 </body>
 </html>

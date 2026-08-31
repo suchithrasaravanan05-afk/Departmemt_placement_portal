@@ -1,16 +1,15 @@
 // ============================================================
-// GPA.JS — Standalone GPA & CGPA Calculator
-// Anna University Grade System
-// (Semester subjects loaded from Regulation 2021 - CSBS syllabus)
-// Semesters 5-8 support Regular / Honours course type.
+// GPA.JS — Anna University Credit-Based Semester GPA & CGPA Calculator
+// Regulation 2021 — Computer Science and Business Systems (CSBS)
+// Supports Regular / Honours course types for higher semesters.
 // ============================================================
 
 const GRADE_POINTS = { O: 10, 'A+': 9, A: 8, 'B+': 7, B: 6, RA: 0 };
 const TOTAL_SEMS = 8;
-const HONOURS_SEMS = [5, 6, 7]; // semesters that actually have honours subjects
+const HONOURS_SEMS = [5, 6, 7];
 
 const gpaData = {};      // { semIndex: [ { name, credits, grade } ] }
-const courseType = {};   // { semIndex: 'Regular' | 'Honours' } — only meaningful for sem 5-8
+const courseType = {};   // { semIndex: 'Regular' | 'Honours' }
 let activeSem = 1;
 
 // ------------------------------------------------------------
@@ -95,7 +94,7 @@ const REGULAR_SUBJECTS = {
 };
 
 // ------------------------------------------------------------
-// HONOURS SUBJECTS (added on top of Regular, sem 5-7 only)
+// HONOURS SUBJECTS (Sem 5-7)
 // ------------------------------------------------------------
 const HONOURS_SUBJECTS = {
   5: [
@@ -116,8 +115,6 @@ function semHasHonours(sem) {
   return HONOURS_SEMS.includes(sem);
 }
 
-// Build the subject list for a semester based on its course type.
-// Sem 1-4: always Regular. Sem 5-8: Regular, or Regular+Honours.
 function getDefaultSubjectsForSem(sem) {
   const regular = (REGULAR_SUBJECTS[sem] || []).map(s => ({ ...s }));
 
@@ -134,179 +131,254 @@ function getDefaultSubjectsForSem(sem) {
 }
 
 // ============================================================
-// INIT
+// INITIALIZATION
 // ============================================================
-window.addEventListener('DOMContentLoaded', () => {
+function initGpaState() {
   for (let i = 1; i <= TOTAL_SEMS; i++) {
-    courseType[i] = 'Regular';
-    gpaData[i] = getDefaultSubjectsForSem(i);
+    if (!courseType[i]) courseType[i] = 'Regular';
+    if (!gpaData[i] || gpaData[i].length === 0) {
+      gpaData[i] = getDefaultSubjectsForSem(i);
+    }
   }
-  renderPage();
-});
+}
+
+// Auto-boot if on standalone gpa.html
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => {
+    const root = document.getElementById('gpaPage');
+    if (root) {
+      initGpaState();
+      renderSemesterGpaApp('gpaPage');
+    }
+  });
+}
 
 // ============================================================
-// PAGE RENDER
+// MAIN HTML RENDERER
 // ============================================================
-function renderPage() {
-  const root = document.getElementById('gpaPage');
+function renderSemesterGpaApp(targetElementId, allowProfileSync = false) {
+  const root = document.getElementById(targetElementId);
   if (!root) return;
 
+  initGpaState();
+
   root.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
+    <div class="gpa-container-grid">
       
-      <!-- Main Calculator -->
+      <!-- Left Column: Main Calculator -->
       <div>
         <div class="gpa-calculator-card">
+          
+          <!-- Header Bar -->
           <div class="gpa-calc-header">
-            <i class="fa-solid fa-calculator"></i>
-            <div>
+            <div class="gpa-header-icon-box">
+              <i class="fa-solid fa-calculator"></i>
+            </div>
+            <div class="gpa-header-text">
               <h3>Semester GPA Calculator</h3>
               <p>Anna University Credit-Based Grading System</p>
             </div>
           </div>
 
-          <!-- Sem Tabs -->
-          <div class="sem-tabs" id="semTabs"></div>
+          <!-- Semester Tabs Row -->
+          <div class="gpa-sem-tabs-bar" id="gpaSemTabs"></div>
 
-          <!-- Course Type (only shown for Sem 5-8) -->
-          <div id="courseTypeArea" style="padding:14px 24px 0;"></div>
+          <!-- Optional Course Type Toggle (for higher semesters) -->
+          <div id="gpaCourseTypeArea"></div>
 
-          <!-- Results -->
-          <div style="padding:20px 24px 0;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-              <div class="gpa-result-box">
-                <div class="gpa-result-label">Semester ${activeSem} GPA</div>
-                <div class="gpa-result-value" id="currentSemGpa">—</div>
-                <div class="gpa-result-out">out of 10.0</div>
-              </div>
-              <div class="gpa-result-box" style="background:linear-gradient(135deg,#059669,#34d399);">
-                <div class="gpa-result-label">Overall CGPA</div>
-                <div class="gpa-result-value" id="overallCgpa">—</div>
-                <div class="gpa-result-out">out of 10.0</div>
-              </div>
+          <!-- Results Score Cards (Blue & Green) -->
+          <div class="gpa-results-grid">
+            <div class="gpa-score-card blue-card">
+              <div class="gpa-score-label" id="gpaSemTitleLabel">SEMESTER ${activeSem} GPA</div>
+              <div class="gpa-score-value" id="currentSemGpa">—</div>
+              <div class="gpa-score-out">out of 10.0</div>
+            </div>
+            <div class="gpa-score-card green-card">
+              <div class="gpa-score-label">OVERALL CGPA</div>
+              <div class="gpa-score-value" id="overallCgpa">—</div>
+              <div class="gpa-score-out">out of 10.0</div>
             </div>
           </div>
 
           <!-- Subjects Table -->
-          <div style="padding:0 24px 20px;">
-            <div id="subjectsArea"></div>
-            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-              <button class="btn btn-outline btn-sm" onclick="addSubject()">
-                <i class="fa-solid fa-plus"></i> Add Subject
-              </button>
-              <button class="btn btn-outline btn-sm" onclick="resetSem()">
-                <i class="fa-solid fa-rotate-left"></i> Reset Semester
-              </button>
-              <button class="btn btn-outline btn-sm" onclick="resetAll()">
-                <i class="fa-solid fa-trash-can"></i> Reset All
-              </button>
-            </div>
+          <div class="gpa-table-wrap">
+            <div id="gpaSubjectsArea"></div>
           </div>
 
-          <!-- CGPA Summary -->
-          <div class="cgpa-summary" id="cgpaSummary"></div>
+          <!-- Action Buttons Bar -->
+          <div class="gpa-actions-bar">
+            <button type="button" class="gpa-btn-action" onclick="addGpaSubject()">
+              <i class="fa-solid fa-plus"></i> Add Subject
+            </button>
+            <button type="button" class="gpa-btn-action" onclick="resetGpaSem()">
+              <i class="fa-solid fa-rotate-left"></i> Reset Semester
+            </button>
+            <button type="button" class="gpa-btn-action" onclick="resetGpaAll()">
+              <i class="fa-solid fa-trash-can"></i> Reset All
+            </button>
+            ${allowProfileSync ? `
+            <button type="button" class="gpa-btn-action gpa-btn-primary" onclick="syncGpaToStudentProfile()" style="margin-left:auto;">
+              <i class="fa-solid fa-floppy-disk"></i> Sync to Profile
+            </button>` : ''}
+          </div>
+
+          <!-- Bottom CGPA Summary Info -->
+          <div class="gpa-bottom-summary" id="gpaBottomSummary">
+            <span>Enter grades to see CGPA summary</span>
+          </div>
+
         </div>
       </div>
 
-      <!-- Sidebar -->
-      <div style="display:flex;flex-direction:column;gap:16px;">
+      <!-- Right Column: Sidebar Reference Cards -->
+      <div class="gpa-sidebar-stack">
 
-        <!-- Grade Table -->
-        <div class="panel-card">
-          <div class="panel-header">
-            <div class="panel-title"><i class="fa-solid fa-table"></i> Grade Reference</div>
+        <!-- 1. Grade Reference Card -->
+        <div class="gpa-sidebar-card">
+          <div class="gpa-sidebar-header">
+            <i class="fa-solid fa-table-cells"></i> Grade Reference
           </div>
-          <div class="panel-body" style="padding:12px;">
-            <table class="data-table">
-              <thead><tr><th>Grade</th><th>GP</th><th>Marks</th></tr></thead>
+          <div class="gpa-sidebar-body" style="padding:10px 18px 14px;">
+            <table class="gpa-ref-table">
+              <thead>
+                <tr>
+                  <th>GRADE</th>
+                  <th style="text-align:center;">GP</th>
+                  <th style="text-align:right;">MARKS</th>
+                </tr>
+              </thead>
               <tbody>
-                <tr><td><strong>O</strong></td><td><span class="badge badge-green">10</span></td><td>91–100</td></tr>
-                <tr><td><strong>A+</strong></td><td><span class="badge badge-blue">9</span></td><td>81–90</td></tr>
-                <tr><td><strong>A</strong></td><td><span class="badge badge-blue">8</span></td><td>71–80</td></tr>
-                <tr><td><strong>B+</strong></td><td><span class="badge badge-gray">7</span></td><td>61–70</td></tr>
-                <tr><td><strong>B</strong></td><td><span class="badge badge-gray">6</span></td><td>50–60</td></tr>
-                <tr><td><strong>RA</strong></td><td><span class="badge badge-red">0</span></td><td>&lt;50</td></tr>
+                <tr>
+                  <td><strong>O</strong></td>
+                  <td style="text-align:center;"><span class="gp-val-green">10</span></td>
+                  <td style="text-align:right;">91-100</td>
+                </tr>
+                <tr>
+                  <td><strong>A+</strong></td>
+                  <td style="text-align:center;"><span class="gp-val-blue">9</span></td>
+                  <td style="text-align:right;">81-90</td>
+                </tr>
+                <tr>
+                  <td><strong>A</strong></td>
+                  <td style="text-align:center;"><span class="gp-val-blue">8</span></td>
+                  <td style="text-align:right;">71-80</td>
+                </tr>
+                <tr>
+                  <td><strong>B+</strong></td>
+                  <td style="text-align:center;"><span class="gp-val-slate">7</span></td>
+                  <td style="text-align:right;">61-70</td>
+                </tr>
+                <tr>
+                  <td><strong>B</strong></td>
+                  <td style="text-align:center;"><span class="gp-val-slate">6</span></td>
+                  <td style="text-align:right;">50-60</td>
+                </tr>
+                <tr>
+                  <td><strong>RA</strong></td>
+                  <td style="text-align:center;"><span class="gp-val-red">0</span></td>
+                  <td style="text-align:right;">&lt;50</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- CGPA Interpretor -->
-        <div class="panel-card">
-          <div class="panel-header">
-            <div class="panel-title"><i class="fa-solid fa-star"></i> CGPA Bands</div>
+        <!-- 2. CGPA Bands Card -->
+        <div class="gpa-sidebar-card">
+          <div class="gpa-sidebar-header">
+            <i class="fa-solid fa-star"></i> CGPA Bands
           </div>
-          <div class="panel-body" style="padding:12px;font-size:13px;">
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div class="detail-item"><span class="detail-label">9.0 – 10.0</span><span class="detail-value"><span class="badge badge-green">🏆 Outstanding</span></span></div>
-              <div class="detail-item"><span class="detail-label">8.0 – 8.99</span><span class="detail-value"><span class="badge badge-blue">⭐ Excellent</span></span></div>
-              <div class="detail-item"><span class="detail-label">7.0 – 7.99</span><span class="detail-value"><span class="badge badge-blue">👍 Very Good</span></span></div>
-              <div class="detail-item"><span class="detail-label">6.0 – 6.99</span><span class="detail-value"><span class="badge badge-yellow">📚 Good</span></span></div>
-              <div class="detail-item"><span class="detail-label">Below 6.0</span><span class="detail-value"><span class="badge badge-red">⚠️ Needs Improvement</span></span></div>
+          <div class="gpa-sidebar-body">
+            <div class="gpa-bands-list">
+              <div class="gpa-band-item">
+                <span class="gpa-band-range">9.0 – 10.0</span>
+                <span class="gpa-band-badge badge-band-outstanding">🚀 Outstanding</span>
+              </div>
+              <div class="gpa-band-item">
+                <span class="gpa-band-range">8.0 – 8.99</span>
+                <span class="gpa-band-badge badge-band-excellent">⭐ Excellent</span>
+              </div>
+              <div class="gpa-band-item">
+                <span class="gpa-band-range">7.0 – 7.99</span>
+                <span class="gpa-band-badge badge-band-verygood">🔥 Very Good</span>
+              </div>
+              <div class="gpa-band-item">
+                <span class="gpa-band-range">6.0 – 6.99</span>
+                <span class="gpa-band-badge badge-band-good">👍 Good</span>
+              </div>
+              <div class="gpa-band-item">
+                <span class="gpa-band-range">BELOW 6.0</span>
+                <span class="gpa-band-badge badge-band-needs">⚠️ Needs Improvement</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- How to Calculate -->
-        <div class="panel-card">
-          <div class="panel-header">
-            <div class="panel-title"><i class="fa-solid fa-circle-info"></i> How It Works</div>
+        <!-- 3. How It Works Card -->
+        <div class="gpa-sidebar-card">
+          <div class="gpa-sidebar-header">
+            <i class="fa-solid fa-circle-info"></i> How It Works
           </div>
-          <div class="panel-body" style="font-size:13px;color:#475569;line-height:1.7;">
+          <div class="gpa-sidebar-body" style="font-size:12.5px;color:#475569;line-height:1.6;">
             <p><strong>GPA Formula:</strong></p>
-            <code style="display:block;background:#f1f5f9;padding:8px;border-radius:6px;margin:6px 0;font-size:12px;">
+            <div class="gpa-formula-box">
               GPA = Σ(Credits × Grade Point) / Σ Credits
-            </code>
+            </div>
             <p style="margin-top:8px;"><strong>CGPA</strong> is the weighted average GPA across all semesters.</p>
           </div>
         </div>
 
       </div>
-    </div>`;
 
-  renderSemTabs();
-  renderCourseTypeToggle();
-  renderSubjectsTable();
-  updateResults();
+    </div>
+  `;
+
+  renderGpaTabs();
+  renderGpaCourseType();
+  renderGpaSubjectsTable();
+  updateGpaResults();
 }
 
 // ============================================================
-// SEM TABS
+// SEMESTER TABS LOGIC
 // ============================================================
-function renderSemTabs() {
-  const tabs = document.getElementById('semTabs');
-  if (!tabs) return;
-  tabs.innerHTML = '';
+function renderGpaTabs() {
+  const tabsContainer = document.getElementById('gpaSemTabs');
+  if (!tabsContainer) return;
+
+  tabsContainer.innerHTML = '';
   for (let i = 1; i <= TOTAL_SEMS; i++) {
     const semGpa = calcSemGpa(i);
-    const hasDone = semGpa !== null;
-    tabs.innerHTML += `
-      <button
-        class="sem-tab-btn ${i === activeSem ? 'active' : ''}"
-        onclick="switchSem(${i})"
-        title="Semester ${i}${hasDone ? ' — GPA: ' + semGpa.toFixed(2) : ''}">
-        Sem ${i}${hasDone ? ` <small style="opacity:.8;">${semGpa.toFixed(1)}</small>` : ''}
-      </button>`;
+    const hasGpa = semGpa !== null;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `gpa-sem-pill-btn ${i === activeSem ? 'active' : ''}`;
+    btn.title = `Semester ${i}${hasGpa ? ' — GPA: ' + semGpa.toFixed(2) : ''}`;
+    btn.innerHTML = `Sem ${i}${hasGpa ? ` <span style="font-size:10px;opacity:.85;margin-left:2px;">(${semGpa.toFixed(1)})</span>` : ''}`;
+    btn.onclick = () => switchGpaSem(i);
+    tabsContainer.appendChild(btn);
   }
 }
 
-function switchSem(sem) {
+function switchGpaSem(sem) {
   activeSem = sem;
-  renderSemTabs();
-  renderCourseTypeToggle();
-  renderSubjectsTable();
-  updateResults();
+  const label = document.getElementById('gpaSemTitleLabel');
+  if (label) label.innerText = `SEMESTER ${activeSem} GPA`;
+
+  renderGpaTabs();
+  renderGpaCourseType();
+  renderGpaSubjectsTable();
+  updateGpaResults();
 }
 
 // ============================================================
-// COURSE TYPE (Regular / Honours) — Sem 5-8 only
+// COURSE TYPE TOGGLE (Sem 5-7)
 // ============================================================
-function renderCourseTypeToggle() {
-  const area = document.getElementById('courseTypeArea');
+function renderGpaCourseType() {
+  const area = document.getElementById('gpaCourseTypeArea');
   if (!area) return;
 
   if (!semHasHonours(activeSem)) {
-    // Sem 1-4 and Sem 8 (no honours subjects defined) — hide toggle
     area.innerHTML = '';
     return;
   }
@@ -314,25 +386,23 @@ function renderCourseTypeToggle() {
   const type = courseType[activeSem] || 'Regular';
 
   area.innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
-      <span style="font-size:13px;font-weight:700;color:#334155;">Course Type:</span>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
-        <input type="radio" name="courseType" value="Regular" ${type === 'Regular' ? 'checked' : ''}
-          onchange="setCourseType('Regular')">
+    <div class="gpa-course-type-bar">
+      <span style="font-weight:700;color:#0f172a;"><i class="fa-solid fa-graduation-cap"></i> Course Type:</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;">
+        <input type="radio" name="gpaCourseTypeRadio" value="Regular" ${type === 'Regular' ? 'checked' : ''}
+          onchange="setGpaCourseType('Regular')">
         Regular
       </label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
-        <input type="radio" name="courseType" value="Honours" ${type === 'Honours' ? 'checked' : ''}
-          onchange="setCourseType('Honours')">
-        Honours (Regular + Honours subjects)
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;">
+        <input type="radio" name="gpaCourseTypeRadio" value="Honours" ${type === 'Honours' ? 'checked' : ''}
+          onchange="setGpaCourseType('Honours')">
+        Honours (Regular + Honours Electives)
       </label>
     </div>`;
 }
 
-function setCourseType(type) {
+function setGpaCourseType(type) {
   courseType[activeSem] = type;
-  // Rebuild this semester's subject list to match the new course type,
-  // preserving grades already entered for subjects that still appear.
   const previous = gpaData[activeSem] || [];
   const prevGrades = {};
   previous.forEach(s => { prevGrades[s.name] = s.grade; });
@@ -344,56 +414,56 @@ function setCourseType(type) {
 
   gpaData[activeSem] = rebuilt;
 
-  renderCourseTypeToggle();
-  renderSubjectsTable();
-  renderSemTabs();
-  updateResults();
+  renderGpaCourseType();
+  renderGpaSubjectsTable();
+  renderGpaTabs();
+  updateGpaResults();
 }
 
 // ============================================================
-// SUBJECTS TABLE
+// SUBJECTS TABLE RENDERING
 // ============================================================
-function renderSubjectsTable() {
-  const area = document.getElementById('subjectsArea');
+function renderGpaSubjectsTable() {
+  const area = document.getElementById('gpaSubjectsArea');
   if (!area) return;
 
   const subjects = gpaData[activeSem] || [];
 
-  area.innerHTML = `
-    <div style="overflow-x:auto;">
-      <table class="subjects-table" style="width:100%;">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Subject Name</th>
-            <th>Credits</th>
-            <th>Grade</th>
-            <th>GP</th>
-            <th>Credits × GP</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${subjects.map((s, idx) => buildRow(s, idx)).join('')}
-        </tbody>
-        <tfoot>
-          <tr style="background:#f8fafc;font-weight:700;">
-            <td colspan="2" style="padding:10px 12px;font-size:12px;color:#64748b;">TOTAL</td>
-            <td style="padding:10px 12px;color:#0f172a;">${subjects.reduce((a, s) => a + (parseFloat(s.credits) || 0), 0)}</td>
-            <td colspan="2"></td>
-            <td style="padding:10px 12px;color:#2563eb;font-weight:800;">${subjects.reduce((a, s) => {
+  const totalCredits = subjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0);
+  const totalCpg = subjects.reduce((sum, s) => {
     const gp = GRADE_POINTS[s.grade];
-    return gp !== undefined ? a + (parseFloat(s.credits) || 0) * gp : a;
-  }, 0).toFixed(1)
-    }</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>`;
+    return gp !== undefined ? sum + (parseFloat(s.credits) || 0) * gp : sum;
+  }, 0);
+
+  area.innerHTML = `
+    <table class="gpa-custom-table">
+      <thead>
+        <tr>
+          <th style="width:36px;text-align:center;">#</th>
+          <th>SUBJECT NAME</th>
+          <th style="width:80px;text-align:center;">CREDITS</th>
+          <th style="width:100px;text-align:center;">GRADE</th>
+          <th style="width:55px;text-align:center;">GP</th>
+          <th style="width:100px;text-align:center;">CREDITS × GP</th>
+          <th style="width:36px;text-align:center;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${subjects.map((s, idx) => buildGpaRow(s, idx)).join('')}
+      </tbody>
+      <tfoot>
+        <tr class="gpa-table-footer">
+          <td colspan="2" class="gpa-total-label">TOTAL</td>
+          <td class="gpa-total-credits-val">${totalCredits}</td>
+          <td colspan="2"></td>
+          <td class="gpa-total-cpg-val">${totalCpg.toFixed(1)}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>`;
 }
 
-function buildRow(s, idx) {
+function buildGpaRow(s, idx) {
   const gradeOptions = Object.keys(GRADE_POINTS).map(g =>
     `<option value="${g}" ${s.grade === g ? 'selected' : ''}>${g}</option>`
   ).join('');
@@ -405,115 +475,129 @@ function buildRow(s, idx) {
 
   return `
   <tr>
-    <td style="color:#94a3b8;font-size:12px;">${idx + 1}</td>
+    <td class="gpa-row-idx">${idx + 1}</td>
     <td>
       <input
         type="text"
-        class="grade-select"
-        style="padding:7px 10px;min-width:220px;"
-        value="${s.name}"
-        placeholder="Subject name (optional)"
-        onchange="updateField(${idx}, 'name', this.value)">
+        class="gpa-subject-input"
+        value="${escapeHtmlAttr(s.name)}"
+        placeholder="e.g. Subject Name"
+        oninput="updateGpaSubjectField(${idx}, 'name', this.value)">
     </td>
-    <td>
+    <td style="text-align:center;">
       <input
         type="number"
-        class="grade-select"
-        style="padding:7px 10px;width:65px;"
-        min="0" max="10" step="0.5"
+        class="gpa-credits-input"
+        min="0" max="15" step="0.5"
         value="${s.credits}"
-        onchange="updateField(${idx}, 'credits', parseFloat(this.value) || 0)">
+        oninput="updateGpaSubjectField(${idx}, 'credits', parseFloat(this.value) || 0)">
     </td>
-    <td>
-      <select class="grade-select" onchange="updateField(${idx}, 'grade', this.value)">
+    <td style="text-align:center;">
+      <select class="gpa-grade-select-custom" onchange="updateGpaSubjectField(${idx}, 'grade', this.value)">
         <option value="">—</option>
         ${gradeOptions}
       </select>
     </td>
-    <td style="font-weight:700;color:#2563eb;">${gp}</td>
-    <td style="font-weight:700;">${cpg}</td>
-    <td>
+    <td class="gpa-gp-cell">${gp}</td>
+    <td class="gpa-cpg-cell">${cpg}</td>
+    <td style="text-align:center;">
       <button
-        onclick="removeSubject(${idx})"
-        style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:14px;"
-        title="Remove subject">
+        type="button"
+        class="gpa-delete-btn"
+        onclick="removeGpaSubject(${idx})"
+        title="Remove this subject">
         <i class="fa-solid fa-trash-can"></i>
       </button>
     </td>
   </tr>`;
 }
 
+function escapeHtmlAttr(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // ============================================================
 // DATA OPERATIONS
 // ============================================================
-function updateField(idx, field, value) {
+function updateGpaSubjectField(idx, field, value) {
   if (gpaData[activeSem]?.[idx] !== undefined) {
     gpaData[activeSem][idx][field] = value;
   }
-  renderSubjectsTable();
-  renderSemTabs();
-  updateResults();
+  renderGpaSubjectsTable();
+  renderGpaTabs();
+  updateGpaResults();
 }
 
-function addSubject() {
+function addGpaSubject() {
+  if (!gpaData[activeSem]) gpaData[activeSem] = [];
   gpaData[activeSem].push({ name: '', credits: 3, grade: '' });
-  renderSubjectsTable();
+  renderGpaSubjectsTable();
 }
 
-function removeSubject(idx) {
-  if (gpaData[activeSem].length <= 1) {
-    alert('At least one subject is required.');
+function removeGpaSubject(idx) {
+  if (!gpaData[activeSem] || gpaData[activeSem].length <= 1) {
+    alert('At least one subject row is required.');
     return;
   }
   gpaData[activeSem].splice(idx, 1);
-  renderSubjectsTable();
-  updateResults();
+  renderGpaSubjectsTable();
+  renderGpaTabs();
+  updateGpaResults();
 }
 
-function resetSem() {
-  if (!confirm(`Reset Semester ${activeSem} data?`)) return;
+function resetGpaSem() {
+  if (!confirm(`Reset Semester ${activeSem} subjects and grades?`)) return;
   courseType[activeSem] = 'Regular';
   gpaData[activeSem] = getDefaultSubjectsForSem(activeSem);
-  renderCourseTypeToggle();
-  renderSubjectsTable();
-  renderSemTabs();
-  updateResults();
+  renderGpaCourseType();
+  renderGpaSubjectsTable();
+  renderGpaTabs();
+  updateGpaResults();
 }
 
-function resetAll() {
-  if (!confirm('Reset all semester data? This cannot be undone.')) return;
+function resetGpaAll() {
+  if (!confirm('Reset all 8 semesters data to defaults?')) return;
   for (let i = 1; i <= TOTAL_SEMS; i++) {
     courseType[i] = 'Regular';
     gpaData[i] = getDefaultSubjectsForSem(i);
   }
-  renderCourseTypeToggle();
-  renderSubjectsTable();
-  renderSemTabs();
-  updateResults();
+  renderGpaCourseType();
+  renderGpaSubjectsTable();
+  renderGpaTabs();
+  updateGpaResults();
 }
 
 // ============================================================
-// CALCULATIONS
+// CALCULATIONS & RESULTS
 // ============================================================
 function calcSemGpa(sem) {
   const subs = gpaData[sem] || [];
   let tc = 0, tp = 0;
   subs.forEach(s => {
     if (s.grade && GRADE_POINTS[s.grade] !== undefined) {
-      tc += parseFloat(s.credits) || 0;
-      tp += (parseFloat(s.credits) || 0) * GRADE_POINTS[s.grade];
+      const cr = parseFloat(s.credits) || 0;
+      tc += cr;
+      tp += cr * GRADE_POINTS[s.grade];
     }
   });
   return tc > 0 ? tp / tc : null;
 }
 
-function updateResults() {
-  // Current sem GPA
+function updateGpaResults() {
+  // 1. Current Semester GPA
   const semGpa = calcSemGpa(activeSem);
   const semGpaEl = document.getElementById('currentSemGpa');
-  if (semGpaEl) semGpaEl.innerText = semGpa !== null ? semGpa.toFixed(2) : '—';
+  if (semGpaEl) {
+    semGpaEl.innerText = semGpa !== null ? semGpa.toFixed(2) : '—';
+  }
 
-  // Overall CGPA (credit-weighted)
+  // 2. Overall CGPA
   let allCredits = 0, allPoints = 0;
   const allSemGpas = [];
 
@@ -522,8 +606,9 @@ function updateResults() {
     let tc = 0, tp = 0;
     subs.forEach(s => {
       if (s.grade && GRADE_POINTS[s.grade] !== undefined) {
-        tc += parseFloat(s.credits) || 0;
-        tp += (parseFloat(s.credits) || 0) * GRADE_POINTS[s.grade];
+        const cr = parseFloat(s.credits) || 0;
+        tc += cr;
+        tp += cr * GRADE_POINTS[s.grade];
       }
     });
     if (tc > 0) {
@@ -535,27 +620,98 @@ function updateResults() {
 
   const cgpa = allCredits > 0 ? allPoints / allCredits : null;
   const cgpaEl = document.getElementById('overallCgpa');
-  if (cgpaEl) cgpaEl.innerText = cgpa !== null ? cgpa.toFixed(2) : '—';
+  if (cgpaEl) {
+    cgpaEl.innerText = cgpa !== null ? cgpa.toFixed(2) : '—';
+  }
 
-  // CGPA Summary bar
-  const summaryEl = document.getElementById('cgpaSummary');
+  // 3. Bottom Summary Info
+  const summaryEl = document.getElementById('gpaBottomSummary');
   if (summaryEl) {
     if (allSemGpas.length === 0) {
-      summaryEl.innerHTML = '<span style="color:#94a3b8;font-size:13px;padding:8px 0;">Enter grades to see CGPA summary</span>';
+      summaryEl.innerHTML = '<span>Enter grades to see CGPA summary</span>';
     } else {
-      summaryEl.innerHTML = allSemGpas.map(({ sem, gpa }) => `
-        <div class="cgpa-summary-item">
-          <div class="val">${gpa.toFixed(2)}</div>
-          <div class="lbl">Sem ${sem}</div>
-        </div>`).join('');
+      let classification = '';
+      if (cgpa >= 9.0) classification = '<strong style="color:#059669;">🚀 Outstanding</strong>';
+      else if (cgpa >= 8.0) classification = '<strong style="color:#2563eb;">⭐ Excellent</strong>';
+      else if (cgpa >= 7.0) classification = '<strong style="color:#1d4ed8;">🔥 Very Good</strong>';
+      else if (cgpa >= 6.0) classification = '<strong style="color:#334155;">👍 Good</strong>';
+      else classification = '<strong style="color:#dc2626;">⚠️ Needs Improvement</strong>';
 
-      if (cgpa) {
-        summaryEl.innerHTML += `
-          <div class="cgpa-summary-item" style="background:rgba(37,99,235,.08);border-radius:8px;padding:8px;">
-            <div class="val" style="font-size:26px;">${cgpa.toFixed(2)}</div>
-            <div class="lbl" style="color:#2563eb;">CGPA</div>
-          </div>`;
-      }
+      summaryEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span>Calculated for <strong>${allSemGpas.length} semester(s)</strong> (${allCredits} total credits)</span>
+          <span>•</span>
+          <span>Performance: ${classification}</span>
+        </div>
+        <div style="font-weight:800;color:#2563eb;font-size:13px;">
+          Overall CGPA: ${cgpa ? cgpa.toFixed(2) : '—'} / 10.0
+        </div>
+      `;
     }
+  }
+}
+
+// ============================================================
+// SYNC GPA TO STUDENT PROFILE (When logged in)
+// ============================================================
+async function syncGpaToStudentProfile() {
+  if (typeof currentUser === 'undefined' || !currentUser || !currentToken) {
+    alert('Please log in as a student to sync GPA to your profile.');
+    return;
+  }
+
+  const semGpas = {};
+  let totalCredits = 0;
+  let totalPoints = 0;
+
+  for (let i = 1; i <= TOTAL_SEMS; i++) {
+    const g = calcSemGpa(i);
+    semGpas[`sem${i}_gpa`] = g !== null ? g.toFixed(2) : '';
+    if (g !== null) {
+      const subs = gpaData[i] || [];
+      subs.forEach(s => {
+        if (s.grade && GRADE_POINTS[s.grade] !== undefined) {
+          const cr = parseFloat(s.credits) || 0;
+          totalCredits += cr;
+          totalPoints += cr * GRADE_POINTS[s.grade];
+        }
+      });
+    }
+  }
+
+  const calculatedCgpa = totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+
+  if (!confirm(`Sync calculated CGPA (${calculatedCgpa}) and Semester GPAs to your profile?`)) return;
+
+  try {
+    const formData = new FormData();
+    formData.append('user_id', currentUser.id);
+    formData.append('cgpa', calculatedCgpa);
+    for (let i = 1; i <= TOTAL_SEMS; i++) {
+      formData.append(`sem${i}_gpa`, semGpas[`sem${i}_gpa`]);
+    }
+
+    const res = await fetch(`${API_BASE}/student/profile/save`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${currentToken}` },
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      if (typeof showStudentAlert === 'function') {
+        showStudentAlert(`✅ GPA & CGPA (${calculatedCgpa}) synced to your profile!`, true);
+      } else {
+        alert(`✅ GPA & CGPA (${calculatedCgpa}) synced to your profile!`);
+      }
+      if (typeof loadStudentProfile === 'function') {
+        await loadStudentProfile();
+      }
+    } else {
+      alert(data.message || 'Failed to sync GPA to profile.');
+    }
+  } catch (err) {
+    console.error('Sync GPA error:', err);
+    alert('Network error while syncing GPA.');
   }
 }

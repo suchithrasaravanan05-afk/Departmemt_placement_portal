@@ -126,6 +126,9 @@ function switchTab(tabName) {
 
   if (tabName === 'drives')       loadPlacementDrives();
   if (tabName === 'applications') loadAppliedDrivesTable();
+  if (tabName === 'gpa' && typeof renderSemesterGpaApp === 'function') {
+    renderSemesterGpaApp('gpaDashboardContainer', true);
+  }
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
