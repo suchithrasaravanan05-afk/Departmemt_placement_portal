@@ -56,6 +56,20 @@ async function querySupabase(sql, params = [], callback) {
         // 2. USERS TABLE QUERIES
         // ----------------------------------------------------
         if (cleanSql.startsWith("SELECT") && cleanSql.includes("FROM users")) {
+            // LOGIN QUERY: register_number = ? OR email = ? OR (role = 'admin' AND ...)
+            // This is the main student/admin login lookup used by auth.js
+            if (cleanSql.includes("register_number = ? OR email = ?")) {
+                const identifier = params[0]; // register_number
+                const emailVal   = params[1]; // email (same value in login)
+                const searchVal  = identifier || emailVal;
+                const { data, error } = await client
+                    .from("users")
+                    .select("*")
+                    .or(`register_number.eq.${searchVal},email.eq.${searchVal}`);
+                if (error) return callback(error, null);
+                return callback(null, data || []);
+            }
+
             if (cleanSql.includes("email = ? OR (register_number")) {
                 const emailVal = params[0];
                 const regVal = params[1];
@@ -85,6 +99,14 @@ async function querySupabase(sql, params = [], callback) {
 
             if (cleanSql.includes("WHERE id = ?")) {
                 const { data, error } = await client.from("users").select("*").eq("id", params[0]);
+                if (error) return callback(error, null);
+                return callback(null, data || []);
+            }
+
+            // Fallback: generic select all users (e.g. /auth/me with register_number lookup)
+            if (cleanSql.includes("register_number, email, role") || cleanSql.includes("id, full_name, register_number")) {
+                const userId = params[0];
+                const { data, error } = await client.from("users").select("id, full_name, register_number, email, role, year, department, phone").eq("id", userId);
                 if (error) return callback(error, null);
                 return callback(null, data || []);
             }
