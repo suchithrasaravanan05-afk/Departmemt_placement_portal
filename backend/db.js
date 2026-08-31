@@ -363,31 +363,35 @@ async function querySupabase(sql, params = [], callback) {
 
         if (cleanSql.includes("UPDATE placement_drives SET is_deleted_for_students =")) {
             const isDel = params[0];
-            const driveId = params[1];
+            const driveId = parseInt(params[1]) || params[1];
             const { data, error } = await client.from("placement_drives").update({ is_deleted_for_students: isDel }).eq("id", driveId);
             if (error) return callback(error, null);
             return callback(null, { affectedRows: 1 });
         }
 
-        if (cleanSql.startsWith("UPDATE placement_drives SET")) {
+        if (cleanSql.includes("UPDATE placement_drives SET")) {
             const [
                 company_name, job_role, package_ctc, min_cgpa, max_standing_arrears,
-                eligible_years, job_location, deadline, description, target_batch, driveId
+                eligible_years, job_location, deadline, description, target_batch, rawDriveId
             ] = params;
+            const driveId = parseInt(rawDriveId) || rawDriveId;
             const updateObj = {
                 company_name,
                 job_role,
                 package_ctc,
-                min_cgpa,
-                max_standing_arrears,
+                min_cgpa: parseFloat(min_cgpa) || 0,
+                max_standing_arrears: parseInt(max_standing_arrears) || 0,
                 eligible_years,
                 job_location,
-                deadline,
+                deadline: deadline || null,
                 description,
-                target_batch
+                target_batch: target_batch || "2023-2027"
             };
             const { data, error } = await client.from("placement_drives").update(updateObj).eq("id", driveId);
-            if (error) return callback(error, null);
+            if (error) {
+                console.error("Supabase update placement_drives error:", error);
+                return callback(error, null);
+            }
             return callback(null, { affectedRows: 1 });
         }
 

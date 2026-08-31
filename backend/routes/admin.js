@@ -136,7 +136,7 @@ router.post("/drives", (req, res) => {
 // ==========================================
 // UPDATE PLACEMENT DRIVE DETAILS (EDIT)
 // ==========================================
-router.put("/drives/:id", (req, res) => {
+const handleUpdateDrive = (req, res) => {
     const driveId = req.params.id;
     const {
         company_name,
@@ -174,8 +174,8 @@ router.put("/drives/:id", (req, res) => {
         company_name,
         job_role,
         package_ctc,
-        min_cgpa || 0.00,
-        max_standing_arrears || 0,
+        parseFloat(min_cgpa) || 0.00,
+        parseInt(max_standing_arrears) || 0,
         eligible_years || "3,4",
         job_location || "Flexible",
         deadline || null,
@@ -189,7 +189,11 @@ router.put("/drives/:id", (req, res) => {
         }
         res.json({ success: true, message: "Placement Drive details updated successfully!" });
     });
-});
+};
+
+router.put("/drives/:id", handleUpdateDrive);
+router.post("/drives/:id", handleUpdateDrive);
+router.post("/drives/:id/edit", handleUpdateDrive);
 
 // ==========================================
 // GET ELIGIBLE STUDENTS (REGISTERED & UNREGISTERED) FOR A DRIVE

@@ -100,9 +100,9 @@ VALUES ('CSBS Placement Admin', 'ADMIN001', 'admin@rit.ac.in', '$2a$10$7vN1E7eP.
 ON DUPLICATE KEY UPDATE email=email;
 
 -- Default Drives
-INSERT INTO placement_drives (company_name, job_role, package_ctc, min_cgpa, max_standing_arrears, eligible_years, job_location, deadline, description)
+INSERT INTO placement_drives (company_name, job_role, package_ctc, min_cgpa, max_standing_arrears, eligible_years, job_location, deadline, description, target_batch)
 VALUES 
-('TCS Digital & Ninja', 'Software Engineer', '7.0 - 3.36 LPA', 6.50, 0, '3,4', 'Chennai / Bangalore', '2026-08-30', 'Hiring for CSBS engineering graduates. TCS National Qualifier Test (NQT) mandatory.'),
-('Zoho Corporation', 'Software Development Engineer', '8.5 - 12.0 LPA', 7.00, 0, '3,4', 'Tenkasi / Chennai', '2026-09-15', 'Full-stack software developer role. Programming test focusing on problem solving & DSA.'),
-('Cognizant (CTS)', 'GenC Next & Elevate', '6.75 LPA', 6.00, 1, '4', 'Coimbatore / Chennai', '2026-09-01', 'Role in Cloud, AI, and Full Stack development.')
+('TCS Digital & Ninja', 'Software Engineer', '7.0 - 3.36 LPA', 6.50, 0, '3,4', 'Chennai / Bangalore', '2026-08-30', 'Hiring for CSBS engineering graduates. TCS National Qualifier Test (NQT) mandatory.', '2023-2027'),
+('Zoho Corporation', 'Software Development Engineer', '8.5 - 12.0 LPA', 7.00, 0, '3,4', 'Tenkasi / Chennai', '2026-09-15', 'Full-stack software developer role. Programming test focusing on problem solving & DSA.', '2023-2027'),
+('Cognizant (CTS)', 'GenC Next & Elevate', '6.75 LPA', 6.00, 1, '4', 'Coimbatore / Chennai', '2026-09-01', 'Role in Cloud, AI, and Full Stack development.', '2023-2027')
 ON DUPLICATE KEY UPDATE company_name=company_name;

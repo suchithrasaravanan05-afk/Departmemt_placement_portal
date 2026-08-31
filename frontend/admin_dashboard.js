@@ -518,6 +518,160 @@ async function loadAdminDrives() {
 }
 
 // ============================================================
+// COMPANY BRAND LOGOS GENERATOR (SVG / VECTOR EMBLEMS)
+// ============================================================
+function getCompanyLogoHtml(name) {
+  const norm = (name || '').trim().toLowerCase();
+
+  // Zoho Corporation
+  if (norm.includes('zoho')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#ffffff;border:1px solid #e2e8f0;padding:4px;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <rect width="44" height="44" x="4" y="4" rx="10" fill="#E52520"/>
+        <rect width="44" height="44" x="52" y="4" rx="10" fill="#43A047"/>
+        <rect width="44" height="44" x="4" y="52" rx="10" fill="#1E88E5"/>
+        <rect width="44" height="44" x="52" y="52" rx="10" fill="#FBC02D"/>
+        <text x="50" y="69" font-size="54" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">Z</text>
+      </svg>
+    </div>`;
+  }
+
+  // Tata Consultancy Services (TCS)
+  if (norm.includes('tcs') || norm.includes('tata consultancy')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:linear-gradient(135deg, #001F54 0%, #0A2540 100%);">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="58" font-size="34" font-weight="900" fill="#ffffff" letter-spacing="1" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">TCS</text>
+        <circle cx="82" cy="48" r="4.5" fill="#00D4B2"/>
+        <rect x="20" y="68" width="60" height="4" rx="2" fill="#E63946"/>
+      </svg>
+    </div>`;
+  }
+
+  // Cognizant / CTS / GenC
+  if (norm.includes('cognizant') || norm.includes('cts') || norm.includes('genc')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:linear-gradient(135deg, #0033A0 0%, #001A57 100%);">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <path d="M 70 30 C 58 18, 32 20, 24 38 C 14 56, 20 74, 38 80 C 54 86, 68 76, 74 62" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round"/>
+        <circle cx="72" cy="30" r="7" fill="#00B2E2"/>
+      </svg>
+    </div>`;
+  }
+
+  // Infosys
+  if (norm.includes('infosys') || norm.includes('infy')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:linear-gradient(135deg, #007CC3 0%, #005A9C 100%);">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="62" font-size="34" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">infy</text>
+      </svg>
+    </div>`;
+  }
+
+  // Wipro
+  if (norm.includes('wipro')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:linear-gradient(135deg, #2E1A47 0%, #170928 100%);">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <circle cx="50" cy="50" r="32" fill="none" stroke="#502C82" stroke-width="4"/>
+        <circle cx="34" cy="36" r="6" fill="#E40046"/>
+        <circle cx="66" cy="36" r="6" fill="#F36C21"/>
+        <circle cx="66" cy="64" r="6" fill="#00A88F"/>
+        <circle cx="34" cy="64" r="6" fill="#009CDE"/>
+        <text x="50" y="58" font-size="28" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">W</text>
+      </svg>
+    </div>`;
+  }
+
+  // Accenture
+  if (norm.includes('accenture')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#000000;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <path d="M 32 28 L 64 50 L 32 72" fill="none" stroke="#A100FF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>`;
+  }
+
+  // Amazon / AWS
+  if (norm.includes('amazon') || norm.includes('aws')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#131921;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="52" font-size="40" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">a</text>
+        <path d="M 26 68 Q 50 82 74 68" fill="none" stroke="#FF9900" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 70 64 L 76 68 L 70 72" fill="#FF9900"/>
+      </svg>
+    </div>`;
+  }
+
+  // Microsoft
+  if (norm.includes('microsoft')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#ffffff;border:1px solid #e2e8f0;padding:6px;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <rect x="18" y="18" width="28" height="28" fill="#F25022"/>
+        <rect x="54" y="18" width="28" height="28" fill="#7FBA00"/>
+        <rect x="18" y="54" width="28" height="28" fill="#00A4EF"/>
+        <rect x="54" y="54" width="28" height="28" fill="#FFB900"/>
+      </svg>
+    </div>`;
+  }
+
+  // Google
+  if (norm.includes('google')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#ffffff;border:1px solid #e2e8f0;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="69" font-size="58" font-weight="900" fill="#4285F4" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">G</text>
+      </svg>
+    </div>`;
+  }
+
+  // IBM
+  if (norm.includes('ibm')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#006699;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="60" font-size="34" font-weight="900" fill="#ffffff" letter-spacing="2" text-anchor="middle" font-family="monospace">IBM</text>
+      </svg>
+    </div>`;
+  }
+
+  // Capgemini
+  if (norm.includes('capgemini')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#0070AD;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="64" font-size="44" font-weight="900" fill="#ffffff" text-anchor="middle">♠</text>
+      </svg>
+    </div>`;
+  }
+
+  // Tech Mahindra
+  if (norm.includes('tech mahindra') || norm.includes('mahindra')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#E31B23;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="58" font-size="32" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">TM</text>
+      </svg>
+    </div>`;
+  }
+
+  // HCL / HCLTech
+  if (norm.includes('hcl')) {
+    return `<div class="pro-company-avatar" title="${escapeHtml(name)}" style="background:#005696;">
+      <svg viewBox="0 0 100 100" class="brand-svg">
+        <text x="50" y="60" font-size="32" font-weight="900" fill="#ffffff" letter-spacing="1" text-anchor="middle" font-family="'Plus Jakarta Sans', Arial, sans-serif">HCL</text>
+      </svg>
+    </div>`;
+  }
+
+  // Bespoke 2-letter Monogram Avatar with deterministic color gradient
+  const initials = (name || 'CO')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join('') || 'CO';
+  const avatarBg = getCompanyAvatarColor(name);
+
+  return `<div class="pro-company-avatar custom-brand" style="background: ${avatarBg};" title="${escapeHtml(name)}">
+    ${initials}
+  </div>`;
+}
+
+// ============================================================
 // PROFESSIONAL DRIVE CARD BUILDER (ADMIN)
 // ============================================================
 function buildAdminDriveCard(d) {
@@ -526,8 +680,7 @@ function buildAdminDriveCard(d) {
   const rawBatch      = d.target_batch || '';
   const batchLabel    = (!rawBatch || rawBatch === 'All Batches') ? '2023-2027 (4th Year)' : (rawBatch.includes('(') ? rawBatch : `${rawBatch}`);
   const companyName   = d.company_name || 'Company';
-  const initial       = companyName.charAt(0).toUpperCase();
-  const avatarBg      = getCompanyAvatarColor(companyName);
+  const logoHtml      = getCompanyLogoHtml(companyName);
   const minCgpa       = parseFloat(d.min_cgpa || 0).toFixed(2);
   const maxArrears    = d.max_standing_arrears ?? 0;
   const eligibleYears = d.eligible_years || '3, 4';
@@ -542,9 +695,7 @@ function buildAdminDriveCard(d) {
     <!-- Card Top Header -->
     <div class="pro-drive-header">
       <div class="pro-drive-brand">
-        <div class="pro-company-avatar" style="background: ${avatarBg};">
-          ${initial}
-        </div>
+        ${logoHtml}
         <div class="pro-company-meta">
           <h4 class="pro-company-name" title="${safeComp}">${safeComp}</h4>
           <span class="pro-job-role" title="${safeRole}">${safeRole}</span>
@@ -746,7 +897,7 @@ async function handleEditDriveSubmit(event) {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/admin/drives/${driveId}`, {
+    let res = await fetch(`${API_BASE}/admin/drives/${driveId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -754,12 +905,25 @@ async function handleEditDriveSubmit(event) {
       },
       body: JSON.stringify(payload)
     });
+
+    if (!res.ok && res.status !== 400) {
+      res = await fetch(`${API_BASE}/admin/drives/${driveId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization:  `Bearer ${currentAdminToken}`
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+
     const data = await res.json();
 
     if (data.success) {
       closeEditDriveModal();
-      showAdminAlert(`✅ Placement drive for "${payload.company_name}" updated successfully!`, true);
+      showAdminAlert(`✅ Placement drive for "${payload.company_name}" updated successfully! Changes are live across Admin and Student portals.`, true);
       loadAdminDrives();
+      loadDashboardStats();
     } else {
       showAdminAlert(data.message || 'Failed to update placement drive.');
     }
