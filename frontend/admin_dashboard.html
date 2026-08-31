@@ -46,28 +46,28 @@
 
   <!-- Stats Overview -->
   <div class="admin-stats-grid">
-    <div class="admin-stat-card">
+    <div class="admin-stat-card clickable" onclick="switchAdminTab('students')" style="cursor:pointer;" title="Click to view registered students roster">
       <div class="admin-stat-icon blue"><i class="fa-solid fa-users"></i></div>
       <div>
         <div class="admin-stat-val" id="statTotalStudents">—</div>
         <div class="admin-stat-lbl">Registered Students</div>
       </div>
     </div>
-    <div class="admin-stat-card">
+    <div class="admin-stat-card clickable" onclick="switchAdminTab('placed')" style="cursor:pointer;border-color:#a7f3d0;" title="Click to view list of placed students & companies">
       <div class="admin-stat-icon green"><i class="fa-solid fa-user-check"></i></div>
       <div>
         <div class="admin-stat-val" id="statPlacedStudents">—</div>
-        <div class="admin-stat-lbl">Placed Students</div>
+        <div class="admin-stat-lbl">Placed Students <i class="fa-solid fa-arrow-right" style="font-size:10px;margin-left:2px;color:#10b981;"></i></div>
       </div>
     </div>
-    <div class="admin-stat-card">
+    <div class="admin-stat-card clickable" onclick="switchAdminTab('drives')" style="cursor:pointer;" title="Click to manage placement drives">
       <div class="admin-stat-icon orange"><i class="fa-solid fa-building"></i></div>
       <div>
         <div class="admin-stat-val" id="statActiveDrives">—</div>
         <div class="admin-stat-lbl">Placement Drives</div>
       </div>
     </div>
-    <div class="admin-stat-card">
+    <div class="admin-stat-card clickable" onclick="switchAdminTab('applications')" style="cursor:pointer;" title="Click to view student applications">
       <div class="admin-stat-icon purple"><i class="fa-solid fa-file-signature"></i></div>
       <div>
         <div class="admin-stat-val" id="statTotalApps">—</div>
@@ -80,6 +80,9 @@
   <nav class="admin-tab-navigation">
     <button class="admin-tab-btn active" id="tabBtnStudents" onclick="switchAdminTab('students')">
       <i class="fa-solid fa-users-viewfinder"></i> Student Roster
+    </button>
+    <button class="admin-tab-btn" id="tabBtnPlaced" onclick="switchAdminTab('placed')">
+      <i class="fa-solid fa-award"></i> Placed Students
     </button>
     <button class="admin-tab-btn" id="tabBtnDrives" onclick="switchAdminTab('drives')">
       <i class="fa-solid fa-plus-circle"></i> Manage Drives
@@ -183,6 +186,76 @@
             <tr>
               <td colspan="11" class="text-center" style="padding:40px;">
                 <i class="fa-solid fa-spinner fa-spin" style="color:#94a3b8;"></i>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       TAB: PLACED STUDENTS
+       ======================================================== -->
+  <div id="adminTabPlaced" class="tab-content hidden">
+    <div class="admin-panel-card">
+      <div class="admin-panel-header">
+        <div class="admin-panel-title">
+          <i class="fa-solid fa-trophy" style="color:#10b981;"></i> Placed Students &amp; Placement Offers
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-success btn-sm" onclick="downloadPlacedExcel()">
+            <i class="fa-solid fa-file-excel"></i> Export Placed List
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="loadPlacedStudents()">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Bar for Placed Tab -->
+      <div class="admin-filter-bar">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px,1fr));gap:12px;">
+          <div class="form-group">
+            <label>Filter by Year</label>
+            <select id="filterPlacedYear" class="form-control" onchange="loadPlacedStudents()">
+              <option value="">All Years</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">Passed Out</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Search Placed Record</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-search input-icon"></i>
+              <input type="text" id="filterPlacedSearch" class="form-control" placeholder="Student Name / Reg No / Company" oninput="loadPlacedStudents()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Reg No</th>
+              <th>Year</th>
+              <th>CGPA</th>
+              <th>Placed Company</th>
+              <th>Designation / Role</th>
+              <th>Package (CTC)</th>
+              <th>Selection Date</th>
+              <th>Actions / Resume</th>
+            </tr>
+          </thead>
+          <tbody id="placedStudentsTableBody">
+            <tr>
+              <td colspan="9" class="text-center" style="padding:40px;color:#94a3b8;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading placed records...
               </td>
             </tr>
           </tbody>

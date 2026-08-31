@@ -256,4 +256,44 @@ router.post("/applications/status", (req, res) => {
     });
 });
 
+// ==========================================
+// GET PLACED STUDENTS LIST WITH COMPANY DETAILS
+// ==========================================
+router.get("/placed-students", (req, res) => {
+    const { year, search } = req.query;
+
+    let sql = `
+        SELECT app.id as app_id, app.status, app.applied_at,
+               pd.id as drive_id, pd.company_name, pd.job_role, pd.package_ctc,
+               u.id as user_id, u.full_name, u.register_number, u.email, u.year, u.department, u.phone,
+               sp.cgpa, sp.standing_arrears_count, sp.resume_file
+        FROM applications app
+        JOIN placement_drives pd ON app.drive_id = pd.id
+        JOIN users u ON app.user_id = u.id
+        LEFT JOIN student_profiles sp ON u.id = sp.user_id
+        WHERE app.status = 'Selected'
+    `;
+
+    const params = [];
+
+    if (year) {
+        sql += " AND u.year = ?";
+        params.push(year);
+    }
+    if (search) {
+        sql += " AND (u.full_name LIKE ? OR u.register_number LIKE ? OR pd.company_name LIKE ? OR pd.job_role LIKE ?)";
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    sql += " ORDER BY app.applied_at DESC";
+
+    db.query(sql, params, (err, results) => {
+        if (err) {
+            console.error("Error fetching placed students:", err);
+            return res.status(500).json({ success: false, message: "DB Error" });
+        }
+        res.json({ success: true, placedStudents: results });
+    });
+});
+
 module.exports = router;

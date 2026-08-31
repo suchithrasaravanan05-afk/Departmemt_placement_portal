@@ -7,6 +7,7 @@ const API_BASE = `${window.location.origin}/api`;
 let currentAdminToken    = null;
 let currentAdminUser     = null;
 let currentFetchedStudents = [];
+let currentPlacedStudents  = [];
 
 // ============================================================
 // BOOT
@@ -73,18 +74,28 @@ function hideAdminAlert() {
 // ============================================================
 // TAB NAVIGATION
 // ============================================================
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function switchAdminTab(tabName) {
-  const tabs   = ['students', 'drives', 'applications'];
-  const tabMap = { students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications' };
-  const panMap = { students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications' };
+  const tabs   = ['students', 'placed', 'drives', 'applications'];
+  const tabMap = { students: 'tabBtnStudents', placed: 'tabBtnPlaced', drives: 'tabBtnDrives', applications: 'tabBtnApplications' };
+  const panMap = { students: 'adminTabStudents', placed: 'adminTabPlaced', drives: 'adminTabDrives', applications: 'adminTabApplications' };
 
   tabs.forEach(t => {
     el(panMap[t])?.classList.toggle('hidden', t !== tabName);
     el(tabMap[t])?.classList.toggle('active', t === tabName);
   });
 
-  if (tabName === 'students')    fetchStudentRoster();
-  if (tabName === 'drives')      loadAdminDrives();
+  if (tabName === 'students')     fetchStudentRoster();
+  if (tabName === 'placed')       loadPlacedStudents();
+  if (tabName === 'drives')       loadAdminDrives();
   if (tabName === 'applications') loadApplicationsList();
 }
 
@@ -185,11 +196,15 @@ function renderStudentRoster(students, tbody) {
       ? '<span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;">Passed Out</span>'
       : (s.year ? `<span class="badge badge-blue">${s.year}${['','st','nd','rd','th'][s.year] || ''} Yr</span>` : '—');
 
+    const placedBadge = s.placed_company
+      ? `<br/><span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;margin-top:4px;"><i class="fa-solid fa-briefcase"></i> Placed @ ${escapeHtml(s.placed_company)}</span>`
+      : '';
+
     return `
     <tr>
       <td>${yearStr}</td>
       <td style="font-family:monospace;font-size:12px;">${s.register_number || '—'}</td>
-      <td><strong>${s.full_name}</strong></td>
+      <td><strong>${s.full_name}</strong>${placedBadge}</td>
       <td style="font-size:12px;color:#64748b;">${s.email}</td>
       <td><strong>${tenth}</strong></td>
       <td><strong>${twelth}</strong></td>
@@ -670,6 +685,9 @@ async function updateAppStatus(appId, newStatus, selectEl) {
       showAdminAlert(`Status updated to "${newStatus}".`, true);
       loadApplicationsList();
       loadDashboardStats();
+      if (!el('adminTabPlaced')?.classList.contains('hidden')) {
+        loadPlacedStudents();
+      }
     } else {
       showAdminAlert(data.message || 'Failed to update status.');
       selectEl.value = '';
@@ -726,4 +744,149 @@ function downloadStudentExcel() {
   const timestamp = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `RIT_CSBS_Students_${timestamp}.xlsx`);
   showAdminAlert(`Exported ${rows.length} student records to Excel.`, true);
+}
+
+// ============================================================
+// PLACED STUDENTS TAB LOGIC
+// ============================================================
+async function loadPlacedStudents() {
+  const year   = el('filterPlacedYear')?.value || '';
+  const search = el('filterPlacedSearch')?.value.trim() || '';
+
+  const query = new URLSearchParams();
+  if (year)   query.append('year', year);
+  if (search) query.append('search', search);
+
+  const tbody = el('placedStudentsTableBody');
+  if (tbody) tbody.innerHTML = `
+    <tr><td colspan="9" class="text-center" style="padding:30px;">
+      <i class="fa-solid fa-spinner fa-spin" style="color:#10b981;"></i> Loading placed student records...
+    </td></tr>`;
+
+  try {
+    const res  = await fetch(`${API_BASE}/admin/placed-students?${query.toString()}`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+
+    if (!data.success || !data.placedStudents || data.placedStudents.length === 0) {
+      currentPlacedStudents = [];
+      if (tbody) tbody.innerHTML = `
+        <tr><td colspan="9" class="text-center" style="padding:40px;">
+          <i class="fa-solid fa-trophy" style="font-size:32px;color:#cbd5e1;display:block;margin-bottom:10px;"></i>
+          <span style="color:#64748b;font-weight:700;font-size:15px;">No placed students found matching the criteria.</span>
+          <p style="color:#94a3b8;font-size:12px;margin-top:4px;">When student applications are updated to 'Selected', placed records will appear here.</p>
+        </td></tr>`;
+      return;
+    }
+
+    currentPlacedStudents = data.placedStudents;
+    renderPlacedStudents(data.placedStudents, tbody);
+  } catch (err) {
+    console.error('Placed students fetch error:', err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:30px;color:#ef4444;">Failed to load placed records. Please try again.</td></tr>`;
+  }
+}
+
+function renderPlacedStudents(placedList, tbody) {
+  tbody.innerHTML = placedList.map(p => {
+    const cgpa    = p.cgpa ? parseFloat(p.cgpa).toFixed(2) : '—';
+    const yearStr = (p.year == 5 || String(p.year).toLowerCase().includes('passed'))
+      ? '<span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;">Passed Out</span>'
+      : (p.year ? `<span class="badge badge-blue">${p.year}${['','st','nd','rd','th'][p.year] || ''} Yr</span>` : '—');
+
+    let resumeHtml = `<span style="color:#94a3b8;font-size:12px;">No resume</span>`;
+    if (p.resume_file) {
+      const url = getFullFileUrl(p.resume_file);
+      resumeHtml = `<a href="${url}" target="_blank" download class="btn btn-success btn-sm" style="padding:4px 10px;font-size:11px;">
+        <i class="fa-solid fa-download"></i> Resume
+      </a>`;
+    }
+
+    const studentJson = JSON.stringify({
+      full_name: p.full_name,
+      register_number: p.register_number,
+      email: p.email,
+      phone: p.phone,
+      year: p.year,
+      cgpa: p.cgpa,
+      standing_arrears_count: p.standing_arrears_count,
+      resume_file: p.resume_file
+    }).replace(/"/g, '&quot;');
+
+    return `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:1px solid #a7f3d0;">
+            ${escapeHtml((p.full_name || 'S').charAt(0).toUpperCase())}
+          </div>
+          <div>
+            <strong style="color:#0f172a;">${escapeHtml(p.full_name)}</strong>
+            <div style="font-size:11px;color:#64748b;">${escapeHtml(p.email)}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-family:monospace;font-size:12px;">${escapeHtml(p.register_number || '—')}</td>
+      <td>${yearStr}</td>
+      <td><span style="font-weight:800;color:#2563eb;">${cgpa}</span></td>
+      <td>
+        <span style="background:#ecfdf5;color:#047857;border:1.5px solid #6ee7b7;padding:5px 12px;border-radius:20px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(16,185,129,0.12);">
+          <i class="fa-solid fa-building" style="color:#10b981;"></i> ${escapeHtml(p.company_name)}
+        </span>
+      </td>
+      <td><strong style="color:#334155;">${escapeHtml(p.job_role)}</strong></td>
+      <td><span style="font-weight:700;color:#059669;">${escapeHtml(p.package_ctc)}</span></td>
+      <td style="font-size:12px;color:#64748b;"><i class="fa-regular fa-calendar-check" style="margin-right:4px;color:#10b981;"></i>${fmtDate(p.applied_at)}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${resumeHtml}
+          <button class="btn btn-outline btn-sm" onclick="viewStudentModal(${studentJson})" title="View Student Profile" style="padding:4px 8px;font-size:11px;">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function downloadPlacedExcel() {
+  if (!currentPlacedStudents || currentPlacedStudents.length === 0) {
+    showAdminAlert('No placed student records to export.');
+    return;
+  }
+
+  const rows = currentPlacedStudents.map((p, i) => ({
+    'S.No':              i + 1,
+    'Student Name':      p.full_name || '',
+    'Register Number':   p.register_number || '',
+    'Company Placed':    p.company_name || '',
+    'Designation / Role':p.job_role || '',
+    'Package (CTC)':     p.package_ctc || '',
+    'Year':              p.year || '',
+    'CGPA':              p.cgpa || '',
+    'Email':             p.email || '',
+    'Phone':             p.phone || '',
+    'Selection Date':    fmtDate(p.applied_at),
+    'Resume URL':        p.resume_file || ''
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (!ws[addr]) continue;
+    ws[addr].s = {
+      fill: { fgColor: { rgb: '10B981' } },
+      font: { bold: true, color: { rgb: 'FFFFFF' } },
+      alignment: { horizontal: 'center' }
+    };
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Placed Students');
+  const timestamp = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `RIT_CSBS_Placed_Students_${timestamp}.xlsx`);
+  showAdminAlert(`Exported ${rows.length} placed student records to Excel.`, true);
 }

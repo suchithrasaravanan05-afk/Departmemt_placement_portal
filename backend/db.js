@@ -133,8 +133,23 @@ async function querySupabase(sql, params = [], callback) {
             const { data: profiles } = await client.from("student_profiles").select("*");
             const profMap = new Map((profiles || []).map(p => [p.user_id, p]));
 
+            // Fetch placed companies mapping
+            const { data: selectedApps } = await client.from("applications").select("user_id, drive_id").eq("status", "Selected");
+            const { data: drives } = await client.from("placement_drives").select("id, company_name, job_role");
+            const driveMap = new Map((drives || []).map(d => [d.id, d]));
+            const placedMap = new Map();
+            (selectedApps || []).forEach(sa => {
+                const d = driveMap.get(sa.drive_id);
+                if (d) {
+                    const existing = placedMap.get(sa.user_id) || [];
+                    existing.push(`${d.company_name} (${d.job_role})`);
+                    placedMap.set(sa.user_id, existing);
+                }
+            });
+
             let combined = (users || []).map(u => {
                 const sp = profMap.get(u.id) || {};
+                const placedArr = placedMap.get(u.id) || [];
                 return {
                     user_id: u.id,
                     full_name: u.full_name,
@@ -151,7 +166,8 @@ async function querySupabase(sql, params = [], callback) {
                     twelth_percentage: sp.twelth_percentage,
                     resume_file: sp.resume_file,
                     linkedin_link: sp.linkedin_link,
-                    github_link: sp.github_link
+                    github_link: sp.github_link,
+                    placed_company: placedArr.length > 0 ? placedArr.join(", ") : null
                 };
             });
 
@@ -407,7 +423,7 @@ async function querySupabase(sql, params = [], callback) {
             const { data: profiles } = await client.from("student_profiles").select("*");
             const profMap = new Map((profiles || []).map(p => [p.user_id, p]));
 
-            const results = (apps || []).map(a => {
+            let results = (apps || []).map(a => {
                 const drive = driveMap.get(a.drive_id) || {};
                 const user = userMap.get(a.user_id) || {};
                 const sp = profMap.get(a.user_id) || {};
@@ -429,6 +445,26 @@ async function querySupabase(sql, params = [], callback) {
                     resume_file: sp.resume_file
                 };
             });
+
+            if (cleanSql.includes("app.status = 'Selected'") || cleanSql.includes("status = 'Selected'")) {
+                results = results.filter(r => r.status === 'Selected');
+            }
+
+            let pIdx = 0;
+            if (cleanSql.includes("u.year = ?")) {
+                const yearVal = parseInt(params[pIdx++]);
+                results = results.filter(r => r.year === yearVal);
+            }
+            if (cleanSql.includes("LIKE ?")) {
+                const searchVal = String(params[pIdx]).replace(/%/g, "").toLowerCase();
+                results = results.filter(r =>
+                    (r.full_name && r.full_name.toLowerCase().includes(searchVal)) ||
+                    (r.register_number && r.register_number.toLowerCase().includes(searchVal)) ||
+                    (r.company_name && r.company_name.toLowerCase().includes(searchVal)) ||
+                    (r.job_role && r.job_role.toLowerCase().includes(searchVal))
+                );
+            }
+
             return callback(null, results);
         }
 
