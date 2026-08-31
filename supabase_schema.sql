@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS public.placement_drives (
     job_location VARCHAR(100),
     deadline DATE,
     description TEXT,
+    target_batch VARCHAR(50) DEFAULT '2023-2027',
+    is_deleted_for_students INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
