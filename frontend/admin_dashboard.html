@@ -53,7 +53,7 @@
         <div class="admin-stat-lbl">Registered Students</div>
       </div>
     </div>
-    <div class="admin-stat-card clickable" onclick="switchAdminTab('placed')" style="cursor:pointer;border-color:#a7f3d0;" title="Click to view list of placed students & companies">
+    <div class="admin-stat-card clickable" onclick="switchAdminTab('applications', 'Selected')" style="cursor:pointer;border-color:#a7f3d0;" title="Click to view placed students">
       <div class="admin-stat-icon green"><i class="fa-solid fa-user-check"></i></div>
       <div>
         <div class="admin-stat-val" id="statPlacedStudents">—</div>
@@ -384,9 +384,52 @@
         <div class="admin-panel-title">
           <i class="fa-solid fa-clipboard-check"></i> Student Placement Applications
         </div>
-        <button class="btn btn-outline btn-sm" onclick="loadApplicationsList()">
-          <i class="fa-solid fa-rotate-right"></i> Refresh
-        </button>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-outline btn-sm" onclick="clearAppFilters()">
+            <i class="fa-solid fa-xmark"></i> Clear Filters
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="loadApplicationsList()">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Bar for Applications Tab -->
+      <div class="admin-filter-bar">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
+          <div class="form-group">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-filter" style="color:#2563eb;"></i> Application Status</label>
+            <select id="filterAppStatus" class="form-control" style="font-weight:600;" onchange="renderApplicationsFiltered()">
+              <option value="">All Applications</option>
+              <option value="Selected">🏆 Placed Students (Selected)</option>
+              <option value="Applied">📄 Applied Students</option>
+              <option value="Shortlisted">⭐ Shortlisted Students</option>
+              <option value="Rejected">❌ Rejected Students</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-graduation-cap" style="color:#7c3aed;"></i> Academic Year</label>
+            <select id="filterAppYear" class="form-control" onchange="renderApplicationsFiltered()">
+              <option value="">All Years</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">Passed Out</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label style="font-weight:700;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-magnifying-glass" style="color:#059669;"></i> Search</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-search input-icon"></i>
+              <input type="text" id="filterAppSearch" class="form-control" placeholder="Search Student Name, Reg No, Company, or Role..." oninput="renderApplicationsFiltered()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Status Filter Pills -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid #e2e8f0;padding-top:10px;" id="appQuickStatusPills">
+        </div>
       </div>
       <div class="table-responsive">
         <table class="data-table">

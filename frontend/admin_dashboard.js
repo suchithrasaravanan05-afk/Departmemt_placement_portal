@@ -8,6 +8,7 @@ let currentAdminToken    = null;
 let currentAdminUser     = null;
 let currentFetchedStudents = [];
 let currentPlacedStudents  = [];
+let currentFetchedApplications = [];
 
 // ============================================================
 // BOOT
@@ -83,7 +84,7 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-function switchAdminTab(tabName) {
+function switchAdminTab(tabName, initialStatusFilter = null) {
   const tabs   = ['students', 'placed', 'drives', 'applications'];
   const tabMap = { students: 'tabBtnStudents', placed: 'tabBtnPlaced', drives: 'tabBtnDrives', applications: 'tabBtnApplications' };
   const panMap = { students: 'adminTabStudents', placed: 'adminTabPlaced', drives: 'adminTabDrives', applications: 'adminTabApplications' };
@@ -96,7 +97,12 @@ function switchAdminTab(tabName) {
   if (tabName === 'students')     fetchStudentRoster();
   if (tabName === 'placed')       loadPlacedStudents();
   if (tabName === 'drives')       loadAdminDrives();
-  if (tabName === 'applications') loadApplicationsList();
+  if (tabName === 'applications') {
+    if (initialStatusFilter !== null && el('filterAppStatus')) {
+      el('filterAppStatus').value = initialStatusFilter;
+    }
+    loadApplicationsList();
+  }
 }
 
 // ============================================================
@@ -595,7 +601,7 @@ async function loadApplicationsList() {
   const tbody = el('applicationsTableBody');
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:30px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:30px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading applications...</td></tr>`;
 
   try {
     const res  = await fetch(`${API_BASE}/admin/applications`, {
@@ -603,63 +609,165 @@ async function loadApplicationsList() {
     });
     const data = await res.json();
 
-    if (!data.success || !data.applications || data.applications.length === 0) {
-      tbody.innerHTML = `
-        <tr><td colspan="9" class="text-center" style="padding:40px;">
-          <i class="fa-solid fa-inbox" style="font-size:28px;color:#94a3b8;display:block;margin-bottom:8px;"></i>
-          <span style="color:#64748b;font-weight:600;">No applications yet.</span>
-        </td></tr>`;
+    if (!data.success || !data.applications) {
+      currentFetchedApplications = [];
+      renderApplicationsFiltered();
       return;
     }
 
-    const statusMap = {
-      'Applied':     'status-applied',
-      'Shortlisted': 'status-shortlisted',
-      'Selected':    'status-selected',
-      'Rejected':    'status-rejected'
-    };
-
-    tbody.innerHTML = data.applications.map(app => {
-      const resumeHtml = app.resume_file
-        ? `<a href="${app.resume_file.startsWith('http') ? app.resume_file : window.location.origin + app.resume_file}"
-               target="_blank" class="btn btn-success btn-sm" style="padding:4px 8px;font-size:11px;">
-            <i class="fa-solid fa-download"></i>
-           </a>`
-        : '<span style="color:#94a3b8;font-size:11px;">—</span>';
-
-      return `
-      <tr>
-        <td>
-          <strong>${app.company_name}</strong>
-          <div style="font-size:11px;color:#64748b;">${app.job_role} — ${app.package_ctc}</div>
-        </td>
-        <td><strong>${app.full_name}</strong></td>
-        <td style="font-family:monospace;font-size:12px;">${app.register_number || '—'}</td>
-        <td>${app.year ? app.year + ' Yr' : '—'}</td>
-        <td><strong style="color:#2563eb;">${app.cgpa ? parseFloat(app.cgpa).toFixed(2) : '—'}</strong></td>
-        <td><span class="badge ${parseInt(app.standing_arrears_count || 0) > 0 ? 'badge-red' : 'badge-green'}">${app.standing_arrears_count || 0}</span></td>
-        <td>${resumeHtml}</td>
-        <td>
-          <span class="status-pill ${statusMap[app.status] || 'status-applied'}">${app.status}</span>
-        </td>
-        <td>
-          <select
-            class="form-control"
-            style="padding:5px 8px;font-size:12px;min-width:130px;"
-            onchange="updateAppStatus(${app.app_id}, this.value, this)">
-            <option value="">Change Status…</option>
-            <option value="Applied">Applied</option>
-            <option value="Shortlisted">Shortlisted</option>
-            <option value="Selected">Selected</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </td>
-      </tr>`;
-    }).join('');
+    currentFetchedApplications = data.applications;
+    updateAppStatusDropdownCounts();
+    renderApplicationsFiltered();
   } catch (err) {
     console.error('Applications load error:', err);
-    tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:30px;color:#ef4444;">Error loading applications.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:30px;color:#ef4444;">Error loading applications. Check network connection.</td></tr>`;
   }
+}
+
+function updateAppStatusDropdownCounts() {
+  const apps = currentFetchedApplications || [];
+  const totalCount = apps.length;
+  const placedCount = apps.filter(a => a.status === 'Selected').length;
+  const appliedCount = apps.filter(a => a.status === 'Applied').length;
+  const shortlistedCount = apps.filter(a => a.status === 'Shortlisted').length;
+  const rejectedCount = apps.filter(a => a.status === 'Rejected').length;
+
+  const select = el('filterAppStatus');
+  if (select) {
+    const currentVal = select.value;
+    select.innerHTML = `
+      <option value="">All Applications (${totalCount})</option>
+      <option value="Selected">🏆 Placed Students (${placedCount})</option>
+      <option value="Applied">📄 Applied Students (${appliedCount})</option>
+      <option value="Shortlisted">⭐ Shortlisted Students (${shortlistedCount})</option>
+      <option value="Rejected">❌ Rejected Students (${rejectedCount})</option>
+    `;
+    select.value = currentVal;
+  }
+
+  const pillsContainer = el('appQuickStatusPills');
+  if (pillsContainer) {
+    const activeStatus = select ? select.value : '';
+    pillsContainer.innerHTML = `
+      <button class="btn btn-sm ${activeStatus === '' ? 'btn-primary' : 'btn-outline'}" onclick="setAppStatusFilter('')">
+        All (${totalCount})
+      </button>
+      <button class="btn btn-sm ${activeStatus === 'Selected' ? 'btn-success' : 'btn-outline'}" onclick="setAppStatusFilter('Selected')" style="${activeStatus === 'Selected' ? 'background:#10b981;color:#fff;border-color:#10b981;' : ''}">
+        <i class="fa-solid fa-trophy"></i> Placed Students (${placedCount})
+      </button>
+      <button class="btn btn-sm ${activeStatus === 'Applied' ? 'btn-primary' : 'btn-outline'}" onclick="setAppStatusFilter('Applied')">
+        <i class="fa-solid fa-paper-plane"></i> Applied (${appliedCount})
+      </button>
+      <button class="btn btn-sm ${activeStatus === 'Shortlisted' ? 'btn-warning' : 'btn-outline'}" onclick="setAppStatusFilter('Shortlisted')">
+        <i class="fa-solid fa-star"></i> Shortlisted (${shortlistedCount})
+      </button>
+      <button class="btn btn-sm ${activeStatus === 'Rejected' ? 'btn-danger' : 'btn-outline'}" onclick="setAppStatusFilter('Rejected')">
+        <i class="fa-solid fa-xmark"></i> Rejected (${rejectedCount})
+      </button>
+    `;
+  }
+}
+
+function setAppStatusFilter(statusVal) {
+  const select = el('filterAppStatus');
+  if (select) select.value = statusVal;
+  renderApplicationsFiltered();
+}
+
+function clearAppFilters() {
+  if (el('filterAppStatus')) el('filterAppStatus').value = '';
+  if (el('filterAppYear'))   el('filterAppYear').value = '';
+  if (el('filterAppSearch')) el('filterAppSearch').value = '';
+  renderApplicationsFiltered();
+}
+
+function renderApplicationsFiltered() {
+  const tbody = el('applicationsTableBody');
+  if (!tbody) return;
+
+  const statusVal = el('filterAppStatus')?.value || '';
+  const yearVal   = el('filterAppYear')?.value || '';
+  const searchVal = el('filterAppSearch')?.value.trim().toLowerCase() || '';
+
+  let filtered = currentFetchedApplications || [];
+
+  if (statusVal) {
+    filtered = filtered.filter(a => a.status === statusVal);
+  }
+  if (yearVal) {
+    filtered = filtered.filter(a => String(a.year) === String(yearVal));
+  }
+  if (searchVal) {
+    filtered = filtered.filter(a =>
+      (a.full_name && a.full_name.toLowerCase().includes(searchVal)) ||
+      (a.register_number && a.register_number.toLowerCase().includes(searchVal)) ||
+      (a.company_name && a.company_name.toLowerCase().includes(searchVal)) ||
+      (a.job_role && a.job_role.toLowerCase().includes(searchVal))
+    );
+  }
+
+  if (filtered.length === 0) {
+    let emptyLabel = 'No applications found matching the selected filters.';
+    if (statusVal === 'Selected') emptyLabel = 'No placed students (Selected) found matching the filters.';
+    else if (statusVal === 'Applied') emptyLabel = 'No applied students found matching the filters.';
+    else if (statusVal === 'Shortlisted') emptyLabel = 'No shortlisted students found matching the filters.';
+    else if (statusVal === 'Rejected') emptyLabel = 'No rejected students found matching the filters.';
+
+    tbody.innerHTML = `
+      <tr><td colspan="9" class="text-center" style="padding:40px;">
+        <i class="fa-solid fa-filter-circle-xmark" style="font-size:32px;color:#cbd5e1;display:block;margin-bottom:10px;"></i>
+        <span style="color:#64748b;font-weight:700;font-size:14px;">${emptyLabel}</span>
+      </td></tr>`;
+    return;
+  }
+
+  const statusMap = {
+    'Applied':     'status-applied',
+    'Shortlisted': 'status-shortlisted',
+    'Selected':    'status-selected',
+    'Rejected':    'status-rejected'
+  };
+
+  tbody.innerHTML = filtered.map(app => {
+    const resumeHtml = app.resume_file
+      ? `<a href="${app.resume_file.startsWith('http') ? app.resume_file : window.location.origin + app.resume_file}"
+             target="_blank" class="btn btn-success btn-sm" style="padding:4px 8px;font-size:11px;">
+          <i class="fa-solid fa-download"></i> Resume
+         </a>`
+      : '<span style="color:#94a3b8;font-size:11px;">—</span>';
+
+    const isSelected = app.status === 'Selected';
+    const statusLabel = isSelected ? '<i class="fa-solid fa-trophy" style="margin-right:3px;color:#059669;"></i> Placed (Selected)' : app.status;
+
+    return `
+    <tr style="${isSelected ? 'background:#ecfdf5;' : ''}">
+      <td>
+        <strong>${escapeHtml(app.company_name)}</strong>
+        <div style="font-size:11px;color:#64748b;">${escapeHtml(app.job_role)} — ${escapeHtml(app.package_ctc)}</div>
+      </td>
+      <td><strong>${escapeHtml(app.full_name)}</strong></td>
+      <td style="font-family:monospace;font-size:12px;">${escapeHtml(app.register_number || '—')}</td>
+      <td>${app.year ? app.year + ' Yr' : '—'}</td>
+      <td><strong style="color:#2563eb;">${app.cgpa ? parseFloat(app.cgpa).toFixed(2) : '—'}</strong></td>
+      <td><span class="badge ${parseInt(app.standing_arrears_count || 0) > 0 ? 'badge-red' : 'badge-green'}">${app.standing_arrears_count || 0}</span></td>
+      <td>${resumeHtml}</td>
+      <td>
+        <span class="status-pill ${statusMap[app.status] || 'status-applied'}">${statusLabel}</span>
+      </td>
+      <td>
+        <select
+          class="form-control"
+          style="padding:5px 8px;font-size:12px;min-width:135px;"
+          onchange="updateAppStatus(${app.app_id}, this.value, this)">
+          <option value="">Change Status…</option>
+          <option value="Applied" ${app.status === 'Applied' ? 'selected' : ''}>Applied</option>
+          <option value="Shortlisted" ${app.status === 'Shortlisted' ? 'selected' : ''}>Shortlisted</option>
+          <option value="Selected" ${app.status === 'Selected' ? 'selected' : ''}>Selected (Placed)</option>
+          <option value="Rejected" ${app.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 // ============================================================
