@@ -165,7 +165,8 @@ const handleUpdateDrive = async (req, res) => {
             return res.status(500).json({ success: false, message: "Database client not available" });
         }
 
-        const updateObj = {
+        // Core fields that definitely exist in the schema
+        const coreUpdateObj = {
             company_name,
             job_role,
             package_ctc,
@@ -174,17 +175,34 @@ const handleUpdateDrive = async (req, res) => {
             eligible_years: eligible_years || "3,4",
             job_location: job_location || "Flexible",
             deadline: deadline || null,
-            description: description || "",
+            description: description || ""
+        };
+
+        // Extended fields — added via migration (may not exist yet)
+        const fullUpdateObj = {
+            ...coreUpdateObj,
             target_batch: target_batch || "2023-2027"
         };
 
-        console.log('[handleUpdateDrive] updateObj:', updateObj);
+        console.log('[handleUpdateDrive] attempting full update with target_batch...');
 
-        const { data, error } = await client
+        let { data, error } = await client
             .from("placement_drives")
-            .update(updateObj)
+            .update(fullUpdateObj)
             .eq("id", driveId)
             .select();
+
+        // If target_batch column doesn't exist yet, fall back to core fields only
+        if (error && (error.message || "").includes("target_batch")) {
+            console.warn("[handleUpdateDrive] target_batch column missing — retrying with core fields only");
+            const result2 = await client
+                .from("placement_drives")
+                .update(coreUpdateObj)
+                .eq("id", driveId)
+                .select();
+            data = result2.data;
+            error = result2.error;
+        }
 
         if (error) {
             console.error("[handleUpdateDrive] Supabase error:", error);
@@ -198,6 +216,7 @@ const handleUpdateDrive = async (req, res) => {
         res.status(500).json({ success: false, message: ex.message || "Server error while updating placement drive" });
     }
 };
+
 
 
 router.put("/drives/:id", handleUpdateDrive);
