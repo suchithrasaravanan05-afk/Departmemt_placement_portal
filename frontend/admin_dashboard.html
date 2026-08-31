@@ -77,18 +77,19 @@
   </div>
 
   <!-- Tab Navigation -->
+  <!-- Tab Navigation -->
   <nav class="admin-tab-navigation">
     <button class="admin-tab-btn active" id="tabBtnStudents" onclick="switchAdminTab('students')">
       <i class="fa-solid fa-users-viewfinder"></i> Student Roster
     </button>
-    <button class="admin-tab-btn" id="tabBtnPlaced" onclick="switchAdminTab('placed')">
-      <i class="fa-solid fa-award"></i> Placed Students
-    </button>
     <button class="admin-tab-btn" id="tabBtnDrives" onclick="switchAdminTab('drives')">
-      <i class="fa-solid fa-plus-circle"></i> Manage Drives
+      <i class="fa-solid fa-briefcase"></i> Manage Drives
     </button>
     <button class="admin-tab-btn" id="tabBtnApplications" onclick="switchAdminTab('applications')">
       <i class="fa-solid fa-list-check"></i> Applications
+    </button>
+    <button class="admin-tab-btn" id="tabBtnPlaced" onclick="switchAdminTab('placed')">
+      <i class="fa-solid fa-award"></i> Placed Students
     </button>
   </nav>
 
@@ -195,76 +196,6 @@
   </div>
 
   <!-- ========================================================
-       TAB: PLACED STUDENTS
-       ======================================================== -->
-  <div id="adminTabPlaced" class="tab-content hidden">
-    <div class="admin-panel-card">
-      <div class="admin-panel-header">
-        <div class="admin-panel-title">
-          <i class="fa-solid fa-trophy" style="color:#10b981;"></i> Placed Students &amp; Placement Offers
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <button class="btn btn-success btn-sm" onclick="downloadPlacedExcel()">
-            <i class="fa-solid fa-file-excel"></i> Export Placed List
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="loadPlacedStudents()">
-            <i class="fa-solid fa-rotate-right"></i> Refresh
-          </button>
-        </div>
-      </div>
-
-      <!-- Filter Bar for Placed Tab -->
-      <div class="admin-filter-bar">
-        <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px,1fr));gap:12px;">
-          <div class="form-group">
-            <label>Filter by Year</label>
-            <select id="filterPlacedYear" class="form-control" onchange="loadPlacedStudents()">
-              <option value="">All Years</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-              <option value="5">Passed Out</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Search Placed Record</label>
-            <div class="input-with-icon">
-              <i class="fa-solid fa-search input-icon"></i>
-              <input type="text" id="filterPlacedSearch" class="form-control" placeholder="Student Name / Reg No / Company" oninput="loadPlacedStudents()">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Student Name</th>
-              <th>Reg No</th>
-              <th>Year</th>
-              <th>CGPA</th>
-              <th>Placed Company</th>
-              <th>Designation / Role</th>
-              <th>Package (CTC)</th>
-              <th>Selection Date</th>
-              <th>Actions / Resume</th>
-            </tr>
-          </thead>
-          <tbody id="placedStudentsTableBody">
-            <tr>
-              <td colspan="9" class="text-center" style="padding:40px;color:#94a3b8;">
-                <i class="fa-solid fa-spinner fa-spin"></i> Loading placed records...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================
        TAB 2: MANAGE DRIVES
        ======================================================== -->
   <div id="adminTabDrives" class="tab-content hidden">
@@ -353,7 +284,7 @@
             <select id="filterDriveBatch" class="form-control" style="width:auto;padding:5px 12px;font-size:13px;font-weight:600;border-radius:8px;" onchange="loadAdminDrives()">
               <option value="">All Batches</option>
               <option value="2022-2026">2022-2026 (Passed Out)</option>
-              <option value="2023-2027">2023-2027 (4th Year)</option>
+              <option value="2023-2027" selected>2023-2027 (4th Year)</option>
               <option value="2024-2028">2024-2028 (3rd Year)</option>
               <option value="2025-2029">2025-2029 (2nd Year)</option>
               <option value="2026-2030">2026-2030 (1st Year)</option>
@@ -458,6 +389,76 @@
     </div>
   </div>
 
+  <!-- ========================================================
+       TAB 4: PLACED STUDENTS
+       ======================================================== -->
+  <div id="adminTabPlaced" class="tab-content hidden">
+    <div class="admin-panel-card">
+      <div class="admin-panel-header">
+        <div class="admin-panel-title">
+          <i class="fa-solid fa-trophy" style="color:#10b981;"></i> Placed Students &amp; Placement Offers
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-success btn-sm" onclick="downloadPlacedExcel()">
+            <i class="fa-solid fa-file-excel"></i> Export Placed List
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="loadPlacedStudents()">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Bar for Placed Tab -->
+      <div class="admin-filter-bar">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px,1fr));gap:12px;">
+          <div class="form-group">
+            <label>Filter by Year</label>
+            <select id="filterPlacedYear" class="form-control" onchange="loadPlacedStudents()">
+              <option value="">All Years</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">Passed Out</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Search Placed Record</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-search input-icon"></i>
+              <input type="text" id="filterPlacedSearch" class="form-control" placeholder="Student Name / Reg No / Company" oninput="loadPlacedStudents()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Reg No</th>
+              <th>Year</th>
+              <th>CGPA</th>
+              <th>Placed Company</th>
+              <th>Designation / Role</th>
+              <th>Package (CTC)</th>
+              <th>Selection Date</th>
+              <th>Actions / Resume</th>
+            </tr>
+          </thead>
+          <tbody id="placedStudentsTableBody">
+            <tr>
+              <td colspan="9" class="text-center" style="padding:40px;color:#94a3b8;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading placed records...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /admin-app-container -->
 
 <!-- Student Detail Modal -->
@@ -470,6 +471,42 @@
     <div class="modal-body" id="studentModalBody"></div>
     <div class="modal-footer">
       <button class="btn btn-outline btn-sm" onclick="closeStudentModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Delete Drive Confirmation Modal -->
+<div id="deleteDriveModal" class="admin-modal-overlay hidden">
+  <div class="admin-modal delete-confirm-modal" style="max-width:480px;">
+    <div class="delete-modal-icon-wrap">
+      <div class="delete-modal-icon-circle">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+    </div>
+    <div class="delete-modal-content">
+      <h3 class="delete-modal-title">Delete Placement Drive?</h3>
+      <p class="delete-modal-desc">
+        Are you sure you want to permanently delete the drive for <strong id="deleteModalCompanyName">---</strong>?
+      </p>
+      
+      <div class="delete-modal-card-preview" id="deleteModalPreview">
+        <div class="delete-modal-card-role" id="deleteModalRole">---</div>
+        <div class="delete-modal-card-tags">
+          <span class="badge badge-blue" id="deleteModalPackage">---</span>
+          <span class="badge badge-purple" id="deleteModalBatch">---</span>
+        </div>
+      </div>
+
+      <div class="delete-modal-notice">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>This will permanently delete this drive from both the <strong>Admin Panel</strong> and the <strong>Student Dashboard</strong>.</span>
+      </div>
+    </div>
+    <div class="delete-modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeDeleteDriveModal()">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirmDeleteDriveBtn" onclick="executeDeleteDrive()">
+        <i class="fa-solid fa-trash-can"></i> Delete Drive
+      </button>
     </div>
   </div>
 </div>

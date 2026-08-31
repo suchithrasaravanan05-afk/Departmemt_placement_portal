@@ -379,6 +379,8 @@ async function querySupabase(sql, params = [], callback) {
             let q = client.from("applications").delete();
             if (cleanSql.includes("user_id = ?")) {
                 q = q.eq("user_id", params[0]);
+            } else if (cleanSql.includes("drive_id = ?")) {
+                q = q.eq("drive_id", params[0]);
             } else if (cleanSql.includes("id = ?")) {
                 q = q.eq("id", params[0]);
             }

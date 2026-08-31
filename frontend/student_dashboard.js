@@ -714,8 +714,24 @@ function handleDriveFilterChange(newFilter) {
   renderDrivesWithFilter();
 }
 
+function getCompanyAvatarColor(name) {
+  const gradients = [
+    'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', // blue
+    'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)', // purple
+    'linear-gradient(135deg, #059669 0%, #047857 100%)', // emerald
+    'linear-gradient(135deg, #d97706 0%, #b45309 100%)', // amber
+    'linear-gradient(135deg, #db2777 0%, #be185d 100%)', // pink
+    'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)', // cyan
+    'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)'  // indigo
+  ];
+  let hash = 0;
+  for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  const index = Math.abs(hash) % gradients.length;
+  return gradients[index];
+}
+
 /**
- * Builds the HTML markup for a single placement drive card.
+ * Builds the HTML markup for a single placement drive card (Student Dashboard).
  */
 function buildDriveCard(d, evalRes) {
   const minCgpa       = parseFloat(d.min_cgpa || 0);
@@ -723,6 +739,10 @@ function buildDriveCard(d, evalRes) {
   const isEligible    = evalRes.isEligible;
   const isExpired     = evalRes.isExpired;
   const alreadyApplied = !!d.app_status;
+  const companyName   = d.company_name || 'Company';
+  const initial       = companyName.charAt(0).toUpperCase();
+  const avatarBg      = getCompanyAvatarColor(companyName);
+  const batchLabel    = d.target_batch || 'All Batches';
 
   let statusClass = '';
   let eligibilityBadge = '';
@@ -748,48 +768,76 @@ function buildDriveCard(d, evalRes) {
       <div class="drive-ineligible-banner">
         <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px;flex-shrink:0;"></i>
         <div>
-          <strong>Reason:</strong> ${evalRes.reasons.map(r => escapeHtml(r)).join('; ')}
+          <strong>Criteria not met:</strong> ${evalRes.reasons.map(r => escapeHtml(r)).join('; ')}
         </div>
       </div>`;
   }
 
   return `
-  <div class="drive-card ${statusClass}" data-drive-id="${d.id}">
-    <div>
-      <div class="drive-company">${escapeHtml(d.company_name)}</div>
-      <div class="drive-role" style="margin-top:3px;">${escapeHtml(d.job_role)}</div>
+  <div class="pro-drive-card ${statusClass} ${isExpired ? 'is-expired-card' : ''}" data-drive-id="${d.id}">
+    <!-- Header with Company Avatar -->
+    <div class="pro-drive-header">
+      <div class="pro-drive-brand">
+        <div class="pro-company-avatar" style="background: ${avatarBg};">
+          ${initial}
+        </div>
+        <div class="pro-company-meta">
+          <h4 class="pro-company-name" title="${escapeHtml(companyName)}">${escapeHtml(companyName)}</h4>
+          <span class="pro-job-role" title="${escapeHtml(d.job_role || '')}">${escapeHtml(d.job_role || 'Role')}</span>
+        </div>
+      </div>
+      <div>
+        ${eligibilityBadge}
+      </div>
     </div>
 
-    <div class="drive-meta">
-      <span class="badge badge-blue"><i class="fa-solid fa-indian-rupee-sign"></i> ${escapeHtml(d.package_ctc)}</span>
-      <span class="badge badge-gray"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(d.job_location || 'Flexible')}</span>
-      <span class="badge ${isExpired ? 'badge-red' : 'badge-yellow'}">
-        <i class="fa-solid fa-calendar-days"></i> ${isExpired ? 'Closed' : 'Deadline: ' + deadlineStr}
+    <!-- Tags Ribbon -->
+    <div class="pro-drive-tags">
+      <span class="pro-tag pro-tag-ctc" title="Package CTC">
+        <i class="fa-solid fa-indian-rupee-sign"></i> ${escapeHtml(d.package_ctc || 'Disclosed')}
+      </span>
+      <span class="pro-tag pro-tag-batch" title="Target Batch">
+        <i class="fa-solid fa-graduation-cap"></i> ${escapeHtml(batchLabel)}
+      </span>
+      <span class="pro-tag pro-tag-location" title="Job Location">
+        <i class="fa-solid fa-location-dot"></i> ${escapeHtml(d.job_location || 'Flexible')}
+      </span>
+      <span class="pro-tag ${isExpired ? 'pro-tag-expired' : 'pro-tag-deadline'}" title="Application Deadline">
+        <i class="fa-solid ${isExpired ? 'fa-lock' : 'fa-calendar-days'}"></i> ${isExpired ? 'Closed' : 'Deadline: ' + deadlineStr}
       </span>
     </div>
 
-    <div style="font-size:12px;color:#64748b;line-height:1.5;margin-top:4px;">
-      <span><strong>Min CGPA:</strong> ${minCgpa.toFixed(1)} &nbsp;|&nbsp;</span>
-      <span><strong>Max Arrears:</strong> ${maxArrears}</span>
-      ${d.eligible_years ? `&nbsp;|&nbsp;<span><strong>Years:</strong> ${escapeHtml(d.eligible_years)}</span>` : ''}
+    <!-- Criteria Box -->
+    <div class="pro-criteria-box">
+      <div class="pro-criteria-item">
+        <span class="crit-label">Min CGPA</span>
+        <span class="crit-val">${minCgpa.toFixed(1)}</span>
+      </div>
+      <div class="pro-criteria-item">
+        <span class="crit-label">Max Arrears</span>
+        <span class="crit-val">${maxArrears}</span>
+      </div>
+      <div class="pro-criteria-item">
+        <span class="crit-label">Eligible Years</span>
+        <span class="crit-val">Yr ${escapeHtml(d.eligible_years || 'All')}</span>
+      </div>
     </div>
 
     ${ineligibleBanner}
 
-    ${d.description ? `<p style="font-size:12px;color:#64748b;line-height:1.5;border-top:1px solid #f1f5f9;padding-top:10px;margin-top:8px;">${escapeHtml(d.description.slice(0, 130))}${d.description.length > 130 ? '…' : ''}</p>` : ''}
+    ${d.description ? `<div class="pro-drive-desc" title="${escapeHtml(d.description)}">${escapeHtml(d.description)}</div>` : ''}
 
-    <div class="drive-actions" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid #f8fafc;">
-      ${eligibilityBadge}
+    <div class="pro-drive-footer">
       ${alreadyApplied
-        ? `<span class="badge badge-gray" style="font-size:11px;"><i class="fa-solid fa-circle-check"></i> Applied ${fmtDate(d.applied_at)}</span>`
+        ? `<span class="badge badge-gray" style="font-size:12px;"><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Applied on ${fmtDate(d.applied_at)}</span>`
         : isExpired
-          ? `<span class="badge badge-red"><i class="fa-solid fa-lock"></i> Drive Closed</span>`
+          ? `<span class="badge badge-red"><i class="fa-solid fa-lock"></i> Application Closed</span>`
           : isEligible
-            ? `<button class="btn btn-primary btn-sm" onclick="applyForDrive(${d.id}, '${escapeHtml(d.company_name).replace(/'/g, "\\'")}')">
+            ? `<button class="btn btn-primary btn-sm" onclick="applyForDrive(${d.id}, '${escapeHtml(companyName).replace(/'/g, "\\'")}')" style="margin-left:auto;">
                 <i class="fa-solid fa-paper-plane"></i> Apply Now
                </button>`
-            : `<button class="btn btn-outline btn-sm" disabled style="opacity:.55;cursor:not-allowed;" title="You do not meet company eligibility criteria">
-                <i class="fa-solid fa-ban"></i> Not Eligible
+            : `<button class="btn btn-outline btn-sm" disabled style="opacity:.55;cursor:not-allowed;margin-left:auto;" title="You do not meet company eligibility criteria">
+                <i class="fa-solid fa-ban"></i> Ineligible
                </button>`
       }
     </div>

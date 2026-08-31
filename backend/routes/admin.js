@@ -134,29 +134,22 @@ router.post("/drives", (req, res) => {
 });
 
 // ==========================================
-// DELETE / ARCHIVE PLACEMENT DRIVE
-// Soft delete for students by default, permanent delete if ?action=permanent
+// DELETE PLACEMENT DRIVE (Permanently remove from Admin & Student)
 // ==========================================
 router.delete("/drives/:id", (req, res) => {
     const driveId = req.params.id;
-    const action = req.query.action;
 
-    if (action === "permanent") {
+    // Step 1: Clean up associated applications
+    db.query("DELETE FROM applications WHERE drive_id = ?", [driveId], (errApp) => {
+        // Step 2: Delete placement drive
         db.query("DELETE FROM placement_drives WHERE id = ?", [driveId], (err) => {
             if (err) {
-                return res.status(500).json({ success: false, message: "Failed to permanently delete drive" });
+                console.error("Error deleting drive:", err);
+                return res.status(500).json({ success: false, message: "Failed to delete placement drive" });
             }
-            res.json({ success: true, message: "Placement drive permanently deleted" });
+            res.json({ success: true, message: "Placement drive deleted successfully from Admin Panel and Student Dashboard" });
         });
-    } else {
-        // Soft delete: Hide from students, keep in admin panel & DB
-        db.query("UPDATE placement_drives SET is_deleted_for_students = 1 WHERE id = ?", [1, driveId], (err) => {
-            if (err) {
-                return res.status(500).json({ success: false, message: "Failed to update drive status" });
-            }
-            res.json({ success: true, message: "Placement drive hidden from students. Preserved in admin database." });
-        });
-    }
+    });
 });
 
 // ==========================================
