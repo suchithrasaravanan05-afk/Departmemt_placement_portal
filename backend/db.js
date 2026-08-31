@@ -370,6 +370,7 @@ async function querySupabase(sql, params = [], callback) {
         }
 
         if (cleanSql.includes("UPDATE placement_drives SET")) {
+            console.log('UPDATE placement_drives params:', params);
             const [
                 company_name, job_role, package_ctc, min_cgpa, max_standing_arrears,
                 eligible_years, job_location, deadline, description, target_batch, rawDriveId
@@ -392,6 +393,7 @@ async function querySupabase(sql, params = [], callback) {
                 console.error("Supabase update placement_drives error:", error);
                 return callback(error, null);
             }
+            console.log('Placement drive updated, data:', data);
             return callback(null, { affectedRows: 1 });
         }
 

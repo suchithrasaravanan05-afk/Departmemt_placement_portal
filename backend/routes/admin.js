@@ -154,6 +154,7 @@ const handleUpdateDrive = (req, res) => {
     if (!company_name || !job_role || !package_ctc) {
         return res.status(400).json({ success: false, message: "Company Name, Job Role, and Package CTC are required." });
     }
+    console.log('handleUpdateDrive payload:', req.body, 'driveId:', driveId);
 
     const sql = `
         UPDATE placement_drives SET
@@ -187,7 +188,14 @@ const handleUpdateDrive = (req, res) => {
             console.error("Error updating placement drive:", err);
             return res.status(500).json({ success: false, message: "Failed to update placement drive" });
         }
-        res.json({ success: true, message: "Placement Drive details updated successfully!" });
+        // Fetch the updated drive to return
+        db.query(`SELECT * FROM placement_drives WHERE id = ?`, [driveId], (err2, updated) => {
+            if (err2) {
+                console.error('Error fetching updated drive:', err2);
+                return res.status(500).json({ success: false, message: 'Failed to fetch updated drive' });
+            }
+            res.json({ success: true, message: "Placement Drive details updated successfully!", drive: updated[0] });
+        });
     });
 };
 
