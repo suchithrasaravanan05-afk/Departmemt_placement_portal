@@ -994,16 +994,78 @@ function buildDriveCard(d, evalRes) {
 }
 
 // ============================================================
+// CUSTOM APPLY CONFIRMATION MODAL HELPERS
+// ============================================================
+let _applyModalResolve = null;
+
+function showApplyConfirmModal(driveId, companyName) {
+  return new Promise((resolve) => {
+    _applyModalResolve = resolve;
+
+    // Set company name text
+    const nameEl = document.getElementById('applyModalCompanyName');
+    if (nameEl) nameEl.textContent = companyName;
+
+    // Update avatar gradient based on company colour
+    const avatarEl = document.getElementById('applyModalAvatar');
+    if (avatarEl) {
+      const bg = getCompanyAvatarColor(companyName);
+      avatarEl.style.background = bg;
+      // Use first 2 initials as text
+      const initials = (companyName || 'CO')
+        .split(/\s+/).filter(Boolean).slice(0, 2)
+        .map(w => w[0].toUpperCase()).join('') || 'CO';
+      avatarEl.innerHTML = `<span style="font-size:22px;font-weight:800;letter-spacing:1px;">${initials}</span>`;
+    }
+
+    // Show modal
+    const modal = document.getElementById('applyConfirmModal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  });
+}
+
+function _confirmApplyModal() {
+  const modal = document.getElementById('applyConfirmModal');
+  if (modal) modal.style.display = 'none';
+  if (_applyModalResolve) { _applyModalResolve(true); _applyModalResolve = null; }
+}
+
+function _cancelApplyModal() {
+  const modal = document.getElementById('applyConfirmModal');
+  if (modal) modal.style.display = 'none';
+  if (_applyModalResolve) { _applyModalResolve(false); _applyModalResolve = null; }
+}
+
+function _closeApplyModal(event) {
+  // Close when clicking the backdrop
+  if (event.target === document.getElementById('applyConfirmModal')) {
+    _cancelApplyModal();
+  }
+}
+
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') _cancelApplyModal();
+});
+
+// ============================================================
 // APPLY FOR DRIVE
 // ============================================================
 async function applyForDrive(driveId, companyName) {
-  if (!confirm(`Apply for the placement drive at ${companyName}?`)) return;
+  // Show beautiful custom modal instead of browser confirm()
+  const confirmed = await showApplyConfirmModal(driveId, companyName);
+  if (!confirmed) return;
 
   if (!currentProfile || !currentProfile.cgpa) {
     showStudentAlert('Please complete your profile before applying for drives.');
     switchTab('profile');
     return;
   }
+
+  // Show loading state on button
+  const confirmBtn = document.getElementById('applyModalConfirmBtn');
 
   try {
     const res  = await fetch(`${API_BASE}/student/drives/apply`, {
@@ -1027,6 +1089,7 @@ async function applyForDrive(driveId, companyName) {
     showStudentAlert('Server error. Please try again.');
   }
 }
+
 
 // ============================================================
 // LOAD APPLIED DRIVES
