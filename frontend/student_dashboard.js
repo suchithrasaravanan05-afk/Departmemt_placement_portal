@@ -741,8 +741,8 @@ function buildDriveCard(d, evalRes) {
   const alreadyApplied = !!d.app_status;
   const companyName   = d.company_name || 'Company';
   const initial       = companyName.charAt(0).toUpperCase();
-  const avatarBg      = getCompanyAvatarColor(companyName);
-  const batchLabel    = d.target_batch || 'All Batches';
+  const rawBatch      = d.target_batch || '';
+  const batchLabel    = (!rawBatch || rawBatch === 'All Batches') ? '2023-2027 (4th Year)' : (rawBatch.includes('(') ? rawBatch : `${rawBatch}`);
 
   let statusClass = '';
   let eligibilityBadge = '';

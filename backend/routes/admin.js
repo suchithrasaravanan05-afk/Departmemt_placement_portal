@@ -123,13 +123,179 @@ router.post("/drives", (req, res) => {
         job_location || "Flexible",
         deadline || null,
         description || "",
-        target_batch || "All Batches"
+        target_batch || "2023-2027"
     ], (err, result) => {
         if (err) {
             console.error("Error creating placement drive:", err);
             return res.status(500).json({ success: false, message: "Failed to create placement drive" });
         }
         res.status(201).json({ success: true, message: "Placement Drive posted successfully!" });
+    });
+});
+
+// ==========================================
+// UPDATE PLACEMENT DRIVE DETAILS (EDIT)
+// ==========================================
+router.put("/drives/:id", (req, res) => {
+    const driveId = req.params.id;
+    const {
+        company_name,
+        job_role,
+        package_ctc,
+        min_cgpa,
+        max_standing_arrears,
+        eligible_years,
+        target_batch,
+        job_location,
+        deadline,
+        description
+    } = req.body;
+
+    if (!company_name || !job_role || !package_ctc) {
+        return res.status(400).json({ success: false, message: "Company Name, Job Role, and Package CTC are required." });
+    }
+
+    const sql = `
+        UPDATE placement_drives SET
+            company_name = ?,
+            job_role = ?,
+            package_ctc = ?,
+            min_cgpa = ?,
+            max_standing_arrears = ?,
+            eligible_years = ?,
+            job_location = ?,
+            deadline = ?,
+            description = ?,
+            target_batch = ?
+        WHERE id = ?
+    `;
+
+    db.query(sql, [
+        company_name,
+        job_role,
+        package_ctc,
+        min_cgpa || 0.00,
+        max_standing_arrears || 0,
+        eligible_years || "3,4",
+        job_location || "Flexible",
+        deadline || null,
+        description || "",
+        target_batch || "2023-2027",
+        driveId
+    ], (err, result) => {
+        if (err) {
+            console.error("Error updating placement drive:", err);
+            return res.status(500).json({ success: false, message: "Failed to update placement drive" });
+        }
+        res.json({ success: true, message: "Placement Drive details updated successfully!" });
+    });
+});
+
+// ==========================================
+// GET ELIGIBLE STUDENTS (REGISTERED & UNREGISTERED) FOR A DRIVE
+// ==========================================
+router.get("/drives/:id/eligible-students", (req, res) => {
+    const driveId = req.params.id;
+
+    // Step 1: Get the drive details
+    db.query("SELECT * FROM placement_drives WHERE id = ?", [driveId], (errDrive, drives) => {
+        if (errDrive || !drives || drives.length === 0) {
+            return res.status(404).json({ success: false, message: "Placement drive not found" });
+        }
+        const drive = drives[0];
+        const minCgpa = parseFloat(drive.min_cgpa || 0);
+        const maxArrears = parseInt(drive.max_standing_arrears || 0);
+        const eligibleYears = (drive.eligible_years || "1,2,3,4,5").split(",").map(y => parseInt(y.trim())).filter(y => !isNaN(y));
+
+        // Step 2: Get all students and profiles
+        const sqlStudents = `
+            SELECT u.id as user_id, u.full_name, u.register_number, u.email, u.year, u.department, u.phone,
+                   sp.cgpa, sp.standing_arrears_count, sp.history_arrears_count, sp.tenth_percentage,
+                   sp.twelth_percentage, sp.resume_file, sp.domain_interest
+            FROM users u
+            LEFT JOIN student_profiles sp ON u.id = sp.user_id
+            WHERE u.role = 'student'
+            ORDER BY u.full_name ASC
+        `;
+
+        db.query(sqlStudents, [], (errStd, students) => {
+            if (errStd) {
+                console.error("Error fetching students:", errStd);
+                return res.status(500).json({ success: false, message: "Failed to fetch students" });
+            }
+
+            // Step 3: Get applications for this drive
+            db.query("SELECT * FROM applications WHERE drive_id = ?", [driveId], (errApp, apps) => {
+                if (errApp) {
+                    console.error("Error fetching applications:", errApp);
+                    return res.status(500).json({ success: false, message: "Failed to fetch applications" });
+                }
+
+                const appMap = {};
+                (apps || []).forEach(a => {
+                    appMap[a.user_id] = a;
+                });
+
+                // Filter and classify students
+                const allEligible = [];
+                const appliedList = [];
+                const unappliedList = [];
+
+                (students || []).forEach(s => {
+                    const stdCgpa = parseFloat(s.cgpa || 0);
+                    const stdArrears = parseInt(s.standing_arrears_count || 0);
+                    const stdYear = parseInt(s.year || 4);
+
+                    // Check eligibility
+                    const isCgpaOk = stdCgpa >= minCgpa;
+                    const isArrearsOk = stdArrears <= maxArrears;
+                    const isYearOk = eligibleYears.length === 0 || eligibleYears.includes(stdYear);
+
+                    if (isCgpaOk && isArrearsOk && isYearOk) {
+                        const app = appMap[s.user_id];
+                        const studentData = {
+                            user_id: s.user_id,
+                            full_name: s.full_name,
+                            register_number: s.register_number,
+                            email: s.email,
+                            year: s.year,
+                            department: s.department,
+                            phone: s.phone,
+                            cgpa: stdCgpa.toFixed(2),
+                            standing_arrears: stdArrears,
+                            tenth_percentage: s.tenth_percentage ? `${s.tenth_percentage}%` : '--',
+                            twelth_percentage: s.twelth_percentage ? `${s.twelth_percentage}%` : '--',
+                            resume_file: s.resume_file,
+                            is_applied: !!app,
+                            application_status: app ? app.status : 'Not Applied',
+                            applied_at: app ? app.applied_at : null
+                        };
+
+                        allEligible.push(studentData);
+                        if (app) {
+                            appliedList.push(studentData);
+                        } else {
+                            unappliedList.push(studentData);
+                        }
+                    }
+                });
+
+                res.json({
+                    success: true,
+                    drive,
+                    summary: {
+                        total_eligible: allEligible.length,
+                        applied_count: appliedList.length,
+                        unapplied_count: unappliedList.length
+                    },
+                    students: {
+                        all: allEligible,
+                        applied: appliedList,
+                        unapplied: unappliedList
+                    }
+                });
+            });
+        });
     });
 });
 

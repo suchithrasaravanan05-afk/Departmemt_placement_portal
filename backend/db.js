@@ -369,6 +369,28 @@ async function querySupabase(sql, params = [], callback) {
             return callback(null, { affectedRows: 1 });
         }
 
+        if (cleanSql.startsWith("UPDATE placement_drives SET")) {
+            const [
+                company_name, job_role, package_ctc, min_cgpa, max_standing_arrears,
+                eligible_years, job_location, deadline, description, target_batch, driveId
+            ] = params;
+            const updateObj = {
+                company_name,
+                job_role,
+                package_ctc,
+                min_cgpa,
+                max_standing_arrears,
+                eligible_years,
+                job_location,
+                deadline,
+                description,
+                target_batch
+            };
+            const { data, error } = await client.from("placement_drives").update(updateObj).eq("id", driveId);
+            if (error) return callback(error, null);
+            return callback(null, { affectedRows: 1 });
+        }
+
         if (cleanSql.startsWith("DELETE FROM placement_drives WHERE id = ?")) {
             const { data, error } = await client.from("placement_drives").delete().eq("id", params[0]);
             if (error) return callback(error, null);

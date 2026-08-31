@@ -476,6 +476,7 @@ async function loadAdminDrives() {
     const data = await res.json();
 
     if (!data.success || !data.drives || data.drives.length === 0) {
+      currentAdminDrivesList = [];
       container.innerHTML = `
         <div class="empty-state">
           <i class="fa-solid fa-briefcase" style="color:#94a3b8;font-size:36px;margin-bottom:12px;"></i>
@@ -485,11 +486,13 @@ async function loadAdminDrives() {
       return;
     }
 
+    currentAdminDrivesList = data.drives;
     let drivesToRender = data.drives;
     if (batchFilter) {
-      drivesToRender = data.drives.filter(d =>
-        !d.target_batch || d.target_batch === 'All Batches' || d.target_batch === batchFilter
-      );
+      drivesToRender = data.drives.filter(d => {
+        const b = d.target_batch || '2023-2027';
+        return b === 'All Batches' || b === batchFilter || (batchFilter === '2023-2027' && (!d.target_batch || d.target_batch === 'All Batches' || d.target_batch === '2023-2027'));
+      });
     }
 
     if (drivesToRender.length === 0) {
@@ -520,7 +523,8 @@ async function loadAdminDrives() {
 function buildAdminDriveCard(d) {
   const deadlineStr   = d.deadline ? fmtDate(d.deadline) : 'Open';
   const isExpired     = d.deadline && new Date(d.deadline) < new Date();
-  const batchLabel    = d.target_batch || 'All Batches';
+  const rawBatch      = d.target_batch || '';
+  const batchLabel    = (!rawBatch || rawBatch === 'All Batches') ? '2023-2027 (4th Year)' : (rawBatch.includes('(') ? rawBatch : `${rawBatch}`);
   const companyName   = d.company_name || 'Company';
   const initial       = companyName.charAt(0).toUpperCase();
   const avatarBg      = getCompanyAvatarColor(companyName);
@@ -546,6 +550,7 @@ function buildAdminDriveCard(d) {
           <span class="pro-job-role" title="${safeRole}">${safeRole}</span>
         </div>
       </div>
+      <!-- Single Clean Delete Option at Top Right -->
       <button type="button" class="pro-drive-delete-btn"
               onclick="openDeleteDriveModal(${d.id}, '${safeComp.replace(/'/g, "\\'")}', '${safeRole.replace(/'/g, "\\'")}', '${safePkg.replace(/'/g, "\\'")}', '${safeBatch.replace(/'/g, "\\'")}')"
               title="Delete placement drive">
@@ -591,15 +596,25 @@ function buildAdminDriveCard(d) {
       ${escapeHtml(d.description)}
     </div>` : ''}
 
-    <!-- Card Bottom Status Footer -->
+    <!-- Card Bottom Footer with Eligible Students & Edit Buttons -->
     <div class="pro-drive-footer">
       <span class="pro-status-live">
-        <span class="pulse-green-dot"></span> Active in Student Portal
+        <span class="pulse-green-dot"></span> Active in Portal
       </span>
-      <button type="button" class="pro-delete-text-btn"
-              onclick="openDeleteDriveModal(${d.id}, '${safeComp.replace(/'/g, "\\'")}', '${safeRole.replace(/'/g, "\\'")}', '${safePkg.replace(/'/g, "\\'")}', '${safeBatch.replace(/'/g, "\\'")}')">
-        <i class="fa-solid fa-trash-can"></i> Delete
-      </button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" class="btn btn-sm btn-primary"
+                onclick="openDriveEligibleModal(${d.id})"
+                style="padding:6px 12px;font-size:12px;font-weight:700;"
+                title="View Eligible, Registered and Pending Students">
+          <i class="fa-solid fa-users-viewfinder"></i> Eligible Students
+        </button>
+        <button type="button" class="btn btn-sm btn-outline"
+                onclick="openEditDriveModal(${d.id})"
+                style="padding:6px 12px;font-size:12px;font-weight:700;color:#2563eb;border-color:#bfdbfe;"
+                title="Edit placement drive details">
+          <i class="fa-solid fa-pen-to-square"></i> Edit
+        </button>
+      </div>
     </div>
   </div>`;
 }
@@ -617,7 +632,7 @@ function openDeleteDriveModal(id, companyName, jobRole, packageCtc, targetBatch)
   el('deleteModalCompanyName').innerText = companyName;
   el('deleteModalRole').innerText = jobRole || 'Placement Drive';
   el('deleteModalPackage').innerHTML = `<i class="fa-solid fa-indian-rupee-sign"></i> ${packageCtc || 'CTC Disclosed'}`;
-  el('deleteModalBatch').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${targetBatch || 'All Batches'}`;
+  el('deleteModalBatch').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${targetBatch || '2023-2027'}`;
 
   const btn = el('confirmDeleteDriveBtn');
   if (btn) {
@@ -670,6 +685,292 @@ async function executeDeleteDrive() {
       btn.innerHTML = `<i class="fa-solid fa-trash-can"></i> Delete Drive`;
     }
   }
+}
+
+// ============================================================
+// EDIT PLACEMENT DRIVE MODAL LOGIC
+// ============================================================
+let currentAdminDrivesList = [];
+
+function openEditDriveModal(driveId) {
+  const drive = (currentAdminDrivesList || []).find(d => d.id === driveId);
+  if (!drive) {
+    showAdminAlert('Drive details not found in cache. Refreshing...');
+    loadAdminDrives();
+    return;
+  }
+
+  el('editDriveId').value          = drive.id;
+  el('editDriveCompany').value     = drive.company_name || '';
+  el('editDriveRole').value        = drive.job_role || '';
+  el('editDrivePackage').value     = drive.package_ctc || '';
+  el('editDriveMinCgpa').value    = drive.min_cgpa ?? 6.0;
+  el('editDriveMaxArrears').value = drive.max_standing_arrears ?? 0;
+  el('editDriveYears').value      = drive.eligible_years || '3,4';
+  el('editDriveBatch').value      = drive.target_batch || '2023-2027';
+  el('editDriveLocation').value   = drive.job_location || '';
+  el('editDriveDeadline').value   = drive.deadline ? drive.deadline.slice(0, 10) : '';
+  el('editDriveDescription').value= drive.description || '';
+
+  const modal = el('editDriveModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeEditDriveModal() {
+  const modal = el('editDriveModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function handleEditDriveSubmit(event) {
+  event.preventDefault();
+  const driveId = el('editDriveId').value;
+  if (!driveId) return;
+
+  const payload = {
+    company_name:         el('editDriveCompany').value.trim(),
+    job_role:             el('editDriveRole').value.trim(),
+    package_ctc:          el('editDrivePackage').value.trim(),
+    min_cgpa:             parseFloat(el('editDriveMinCgpa').value) || 0,
+    max_standing_arrears: parseInt(el('editDriveMaxArrears').value) || 0,
+    eligible_years:       el('editDriveYears').value.trim() || '3,4',
+    target_batch:         el('editDriveBatch').value || '2023-2027',
+    job_location:         el('editDriveLocation').value.trim() || 'Flexible',
+    deadline:             el('editDriveDeadline').value || null,
+    description:          el('editDriveDescription').value.trim()
+  };
+
+  const saveBtn = el('saveEditDriveBtn');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/drives/${driveId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization:  `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      closeEditDriveModal();
+      showAdminAlert(`✅ Placement drive for "${payload.company_name}" updated successfully!`, true);
+      loadAdminDrives();
+    } else {
+      showAdminAlert(data.message || 'Failed to update placement drive.');
+    }
+  } catch (err) {
+    console.error('Update drive error:', err);
+    showAdminAlert('Network or server error while updating drive.');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+    }
+  }
+}
+
+// ============================================================
+// ELIGIBLE STUDENTS MODAL (REGISTERED & UNREGISTERED)
+// ============================================================
+let currentEligibleData = null;
+let currentEligibleFilter = 'all';
+
+async function openDriveEligibleModal(driveId) {
+  const modal = el('driveEligibleModal');
+  if (!modal) return;
+
+  el('eligibleModalTitle').innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color:#2563eb;"></i> Loading Eligible Students...`;
+  el('eligibleModalSubtitle').innerText = 'Evaluating student criteria and registration status...';
+  el('eligibleStudentsTableBody').innerHTML = `
+    <tr>
+      <td colspan="9" class="text-center" style="padding:40px;color:#94a3b8;">
+        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top:8px;font-weight:600;">Evaluating department students against drive criteria...</p>
+      </td>
+    </tr>`;
+
+  modal.classList.remove('hidden');
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/drives/${driveId}/eligible-students`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      el('eligibleStudentsTableBody').innerHTML = `
+        <tr><td colspan="9" class="text-center" style="padding:30px;color:#ef4444;">${data.message || 'Failed to load eligible students'}</td></tr>`;
+      return;
+    }
+
+    currentEligibleData = data;
+    currentEligibleFilter = 'all';
+
+    const d = data.drive;
+    const s = data.summary;
+
+    el('eligibleModalTitle').innerHTML = `
+      <i class="fa-solid fa-building" style="color:#2563eb;"></i> ${escapeHtml(d.company_name)} — ${escapeHtml(d.job_role)}
+    `;
+    el('eligibleModalSubtitle').innerHTML = `
+      <strong>Criteria:</strong> Min CGPA: ${parseFloat(d.min_cgpa||0).toFixed(2)} | Max Arrears: ${d.max_standing_arrears||0} | Batch: ${escapeHtml(d.target_batch||'2023-2027')} | Package: ${escapeHtml(d.package_ctc||'')}
+    `;
+
+    el('eligibleTotalCount').innerText     = s.total_eligible;
+    el('eligibleAppliedCount').innerText   = s.applied_count;
+    el('eligibleUnappliedCount').innerText = s.unapplied_count;
+
+    el('pillCountAll').innerText       = s.total_eligible;
+    el('pillCountApplied').innerText   = s.applied_count;
+    el('pillCountUnapplied').innerText = s.unapplied_count;
+
+    filterEligibleModalList('all');
+  } catch (err) {
+    console.error('Eligible students error:', err);
+    el('eligibleStudentsTableBody').innerHTML = `
+      <tr><td colspan="9" class="text-center" style="padding:30px;color:#ef4444;">Network error while fetching eligible students.</td></tr>`;
+  }
+}
+
+function closeDriveEligibleModal() {
+  const modal = el('driveEligibleModal');
+  if (modal) modal.classList.add('hidden');
+  currentEligibleData = null;
+}
+
+function filterEligibleModalList(filterType) {
+  currentEligibleFilter = filterType;
+
+  ['btnFilterAllEligible', 'btnFilterAppliedEligible', 'btnFilterUnappliedEligible'].forEach(id => {
+    const btn = el(id);
+    if (btn) {
+      btn.className = 'btn btn-sm btn-outline';
+    }
+  });
+
+  if (filterType === 'all' && el('btnFilterAllEligible')) {
+    el('btnFilterAllEligible').className = 'btn btn-sm btn-primary';
+  } else if (filterType === 'applied' && el('btnFilterAppliedEligible')) {
+    el('btnFilterAppliedEligible').className = 'btn btn-sm btn-success';
+  } else if (filterType === 'unapplied' && el('btnFilterUnappliedEligible')) {
+    el('btnFilterUnappliedEligible').className = 'btn btn-sm btn-warning';
+  }
+
+  renderEligibleStudentsTable();
+}
+
+function renderEligibleStudentsTable() {
+  if (!currentEligibleData || !currentEligibleData.students) return;
+
+  const tbody = el('eligibleStudentsTableBody');
+  if (!tbody) return;
+
+  let list = currentEligibleData.students.all || [];
+  if (currentEligibleFilter === 'applied')   list = currentEligibleData.students.applied || [];
+  if (currentEligibleFilter === 'unapplied') list = currentEligibleData.students.unapplied || [];
+
+  const search = (el('eligibleSearchInput')?.value || '').trim().toLowerCase();
+  if (search) {
+    list = list.filter(s =>
+      (s.full_name && s.full_name.toLowerCase().includes(search)) ||
+      (s.register_number && s.register_number.toLowerCase().includes(search)) ||
+      (s.email && s.email.toLowerCase().includes(search))
+    );
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center" style="padding:32px;color:#94a3b8;">
+          <i class="fa-solid fa-users-slash" style="font-size:24px;margin-bottom:6px;"></i>
+          <p>No eligible students match this view / search.</p>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((s, idx) => {
+    const statusPill = s.is_applied
+      ? `<span class="badge badge-green" style="font-weight:700;"><i class="fa-solid fa-circle-check"></i> Applied (${escapeHtml(s.application_status)})</span>`
+      : `<span class="badge badge-yellow" style="font-weight:700;"><i class="fa-solid fa-clock"></i> Not Applied / Pending</span>`;
+
+    const resumeBtn = s.resume_file
+      ? `<a href="${s.resume_file}" target="_blank" class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;" title="View Resume">
+           <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Resume
+         </a>`
+      : `<span style="color:#94a3b8;font-size:11px;">--</span>`;
+
+    return `
+      <tr>
+        <td style="color:#94a3b8;font-size:12px;">${idx + 1}</td>
+        <td><strong style="color:#0f172a;font-family:monospace;font-size:12.5px;">${escapeHtml(s.register_number)}</strong></td>
+        <td>
+          <div style="font-weight:700;color:#1e293b;">${escapeHtml(s.full_name)}</div>
+          <div style="font-size:11px;color:#64748b;">${escapeHtml(s.email)}</div>
+        </td>
+        <td><span class="badge badge-blue">Yr ${s.year || 4}</span></td>
+        <td><strong style="color:#2563eb;">${s.cgpa}</strong></td>
+        <td>
+          <span class="badge ${s.standing_arrears === 0 ? 'badge-green' : 'badge-red'}">
+            ${s.standing_arrears} Arrears
+          </span>
+        </td>
+        <td style="font-size:12px;">${s.tenth_percentage} / ${s.twelth_percentage}</td>
+        <td>${statusPill}</td>
+        <td>${resumeBtn}</td>
+      </tr>`;
+  }).join('');
+}
+
+function exportEligibleStudentsExcel() {
+  if (!currentEligibleData || !currentEligibleData.students || !window.XLSX) {
+    alert('Excel library or data not ready.');
+    return;
+  }
+
+  let list = currentEligibleData.students.all || [];
+  if (currentEligibleFilter === 'applied')   list = currentEligibleData.students.applied || [];
+  if (currentEligibleFilter === 'unapplied') list = currentEligibleData.students.unapplied || [];
+
+  const d = currentEligibleData.drive || {};
+  const companySafe = (d.company_name || 'Placement_Drive').replace(/[^a-zA-Z0-9]/g, '_');
+
+  const rows = [
+    [`RAMCO INSTITUTE OF TECHNOLOGY — CSBS DEPARTMENT`],
+    [`Eligible Students List for: ${d.company_name || 'Drive'} (${d.job_role || ''})`],
+    [`Criteria: Min CGPA >= ${d.min_cgpa || 0} | Max Arrears <= ${d.max_standing_arrears || 0} | Filter View: ${currentEligibleFilter.toUpperCase()}`],
+    [],
+    ['S.No', 'Register Number', 'Student Name', 'Email', 'Phone', 'Year', 'Department', 'CGPA', 'Standing Arrears', '10th %', '12th %', 'Application Status', 'Applied At', 'Resume Link']
+  ];
+
+  list.forEach((s, i) => {
+    rows.push([
+      i + 1,
+      s.register_number,
+      s.full_name,
+      s.email,
+      s.phone || '--',
+      s.year,
+      s.department || 'CSBS',
+      s.cgpa,
+      s.standing_arrears,
+      s.tenth_percentage,
+      s.twelth_percentage,
+      s.application_status,
+      s.applied_at ? fmtDate(s.applied_at) : 'Not Applied',
+      s.resume_file || 'Not Uploaded'
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Eligible Students');
+  XLSX.writeFile(wb, `${companySafe}_Eligible_Students.xlsx`);
 }
 
 // ============================================================
