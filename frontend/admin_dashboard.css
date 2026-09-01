@@ -38,26 +38,15 @@
 }
 
 /* =============================================
-   UNIFIED EXECUTIVE HEADER
+   EXECUTIVE HEADER & DEPT BANNER
    ============================================= */
 .admin-header-wrapper {
-  background: linear-gradient(135deg, #090d16 0%, #0f172a 45%, #172554 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, #0b1120 0%, #0f172a 60%, #1e293b 100%);
+  border-bottom: 2px solid rgba(37, 99, 235, 0.4);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(12px);
-}
-
-.admin-header-wrapper::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2.5px;
-  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 40%, #818cf8 70%, #c084fc 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .admin-college-header {
@@ -68,6 +57,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+}
+
+.admin-dept-banner {
+  background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 50%, #4338ca 100%);
+  color: #ffffff;
+  text-align: center;
+  padding: 11px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .admin-logo-group {
