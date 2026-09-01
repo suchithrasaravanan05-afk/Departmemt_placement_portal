@@ -937,11 +937,8 @@ async function loadAdminDrives() {
   if (!container) return;
 
   const batchSelect = el('filterDriveBatch');
-  // Default to 2023-2027 if value is not set
-  if (batchSelect && !batchSelect.value && batchSelect.querySelector('option[value="2023-2027"]')) {
-    batchSelect.value = '2023-2027';
-  }
-  const batchFilter = batchSelect ? batchSelect.value : '2023-2027';
+  const defaultBatch = (portalSettings && portalSettings.default_year) ? portalSettings.default_year : '2023-2027';
+  const batchFilter = batchSelect ? batchSelect.value : defaultBatch;
 
   container.innerHTML = `
     <div class="spinner-box">
@@ -968,10 +965,10 @@ async function loadAdminDrives() {
 
     currentAdminDrivesList = data.drives;
     let drivesToRender = data.drives;
-    if (batchFilter) {
+    if (batchFilter && batchFilter !== 'All Batches') {
       drivesToRender = data.drives.filter(d => {
-        const b = d.target_batch || '2023-2027';
-        return b === 'All Batches' || b === batchFilter || (batchFilter === '2023-2027' && (!d.target_batch || d.target_batch === 'All Batches' || d.target_batch === '2023-2027'));
+        const b = d.target_batch || '';
+        return !b || b === 'All Batches' || b === batchFilter || (batchFilter === defaultBatch && (!d.target_batch || d.target_batch === 'All Batches' || d.target_batch === defaultBatch));
       });
     }
 
@@ -979,7 +976,7 @@ async function loadAdminDrives() {
       container.innerHTML = `
         <div class="empty-state" style="padding:40px 20px;">
           <i class="fa-solid fa-filter" style="color:#94a3b8;font-size:36px;margin-bottom:12px;"></i>
-          <p style="font-weight:600;color:#475569;">No active drives for batch "${batchFilter}".</p>
+          <p style="font-weight:600;color:#475569;">No active drives for batch "${escapeHtml(batchFilter)}".</p>
           <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="if(el('filterDriveBatch')){el('filterDriveBatch').value='';loadAdminDrives();}">
             <i class="fa-solid fa-layer-group"></i> View All Batches
           </button>

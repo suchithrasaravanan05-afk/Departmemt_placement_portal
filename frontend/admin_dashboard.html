@@ -473,38 +473,29 @@
 
     <!-- Active Drives List -->
     <div class="admin-panel-card">
-      <div class="admin-panel-header">
+      <div class="admin-panel-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div class="admin-panel-title">
           <i class="fa-solid fa-list-ul"></i> Active Placement Drives
         </div>
-        <button class="btn btn-outline btn-sm" onclick="loadAdminDrives()">
-          <i class="fa-solid fa-rotate-right"></i> Refresh
-        </button>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <select id="filterDriveBatch" class="form-control" style="width:auto;min-width:180px;" onchange="loadAdminDrives()">
+            <option value="">All Batches</option>
+            <option value="2023-2027" selected>2023-2027 (Default Year)</option>
+            <option value="2022-2026">2022-2026</option>
+            <option value="2024-2028">2024-2028</option>
+            <option value="2025-2029">2025-2029</option>
+            <option value="2026-2030">2026-2030</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="loadAdminDrives()">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
       </div>
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th>Role</th>
-              <th>Package</th>
-              <th>Min CGPA</th>
-              <th>Arrears</th>
-              <th>Eligible Years</th>
-              <th>Location</th>
-              <th>Deadline</th>
-              <th>Applicants</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="adminDrivesTableBody">
-            <tr>
-              <td colspan="10" class="text-center" style="padding:40px;color:#94a3b8;">
-                <i class="fa-solid fa-spinner fa-spin"></i> Loading drives...
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div id="adminDrivesContainer" style="padding: 6px 0;">
+        <div class="spinner-box">
+          <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#94a3b8;"></i>
+          <p>Loading placement drives...</p>
+        </div>
       </div>
     </div>
   </div>
