@@ -530,6 +530,7 @@
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -743,10 +744,6 @@
 .chart-card:hover {
   box-shadow: 0 8px 24px rgba(15,23,42,0.1);
   transform: translateY(-2px);
-}
-
-.chart-card-wide {
-  /* takes remaining columns naturally in CSS grid */
 }
 
 .chart-card-header {

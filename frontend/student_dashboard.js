@@ -360,6 +360,12 @@ function populateViewMode(p) {
   set('viewTenth',  p.tenth_percentage  ? `${parseFloat(p.tenth_percentage).toFixed(1)}%` : '--');
   set('viewTwelth', p.twelth_percentage ? `${parseFloat(p.twelth_percentage).toFixed(1)}%` : '--');
   set('viewDiploma', p.diploma_percentage ? `${parseFloat(p.diploma_percentage).toFixed(1)}%` : '--');
+
+  const gpaGrid = el('viewGpaGrid');
+  if (gpaGrid) {
+    gpaGrid.innerHTML = '';
+    for (let i = 1; i <= 8; i++) {
+      const val = p[`sem${i}_gpa`];
       if (val && parseFloat(val) > 0) {
         gpaGrid.innerHTML += `
           <div class="gpa-chip">
@@ -377,13 +383,6 @@ function populateViewMode(p) {
   set('viewStandingArrears', p.standing_of_arrears === 'yes' ? '⚠️ Yes' : '✅ No');
   set('viewStandingCount',   p.standing_of_arrears === 'yes' ? (p.standing_arrears_count || 0) : 'N/A');
 
-function getFullFileUrl(pathStr) {
-  if (!pathStr) return '';
-  if (pathStr.startsWith('http://') || pathStr.startsWith('https://')) return pathStr;
-  const cleanPath = pathStr.startsWith('/') ? pathStr : `/${pathStr}`;
-  return `${window.location.origin}${cleanPath}`;
-}
-
   // Docs
   const docLinksEl = el('viewDocLinks');
   if (docLinksEl) {
@@ -395,6 +394,7 @@ function getFullFileUrl(pathStr) {
       docLinksEl.innerHTML = '<span style="font-size:13px;color:#94a3b8;">No resume uploaded yet.</span>';
     }
   }
+
   // Placement Willingness
   const pw = p.placement_willingness || 'Interested';
   const pwEl = el('viewPlacementWillingness');
@@ -413,6 +413,13 @@ function getFullFileUrl(pathStr) {
       }
     }
   }
+}
+
+function getFullFileUrl(pathStr) {
+  if (!pathStr) return '';
+  if (pathStr.startsWith('http://') || pathStr.startsWith('https://')) return pathStr;
+  const cleanPath = pathStr.startsWith('/') ? pathStr : `/${pathStr}`;
+  return `${window.location.origin}${cleanPath}`;
 }
 
 // ============================================================
