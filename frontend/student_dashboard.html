@@ -301,11 +301,11 @@
               <div class="form-group">
                 <label>Academic Year</label>
                 <select id="yearSelect" class="form-control" onchange="handleYearChange()">
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3" selected>3rd Year</option>
-                  <option value="4">4th Year</option>
-                  <option value="5">Passed Out</option>
+                  <option value="5">2022-2026 (Passed Out)</option>
+                  <option value="4" selected>2023-2027 (Default Year)</option>
+                  <option value="3">2024-2028 (3rd Year)</option>
+                  <option value="2">2025-2029 (2nd Year)</option>
+                  <option value="1">2026-2030 (1st Year)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -500,8 +500,8 @@
                 <div id="existingPhotoInfo" style="font-size:12px;color:#64748b;margin-top:4px;"></div>
               </div>
               <div class="form-group">
-                <label>Resume (PDF or DOCX)</label>
-                <input type="file" id="resumeFileInput" class="form-control" accept=".pdf,.doc,.docx">
+                <label>Resume (PDF format only)</label>
+                <input type="file" id="resumeFileInput" class="form-control" accept=".pdf,application/pdf">
                 <div id="existingResumeInfo" style="font-size:12px;color:#64748b;margin-top:4px;"></div>
               </div>
             </div>

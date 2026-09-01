@@ -286,8 +286,15 @@ function populateViewMode(p) {
   }
 
   // Personal
+  const BATCH_MAP = {
+    5: '2022-2026 (Passed Out)',
+    4: '2023-2027 (Default Year)',
+    3: '2024-2028 (3rd Year)',
+    2: '2025-2029 (2nd Year)',
+    1: '2026-2030 (1st Year)'
+  };
   set('viewDob',          fmtDate(p.dob));
-  set('viewYear',         (p.year == 5 || String(p.year).toLowerCase().includes('passed')) ? 'Passed Out' : (p.year ? `${p.year}${['','st','nd','rd','th'][p.year]} Year` : '--'));
+  set('viewYear',         BATCH_MAP[p.year] || (p.year ? `Year ${p.year}` : '--'));
   set('viewPersonalEmail', p.personal_email);
   set('viewCollegeEmail',  p.college_email || p.email);
   set('viewPhone',         p.phone_number || p.phone);
@@ -298,14 +305,6 @@ function populateViewMode(p) {
   set('viewTenth',  p.tenth_percentage  ? `${parseFloat(p.tenth_percentage).toFixed(1)}%` : '--');
   set('viewTwelth', p.twelth_percentage ? `${parseFloat(p.twelth_percentage).toFixed(1)}%` : '--');
   set('viewDiploma', p.diploma_percentage ? `${parseFloat(p.diploma_percentage).toFixed(1)}%` : '--');
-  set('viewDegree',  p.degree || 'B.Tech');
-
-  // GPA Grid
-  const gpaGrid = el('viewGpaGrid');
-  if (gpaGrid) {
-    gpaGrid.innerHTML = '';
-    for (let i = 1; i <= 8; i++) {
-      const val = p[`sem${i}_gpa`];
       if (val && parseFloat(val) > 0) {
         gpaGrid.innerHTML += `
           <div class="gpa-chip">
@@ -446,7 +445,15 @@ async function saveStudentProfile(e) {
   const photoFile  = el('profilePhotoInput')?.files[0];
   const resumeFile = el('resumeFileInput')?.files[0];
   if (photoFile)  formData.append('profile_photo', photoFile);
-  if (resumeFile) formData.append('resume_file',   resumeFile);
+  if (resumeFile) {
+    const isPdf = resumeFile.name.toLowerCase().endsWith('.pdf') || resumeFile.type === 'application/pdf';
+    if (!isPdf) {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Profile'; }
+      showStudentAlert('⚠️ Only PDF format (.pdf) is allowed for resume upload.');
+      return;
+    }
+    formData.append('resume_file', resumeFile);
+  }
 
   try {
     const res  = await fetch(`${API_BASE}/student/profile/save`, {

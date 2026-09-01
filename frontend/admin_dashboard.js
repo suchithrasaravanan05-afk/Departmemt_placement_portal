@@ -202,7 +202,7 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
   const canvas = el('chartPlacedNonPlaced');
   if (!canvas) return;
 
-  const yearLabels = { 1: '1st Yr', 2: '2nd Yr', 3: '3rd Yr', 4: '4th Yr', 5: 'Passed Out' };
+  const yearLabels = { 1: '2026-2030', 2: '2025-2029', 3: '2024-2028', 4: '2023-2027', 5: '2022-2026 (Passed Out)' };
 
   let labels, placed, nonPlaced;
 
@@ -467,14 +467,14 @@ async function loadChartTechNonTechYear() {
     // Build year → { tech, nonTech } map
     const yearMap = { 1: { tech: 0, nonTech: 0 }, 2: { tech: 0, nonTech: 0 }, 3: { tech: 0, nonTech: 0 }, 4: { tech: 0, nonTech: 0 }, 5: { tech: 0, nonTech: 0 } };
     rows.forEach(r => {
-      const y = parseInt(r.year) || 3;
+      const y = parseInt(r.year) || 4;
       if (!yearMap[y]) yearMap[y] = { tech: 0, nonTech: 0 };
       const cnt = parseInt(r.cnt || 1);
       if (isTechnicalRole(r.job_role)) yearMap[y].tech    += cnt;
       else                             yearMap[y].nonTech += cnt;
     });
 
-    const yearLabels = { 1: '1st Yr', 2: '2nd Yr', 3: '3rd Yr', 4: '4th Yr', 5: 'Passed Out' };
+    const yearLabels = { 1: '2026-2030', 2: '2025-2029', 3: '2024-2028', 4: '2023-2027', 5: '2022-2026 (Passed Out)' };
     const sortedYears = [1, 2, 3, 4, 5];
     const labels  = sortedYears.map(y => yearLabels[y]);
     const tech    = sortedYears.map(y => yearMap[y].tech);
@@ -569,7 +569,7 @@ async function fetchStudentRoster() {
 
   const tbody = el('studentRosterTableBody');
   if (tbody) tbody.innerHTML = `
-    <tr><td colspan="11" class="text-center" style="padding:30px;">
+    <tr><td colspan="12" class="text-center" style="padding:30px;">
       <i class="fa-solid fa-spinner fa-spin" style="color:#94a3b8;"></i> Loading...
     </td></tr>`;
 
@@ -582,7 +582,7 @@ async function fetchStudentRoster() {
     if (!data.success || !data.students || data.students.length === 0) {
       currentFetchedStudents = [];
       if (tbody) tbody.innerHTML = `
-        <tr><td colspan="11" class="text-center" style="padding:40px;">
+        <tr><td colspan="12" class="text-center" style="padding:40px;">
           <i class="fa-solid fa-magnifying-glass" style="font-size:28px;color:#94a3b8;display:block;margin-bottom:8px;"></i>
           <span style="color:#64748b;font-weight:600;">No students found matching the filters.</span>
         </td></tr>`;
@@ -593,7 +593,7 @@ async function fetchStudentRoster() {
     renderStudentRoster(data.students, tbody);
   } catch (err) {
     console.error('Roster fetch error:', err);
-    if (tbody) tbody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:30px;color:#ef4444;">Error loading roster. Check network connection.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="12" class="text-center" style="padding:30px;color:#ef4444;">Error loading roster. Check network connection.</td></tr>`;
   }
 }
 
@@ -605,6 +605,14 @@ function getFullFileUrl(pathStr) {
 }
 
 function renderStudentRoster(students, tbody) {
+  const BATCH_MAP = {
+    5: '2022-2026 (Passed Out)',
+    4: '2023-2027',
+    3: '2024-2028',
+    2: '2025-2029',
+    1: '2026-2030'
+  };
+
   tbody.innerHTML = students.map(s => {
     const cgpa     = s.cgpa ? parseFloat(s.cgpa).toFixed(2) : '—';
     const tenth    = s.tenth_percentage ? `${parseFloat(s.tenth_percentage).toFixed(1)}%` : '—';
@@ -619,9 +627,10 @@ function renderStudentRoster(students, tbody) {
       </a>`;
     }
 
-    const yearStr = (s.year == 5 || String(s.year).toLowerCase().includes('passed'))
-      ? '<span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;">Passed Out</span>'
-      : (s.year ? `<span class="badge badge-blue">${s.year}${['','st','nd','rd','th'][s.year] || ''} Yr</span>` : '—');
+    const sYr = parseInt(s.year);
+    const yearStr = (sYr === 5 || String(s.year).toLowerCase().includes('passed'))
+      ? '<span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;white-space:nowrap;">2022-2026 (Passed Out)</span>'
+      : (BATCH_MAP[sYr] ? `<span class="badge badge-blue" style="white-space:nowrap;">${BATCH_MAP[sYr]}</span>` : (s.year ? `${s.year} Yr` : '—'));
 
     const placedBadge = s.placed_company
       ? `<br/><span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;margin-top:4px;"><i class="fa-solid fa-briefcase"></i> Placed @ ${escapeHtml(s.placed_company)}</span>`
@@ -638,23 +647,23 @@ function renderStudentRoster(students, tbody) {
       <td><span style="font-weight:800;color:#2563eb;">${cgpa}</span></td>
       <td><span class="badge ${arrears > 0 ? 'badge-red' : 'badge-green'}">${arrears} ${arrears === 1 ? 'Arrear' : 'Arrears'}</span></td>
       <td style="font-size:12px;">${s.domain_interest || 'General'}</td>
+      <td>
+        <button class="btn btn-outline-primary btn-sm"
+          onclick="viewStudentModal(${JSON.stringify(s).replace(/"/g, '&quot;')})"
+          title="View Student Profile"
+          style="padding:4px 9px;font-size:11.5px;display:inline-flex;align-items:center;gap:4px;">
+          <i class="fa-solid fa-eye"></i> View
+        </button>
+      </td>
       <td>${resumeHtml}</td>
       <td>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-outline btn-sm"
-            onclick="viewStudentModal(${JSON.stringify(s).replace(/"/g, '&quot;')})"
-            title="View Details"
-            style="padding:4px 8px;font-size:11px;">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-          <button
-            onclick="deleteStudent(${s.user_id}, '${s.full_name.replace(/'/g, "\\'")}')"
-            class="btn btn-danger btn-sm"
-            title="Delete Student"
-            style="padding:4px 8px;font-size:11px;">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
+        <button
+          onclick="deleteStudent(${s.user_id}, '${s.full_name.replace(/'/g, "\\'")}')"
+          class="btn btn-danger btn-sm"
+          title="Delete Student Profile"
+          style="padding:4px 8px;font-size:11px;">
+          <i class="fa-solid fa-trash"></i>
+        </button>
       </td>
     </tr>`;
   }).join('');

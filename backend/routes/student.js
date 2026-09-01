@@ -133,6 +133,10 @@ router.post("/profile/save", cpUpload, async (req, res) => {
         // Upload resume to Supabase if provided
         if (req.files && req.files.resume_file && req.files.resume_file[0]) {
             const file = req.files.resume_file[0];
+            const ext = (file.originalname || '').split('.').pop().toLowerCase();
+            if (ext !== 'pdf' && !file.mimetype.includes('pdf')) {
+                return res.status(400).json({ success: false, message: 'Invalid resume format: Only PDF files (.pdf) are allowed.' });
+            }
             try {
                 resumeUrl = await uploadToSupabase(file.buffer, file.originalname, "resume", userId);
                 console.log("✅ Resume uploaded to Supabase:", resumeUrl);
