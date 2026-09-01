@@ -92,6 +92,9 @@
     <button class="admin-tab-btn" id="tabBtnPlaced" onclick="switchAdminTab('placed')">
       <i class="fa-solid fa-award"></i> Placed Students
     </button>
+    <button class="admin-tab-btn" id="tabBtnAnalytics" onclick="switchAdminTab('analytics')">
+      <i class="fa-solid fa-chart-pie"></i> Analytics
+    </button>
   </nav>
 
   <!-- Alert -->
@@ -101,64 +104,6 @@
        TAB 1: STUDENT ROSTER
        ======================================================== -->
   <div id="adminTabStudents" class="tab-content">
-
-    <!-- ===== ANALYTICS CHARTS ROW ===== -->
-    <div class="charts-analytics-section" id="analyticsChartsSection">
-
-      <!-- Chart 1: Year-wise Placed Students — Technical vs Non-Technical -->
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <div class="chart-card-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
-            <i class="fa-solid fa-chart-pie"></i>
-          </div>
-          <div>
-            <div class="chart-card-title">Placed Students by Role Type</div>
-            <div class="chart-card-sub">Technical vs Non-Technical placements</div>
-          </div>
-        </div>
-        <div class="chart-legend-row" id="placedRoleLegend"></div>
-        <div class="chart-canvas-wrap">
-          <canvas id="chartPlacedRoles" width="260" height="260"></canvas>
-          <div class="chart-center-stat" id="chartPlacedCenter">
-            <div class="cstat-val" id="cstatPlacedTotal">—</div>
-            <div class="cstat-lbl">Placed</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chart 2: Current Drives vs Registered Students per Drive -->
-      <div class="chart-card chart-card-wide">
-        <div class="chart-card-header">
-          <div class="chart-card-icon" style="background:linear-gradient(135deg,#0891b2,#06b6d4);">
-            <i class="fa-solid fa-chart-column"></i>
-          </div>
-          <div>
-            <div class="chart-card-title">Drives vs Student Registrations</div>
-            <div class="chart-card-sub">Current drives & registered applicants</div>
-          </div>
-        </div>
-        <div class="chart-canvas-wrap" style="height:220px;">
-          <canvas id="chartDrivesRegistrations"></canvas>
-        </div>
-      </div>
-
-      <!-- Chart 3: Last Year vs Current Year Drives -->
-      <div class="chart-card chart-card-wide">
-        <div class="chart-card-header">
-          <div class="chart-card-icon" style="background:linear-gradient(135deg,#059669,#10b981);">
-            <i class="fa-solid fa-chart-bar"></i>
-          </div>
-          <div>
-            <div class="chart-card-title">Year-over-Year Drive Comparison</div>
-            <div class="chart-card-sub" id="yoyChartSubtitle">Last year vs current year drives</div>
-          </div>
-        </div>
-        <div class="chart-canvas-wrap" style="height:220px;">
-          <canvas id="chartYearComparison"></canvas>
-        </div>
-      </div>
-
-    </div><!-- /analyticsChartsSection -->
 
     <div class="admin-panel-card">
       <div class="admin-panel-header">
@@ -518,6 +463,137 @@
       </div>
     </div>
   </div>
+
+  <!-- ========================================================
+       TAB 5: ANALYTICS
+       ======================================================== -->
+  <div id="adminTabAnalytics" class="tab-content hidden">
+
+    <!-- Page Header -->
+    <div class="analytics-page-header">
+      <div class="analytics-page-header-left">
+        <div class="analytics-page-icon">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div>
+          <h2 class="analytics-page-title">Placement Analytics</h2>
+          <p class="analytics-page-sub">Visual insights across students, drives &amp; placements</p>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadAnalyticsCharts()" id="analyticsRefreshBtn">
+        <i class="fa-solid fa-rotate-right"></i> Refresh All
+      </button>
+    </div>
+
+    <!-- ROW 1: Placed vs Non-Placed (year-wise) + Placement Interest -->
+    <div class="analytics-row">
+
+      <!-- Chart 1: Placed vs Non-Placed Year-wise -->
+      <div class="analytics-chart-card analytics-card-lg">
+        <div class="analytics-card-head">
+          <div class="analytics-card-head-left">
+            <div class="analytics-card-icon" style="background:linear-gradient(135deg,#2563eb,#4f46e5);">
+              <i class="fa-solid fa-chart-bar"></i>
+            </div>
+            <div>
+              <div class="analytics-card-title">Placed vs Non-Placed Students</div>
+              <div class="analytics-card-sub">Year-wise comparison</div>
+            </div>
+          </div>
+          <select id="filterPlacedNonPlacedYear" class="analytics-dropdown" onchange="updatePlacedNonPlacedChart()">
+            <option value="all">All Years</option>
+            <option value="4">Final Year (4th Yr)</option>
+            <option value="5">Passed Out</option>
+            <option value="3">3rd Year</option>
+            <option value="2">2nd Year</option>
+            <option value="1">1st Year</option>
+          </select>
+        </div>
+        <div class="analytics-legend-row" id="placedNonPlacedLegend">
+          <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#2563eb;"></span>Placed</span>
+          <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#e2e8f0;border:1px solid #cbd5e1;"></span>Non-Placed</span>
+        </div>
+        <div style="height:240px;position:relative;">
+          <canvas id="chartPlacedNonPlaced"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Placement Interested vs Not Interested -->
+      <div class="analytics-chart-card analytics-card-sm">
+        <div class="analytics-card-head">
+          <div class="analytics-card-head-left">
+            <div class="analytics-card-icon" style="background:linear-gradient(135deg,#db2777,#ec4899);">
+              <i class="fa-solid fa-heart-pulse"></i>
+            </div>
+            <div>
+              <div class="analytics-card-title">Placement Interest</div>
+              <div class="analytics-card-sub">Applied vs Not Applied to any drive</div>
+            </div>
+          </div>
+        </div>
+        <div class="analytics-legend-row" id="placementInterestLegend"></div>
+        <div style="height:220px;position:relative;display:flex;align-items:center;justify-content:center;">
+          <canvas id="chartPlacementInterest" style="max-width:220px;max-height:220px;"></canvas>
+          <div class="chart-center-stat" style="pointer-events:none;">
+            <div class="cstat-val" id="cstatTotalStudents">&#8212;</div>
+            <div class="cstat-lbl">Total Stds</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ROW 2: Company-wise Stats + Tech vs Non-Tech Year-wise -->
+    <div class="analytics-row">
+
+      <!-- Chart 3: Company-wise Placed / Registered / Eligible -->
+      <div class="analytics-chart-card analytics-card-lg">
+        <div class="analytics-card-head">
+          <div class="analytics-card-head-left">
+            <div class="analytics-card-icon" style="background:linear-gradient(135deg,#0891b2,#06b6d4);">
+              <i class="fa-solid fa-building"></i>
+            </div>
+            <div>
+              <div class="analytics-card-title">Company-wise Student Stats</div>
+              <div class="analytics-card-sub">Eligible, Registered &amp; Placed per drive</div>
+            </div>
+          </div>
+        </div>
+        <div class="analytics-legend-row">
+          <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#0891b2;"></span>Eligible</span>
+          <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#8b5cf6;"></span>Registered</span>
+          <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#10b981;"></span>Placed</span>
+        </div>
+        <div style="height:240px;position:relative;">
+          <canvas id="chartCompanyStats"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 4: Year-wise Tech vs Non-Tech Placed -->
+      <div class="analytics-chart-card analytics-card-sm">
+        <div class="analytics-card-head">
+          <div class="analytics-card-head-left">
+            <div class="analytics-card-icon" style="background:linear-gradient(135deg,#059669,#10b981);">
+              <i class="fa-solid fa-code"></i>
+            </div>
+            <div>
+              <div class="analytics-card-title">Tech vs Non-Tech Placements</div>
+              <div class="analytics-card-sub">Year-wise role type breakdown</div>
+            </div>
+          </div>
+        </div>
+        <div class="analytics-legend-row">
+          <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#6366f1;"></span>Technical</span>
+          <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#fb7185;"></span>Non-Technical</span>
+        </div>
+        <div style="height:220px;position:relative;">
+          <canvas id="chartTechNonTechYear"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /adminTabAnalytics -->
 
 </div><!-- /admin-app-container -->
 

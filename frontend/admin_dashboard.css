@@ -850,3 +850,205 @@
     height: 220px;
   }
 }
+
+/* ============================================================
+   ANALYTICS PAGE STYLES
+   ============================================================ */
+
+/* Page header */
+.analytics-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.18);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.analytics-page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.analytics-page-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #93c5fd;
+  flex-shrink: 0;
+}
+
+.analytics-page-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.analytics-page-sub {
+  font-size: 12.5px;
+  color: #93c5fd;
+  font-weight: 500;
+  margin: 3px 0 0;
+}
+
+/* Row layout */
+.analytics-row {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 18px;
+  margin-bottom: 18px;
+  align-items: start;
+}
+
+/* Chart card */
+.analytics-chart-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.analytics-chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 18px 18px 0 0;
+}
+
+.analytics-chart-card:nth-child(1)::before { background: linear-gradient(90deg,#2563eb,#4f46e5); }
+.analytics-chart-card:nth-child(2)::before { background: linear-gradient(90deg,#db2777,#ec4899); }
+
+.analytics-row:nth-child(3) .analytics-chart-card:nth-child(1)::before { background: linear-gradient(90deg,#0891b2,#06b6d4); }
+.analytics-row:nth-child(3) .analytics-chart-card:nth-child(2)::before { background: linear-gradient(90deg,#059669,#10b981); }
+
+.analytics-chart-card:hover {
+  box-shadow: 0 10px 28px rgba(15,23,42,0.1);
+  transform: translateY(-2px);
+}
+
+/* Card head */
+.analytics-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.analytics-card-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analytics-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.14);
+}
+
+.analytics-card-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.analytics-card-sub {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Legend row */
+.analytics-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.analytics-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #374151;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.analytics-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Year filter dropdown */
+.analytics-dropdown {
+  padding: 6px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  background: #f8fafc;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.18s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.analytics-dropdown:focus {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .analytics-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-row {
+    grid-template-columns: 1fr;
+  }
+  .analytics-page-header {
+    padding: 16px;
+    border-radius: 14px;
+  }
+}

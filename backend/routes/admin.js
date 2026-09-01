@@ -488,20 +488,23 @@ router.get("/placed-students", (req, res) => {
 });
 
 // ==========================================
-// ANALYTICS: PLACED STUDENTS BY ROLE TYPE
+// ANALYTICS: PLACED VS NON-PLACED (YEAR-WISE)
 // ==========================================
-router.get("/analytics/placed-roles", (req, res) => {
+router.get("/analytics/placed-nonplaced", (req, res) => {
     const sql = `
-        SELECT pd.job_role, COUNT(a.id) as cnt
-        FROM applications a
-        JOIN placement_drives pd ON a.drive_id = pd.id
-        WHERE a.status = 'Selected'
-        GROUP BY pd.job_role
-        ORDER BY cnt DESC
+        SELECT 
+            u.year,
+            COUNT(DISTINCT u.id) AS total_count,
+            COUNT(DISTINCT CASE WHEN a.status = 'Selected' THEN u.id END) AS placed_count
+        FROM users u
+        LEFT JOIN applications a ON u.id = a.user_id
+        WHERE u.role = 'student' AND u.year IS NOT NULL
+        GROUP BY u.year
+        ORDER BY u.year ASC
     `;
     db.query(sql, [], (err, results) => {
         if (err) {
-            console.error("Analytics placed-roles error:", err);
+            console.error("Analytics placed-nonplaced error:", err);
             return res.status(500).json({ success: false, message: "DB Error" });
         }
         res.json({ success: true, rows: results });
@@ -509,45 +512,113 @@ router.get("/analytics/placed-roles", (req, res) => {
 });
 
 // ==========================================
-// ANALYTICS: DRIVES VS REGISTRATIONS
+// ANALYTICS: PLACEMENT INTEREST (APPLIED VS NOT APPLIED)
 // ==========================================
-router.get("/analytics/drives-registrations", (req, res) => {
+router.get("/analytics/placement-interest", (req, res) => {
     const sql = `
-        SELECT pd.id, pd.company_name, pd.job_role,
-               COUNT(a.id) as registrations
+        SELECT 
+            COUNT(DISTINCT u.id) AS total,
+            COUNT(DISTINCT a.user_id) AS applied
+        FROM users u
+        LEFT JOIN applications a ON u.id = a.user_id
+        WHERE u.role = 'student'
+    `;
+    db.query(sql, [], (err, results) => {
+        if (err) {
+            console.error("Analytics placement-interest error:", err);
+            return res.status(500).json({ success: false, message: "DB Error" });
+        }
+        const row = results && results[0] ? results[0] : { total: 0, applied: 0 };
+        res.json({ success: true, total: row.total, applied: row.applied });
+    });
+});
+
+// ==========================================
+// ANALYTICS: COMPANY-WISE (ELIGIBLE / REGISTERED / PLACED)
+// ==========================================
+router.get("/analytics/company-stats", (req, res) => {
+    const sqlDrives = `
+        SELECT pd.id, pd.company_name, pd.job_role, pd.min_cgpa, pd.max_standing_arrears, pd.eligible_years,
+               COUNT(a.id) AS registered,
+               COUNT(CASE WHEN a.status = 'Selected' THEN 1 END) AS placed
         FROM placement_drives pd
         LEFT JOIN applications a ON a.drive_id = pd.id
-        GROUP BY pd.id, pd.company_name, pd.job_role
+        GROUP BY pd.id, pd.company_name, pd.job_role, pd.min_cgpa, pd.max_standing_arrears, pd.eligible_years, pd.created_at
         ORDER BY pd.created_at DESC
         LIMIT 10
     `;
-    db.query(sql, [], (err, results) => {
-        if (err) {
-            console.error("Analytics drives-registrations error:", err);
+    const sqlStudents = `
+        SELECT u.id, u.year, COALESCE(sp.cgpa, 0) as cgpa, COALESCE(sp.standing_arrears_count, 0) as arrears
+        FROM users u
+        LEFT JOIN student_profiles sp ON u.id = sp.user_id
+        WHERE u.role = 'student'
+    `;
+
+    db.query(sqlDrives, [], (errD, drives) => {
+        if (errD) {
+            console.error("Analytics company-stats drives error:", errD);
             return res.status(500).json({ success: false, message: "DB Error" });
         }
-        res.json({ success: true, rows: results });
+        db.query(sqlStudents, [], (errS, students) => {
+            if (errS) {
+                console.error("Analytics company-stats students error:", errS);
+                return res.status(500).json({ success: false, message: "DB Error" });
+            }
+
+            const rows = (drives || []).map(d => {
+                const minCgpa = parseFloat(d.min_cgpa || 0);
+                const maxArrears = parseInt(d.max_standing_arrears ?? 99);
+                const eligYears = (d.eligible_years || "1,2,3,4,5").split(",").map(y => parseInt(y.trim())).filter(y => !isNaN(y));
+
+                const eligibleCount = (students || []).filter(s => {
+                    const sYear = parseInt(s.year);
+                    const sCgpa = parseFloat(s.cgpa || 0);
+                    const sArrears = parseInt(s.arrears || 0);
+                    const yearOk = eligYears.length === 0 || eligYears.includes(sYear);
+                    const cgpaOk = sCgpa >= minCgpa;
+                    const arrearsOk = sArrears <= maxArrears;
+                    return yearOk && cgpaOk && arrearsOk;
+                }).length;
+
+                return {
+                    id: d.id,
+                    company_name: d.company_name,
+                    job_role: d.job_role,
+                    eligible: eligibleCount,
+                    registered: parseInt(d.registered || 0),
+                    placed: parseInt(d.placed || 0)
+                };
+            });
+
+            res.json({ success: true, rows });
+        });
     });
 });
 
 // ==========================================
-// ANALYTICS: YEAR-OVER-YEAR DRIVES BY MONTH
+// ANALYTICS: YEAR-WISE TECH VS NON-TECH PLACED
 // ==========================================
-router.get("/analytics/yearly-drives", (req, res) => {
+router.get("/analytics/tech-nontech-year", (req, res) => {
     const sql = `
-        SELECT YEAR(created_at) as yr, MONTH(created_at) as mo, COUNT(*) as cnt
-        FROM placement_drives
-        WHERE YEAR(created_at) >= YEAR(CURDATE()) - 1
-        GROUP BY YEAR(created_at), MONTH(created_at)
-        ORDER BY yr ASC, mo ASC
+        SELECT 
+            u.year,
+            pd.job_role,
+            COUNT(a.id) AS cnt
+        FROM applications a
+        JOIN users u ON a.user_id = u.id
+        JOIN placement_drives pd ON a.drive_id = pd.id
+        WHERE a.status = 'Selected' AND u.year IS NOT NULL
+        GROUP BY u.year, pd.job_role
+        ORDER BY u.year ASC
     `;
     db.query(sql, [], (err, results) => {
         if (err) {
-            console.error("Analytics yearly-drives error:", err);
+            console.error("Analytics tech-nontech-year error:", err);
             return res.status(500).json({ success: false, message: "DB Error" });
         }
         res.json({ success: true, rows: results });
     });
 });
 
-module.exports = router;
+module.exports = router;
+
