@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Placement Cell Admin — RIT CSBS</title>
   <meta name="description" content="Placement cell administration panel for RIT CSBS department.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="admin_dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,30 +20,34 @@
   <div class="admin-college-header">
     <div class="admin-logo-group">
       <div class="admin-logo-icon">
-        <i class="fa-solid fa-user-shield"></i>
+        <i class="fa-solid fa-graduation-cap"></i>
       </div>
       <div class="admin-logo-text">
         <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
-        <p>Placement Cell Administration Panel</p>
+        <p>Department of Computer Science and Business Systems (CSBS)</p>
       </div>
     </div>
+    
+    <div class="admin-header-center-badge">
+      <span class="admin-portal-badge">
+        <i class="fa-solid fa-shield-halved"></i> Placement Administration Portal
+      </span>
+    </div>
+
     <div class="admin-nav-user-pill">
-      <div class="nav-user-avatar" style="background:#7c3aed;">
-        <i class="fa-solid fa-user-shield" style="font-size:16px;"></i>
+      <div class="nav-user-avatar">
+        <i class="fa-solid fa-user-tie"></i>
       </div>
       <div class="nav-user-info">
         <div class="nav-user-name" id="adminUserName">Placement Admin</div>
-        <div class="nav-user-role">Administrator</div>
+        <div class="nav-user-role">CSBS Officer</div>
       </div>
-      <button class="btn-logout" onclick="handleLogout()">
-        <i class="fa-solid fa-power-off"></i> Logout
+      <button class="btn-logout" onclick="handleLogout()" title="Logout from Admin Portal">
+        <i class="fa-solid fa-right-from-bracket"></i> Logout
       </button>
     </div>
   </div>
 </header>
-<div class="admin-dept-banner">
-  <i class="fa-solid fa-graduation-cap"></i> Department of Computer Science and Business Systems (CSBS) — Admin Dashboard
-</div>
 
 <!-- ===== MAIN ===== -->
 <div class="admin-app-container">
