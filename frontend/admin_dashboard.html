@@ -94,6 +94,9 @@
     <button class="admin-tab-btn" id="tabBtnPlaced" onclick="switchAdminTab('placed')">
       <i class="fa-solid fa-award"></i> Placed Students
     </button>
+    <button class="admin-tab-btn" id="tabBtnSettings" onclick="switchAdminTab('settings')">
+      <i class="fa-solid fa-gear"></i> Settings
+    </button>
   </nav>
 
   <!-- Alert -->
@@ -651,6 +654,147 @@
             <tr>
               <td colspan="9" class="text-center" style="padding:40px;color:#94a3b8;">
                 <i class="fa-solid fa-spinner fa-spin"></i> Loading placed records...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       TAB 6: PORTAL SETTINGS & BATCH MANAGEMENT
+       ======================================================== -->
+  <div id="adminTabSettings" class="tab-content hidden">
+    <!-- Top Header Banner -->
+    <div class="settings-header-banner">
+      <div class="settings-header-title-wrap">
+        <div class="settings-header-icon">
+          <i class="fa-solid fa-sliders"></i>
+        </div>
+        <div>
+          <h2 class="settings-title">Placement Administration Settings</h2>
+          <p class="settings-subtitle">Configure the default academic batch, create new incoming batches, and manage rollover lifecycle</p>
+        </div>
+      </div>
+      <button class="btn btn-sm analytics-refresh-btn" onclick="loadPortalSettings(true)">
+        <i class="fa-solid fa-rotate-right"></i> Refresh Settings
+      </button>
+    </div>
+
+    <div class="settings-grid">
+      <!-- Card 1: Global Default Academic Year -->
+      <div class="admin-panel-card settings-card">
+        <div class="admin-panel-header">
+          <div class="admin-panel-title">
+            <i class="fa-solid fa-calendar-check" style="color:#2563eb;"></i> Global Default Academic Year
+          </div>
+          <span class="badge badge-blue" id="currentDefaultYearBadge">Current: 2023-2027</span>
+        </div>
+        <div style="padding:16px 20px;">
+          <p style="font-size:13.5px;color:#64748b;margin-bottom:16px;line-height:1.5;">
+            Select which batch is set as the <strong>Default Year</strong> across the entire placement portal. 
+            This dynamically controls the default selected batch in all Admin combo boxes, Analytics filters, Placement Drive forms, and Student Registration.
+          </p>
+
+          <form id="formDefaultYearSetting" onsubmit="handleSaveDefaultYear(event)">
+            <div class="form-group mb-3">
+              <label style="font-weight:700;">Default Year / Batch (Admin-wide Combo Boxes)</label>
+              <select id="settingsDefaultBatchSelect" class="form-control" style="font-size:14.5px;font-weight:600;height:44px;">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:14px;">
+              <button type="submit" class="btn btn-primary" id="saveDefaultBatchBtn">
+                <i class="fa-solid fa-floppy-disk"></i> Apply Default Year
+              </button>
+              <span id="saveSettingsSuccessMsg" style="font-size:13px;font-weight:600;color:#059669;display:none;">
+                <i class="fa-solid fa-circle-check"></i> Applied successfully!
+              </span>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Card 2: Create New Batch & Final Year Rollover -->
+      <div class="admin-panel-card settings-card">
+        <div class="admin-panel-header">
+          <div class="admin-panel-title">
+            <i class="fa-solid fa-plus-circle" style="color:#10b981;"></i> Create New Batch &amp; Rollover
+          </div>
+          <span class="badge badge-green">Lifecycle Management</span>
+        </div>
+        <div style="padding:16px 20px;">
+          <div class="settings-callout-info">
+            <i class="fa-solid fa-circle-info" style="font-size:18px;color:#2563eb;margin-top:2px;"></i>
+            <div>
+              <strong>Batch Rollover Rule:</strong>
+              <p style="margin:4px 0 0 0;font-size:12.5px;color:#475569;">
+                When a new batch is created, the current final year batch (<span id="calloutFinalBatchName" style="font-weight:700;color:#1e293b;">2023-2027</span>) is automatically moved to <strong>Passed Out</strong> status. Existing passed out batches (<span id="calloutPassedBatchName" style="font-weight:700;color:#1e293b;">2022-2026</span>) remain preserved in Passed Out records.
+              </p>
+            </div>
+          </div>
+
+          <form id="formCreateNewBatch" onsubmit="handleCreateNewBatch(event)">
+            <div class="form-grid form-grid-2 mb-3">
+              <div class="form-group">
+                <label style="font-weight:700;">Start Year</label>
+                <input type="number" id="newBatchStartYear" class="form-control" placeholder="e.g. 2027" min="2020" max="2050" required oninput="autoCalculateBatchName()">
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700;">End Year / Passing Out</label>
+                <input type="number" id="newBatchEndYear" class="form-control" placeholder="e.g. 2031" min="2024" max="2055" required oninput="autoCalculateBatchName()">
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label style="font-weight:700;">Batch Name</label>
+              <input type="text" id="newBatchName" class="form-control" placeholder="e.g. 2027-2031" required>
+            </div>
+
+            <div style="margin-bottom:16px;background:#f8fafc;padding:12px 14px;border-radius:8px;border:1px solid #e2e8f0;">
+              <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#334155;margin-bottom:8px;">
+                <input type="checkbox" id="chkAdvanceStudents" checked style="margin-top:3px;accent-color:#2563eb;">
+                <span>Auto-advance existing student years in database (Year 4 &rarr; 5 Passed Out, Year 3 &rarr; 4, etc.)</span>
+              </label>
+              <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#334155;">
+                <input type="checkbox" id="chkSetNewAsDefault" style="margin-top:3px;accent-color:#2563eb;">
+                <span>Set newly created batch as Default Year</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-success" id="createBatchBtn" style="width:100%;">
+              <i class="fa-solid fa-graduation-cap"></i> Create Batch &amp; Advance Final Year
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch Management Table Card -->
+    <div class="admin-panel-card" style="margin-top:20px;">
+      <div class="admin-panel-header">
+        <div class="admin-panel-title">
+          <i class="fa-solid fa-layer-group" style="color:#7c3aed;"></i> Active &amp; Passed Out Batches Master List
+        </div>
+        <span class="badge badge-purple" id="batchesCountBadge">5 Batches</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Batch Name</th>
+              <th>Academic Year Level</th>
+              <th>Status</th>
+              <th>Default Year</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="batchesTableBody">
+            <tr>
+              <td colspan="5" class="text-center" style="padding:30px;color:#94a3b8;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading batches...
               </td>
             </tr>
           </tbody>

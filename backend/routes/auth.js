@@ -228,4 +228,18 @@ router.get("/me", (req, res) => {
     }
 });
 
+// =========================
+// GET PUBLIC PORTAL SETTINGS & BATCHES
+// =========================
+router.get("/settings", async (req, res) => {
+    try {
+        const settingsStorage = require("../settingsStorage");
+        const settings = await settingsStorage.getSettings();
+        res.json({ success: true, settings });
+    } catch (err) {
+        console.error("Error fetching portal settings:", err);
+        res.status(500).json({ success: false, message: "Failed to load portal settings" });
+    }
+});
+
 module.exports = router;

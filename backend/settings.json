@@ -1,0 +1,47 @@
+{
+  "default_year": "2023-2027",
+  "default_year_num": 4,
+  "batches": [
+    {
+      "id": 1,
+      "name": "2026-2030",
+      "year_num": 1,
+      "year_label": "1st Year",
+      "status": "active",
+      "is_default": false
+    },
+    {
+      "id": 2,
+      "name": "2025-2029",
+      "year_num": 2,
+      "year_label": "2nd Year",
+      "status": "active",
+      "is_default": false
+    },
+    {
+      "id": 3,
+      "name": "2024-2028",
+      "year_num": 3,
+      "year_label": "3rd Year",
+      "status": "active",
+      "is_default": false
+    },
+    {
+      "id": 4,
+      "name": "2023-2027",
+      "year_num": 4,
+      "year_label": "4th Year",
+      "status": "active",
+      "is_default": true
+    },
+    {
+      "id": 5,
+      "name": "2022-2026",
+      "year_num": 5,
+      "year_label": "Passed Out",
+      "status": "passed_out",
+      "is_default": false
+    }
+  ],
+  "updated_at": "2026-09-01T07:58:55.360Z"
+}

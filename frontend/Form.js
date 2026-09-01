@@ -17,8 +17,35 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  loadPortalRegistrationBatches();
   updateUI();
 });
+
+async function loadPortalRegistrationBatches() {
+  const regYearSelect = document.getElementById('regYear');
+  if (!regYearSelect) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/settings`);
+    const data = await res.json();
+    if (data.success && data.settings && Array.isArray(data.settings.batches)) {
+      const defaultBatchName = data.settings.default_year || '2023-2027';
+      const defaultYearNum   = data.settings.default_year_num || 4;
+
+      const sorted = [...data.settings.batches].sort((a, b) => (b.year_num || 0) - (a.year_num || 0));
+      regYearSelect.innerHTML = sorted.map(b => {
+        const isDef = (b.name === defaultBatchName || b.year_num === defaultYearNum);
+        const isPassed = (b.status === 'passed_out' || b.year_num === 5);
+        const label = isPassed
+          ? `${b.name} (Passed Out)${isDef ? ' (Default Year)' : ''}`
+          : `${b.name}${isDef ? ' (Default Year)' : ''}`;
+        return `<option value="${b.year_num}" ${isDef ? 'selected' : ''}>${label}</option>`;
+      }).join('');
+    }
+  } catch (err) {
+    console.warn('Could not load dynamic batches for registration, using defaults:', err);
+  }
+}
 
 // =============================================
 // HELPERS

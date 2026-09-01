@@ -11,10 +11,69 @@ let isNewUser      = false;
 
 
 
+let studentPortalSettings = null;
+
+async function loadStudentPortalSettings() {
+  try {
+    const res = await fetch(`${API_BASE}/auth/settings`);
+    const data = await res.json();
+    if (data.success && data.settings) {
+      studentPortalSettings = data.settings;
+      populateStudentBatchDropdown();
+    }
+  } catch (e) {
+    console.warn('Could not load portal settings:', e);
+  }
+}
+
+function getStudentBatchMap() {
+  const map = {};
+  if (studentPortalSettings && Array.isArray(studentPortalSettings.batches)) {
+    studentPortalSettings.batches.forEach(b => {
+      const isDef = (b.name === studentPortalSettings.default_year);
+      const defTag = isDef ? ' (Default Year)' : '';
+      if (b.year_num) {
+        if (b.status === 'passed_out' || b.year_num === 5) {
+          map[b.year_num] = `${b.name} (Passed Out)${defTag}`;
+        } else {
+          map[b.year_num] = `${b.name}${defTag}`;
+        }
+      }
+    });
+  }
+  if (!map[5]) map[5] = '2022-2026 (Passed Out)';
+  if (!map[4]) map[4] = '2023-2027 (Default Year)';
+  if (!map[3]) map[3] = '2024-2028 (3rd Year)';
+  if (!map[2]) map[2] = '2025-2029 (2nd Year)';
+  if (!map[1]) map[1] = '2026-2030 (1st Year)';
+  return map;
+}
+
+function populateStudentBatchDropdown() {
+  const editYearSelect = el('editYear');
+  if (!editYearSelect || !studentPortalSettings || !Array.isArray(studentPortalSettings.batches)) return;
+
+  const currentVal = editYearSelect.value;
+  const defaultBatchName = studentPortalSettings.default_year || '2023-2027';
+  const defaultYearNum   = studentPortalSettings.default_year_num || 4;
+
+  const sorted = [...studentPortalSettings.batches].sort((a, b) => (b.year_num || 0) - (a.year_num || 0));
+  editYearSelect.innerHTML = sorted.map(b => {
+    const isDef = (b.name === defaultBatchName || b.year_num === defaultYearNum);
+    const isPassed = (b.status === 'passed_out' || b.year_num === 5);
+    const label = isPassed
+      ? `${b.name} (Passed Out)${isDef ? ' (Default Year)' : ''}`
+      : `${b.name}${isDef ? ' (Default Year)' : ''}`;
+    return `<option value="${b.year_num}" ${isDef ? 'selected' : ''}>${label}</option>`;
+  }).join('');
+
+  if (currentVal) editYearSelect.value = currentVal;
+}
+
 // ============================================================
 // BOOT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   currentToken = localStorage.getItem('token');
   currentUser  = safeParseUser();
 
@@ -22,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'Form.html';
     return;
   }
+
+  await loadStudentPortalSettings();
 
   // Populate nav header
   const name = currentUser.full_name || 'Student';
@@ -286,13 +347,7 @@ function populateViewMode(p) {
   }
 
   // Personal
-  const BATCH_MAP = {
-    5: '2022-2026 (Passed Out)',
-    4: '2023-2027 (Default Year)',
-    3: '2024-2028 (3rd Year)',
-    2: '2025-2029 (2nd Year)',
-    1: '2026-2030 (1st Year)'
-  };
+  const BATCH_MAP = getStudentBatchMap();
   set('viewDob',          fmtDate(p.dob));
   set('viewYear',         BATCH_MAP[p.year] || (p.year ? `Year ${p.year}` : '--'));
   set('viewPersonalEmail', p.personal_email);

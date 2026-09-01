@@ -10,10 +10,60 @@ let currentFetchedStudents = [];
 let currentPlacedStudents  = [];
 let currentFetchedApplications = [];
 
+// Global portal settings object with robust defaults
+let portalSettings = {
+  default_year: '2023-2027',
+  default_year_num: 4,
+  batches: [
+    { id: 1, name: '2026-2030', year_num: 1, year_label: '1st Year', status: 'active', is_default: false },
+    { id: 2, name: '2025-2029', year_num: 2, year_label: '2nd Year', status: 'active', is_default: false },
+    { id: 3, name: '2024-2028', year_num: 3, year_label: '3rd Year', status: 'active', is_default: false },
+    { id: 4, name: '2023-2027', year_num: 4, year_label: '4th Year', status: 'active', is_default: true },
+    { id: 5, name: '2022-2026', year_num: 5, year_label: 'Passed Out', status: 'passed_out', is_default: false }
+  ]
+};
+
+function getBatchMap() {
+  const map = {};
+  if (portalSettings && Array.isArray(portalSettings.batches)) {
+    portalSettings.batches.forEach(b => {
+      const isDef = (b.name === portalSettings.default_year);
+      const defTag = isDef ? ' (Default Year)' : '';
+      if (b.year_num) {
+        if (b.status === 'passed_out' || b.year_num === 5) {
+          map[b.year_num] = `${b.name} (Passed Out)${defTag}`;
+        } else {
+          map[b.year_num] = `${b.name}${defTag}`;
+        }
+      }
+    });
+  }
+  if (!map[4]) map[4] = '2023-2027 (Default Year)';
+  if (!map[5]) map[5] = '2022-2026 (Passed Out)';
+  return map;
+}
+
+function getYearLabels() {
+  const labels = {};
+  if (portalSettings && Array.isArray(portalSettings.batches)) {
+    portalSettings.batches.forEach(b => {
+      if (b.year_num) {
+        labels[b.year_num] = (b.status === 'passed_out' || b.year_num === 5) ? `${b.name} (Passed Out)` : b.name;
+      }
+    });
+  }
+  if (!labels[1]) labels[1] = '2026-2030';
+  if (!labels[2]) labels[2] = '2025-2029';
+  if (!labels[3]) labels[3] = '2024-2028';
+  if (!labels[4]) labels[4] = '2023-2027';
+  if (!labels[5]) labels[5] = '2022-2026 (Passed Out)';
+  return labels;
+}
+
 // ============================================================
 // BOOT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   currentAdminToken = localStorage.getItem('token');
   currentAdminUser  = safeParseUser();
 
@@ -23,6 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   el('adminUserName').innerText = currentAdminUser.full_name || 'Placement Admin';
+
+  // Load Portal Settings first so batch dropdowns and default year are applied across all pages
+  await loadPortalSettings();
 
   loadDashboardStats();
   fetchStudentRoster();
@@ -86,9 +139,9 @@ function escapeHtml(str) {
 }
 
 function switchAdminTab(tabName, initialStatusFilter = null) {
-  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed'];
-  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced' };
-  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced' };
+  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed', 'settings'];
+  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', settings: 'tabBtnSettings' };
+  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', settings: 'adminTabSettings' };
 
   tabs.forEach(t => {
     el(panMap[t])?.classList.toggle('hidden', t !== tabName);
@@ -105,7 +158,9 @@ function switchAdminTab(tabName, initialStatusFilter = null) {
     loadApplicationsList();
   }
   if (tabName === 'placed')       loadPlacedStudents();
+  if (tabName === 'settings')     renderSettingsTab();
 }
+
 
 // ============================================================
 // DASHBOARD STATS
@@ -202,7 +257,7 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
   const canvas = el('chartPlacedNonPlaced');
   if (!canvas) return;
 
-  const yearLabels = { 1: '2026-2030', 2: '2025-2029', 3: '2024-2028', 4: '2023-2027', 5: '2022-2026 (Passed Out)' };
+  const yearLabels = getYearLabels();
 
   let labels, placed, nonPlaced;
 
@@ -474,7 +529,7 @@ async function loadChartTechNonTechYear() {
       else                             yearMap[y].nonTech += cnt;
     });
 
-    const yearLabels = { 1: '2026-2030', 2: '2025-2029', 3: '2024-2028', 4: '2023-2027', 5: '2022-2026 (Passed Out)' };
+    const yearLabels = getYearLabels();
     const sortedYears = [1, 2, 3, 4, 5];
     const labels  = sortedYears.map(y => yearLabels[y]);
     const tech    = sortedYears.map(y => yearMap[y].tech);
@@ -605,13 +660,7 @@ function getFullFileUrl(pathStr) {
 }
 
 function renderStudentRoster(students, tbody) {
-  const BATCH_MAP = {
-    5: '2022-2026 (Passed Out)',
-    4: '2023-2027',
-    3: '2024-2028',
-    2: '2025-2029',
-    1: '2026-2030'
-  };
+  const BATCH_MAP = getBatchMap();
 
   tbody.innerHTML = students.map(s => {
     const cgpa     = s.cgpa ? parseFloat(s.cgpa).toFixed(2) : '—';
@@ -628,8 +677,9 @@ function renderStudentRoster(students, tbody) {
     }
 
     const sYr = parseInt(s.year);
-    const yearStr = (sYr === 5 || String(s.year).toLowerCase().includes('passed'))
-      ? '<span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;white-space:nowrap;">2022-2026 (Passed Out)</span>'
+    const isPassedOut = (sYr === 5 || String(s.year).toLowerCase().includes('passed'));
+    const yearStr = isPassedOut
+      ? `<span class="badge badge-purple" style="background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;white-space:nowrap;">${BATCH_MAP[5] || 'Passed Out'}</span>`
       : (BATCH_MAP[sYr] ? `<span class="badge badge-blue" style="white-space:nowrap;">${BATCH_MAP[sYr]}</span>` : (s.year ? `${s.year} Yr` : '—'));
 
     const placedBadge = s.placed_company
@@ -1971,3 +2021,400 @@ function downloadPlacedExcel() {
   XLSX.writeFile(wb, `RIT_CSBS_Placed_Students_${timestamp}.xlsx`);
   showAdminAlert(`Exported ${rows.length} placed student records to Excel.`, true);
 }
+
+// ============================================================
+// PORTAL SETTINGS & BATCH MANAGEMENT FUNCTIONS
+// ============================================================
+
+async function loadPortalSettings(showToast = false) {
+  try {
+    const res = await fetch(`${API_BASE}/admin/settings`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.settings) {
+      portalSettings = data.settings;
+      populateAllAdminBatchDropdowns();
+      if (showToast) {
+        showAdminAlert('Portal settings & batches refreshed successfully!', true);
+      }
+      renderSettingsTab();
+    }
+  } catch (err) {
+    console.warn('Failed to load portal settings from API, using default settings:', err);
+    populateAllAdminBatchDropdowns();
+  }
+}
+
+function populateAllAdminBatchDropdowns() {
+  if (!portalSettings || !Array.isArray(portalSettings.batches)) return;
+
+  const defaultBatchName = portalSettings.default_year || '2023-2027';
+  const defaultYearNum   = portalSettings.default_year_num || 4;
+
+  // 1. Settings tab elements
+  const settingsSelect = el('settingsDefaultBatchSelect');
+  if (settingsSelect) {
+    settingsSelect.innerHTML = portalSettings.batches.map(b => {
+      const isDef = (b.name === defaultBatchName);
+      const isPassed = (b.status === 'passed_out' || b.year_num === 5);
+      const statusLabel = isPassed ? ' — Passed Out' : (b.year_label ? ` — ${b.year_label}` : '');
+      return `<option value="${escapeHtml(b.name)}" ${isDef ? 'selected' : ''}>${escapeHtml(b.name)}${statusLabel}${isDef ? ' ⭐ (Current Default)' : ''}</option>`;
+    }).join('');
+  }
+
+  if (el('currentDefaultYearBadge')) {
+    el('currentDefaultYearBadge').innerText = `Current Default: ${defaultBatchName}`;
+  }
+
+  const finalYearBatch = portalSettings.batches.find(b => b.year_num === 4 && b.status === 'active') || portalSettings.batches.find(b => b.name === '2023-2027');
+  const passedOutBatch = portalSettings.batches.find(b => b.status === 'passed_out') || portalSettings.batches.find(b => b.name === '2022-2026');
+  if (el('calloutFinalBatchName') && finalYearBatch) el('calloutFinalBatchName').innerText = finalYearBatch.name;
+  if (el('calloutPassedBatchName') && passedOutBatch) el('calloutPassedBatchName').innerText = passedOutBatch.name;
+
+  // 2. Year-based filter dropdowns:
+  // - #filterPlacedNonPlacedYear (Analytics)
+  // - #filterYear (Student Roster)
+  // - #filterAppYear (Applications)
+  // - #filterPlacedYear (Placed Students)
+  const yearSelectIds = ['filterPlacedNonPlacedYear', 'filterYear', 'filterAppYear', 'filterPlacedYear'];
+  yearSelectIds.forEach(id => {
+    const sel = el(id);
+    if (!sel) return;
+    const prevVal = sel.value;
+
+    let html = (id === 'filterPlacedNonPlacedYear')
+      ? '<option value="all">All Batches</option>'
+      : '<option value="">All Batches</option>';
+
+    // Sort batches by year_num descending (5, 4, 3, 2, 1)
+    const sorted = [...portalSettings.batches].sort((a, b) => (b.year_num || 0) - (a.year_num || 0));
+    sorted.forEach(b => {
+      const isDef = (b.name === defaultBatchName || b.year_num === defaultYearNum);
+      const isPassed = (b.status === 'passed_out' || b.year_num === 5);
+      const label = isPassed
+        ? `${b.name} (Passed Out)${isDef ? ' (Default Year)' : ''}`
+        : `${b.name}${isDef ? ' (Default Year)' : ''}`;
+      
+      html += `<option value="${b.year_num}" ${isDef ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+    });
+
+    sel.innerHTML = html;
+    if (prevVal && prevVal !== 'all' && prevVal !== '') {
+      sel.value = prevVal;
+    } else if (id === 'filterPlacedNonPlacedYear' && prevVal === 'all') {
+      sel.value = 'all';
+    } else {
+      sel.value = String(defaultYearNum);
+    }
+  });
+
+  // 3. Batch Name-based dropdowns:
+  // - #driveBatchInput (Post Drive)
+  // - #filterDriveBatch (Filter Drives)
+  // - #editDriveBatch (Edit Drive)
+  const batchNameSelectIds = ['driveBatchInput', 'filterDriveBatch', 'editDriveBatch'];
+  batchNameSelectIds.forEach(id => {
+    const sel = el(id);
+    if (!sel) return;
+    const prevVal = sel.value;
+
+    let html = '';
+    if (id === 'filterDriveBatch') {
+      html += '<option value="">All Batches</option>';
+    }
+
+    portalSettings.batches.forEach(b => {
+      const isDef = (b.name === defaultBatchName);
+      const isPassed = (b.status === 'passed_out' || b.year_num === 5);
+      const label = isPassed
+        ? `${b.name} (Passed Out)${isDef ? ' (Default Year)' : ''}`
+        : `${b.name}${isDef ? ' (Default Year)' : ''}`;
+      html += `<option value="${escapeHtml(b.name)}" ${isDef ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+    });
+
+    if (id === 'driveBatchInput' || id === 'editDriveBatch') {
+      html += '<option value="All Batches">All Batches</option>';
+    }
+
+    sel.innerHTML = html;
+    if (prevVal && prevVal !== 'All Batches' && prevVal !== '') {
+      sel.value = prevVal;
+    } else if (id === 'filterDriveBatch' && prevVal === '') {
+      sel.value = '';
+    } else {
+      sel.value = defaultBatchName;
+    }
+  });
+}
+
+function renderSettingsTab() {
+  const tbody = el('batchesTableBody');
+  if (!tbody || !portalSettings || !Array.isArray(portalSettings.batches)) return;
+
+  const defaultBatchName = portalSettings.default_year || '2023-2027';
+  const batches = portalSettings.batches;
+
+  if (el('batchesCountBadge')) {
+    el('batchesCountBadge').innerText = `${batches.length} Batches`;
+  }
+
+  tbody.innerHTML = batches.map(b => {
+    const isDef = (b.name === defaultBatchName);
+    const isPassed = (b.status === 'passed_out' || b.year_num === 5);
+
+    const statusBadge = isPassed
+      ? `<span class="badge-passedout-year"><i class="fa-solid fa-flag-checkered"></i> Passed Out</span>`
+      : `<span class="badge-active-year"><i class="fa-solid fa-circle-check"></i> Active</span>`;
+
+    const defaultBadge = isDef
+      ? `<span class="badge-default-year"><i class="fa-solid fa-star"></i> Default Year</span>`
+      : `<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setBatchAsDefaultAction('${escapeHtml(b.name)}')">Set as Default</button>`;
+
+    const togglePassedBtn = isPassed
+      ? `<button class="btn btn-outline-primary btn-sm" style="font-size:11px;padding:3px 8px;" onclick="toggleBatchPassedOutAction('${escapeHtml(b.name)}', false)" title="Mark as Active"><i class="fa-solid fa-rotate-left"></i> Make Active</button>`
+      : `<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:#7c3aed;border-color:#d8b4fe;" onclick="toggleBatchPassedOutAction('${escapeHtml(b.name)}', true)" title="Mark as Passed Out"><i class="fa-solid fa-user-graduate"></i> Mark Passed Out</button>`;
+
+    // Allow deleting only custom non-default batches
+    const isCoreBatch = ['2023-2027', '2022-2026'].includes(b.name);
+    const deleteBtn = (!isDef && !isCoreBatch)
+      ? `<button class="pro-delete-text-btn" style="margin-left:6px;" onclick="deleteBatchAction('${escapeHtml(b.name)}')" title="Delete Batch"><i class="fa-solid fa-trash-can"></i></button>`
+      : '';
+
+    return `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:32px;height:32px;border-radius:8px;background:${isPassed ? '#f3e8ff' : '#eff6ff'};color:${isPassed ? '#7c3aed' : '#2563eb'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <strong style="font-size:14px;color:#0f172a;">${escapeHtml(b.name)}</strong>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span style="font-weight:600;color:#334155;">
+          ${escapeHtml(b.year_label || (isPassed ? 'Passed Out' : `Year ${b.year_num}`))}
+        </span>
+      </td>
+      <td>${statusBadge}</td>
+      <td>${defaultBadge}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${togglePassedBtn}
+          ${deleteBtn}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function handleSaveDefaultYear(event) {
+  event.preventDefault();
+  const select = el('settingsDefaultBatchSelect');
+  if (!select) return;
+  const selectedBatch = select.value;
+  if (!selectedBatch) return;
+
+  const btn = el('saveDefaultBatchBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/settings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ default_year: selectedBatch })
+    });
+    const data = await res.json();
+    if (data.success) {
+      portalSettings = data.settings;
+      populateAllAdminBatchDropdowns();
+      renderSettingsTab();
+
+      const successMsg = el('saveSettingsSuccessMsg');
+      if (successMsg) {
+        successMsg.style.display = 'inline-flex';
+        setTimeout(() => { successMsg.style.display = 'none'; }, 4000);
+      }
+      showAdminAlert(`Default Academic Year set to "${selectedBatch}" across all admin combo boxes!`, true);
+    } else {
+      showAdminAlert(data.message || 'Failed to update default year.');
+    }
+  } catch (err) {
+    console.error('Error saving default year setting:', err);
+    showAdminAlert('Server error while saving default year setting.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Apply Default Year';
+    }
+  }
+}
+
+function autoCalculateBatchName() {
+  const startInput = el('newBatchStartYear');
+  const endInput   = el('newBatchEndYear');
+  const nameInput  = el('newBatchName');
+
+  if (startInput && endInput && nameInput) {
+    const s = parseInt(startInput.value);
+    if (!isNaN(s) && !endInput.value) {
+      endInput.value = s + 4;
+    }
+    const e = parseInt(endInput.value);
+    if (!isNaN(s) && !isNaN(e) && s > 0 && e > 0) {
+      nameInput.value = `${s}-${e}`;
+    }
+  }
+}
+
+async function handleCreateNewBatch(event) {
+  event.preventDefault();
+  const nameInput       = el('newBatchName');
+  const startInput      = el('newBatchStartYear');
+  const endInput        = el('newBatchEndYear');
+  const advanceCheck    = el('chkAdvanceStudents');
+  const setDefCheck     = el('chkSetNewAsDefault');
+
+  const name            = nameInput?.value.trim();
+  const start_year      = parseInt(startInput?.value);
+  const end_year        = parseInt(endInput?.value);
+  const promote_students= advanceCheck ? advanceCheck.checked : true;
+  const set_as_default  = setDefCheck ? setDefCheck.checked : false;
+
+  if (!name) {
+    showAdminAlert('Please specify a batch name.');
+    return;
+  }
+
+  const btn = el('createBatchBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Batch & Rollover...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/batches`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({
+        name,
+        start_year,
+        end_year,
+        promote_students,
+        set_as_default
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      portalSettings = data.settings;
+      populateAllAdminBatchDropdowns();
+      renderSettingsTab();
+      if (el('formCreateNewBatch')) el('formCreateNewBatch').reset();
+
+      showAdminAlert(
+        `Batch "${name}" created successfully! The previous final year batch has been marked as Passed Out.`,
+        true
+      );
+
+      // Refresh other tabs data
+      fetchStudentRoster();
+      loadDashboardStats();
+    } else {
+      showAdminAlert(data.message || 'Failed to create new batch.');
+    }
+  } catch (err) {
+    console.error('Error creating new batch:', err);
+    showAdminAlert('Server error while creating new batch.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-graduation-cap"></i> Create Batch & Advance Final Year';
+    }
+  }
+}
+
+async function setBatchAsDefaultAction(batchName) {
+  try {
+    const res = await fetch(`${API_BASE}/admin/settings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ default_year: batchName })
+    });
+    const data = await res.json();
+    if (data.success) {
+      portalSettings = data.settings;
+      populateAllAdminBatchDropdowns();
+      renderSettingsTab();
+      showAdminAlert(`Default Academic Year set to "${batchName}"!`, true);
+    } else {
+      showAdminAlert(data.message || 'Failed to set default batch.');
+    }
+  } catch (err) {
+    console.error('Error updating default batch:', err);
+    showAdminAlert('Server error while updating default batch.');
+  }
+}
+
+async function toggleBatchPassedOutAction(batchName, isPassedOut) {
+  try {
+    const res = await fetch(`${API_BASE}/admin/batches/${encodeURIComponent(batchName)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ is_passed_out: isPassedOut })
+    });
+    const data = await res.json();
+    if (data.success) {
+      portalSettings = data.settings;
+      populateAllAdminBatchDropdowns();
+      renderSettingsTab();
+      showAdminAlert(`Batch "${batchName}" updated to ${isPassedOut ? 'Passed Out' : 'Active'} status.`, true);
+    } else {
+      showAdminAlert(data.message || 'Failed to update batch status.');
+    }
+  } catch (err) {
+    console.error('Error updating batch status:', err);
+    showAdminAlert('Server error while updating batch status.');
+  }
+}
+
+async function deleteBatchAction(batchName) {
+  if (!confirm(`Are you sure you want to delete batch "${batchName}"?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/batches/${encodeURIComponent(batchName)}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      portalSettings = data.settings;
+      populateAllAdminBatchDropdowns();
+      renderSettingsTab();
+      showAdminAlert(`Batch "${batchName}" deleted successfully.`, true);
+    } else {
+      showAdminAlert(data.message || 'Failed to delete batch.');
+    }
+  } catch (err) {
+    console.error('Error deleting batch:', err);
+    showAdminAlert('Server error while deleting batch.');
+  }
+}
+

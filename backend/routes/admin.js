@@ -666,6 +666,101 @@ router.get("/analytics/tech-nontech-year", async (req, res) => {
     }
 });
 
+// ==========================================
+// PORTAL SETTINGS & BATCH MANAGEMENT
+// ==========================================
+const settingsStorage = require("../settingsStorage");
+
+// GET current settings
+router.get("/settings", async (req, res) => {
+    try {
+        const settings = await settingsStorage.getSettings();
+        res.json({ success: true, settings });
+    } catch (err) {
+        console.error("Error fetching admin settings:", err);
+        res.status(500).json({ success: false, message: "Failed to load portal settings" });
+    }
+});
+
+// UPDATE default batch / year
+router.post("/settings", async (req, res) => {
+    try {
+        const { default_year, default_batch } = req.body;
+        const targetBatch = default_year || default_batch;
+        if (!targetBatch) {
+            return res.status(400).json({ success: false, message: "Default batch / year is required." });
+        }
+        const updated = await settingsStorage.setDefaultBatch(targetBatch);
+        res.json({
+            success: true,
+            message: `Default Academic Year successfully updated to "${targetBatch}".`,
+            settings: updated
+        });
+    } catch (err) {
+        console.error("Error updating settings:", err);
+        res.status(500).json({ success: false, message: err.message || "Failed to update settings" });
+    }
+});
+
+// CREATE NEW BATCH (Rollover final year batch to passed out)
+router.post("/batches", async (req, res) => {
+    try {
+        const { name, start_year, end_year, promote_students, set_as_default } = req.body;
+        const updated = await settingsStorage.createNewBatch({
+            name,
+            start_year,
+            end_year,
+            promote_students: promote_students !== false,
+            set_as_default: !!set_as_default
+        });
+
+        res.status(201).json({
+            success: true,
+            message: `Batch created successfully! The previous final year batch has been moved to Passed Out status.`,
+            settings: updated
+        });
+    } catch (err) {
+        console.error("Error creating new batch:", err);
+        res.status(400).json({ success: false, message: err.message || "Failed to create batch" });
+    }
+});
+
+// TOGGLE BATCH PASSED OUT / UPDATE BATCH
+router.put("/batches/:batchName", async (req, res) => {
+    try {
+        const { batchName } = req.params;
+        const { is_passed_out, status } = req.body;
+        const isPassedOut = is_passed_out !== undefined ? is_passed_out : (status === "passed_out");
+
+        const updated = await settingsStorage.toggleBatchPassedOut(batchName, isPassedOut);
+        res.json({
+            success: true,
+            message: `Batch "${batchName}" status updated successfully.`,
+            settings: updated
+        });
+    } catch (err) {
+        console.error("Error updating batch:", err);
+        res.status(400).json({ success: false, message: err.message || "Failed to update batch" });
+    }
+});
+
+// DELETE BATCH
+router.delete("/batches/:batchName", async (req, res) => {
+    try {
+        const { batchName } = req.params;
+        const updated = await settingsStorage.deleteBatch(batchName);
+        res.json({
+            success: true,
+            message: `Batch "${batchName}" removed successfully.`,
+            settings: updated
+        });
+    } catch (err) {
+        console.error("Error deleting batch:", err);
+        res.status(400).json({ success: false, message: err.message || "Failed to delete batch" });
+    }
+});
+
 module.exports = router;
+
 
 
