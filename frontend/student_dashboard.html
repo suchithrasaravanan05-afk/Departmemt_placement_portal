@@ -194,6 +194,17 @@
                 <span class="student-detail-label">Domain Interest</span>
                 <span class="student-detail-value" id="viewDomain">--</span>
               </div>
+              <div class="student-detail-item" style="grid-column: span 2; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <span class="student-detail-label" style="color: #166534; font-size: 11px;">Campus Placement Willingness</span>
+                  <div id="viewPlacementWillingness" style="font-weight: 800; font-size: 13.5px; color: #15803d; margin-top: 2px;">
+                    <i class="fa-solid fa-circle-check"></i> Interested in Campus Placements
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline" onclick="openPlacementInterestModal()" style="font-size: 11px; padding: 4px 10px; border-color: #86efac; color: #166534;">
+                  <i class="fa-solid fa-pen-to-square"></i> Change
+                </button>
+              </div>
             </div>
 
             <!-- Academic Marks -->
@@ -311,6 +322,13 @@
                   <option>Full Stack Development</option>
                   <option>Embedded Systems</option>
                   <option>General IT</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Campus Placement Willingness</label>
+                <select id="placementWillingnessSelect" class="form-control">
+                  <option value="Interested" selected>Interested in Campus Placements</option>
+                  <option value="Not Interested">Not Interested (Opt Out / Higher Studies)</option>
                 </select>
               </div>
             </div>
@@ -726,6 +744,94 @@
         onmouseout="this.style.opacity='1'">
         <i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i>Yes, Apply!
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Campus Placement Willingness Confirmation Popup Modal -->
+<div id="placementInterestModal" class="student-modal-overlay hidden" style="
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px;
+">
+  <div style="
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+    max-width: 520px; width: 100%;
+    overflow: hidden;
+    animation: applyModalIn .28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid #e2e8f0;
+  ">
+    <!-- Header Banner -->
+    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #4f46e5 100%); padding: 24px; color: #fff; text-align: center; position: relative;">
+      <div style="width: 58px; height: 58px; border-radius: 16px; background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 26px;">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <h3 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.2px;">Campus Placement Willingness</h3>
+      <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.88;">Department of Computer Science &amp; Business Systems (CSBS)</p>
+    </div>
+
+    <!-- Body Content -->
+    <div style="padding: 24px;">
+      <p style="font-size: 13.5px; color: #475569; margin: 0 0 18px; text-align: center; line-height: 1.5;">
+        Your profile details have been saved! Please confirm your willingness to participate in <strong>Campus Placement Drives &amp; Training</strong>:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+        <!-- Option 1: Interested -->
+        <div onclick="submitPlacementInterest('Interested')" style="
+          border: 2px solid #bbf7d0;
+          background: #f0fdf4;
+          border-radius: 14px;
+          padding: 16px 18px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          transition: all 0.2s ease;
+        " onmouseover="this.style.borderColor='#22c55e';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#bbf7d0';this.style.transform='none'">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #22c55e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 15px; font-weight: 800; color: #15803d;">Yes, I am Interested in Placements</div>
+            <div style="font-size: 12px; color: #166534; margin-top: 2px;">Opt-in for campus recruitment drives, test schedules &amp; interview opportunities.</div>
+          </div>
+          <i class="fa-solid fa-arrow-right" style="color: #22c55e; font-size: 14px;"></i>
+        </div>
+
+        <!-- Option 2: Not Interested -->
+        <div onclick="submitPlacementInterest('Not Interested')" style="
+          border: 1.5px solid #e2e8f0;
+          background: #f8fafc;
+          border-radius: 14px;
+          padding: 16px 18px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          transition: all 0.2s ease;
+        " onmouseover="this.style.borderColor='#cbd5e1';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.transform='none'">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #64748b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            <i class="fa-solid fa-ban"></i>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 15px; font-weight: 800; color: #334155;">No, Not Interested (Opt Out)</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Planning for Higher Studies (MS/M.Tech/MBA), Family Business, or Govt Exams.</div>
+          </div>
+          <i class="fa-solid fa-arrow-right" style="color: #94a3b8; font-size: 14px;"></i>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <button type="button" onclick="closePlacementInterestModal()" style="background: none; border: none; font-size: 12px; color: #94a3b8; cursor: pointer; text-decoration: underline;">
+          Decide Later
+        </button>
+      </div>
     </div>
   </div>
 </div>

@@ -341,6 +341,24 @@ function getFullFileUrl(pathStr) {
       docLinksEl.innerHTML = '<span style="font-size:13px;color:#94a3b8;">No resume uploaded yet.</span>';
     }
   }
+  // Placement Willingness
+  const pw = p.placement_willingness || 'Interested';
+  const pwEl = el('viewPlacementWillingness');
+  if (pwEl) {
+    if (pw === 'Interested') {
+      pwEl.innerHTML = `<span style="color:#15803d;"><i class="fa-solid fa-circle-check"></i> Interested in Campus Placements</span>`;
+      if (pwEl.parentElement) {
+        pwEl.parentElement.style.background = '#f0fdf4';
+        pwEl.parentElement.style.borderColor = '#bbf7d0';
+      }
+    } else {
+      pwEl.innerHTML = `<span style="color:#475569;"><i class="fa-solid fa-ban"></i> Opted Out (Not Interested / Higher Studies)</span>`;
+      if (pwEl.parentElement) {
+        pwEl.parentElement.style.background = '#f8fafc';
+        pwEl.parentElement.style.borderColor = '#e2e8f0';
+      }
+    }
+  }
 }
 
 // ============================================================
@@ -352,6 +370,7 @@ function populateEditForm(p) {
   v('dobInput',           p.dob || '');
   v('yearSelect',         p.year || currentUser.year || '3');
   v('domainSelect',       p.domain_interest || '');
+  v('placementWillingnessSelect', p.placement_willingness || 'Interested');
   v('personalEmailInput', p.personal_email || '');
   v('collegeEmailInput',  p.college_email || currentUser.email || '');
   v('phoneInput',         p.phone_number || currentUser.phone || '');
@@ -403,6 +422,7 @@ async function saveStudentProfile(e) {
   formData.append('personal_email',    el('personalEmailInput')?.value || '');
   formData.append('college_email',     el('collegeEmailInput')?.value || '');
   formData.append('domain_interest',   el('domainSelect')?.value || '');
+  formData.append('placement_willingness', el('placementWillingnessSelect')?.value || 'Interested');
   formData.append('tenth_percentage',  el('tenthInput')?.value || '');
   formData.append('twelth_percentage', el('twelthInput')?.value || '');
   formData.append('diploma_percentage',el('diplomaInput')?.value || '');
@@ -439,10 +459,13 @@ async function saveStudentProfile(e) {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Profile'; }
 
     if (data.success) {
-      showStudentAlert('✅ Profile saved successfully!', true);
+      showStudentAlert('✅ Profile details saved successfully!', true);
       isNewUser = false;
       await loadStudentProfile();
       exitEditMode();
+
+      // Show the Placement Willingness Popup Window after saving profile details
+      setTimeout(openPlacementInterestModal, 500);
     } else {
       showStudentAlert(data.message || 'Failed to save profile.');
     }
@@ -452,6 +475,83 @@ async function saveStudentProfile(e) {
     showStudentAlert('Server error while saving profile. Please try again.');
   }
 }
+
+// ============================================================
+// PLACEMENT WILLINGNESS MODAL & NOTIFICATIONS
+// ============================================================
+function openPlacementInterestModal() {
+  el('placementInterestModal')?.classList.remove('hidden');
+}
+
+function closePlacementInterestModal() {
+  el('placementInterestModal')?.classList.add('hidden');
+}
+
+async function submitPlacementInterest(interest) {
+  closePlacementInterestModal();
+
+  try {
+    const res = await fetch(`${API_BASE}/student/placement-interest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ userId: currentUser.id, interest })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      if (currentProfile) currentProfile.placement_willingness = interest;
+      populateViewMode(currentProfile || { placement_willingness: interest });
+
+      const isInt = interest === 'Interested';
+      showStudentAlert(isInt 
+        ? '🏆 You are registered as Interested in Campus Placements!' 
+        : 'ℹ️ Placement status updated: Opted out of campus placements.', true);
+
+      addPlacementStatusNotification(interest);
+    } else {
+      showStudentAlert(data.message || 'Failed to update placement interest.');
+    }
+  } catch (err) {
+    console.error('Placement interest submit error:', err);
+    showStudentAlert('Server error updating placement willingness.');
+  }
+}
+
+function addPlacementStatusNotification(interest) {
+  const notifList = el('notifList');
+  const notifBadge = el('notifBadge');
+  if (!notifList) return;
+
+  const isInt = interest === 'Interested';
+  const icon = isInt ? 'fa-circle-check' : 'fa-ban';
+  const iconColor = isInt ? '#10b981' : '#64748b';
+  const title = isInt ? 'Placement Registration Confirmed' : 'Placement Opt-Out Recorded';
+  const desc = isInt 
+    ? 'You are active for CSBS campus recruitment drives and interview rounds.' 
+    : 'You have chosen to opt out of campus placements for higher studies/other.';
+
+  const itemHtml = `
+    <div class="student-notif-item unread" style="background:#eff6ff;border-left:3px solid #2563eb;padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;gap:10px;">
+      <div style="font-size:16px;color:${iconColor};margin-top:2px;">
+        <i class="fa-solid ${icon}"></i>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#0f172a;">${title}</div>
+        <div style="font-size:11.5px;color:#475569;margin-top:2px;">${desc}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:4px;">Just now</div>
+      </div>
+    </div>`;
+
+  notifList.insertAdjacentHTML('afterbegin', itemHtml);
+  if (notifBadge) {
+    notifBadge.classList.remove('hidden');
+    notifBadge.innerText = String((parseInt(notifBadge.innerText || '0') + 1));
+  }
+}
+
 
 // ============================================================
 // PLACEMENT DRIVES STATE & ELIGIBILITY

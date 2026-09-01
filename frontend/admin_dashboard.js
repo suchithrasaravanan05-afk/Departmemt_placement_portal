@@ -86,16 +86,34 @@ function escapeHtml(str) {
 }
 
 function switchAdminTab(tabName, initialStatusFilter = null) {
-  const tabs   = ['students', 'drives', 'applications', 'placed', 'analytics'];
+  const tabs   = ['students', 'drives', 'applications', 'placed'];
   const tabMap = { students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', analytics: 'tabBtnAnalytics' };
-  const panMap = { students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', analytics: 'adminTabAnalytics' };
+  const panMap = { students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced' };
+
+  if (tabName === 'analytics') {
+    // Analytics is situated in the main view directly before the student roster
+    tabs.forEach(t => {
+      el(panMap[t])?.classList.toggle('hidden', t !== 'students');
+      el(tabMap[t])?.classList.toggle('active', false);
+    });
+    el('tabBtnAnalytics')?.classList.add('active');
+    loadAnalyticsCharts();
+    fetchStudentRoster();
+    el('adminAnalyticsSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  el('tabBtnAnalytics')?.classList.remove('active');
 
   tabs.forEach(t => {
     el(panMap[t])?.classList.toggle('hidden', t !== tabName);
     el(tabMap[t])?.classList.toggle('active', t === tabName);
   });
 
-  if (tabName === 'students')     fetchStudentRoster();
+  if (tabName === 'students') {
+    loadAnalyticsCharts();
+    fetchStudentRoster();
+  }
   if (tabName === 'drives')       loadAdminDrives();
   if (tabName === 'applications') {
     if (initialStatusFilter !== null && el('filterAppStatus')) {
@@ -104,7 +122,6 @@ function switchAdminTab(tabName, initialStatusFilter = null) {
     loadApplicationsList();
   }
   if (tabName === 'placed')       loadPlacedStudents();
-  if (tabName === 'analytics')    loadAnalyticsCharts();
 }
 
 // ============================================================
@@ -128,7 +145,7 @@ async function loadDashboardStats() {
 }
 
 // ============================================================
-// ANALYTICS CHARTS  (Analytics Tab)
+// ANALYTICS CHARTS (EXECUTIVE PLACEMENT ANALYTICS)
 // ============================================================
 let _chartPlacedNonPlaced   = null;
 let _chartPlacementInterest = null;
@@ -140,7 +157,7 @@ let _analyticsPlacedNonPlacedData = [];
 
 async function loadAnalyticsCharts() {
   const btn = el('analyticsRefreshBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing...'; }
   try {
     await Promise.all([
       loadChartPlacedNonPlaced(),
@@ -151,7 +168,7 @@ async function loadAnalyticsCharts() {
   } catch (e) {
     console.warn('Analytics load error:', e);
   }
-  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Refresh All'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Refresh'; }
 }
 
 /* ─── Helper: classify role ─── */
@@ -167,9 +184,9 @@ function isTechnicalRole(role) {
 /* ─── Helper: destroy chart safely ─── */
 function destroyChart(ref) { if (ref) { try { ref.destroy(); } catch(_){} } return null; }
 
-/* ─── Chart defaults ─── */
+/* ─── Chart typography & grid defaults ─── */
 const CHART_FONT = { family: "'Plus Jakarta Sans', -apple-system, sans-serif" };
-const GRID_COLOR = 'rgba(226,232,240,0.8)';
+const GRID_COLOR = 'rgba(241, 245, 249, 0.9)';
 
 /* ══════════════════════════════════════════════════════════
    CHART 1 — Placed vs Non-Placed Students (Year-wise)
@@ -207,7 +224,6 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
   let labels, placed, nonPlaced;
 
   if (filterVal !== 'all' && rows.length === 1) {
-    // Single year — show as doughnut-like summary (just use bar with two bars)
     const r = rows[0];
     const p = parseInt(r.placed_count || 0);
     const t = parseInt(r.total_count || 0);
@@ -220,35 +236,82 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
     nonPlaced = rows.map(r => Math.max(0, parseInt(r.total_count || 0) - parseInt(r.placed_count || 0)));
   }
 
+  // Update Stat Pills
+  const totalPlaced = placed.reduce((s, v) => s + v, 0);
+  const totalNonPlaced = nonPlaced.reduce((s, v) => s + v, 0);
+  const grandTotal = totalPlaced + totalNonPlaced;
+  const placedRate = grandTotal > 0 ? ((totalPlaced / grandTotal) * 100).toFixed(1) : '0.0';
+
+  if (el('pillPlacedTotal'))    el('pillPlacedTotal').innerText    = totalPlaced;
+  if (el('pillNonPlacedTotal')) el('pillNonPlacedTotal').innerText = totalNonPlaced;
+  if (el('pillPlacedRate'))     el('pillPlacedRate').innerText     = `${placedRate}%`;
+
   _chartPlacedNonPlaced = destroyChart(_chartPlacedNonPlaced);
   _chartPlacedNonPlaced = new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'Placed', data: placed, backgroundColor: 'rgba(37,99,235,0.85)', borderColor: '#2563eb', borderWidth: 1.5, borderRadius: 8, borderSkipped: false, barPercentage: 0.6 },
-        { label: 'Non-Placed', data: nonPlaced, backgroundColor: 'rgba(226,232,240,0.9)', borderColor: '#cbd5e1', borderWidth: 1.5, borderRadius: 8, borderSkipped: false, barPercentage: 0.6 }
+        {
+          label: 'Placed Students',
+          data: placed,
+          backgroundColor: 'rgba(37, 99, 235, 0.88)',
+          borderColor: '#2563eb',
+          borderWidth: 1.5,
+          borderRadius: 8,
+          borderSkipped: false,
+          barPercentage: 0.55,
+          categoryPercentage: 0.7
+        },
+        {
+          label: 'Non-Placed Students',
+          data: nonPlaced,
+          backgroundColor: 'rgba(226, 232, 240, 0.95)',
+          borderColor: '#cbd5e1',
+          borderWidth: 1.5,
+          borderRadius: 8,
+          borderSkipped: false,
+          barPercentage: 0.55,
+          categoryPercentage: 0.7
+        }
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { display: true, position: 'top', labels: { font: { ...CHART_FONT, size: 11, weight: '700' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
-        tooltip: { mode: 'index', intersect: false, callbacks: {
-          footer: items => `Total: ${items.reduce((s,i)=>s+i.parsed.y,0)} students`
-        }}
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f172a',
+          titleFont: { ...CHART_FONT, size: 12, weight: '700' },
+          bodyFont: { ...CHART_FONT, size: 12 },
+          padding: 10,
+          cornerRadius: 8,
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            footer: items => `Total: ${items.reduce((s,i)=>s+i.parsed.y,0)} students`
+          }
+        }
       },
       scales: {
-        x: { stacked: false, grid: { display: false }, ticks: { font: { ...CHART_FONT, size: 11, weight: '700' } } },
-        y: { beginAtZero: true, grid: { color: GRID_COLOR }, ticks: { font: { ...CHART_FONT, size: 11 }, stepSize: 1, precision: 0 } }
+        x: {
+          grid: { display: false },
+          ticks: { font: { ...CHART_FONT, size: 11, weight: '700' }, color: '#475569' }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: GRID_COLOR },
+          ticks: { font: { ...CHART_FONT, size: 11 }, color: '#94a3b8', stepSize: 1, precision: 0 }
+        }
       },
-      animation: { duration: 800, easing: 'easeInOutQuart' }
+      animation: { duration: 750, easing: 'easeInOutQuart' }
     }
   });
 }
 
 /* ══════════════════════════════════════════════════════════
-   CHART 2 — Placement Interest (Applied vs Not Applied)
+   CHART 2 — Placement Interest (Willingness Breakdown)
    ══════════════════════════════════════════════════════════ */
 async function loadChartPlacementInterest() {
   try {
@@ -258,17 +321,16 @@ async function loadChartPlacementInterest() {
     if (!res.ok) throw new Error('API unavailable');
     const data = await res.json();
 
-    const total    = parseInt(data.total    || 0);
-    const applied  = parseInt(data.applied  || 0);
-    const notApplied = Math.max(0, total - applied);
+    const total         = parseInt(data.total || 0);
+    const interested    = parseInt(data.interested || data.applied || 0);
+    const notInterested = parseInt(data.not_interested || 0);
+    const pending       = Math.max(0, total - (interested + notInterested));
 
     const cEl = el('cstatTotalStudents');
     if (cEl) cEl.textContent = total || '0';
 
-    const legEl = el('placementInterestLegend');
-    if (legEl) legEl.innerHTML = `
-      <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#db2777;"></span>Interested <strong style="color:#db2777;margin-left:4px;">${applied}</strong></span>
-      <span class="analytics-legend-pill"><span class="analytics-legend-dot" style="background:#e2e8f0;border:1px solid #cbd5e1;"></span>Not Applied <strong style="color:#94a3b8;margin-left:4px;">${notApplied}</strong></span>`;
+    if (el('pillInterestedCount'))    el('pillInterestedCount').innerText    = interested;
+    if (el('pillNotInterestedCount')) el('pillNotInterestedCount').innerText = notInterested + (pending > 0 ? ` (${pending} pending)` : '');
 
     const canvas = el('chartPlacementInterest');
     if (!canvas) return;
@@ -277,16 +339,38 @@ async function loadChartPlacementInterest() {
     _chartPlacementInterest = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
-        labels: ['Interested (Applied)', 'Not Applied'],
-        datasets: [{ data: [applied, notApplied], backgroundColor: ['rgba(219,39,119,0.85)','rgba(226,232,240,0.9)'], borderColor: ['#db2777','#cbd5e1'], borderWidth: 2, hoverOffset: 10, borderRadius: 6 }]
+        labels: ['Interested in Placements', 'Opted Out / Not Interested', 'Pending Decision'],
+        datasets: [{
+          data: [interested, notInterested, pending],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.9)',
+            'rgba(244, 63, 94, 0.9)',
+            'rgba(203, 213, 225, 0.85)'
+          ],
+          borderColor: ['#10b981', '#f43f5e', '#cbd5e1'],
+          borderWidth: 2,
+          hoverOffset: 8,
+          borderRadius: 6
+        }]
       },
       options: {
-        responsive: true, maintainAspectRatio: true, cutout: '68%',
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '72%',
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` } }
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleFont: { ...CHART_FONT, size: 12, weight: '700' },
+            bodyFont: { ...CHART_FONT, size: 12 },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.parsed} student${ctx.parsed !== 1 ? 's' : ''}`
+            }
+          }
         },
-        animation: { animateRotate: true, duration: 900, easing: 'easeInOutQuart' }
+        animation: { animateRotate: true, duration: 850, easing: 'easeInOutQuart' }
       }
     });
   } catch (e) { console.warn('Chart 2 error:', e); }
@@ -304,7 +388,7 @@ async function loadChartCompanyStats() {
     const data = await res.json();
     const rows = data.success ? (data.rows || []) : [];
 
-    const labels     = rows.map(r => (r.company_name || 'Co.').substring(0, 14));
+    const labels     = rows.map(r => (r.company_name || 'Company').substring(0, 14));
     const eligible   = rows.map(r => parseInt(r.eligible   || 0));
     const registered = rows.map(r => parseInt(r.registered || 0));
     const placed     = rows.map(r => parseInt(r.placed     || 0));
@@ -318,22 +402,68 @@ async function loadChartCompanyStats() {
       data: {
         labels,
         datasets: [
-          { label: 'Eligible',    data: eligible,   backgroundColor: 'rgba(8,145,178,0.7)',   borderColor: '#0891b2', borderWidth: 1.5, borderRadius: 6, borderSkipped: false, barPercentage: 0.55 },
-          { label: 'Registered',  data: registered, backgroundColor: 'rgba(139,92,246,0.75)', borderColor: '#8b5cf6', borderWidth: 1.5, borderRadius: 6, borderSkipped: false, barPercentage: 0.55 },
-          { label: 'Placed',      data: placed,     backgroundColor: 'rgba(16,185,129,0.8)',  borderColor: '#10b981', borderWidth: 1.5, borderRadius: 6, borderSkipped: false, barPercentage: 0.55 }
+          {
+            label: 'Eligible Pool',
+            data: eligible,
+            backgroundColor: 'rgba(6, 182, 212, 0.85)',
+            borderColor: '#0891b2',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.6,
+            categoryPercentage: 0.75
+          },
+          {
+            label: 'Registered Applicants',
+            data: registered,
+            backgroundColor: 'rgba(139, 92, 246, 0.85)',
+            borderColor: '#8b5cf6',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.6,
+            categoryPercentage: 0.75
+          },
+          {
+            label: 'Selected Offers',
+            data: placed,
+            backgroundColor: 'rgba(16, 185, 129, 0.9)',
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.6,
+            categoryPercentage: 0.75
+          }
         ]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'top', labels: { font: { ...CHART_FONT, size: 11, weight: '700' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
-          tooltip: { mode: 'index', intersect: false }
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleFont: { ...CHART_FONT, size: 12, weight: '700' },
+            bodyFont: { ...CHART_FONT, size: 12 },
+            padding: 10,
+            cornerRadius: 8,
+            mode: 'index',
+            intersect: false
+          }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { ...CHART_FONT, size: 10.5, weight: '600' }, maxRotation: 35 } },
-          y: { beginAtZero: true, grid: { color: GRID_COLOR }, ticks: { font: { ...CHART_FONT, size: 11 }, stepSize: 1, precision: 0 } }
+          x: {
+            grid: { display: false },
+            ticks: { font: { ...CHART_FONT, size: 11, weight: '600' }, color: '#475569', maxRotation: 25 }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: GRID_COLOR },
+            ticks: { font: { ...CHART_FONT, size: 11 }, color: '#94a3b8', stepSize: 1, precision: 0 }
+          }
         },
-        animation: { duration: 800, easing: 'easeInOutQuart' }
+        animation: { duration: 750, easing: 'easeInOutQuart' }
       }
     });
   } catch (e) { console.warn('Chart 3 error:', e); }
@@ -352,18 +482,18 @@ async function loadChartTechNonTechYear() {
     const rows = data.success ? (data.rows || []) : [];
 
     // Build year → { tech, nonTech } map
-    const yearMap = {};
+    const yearMap = { 1: { tech: 0, nonTech: 0 }, 2: { tech: 0, nonTech: 0 }, 3: { tech: 0, nonTech: 0 }, 4: { tech: 0, nonTech: 0 }, 5: { tech: 0, nonTech: 0 } };
     rows.forEach(r => {
-      const y = parseInt(r.year);
+      const y = parseInt(r.year) || 3;
       if (!yearMap[y]) yearMap[y] = { tech: 0, nonTech: 0 };
-      const cnt = parseInt(r.cnt || 0);
+      const cnt = parseInt(r.cnt || 1);
       if (isTechnicalRole(r.job_role)) yearMap[y].tech    += cnt;
       else                             yearMap[y].nonTech += cnt;
     });
 
     const yearLabels = { 1: '1st Yr', 2: '2nd Yr', 3: '3rd Yr', 4: '4th Yr', 5: 'Passed Out' };
-    const sortedYears = Object.keys(yearMap).map(Number).sort((a,b) => a-b);
-    const labels  = sortedYears.map(y => yearLabels[y] || `Year ${y}`);
+    const sortedYears = [1, 2, 3, 4, 5];
+    const labels  = sortedYears.map(y => yearLabels[y]);
     const tech    = sortedYears.map(y => yearMap[y].tech);
     const nonTech = sortedYears.map(y => yearMap[y].nonTech);
 
@@ -376,25 +506,62 @@ async function loadChartTechNonTechYear() {
       data: {
         labels,
         datasets: [
-          { label: 'Technical',     data: tech,    backgroundColor: 'rgba(99,102,241,0.85)', borderColor: '#6366f1', borderWidth: 1.5, borderRadius: 6, borderSkipped: false, barPercentage: 0.58 },
-          { label: 'Non-Technical', data: nonTech, backgroundColor: 'rgba(251,113,133,0.8)', borderColor: '#fb7185', borderWidth: 1.5, borderRadius: 6, borderSkipped: false, barPercentage: 0.58 }
+          {
+            label: 'Technical Roles',
+            data: tech,
+            backgroundColor: 'rgba(99, 102, 241, 0.88)',
+            borderColor: '#6366f1',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.55,
+            categoryPercentage: 0.7
+          },
+          {
+            label: 'Non-Technical Roles',
+            data: nonTech,
+            backgroundColor: 'rgba(251, 113, 133, 0.88)',
+            borderColor: '#fb7185',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.55,
+            categoryPercentage: 0.7
+          }
         ]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'top', labels: { font: { ...CHART_FONT, size: 11, weight: '700' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
-          tooltip: { mode: 'index', intersect: false }
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleFont: { ...CHART_FONT, size: 12, weight: '700' },
+            bodyFont: { ...CHART_FONT, size: 12 },
+            padding: 10,
+            cornerRadius: 8,
+            mode: 'index',
+            intersect: false
+          }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { ...CHART_FONT, size: 11, weight: '700' } } },
-          y: { beginAtZero: true, grid: { color: GRID_COLOR }, ticks: { font: { ...CHART_FONT, size: 11 }, stepSize: 1, precision: 0 } }
+          x: {
+            grid: { display: false },
+            ticks: { font: { ...CHART_FONT, size: 11, weight: '700' }, color: '#475569' }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: GRID_COLOR },
+            ticks: { font: { ...CHART_FONT, size: 11 }, color: '#94a3b8', stepSize: 1, precision: 0 }
+          }
         },
-        animation: { duration: 800, easing: 'easeInOutQuart' }
+        animation: { duration: 750, easing: 'easeInOutQuart' }
       }
     });
   } catch (e) { console.warn('Chart 4 error:', e); }
 }
+
 
 // ============================================================
 // STUDENT ROSTER

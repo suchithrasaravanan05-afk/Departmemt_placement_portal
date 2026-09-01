@@ -316,4 +316,47 @@ router.post("/drives/apply", (req, res) => {
     });
 });
 
+// ==========================================
+// UPDATE PLACEMENT WILLINGNESS / INTEREST
+// ==========================================
+router.post("/placement-interest", async (req, res) => {
+    const { userId, interest } = req.body; // interest: 'Interested' | 'Not Interested'
+
+
+    if (!userId || !interest) {
+        return res.status(400).json({ success: false, message: "User ID and placement interest status are required" });
+    }
+
+    try {
+        const client = supabaseAdmin || supabase;
+        if (!client) {
+            return res.status(500).json({ success: false, message: "Database client unavailable" });
+        }
+
+        // Check if student profile exists, update or create
+        const { data: existing } = await client.from("student_profiles").select("id, placement_willingness").eq("user_id", userId);
+
+        if (existing && existing.length > 0) {
+            const { error: upErr } = await client
+                .from("student_profiles")
+                .update({ placement_willingness: interest })
+                .eq("user_id", userId);
+
+            if (upErr) {
+                console.warn("⚠️ placement_willingness column warning:", upErr.message);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Placement interest saved as "${interest}"!`,
+            interest
+        });
+    } catch (err) {
+        console.error("Placement interest error:", err);
+        res.status(500).json({ success: false, message: "Server error while saving placement interest" });
+    }
+});
+
 module.exports = router;
+

@@ -488,137 +488,184 @@ router.get("/placed-students", (req, res) => {
 });
 
 // ==========================================
+// ANALYTICS DATA HELPER (SUPABASE DIRECT)
+// ==========================================
+async function getSupabaseAnalyticsData() {
+    const client = supabaseAdmin || supabase;
+    if (!client) throw new Error("Database client not initialized");
+
+    const [
+        { data: users },
+        { data: profiles },
+        { data: drives },
+        { data: apps }
+    ] = await Promise.all([
+        client.from("users").select("id, full_name, register_number, email, role, year, department"),
+        client.from("student_profiles").select("user_id, cgpa, standing_arrears_count, placement_willingness"),
+        client.from("placement_drives").select("id, company_name, job_role, min_cgpa, max_standing_arrears, eligible_years, created_at").order("created_at", { ascending: false }),
+        client.from("applications").select("id, drive_id, user_id, status, applied_at")
+    ]);
+
+    return {
+        users: (users || []).filter(u => u.role === 'student'),
+        profiles: profiles || [],
+        drives: drives || [],
+        apps: apps || []
+    };
+}
+
+// ==========================================
 // ANALYTICS: PLACED VS NON-PLACED (YEAR-WISE)
 // ==========================================
-router.get("/analytics/placed-nonplaced", (req, res) => {
-    const sql = `
-        SELECT 
-            u.year,
-            COUNT(DISTINCT u.id) AS total_count,
-            COUNT(DISTINCT CASE WHEN a.status = 'Selected' THEN u.id END) AS placed_count
-        FROM users u
-        LEFT JOIN applications a ON u.id = a.user_id
-        WHERE u.role = 'student' AND u.year IS NOT NULL
-        GROUP BY u.year
-        ORDER BY u.year ASC
-    `;
-    db.query(sql, [], (err, results) => {
-        if (err) {
-            console.error("Analytics placed-nonplaced error:", err);
-            return res.status(500).json({ success: false, message: "DB Error" });
-        }
-        res.json({ success: true, rows: results });
-    });
+router.get("/analytics/placed-nonplaced", async (req, res) => {
+    try {
+        const { users, apps } = await getSupabaseAnalyticsData();
+        const selectedUserIds = new Set(apps.filter(a => a.status === 'Selected').map(a => a.user_id));
+
+        const yearMap = { 1: { total: 0, placed: 0 }, 2: { total: 0, placed: 0 }, 3: { total: 0, placed: 0 }, 4: { total: 0, placed: 0 }, 5: { total: 0, placed: 0 } };
+
+        users.forEach(u => {
+            const yr = parseInt(u.year) || 3;
+            if (!yearMap[yr]) yearMap[yr] = { total: 0, placed: 0 };
+            yearMap[yr].total++;
+            if (selectedUserIds.has(u.id)) {
+                yearMap[yr].placed++;
+            }
+        });
+
+        const rows = [1, 2, 3, 4, 5].map(yr => ({
+            year: yr,
+            total_count: yearMap[yr]?.total || 0,
+            placed_count: yearMap[yr]?.placed || 0
+        }));
+
+        res.json({ success: true, rows });
+    } catch (err) {
+        console.error("Analytics placed-nonplaced error:", err);
+        res.status(500).json({ success: false, message: "Error loading placed analytics" });
+    }
 });
 
 // ==========================================
-// ANALYTICS: PLACEMENT INTEREST (APPLIED VS NOT APPLIED)
+// ANALYTICS: PLACEMENT INTEREST (WILLINGNESS)
 // ==========================================
-router.get("/analytics/placement-interest", (req, res) => {
-    const sql = `
-        SELECT 
-            COUNT(DISTINCT u.id) AS total,
-            COUNT(DISTINCT a.user_id) AS applied
-        FROM users u
-        LEFT JOIN applications a ON u.id = a.user_id
-        WHERE u.role = 'student'
-    `;
-    db.query(sql, [], (err, results) => {
-        if (err) {
-            console.error("Analytics placement-interest error:", err);
-            return res.status(500).json({ success: false, message: "DB Error" });
+router.get("/analytics/placement-interest", async (req, res) => {
+    try {
+        const { users, profiles, apps } = await getSupabaseAnalyticsData();
+        const profMap = new Map(profiles.map(p => [p.user_id, p]));
+        const appliedUserIds = new Set(apps.map(a => a.user_id));
+
+        let interested = 0;
+        let notInterested = 0;
+        let pending = 0;
+
+        users.forEach(u => {
+            const p = profMap.get(u.id);
+            const willingness = p ? p.placement_willingness : null;
+            if (willingness === 'Interested') {
+                interested++;
+            } else if (willingness === 'Not Interested') {
+                notInterested++;
+            } else if (appliedUserIds.has(u.id)) {
+                // If student has applied to any drive, they are interested in placements
+                interested++;
+            } else {
+                pending++;
+            }
+        });
+
+        // If no explicit willingness set yet, treat applied as interested and remainder as pending/not registered
+        if (interested === 0 && notInterested === 0) {
+            interested = appliedUserIds.size;
+            pending = Math.max(0, users.length - interested);
         }
-        const row = results && results[0] ? results[0] : { total: 0, applied: 0 };
-        res.json({ success: true, total: row.total, applied: row.applied });
-    });
+
+        res.json({
+            success: true,
+            total: users.length,
+            interested,
+            not_interested: notInterested,
+            pending,
+            applied: appliedUserIds.size
+        });
+    } catch (err) {
+        console.error("Analytics placement-interest error:", err);
+        res.status(500).json({ success: false, message: "Error loading placement interest" });
+    }
 });
 
 // ==========================================
 // ANALYTICS: COMPANY-WISE (ELIGIBLE / REGISTERED / PLACED)
 // ==========================================
-router.get("/analytics/company-stats", (req, res) => {
-    const sqlDrives = `
-        SELECT pd.id, pd.company_name, pd.job_role, pd.min_cgpa, pd.max_standing_arrears, pd.eligible_years,
-               COUNT(a.id) AS registered,
-               COUNT(CASE WHEN a.status = 'Selected' THEN 1 END) AS placed
-        FROM placement_drives pd
-        LEFT JOIN applications a ON a.drive_id = pd.id
-        GROUP BY pd.id, pd.company_name, pd.job_role, pd.min_cgpa, pd.max_standing_arrears, pd.eligible_years, pd.created_at
-        ORDER BY pd.created_at DESC
-        LIMIT 10
-    `;
-    const sqlStudents = `
-        SELECT u.id, u.year, COALESCE(sp.cgpa, 0) as cgpa, COALESCE(sp.standing_arrears_count, 0) as arrears
-        FROM users u
-        LEFT JOIN student_profiles sp ON u.id = sp.user_id
-        WHERE u.role = 'student'
-    `;
+router.get("/analytics/company-stats", async (req, res) => {
+    try {
+        const { users, profiles, drives, apps } = await getSupabaseAnalyticsData();
+        const profMap = new Map(profiles.map(p => [p.user_id, p]));
 
-    db.query(sqlDrives, [], (errD, drives) => {
-        if (errD) {
-            console.error("Analytics company-stats drives error:", errD);
-            return res.status(500).json({ success: false, message: "DB Error" });
-        }
-        db.query(sqlStudents, [], (errS, students) => {
-            if (errS) {
-                console.error("Analytics company-stats students error:", errS);
-                return res.status(500).json({ success: false, message: "DB Error" });
-            }
+        const rows = drives.slice(0, 8).map(d => {
+            const minCgpa = parseFloat(d.min_cgpa || 0);
+            const maxArrears = parseInt(d.max_standing_arrears ?? 99);
+            const eligYears = (d.eligible_years || "1,2,3,4,5").split(",").map(y => parseInt(y.trim())).filter(y => !isNaN(y));
 
-            const rows = (drives || []).map(d => {
-                const minCgpa = parseFloat(d.min_cgpa || 0);
-                const maxArrears = parseInt(d.max_standing_arrears ?? 99);
-                const eligYears = (d.eligible_years || "1,2,3,4,5").split(",").map(y => parseInt(y.trim())).filter(y => !isNaN(y));
+            const eligibleCount = users.filter(u => {
+                const sp = profMap.get(u.id) || {};
+                const sYear = parseInt(u.year);
+                const sCgpa = parseFloat(sp.cgpa || 0);
+                const sArrears = parseInt(sp.standing_arrears_count || 0);
+                const yearOk = eligYears.length === 0 || eligYears.includes(sYear);
+                const cgpaOk = sCgpa >= minCgpa;
+                const arrearsOk = sArrears <= maxArrears;
+                return yearOk && cgpaOk && arrearsOk;
+            }).length;
 
-                const eligibleCount = (students || []).filter(s => {
-                    const sYear = parseInt(s.year);
-                    const sCgpa = parseFloat(s.cgpa || 0);
-                    const sArrears = parseInt(s.arrears || 0);
-                    const yearOk = eligYears.length === 0 || eligYears.includes(sYear);
-                    const cgpaOk = sCgpa >= minCgpa;
-                    const arrearsOk = sArrears <= maxArrears;
-                    return yearOk && cgpaOk && arrearsOk;
-                }).length;
+            const driveApps = apps.filter(a => a.drive_id === d.id);
+            const registered = driveApps.length;
+            const placed = driveApps.filter(a => a.status === 'Selected').length;
 
-                return {
-                    id: d.id,
-                    company_name: d.company_name,
-                    job_role: d.job_role,
-                    eligible: eligibleCount,
-                    registered: parseInt(d.registered || 0),
-                    placed: parseInt(d.placed || 0)
-                };
-            });
-
-            res.json({ success: true, rows });
+            return {
+                id: d.id,
+                company_name: d.company_name,
+                job_role: d.job_role,
+                eligible: eligibleCount,
+                registered,
+                placed
+            };
         });
-    });
+
+        res.json({ success: true, rows });
+    } catch (err) {
+        console.error("Analytics company-stats error:", err);
+        res.status(500).json({ success: false, message: "Error loading company stats" });
+    }
 });
 
 // ==========================================
 // ANALYTICS: YEAR-WISE TECH VS NON-TECH PLACED
 // ==========================================
-router.get("/analytics/tech-nontech-year", (req, res) => {
-    const sql = `
-        SELECT 
-            u.year,
-            pd.job_role,
-            COUNT(a.id) AS cnt
-        FROM applications a
-        JOIN users u ON a.user_id = u.id
-        JOIN placement_drives pd ON a.drive_id = pd.id
-        WHERE a.status = 'Selected' AND u.year IS NOT NULL
-        GROUP BY u.year, pd.job_role
-        ORDER BY u.year ASC
-    `;
-    db.query(sql, [], (err, results) => {
-        if (err) {
-            console.error("Analytics tech-nontech-year error:", err);
-            return res.status(500).json({ success: false, message: "DB Error" });
-        }
-        res.json({ success: true, rows: results });
-    });
+router.get("/analytics/tech-nontech-year", async (req, res) => {
+    try {
+        const { users, drives, apps } = await getSupabaseAnalyticsData();
+        const userMap = new Map(users.map(u => [u.id, u]));
+        const driveMap = new Map(drives.map(d => [d.id, d]));
+
+        const placedApps = apps.filter(a => a.status === 'Selected');
+        const rows = placedApps.map(a => {
+            const u = userMap.get(a.user_id) || {};
+            const d = driveMap.get(a.drive_id) || {};
+            return {
+                year: u.year || 3,
+                job_role: d.job_role || 'Software Engineer',
+                cnt: 1
+            };
+        });
+
+        res.json({ success: true, rows });
+    } catch (err) {
+        console.error("Analytics tech-nontech-year error:", err);
+        res.status(500).json({ success: false, message: "Error loading tech vs non-tech placements" });
+    }
 });
 
 module.exports = router;
+
 
