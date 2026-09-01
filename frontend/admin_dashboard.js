@@ -1462,19 +1462,23 @@ async function openDriveEligibleModal(driveId) {
       <strong>Criteria:</strong> Min CGPA: ${parseFloat(d.min_cgpa||0).toFixed(2)} | Max Arrears: ${d.max_standing_arrears||0} | Batch: ${escapeHtml(d.target_batch||'2023-2027')} | Package: ${escapeHtml(d.package_ctc||'')}
     `;
 
-    el('eligibleTotalCount').innerText     = s.total_eligible;
-    el('eligibleAppliedCount').innerText   = s.applied_count;
-    el('eligibleUnappliedCount').innerText = s.unapplied_count;
+    el('eligibleTotalCount').innerText       = s.total_eligible;
+    el('eligibleAppliedCount').innerText     = s.applied_count;
+    if (el('eligibleShortlistedCount')) el('eligibleShortlistedCount').innerText = s.shortlisted_count || 0;
+    if (el('eligiblePlacedCount'))      el('eligiblePlacedCount').innerText      = s.placed_count || 0;
+    el('eligibleUnappliedCount').innerText   = s.unapplied_count;
 
-    el('pillCountAll').innerText       = s.total_eligible;
-    el('pillCountApplied').innerText   = s.applied_count;
-    el('pillCountUnapplied').innerText = s.unapplied_count;
+    el('pillCountAll').innerText         = s.total_eligible;
+    el('pillCountApplied').innerText     = s.applied_count;
+    if (el('pillCountShortlisted')) el('pillCountShortlisted').innerText = s.shortlisted_count || 0;
+    if (el('pillCountPlaced'))      el('pillCountPlaced').innerText      = s.placed_count || 0;
+    el('pillCountUnapplied').innerText   = s.unapplied_count;
 
     filterEligibleModalList('all');
   } catch (err) {
     console.error('Eligible students error:', err);
     el('eligibleStudentsTableBody').innerHTML = `
-      <tr><td colspan="9" class="text-center" style="padding:30px;color:#ef4444;">Network error while fetching eligible students.</td></tr>`;
+      <tr><td colspan="10" class="text-center" style="padding:30px;color:#ef4444;">Network error while fetching eligible students.</td></tr>`;
   }
 }
 
@@ -1487,7 +1491,7 @@ function closeDriveEligibleModal() {
 function filterEligibleModalList(filterType) {
   currentEligibleFilter = filterType;
 
-  ['btnFilterAllEligible', 'btnFilterAppliedEligible', 'btnFilterUnappliedEligible'].forEach(id => {
+  ['btnFilterAllEligible', 'btnFilterAppliedEligible', 'btnFilterShortlistedEligible', 'btnFilterPlacedEligible', 'btnFilterUnappliedEligible'].forEach(id => {
     const btn = el(id);
     if (btn) {
       btn.className = 'btn btn-sm btn-outline';
@@ -1498,6 +1502,10 @@ function filterEligibleModalList(filterType) {
     el('btnFilterAllEligible').className = 'btn btn-sm btn-primary';
   } else if (filterType === 'applied' && el('btnFilterAppliedEligible')) {
     el('btnFilterAppliedEligible').className = 'btn btn-sm btn-success';
+  } else if (filterType === 'shortlisted' && el('btnFilterShortlistedEligible')) {
+    el('btnFilterShortlistedEligible').className = 'btn btn-sm btn-primary';
+  } else if (filterType === 'placed' && el('btnFilterPlacedEligible')) {
+    el('btnFilterPlacedEligible').className = 'btn btn-sm btn-success';
   } else if (filterType === 'unapplied' && el('btnFilterUnappliedEligible')) {
     el('btnFilterUnappliedEligible').className = 'btn btn-sm btn-warning';
   }
@@ -1512,8 +1520,10 @@ function renderEligibleStudentsTable() {
   if (!tbody) return;
 
   let list = currentEligibleData.students.all || [];
-  if (currentEligibleFilter === 'applied')   list = currentEligibleData.students.applied || [];
-  if (currentEligibleFilter === 'unapplied') list = currentEligibleData.students.unapplied || [];
+  if (currentEligibleFilter === 'applied')     list = currentEligibleData.students.applied || [];
+  if (currentEligibleFilter === 'shortlisted') list = currentEligibleData.students.shortlisted || [];
+  if (currentEligibleFilter === 'placed')      list = currentEligibleData.students.placed || [];
+  if (currentEligibleFilter === 'unapplied')   list = currentEligibleData.students.unapplied || [];
 
   const search = (el('eligibleSearchInput')?.value || '').trim().toLowerCase();
   if (search) {
@@ -1527,7 +1537,7 @@ function renderEligibleStudentsTable() {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="text-center" style="padding:32px;color:#94a3b8;">
+        <td colspan="10" class="text-center" style="padding:32px;color:#94a3b8;">
           <i class="fa-solid fa-users-slash" style="font-size:24px;margin-bottom:6px;"></i>
           <p>No eligible students match this view / search.</p>
         </td>
@@ -1535,10 +1545,31 @@ function renderEligibleStudentsTable() {
     return;
   }
 
+  const driveId = currentEligibleData.drive ? currentEligibleData.drive.id : null;
+
   tbody.innerHTML = list.map((s, idx) => {
-    const statusPill = s.is_applied
-      ? `<span class="badge badge-green" style="font-weight:700;"><i class="fa-solid fa-circle-check"></i> Applied (${escapeHtml(s.application_status)})</span>`
-      : `<span class="badge badge-yellow" style="font-weight:700;"><i class="fa-solid fa-clock"></i> Not Applied / Pending</span>`;
+    const rawSt = (s.application_status || '').toLowerCase();
+    let statusPill = '';
+    if (!s.is_applied) {
+      statusPill = `<span class="badge badge-yellow" style="font-weight:700;"><i class="fa-solid fa-clock"></i> Not Applied</span>`;
+    } else if (rawSt === 'selected' || rawSt === 'placed') {
+      statusPill = `<span class="badge badge-green" style="font-weight:800;background:#ecfdf5;color:#047857;border:1.5px solid #6ee7b7;"><i class="fa-solid fa-trophy"></i> Placed</span>`;
+    } else if (rawSt === 'shortlisted') {
+      statusPill = `<span class="badge" style="background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;font-weight:700;"><i class="fa-solid fa-star"></i> Shortlisted</span>`;
+    } else if (rawSt === 'rejected') {
+      statusPill = `<span class="badge badge-red" style="font-weight:700;"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>`;
+    } else {
+      statusPill = `<span class="badge badge-blue" style="font-weight:700;"><i class="fa-solid fa-file-signature"></i> Applied</span>`;
+    }
+
+    const actionSelect = s.is_applied && s.application_id
+      ? `<select class="form-control" style="font-size:11.5px;padding:3px 6px;width:125px;font-weight:700;border-radius:6px;" onchange="handleInlineApplicationStatusChange(this, ${s.application_id}, ${driveId})">
+           <option value="Applied" ${rawSt === 'applied' ? 'selected' : ''}>Applied</option>
+           <option value="Shortlisted" ${rawSt === 'shortlisted' ? 'selected' : ''}>⭐ Shortlisted</option>
+           <option value="Selected" ${(rawSt === 'selected' || rawSt === 'placed') ? 'selected' : ''}>🏆 Placed</option>
+           <option value="Rejected" ${rawSt === 'rejected' ? 'selected' : ''}>❌ Rejected</option>
+         </select>`
+      : `<span style="color:#94a3b8;font-size:11.5px;font-style:italic;">Not Applied</span>`;
 
     const resumeBtn = s.resume_file
       ? `<a href="${s.resume_file}" target="_blank" class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;" title="View Resume">
@@ -1563,9 +1594,46 @@ function renderEligibleStudentsTable() {
         </td>
         <td style="font-size:12px;">${s.tenth_percentage} / ${s.twelth_percentage}</td>
         <td>${statusPill}</td>
+        <td>${actionSelect}</td>
         <td>${resumeBtn}</td>
       </tr>`;
   }).join('');
+}
+
+async function handleInlineApplicationStatusChange(selectEl, applicationId, driveId) {
+  const newStatus = selectEl.value;
+  selectEl.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/applications/status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ application_id: applicationId, status: newStatus })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showAdminAlert(`Application status updated to "${newStatus}"`, true);
+      // Reload this modal data silently to keep filter tabs & counts up to date
+      if (driveId) {
+        const savedFilter = currentEligibleFilter;
+        await openDriveEligibleModal(driveId);
+        filterEligibleModalList(savedFilter);
+      }
+      // Update general stats and tables
+      loadDashboardStats();
+    } else {
+      alert(data.message || 'Failed to update status');
+      selectEl.disabled = false;
+    }
+  } catch (err) {
+    console.error('Status update error:', err);
+    alert('Network error while updating status');
+    selectEl.disabled = false;
+  }
 }
 
 function exportEligibleStudentsExcel() {
@@ -1575,8 +1643,10 @@ function exportEligibleStudentsExcel() {
   }
 
   let list = currentEligibleData.students.all || [];
-  if (currentEligibleFilter === 'applied')   list = currentEligibleData.students.applied || [];
-  if (currentEligibleFilter === 'unapplied') list = currentEligibleData.students.unapplied || [];
+  if (currentEligibleFilter === 'applied')     list = currentEligibleData.students.applied || [];
+  if (currentEligibleFilter === 'shortlisted') list = currentEligibleData.students.shortlisted || [];
+  if (currentEligibleFilter === 'placed')      list = currentEligibleData.students.placed || [];
+  if (currentEligibleFilter === 'unapplied')   list = currentEligibleData.students.unapplied || [];
 
   const d = currentEligibleData.drive || {};
   const companySafe = (d.company_name || 'Placement_Drive').replace(/[^a-zA-Z0-9]/g, '_');
@@ -1610,8 +1680,8 @@ function exportEligibleStudentsExcel() {
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Eligible Students');
-  XLSX.writeFile(wb, `${companySafe}_Eligible_Students.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, `${currentEligibleFilter.toUpperCase()}_Students`);
+  XLSX.writeFile(wb, `${companySafe}_${currentEligibleFilter}_Students.xlsx`);
 }
 
 // ============================================================

@@ -272,6 +272,8 @@ router.get("/drives/:id/eligible-students", (req, res) => {
                 const allEligible = [];
                 const appliedList = [];
                 const unappliedList = [];
+                const shortlistedList = [];
+                const placedList = [];
 
                 (students || []).forEach(s => {
                     const stdCgpa = parseFloat(s.cgpa || 0);
@@ -285,8 +287,10 @@ router.get("/drives/:id/eligible-students", (req, res) => {
 
                     if (isCgpaOk && isArrearsOk && isYearOk) {
                         const app = appMap[s.user_id];
+                        const appStatus = app ? app.status : 'Not Applied';
                         const studentData = {
                             user_id: s.user_id,
+                            application_id: app ? app.id : null,
                             full_name: s.full_name,
                             register_number: s.register_number,
                             email: s.email,
@@ -299,13 +303,19 @@ router.get("/drives/:id/eligible-students", (req, res) => {
                             twelth_percentage: s.twelth_percentage ? `${s.twelth_percentage}%` : '--',
                             resume_file: s.resume_file,
                             is_applied: !!app,
-                            application_status: app ? app.status : 'Not Applied',
+                            application_status: appStatus,
                             applied_at: app ? app.applied_at : null
                         };
 
                         allEligible.push(studentData);
                         if (app) {
                             appliedList.push(studentData);
+                            const stLower = (appStatus || '').toLowerCase();
+                            if (stLower === 'shortlisted') {
+                                shortlistedList.push(studentData);
+                            } else if (stLower === 'selected' || stLower === 'placed') {
+                                placedList.push(studentData);
+                            }
                         } else {
                             unappliedList.push(studentData);
                         }
@@ -318,12 +328,16 @@ router.get("/drives/:id/eligible-students", (req, res) => {
                     summary: {
                         total_eligible: allEligible.length,
                         applied_count: appliedList.length,
-                        unapplied_count: unappliedList.length
+                        unapplied_count: unappliedList.length,
+                        shortlisted_count: shortlistedList.length,
+                        placed_count: placedList.length
                     },
                     students: {
                         all: allEligible,
                         applied: appliedList,
-                        unapplied: unappliedList
+                        unapplied: unappliedList,
+                        shortlisted: shortlistedList,
+                        placed: placedList
                     }
                 });
             });
