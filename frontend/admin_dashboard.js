@@ -86,34 +86,17 @@ function escapeHtml(str) {
 }
 
 function switchAdminTab(tabName, initialStatusFilter = null) {
-  const tabs   = ['students', 'drives', 'applications', 'placed'];
-  const tabMap = { students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', analytics: 'tabBtnAnalytics' };
-  const panMap = { students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced' };
-
-  if (tabName === 'analytics') {
-    // Analytics is situated in the main view directly before the student roster
-    tabs.forEach(t => {
-      el(panMap[t])?.classList.toggle('hidden', t !== 'students');
-      el(tabMap[t])?.classList.toggle('active', false);
-    });
-    el('tabBtnAnalytics')?.classList.add('active');
-    loadAnalyticsCharts();
-    fetchStudentRoster();
-    el('adminAnalyticsSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    return;
-  }
-
-  el('tabBtnAnalytics')?.classList.remove('active');
+  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed'];
+  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced' };
+  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced' };
 
   tabs.forEach(t => {
     el(panMap[t])?.classList.toggle('hidden', t !== tabName);
     el(tabMap[t])?.classList.toggle('active', t === tabName);
   });
 
-  if (tabName === 'students') {
-    loadAnalyticsCharts();
-    fetchStudentRoster();
-  }
+  if (tabName === 'analytics')    loadAnalyticsCharts();
+  if (tabName === 'students')     fetchStudentRoster();
   if (tabName === 'drives')       loadAdminDrives();
   if (tabName === 'applications') {
     if (initialStatusFilter !== null && el('filterAppStatus')) {

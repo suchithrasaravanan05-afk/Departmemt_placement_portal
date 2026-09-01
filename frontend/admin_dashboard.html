@@ -54,7 +54,7 @@
         <div class="admin-stat-lbl">Registered Students</div>
       </div>
     </div>
-    <div class="admin-stat-card clickable" onclick="switchAdminTab('applications', 'Selected')" style="cursor:pointer;border-color:#a7f3d0;" title="Click to view placed students">
+    <div class="admin-stat-card clickable" onclick="switchAdminTab('placed')" style="cursor:pointer;border-color:#a7f3d0;" title="Click to view placed students">
       <div class="admin-stat-icon green"><i class="fa-solid fa-user-check"></i></div>
       <div>
         <div class="admin-stat-val" id="statPlacedStudents">—</div>
@@ -78,9 +78,11 @@
   </div>
 
   <!-- Tab Navigation -->
-  <!-- Tab Navigation -->
   <nav class="admin-tab-navigation">
-    <button class="admin-tab-btn active" id="tabBtnStudents" onclick="switchAdminTab('students')">
+    <button class="admin-tab-btn active" id="tabBtnAnalytics" onclick="switchAdminTab('analytics')">
+      <i class="fa-solid fa-chart-pie"></i> Analytics
+    </button>
+    <button class="admin-tab-btn" id="tabBtnStudents" onclick="switchAdminTab('students')">
       <i class="fa-solid fa-users-viewfinder"></i> Student Roster
     </button>
     <button class="admin-tab-btn" id="tabBtnDrives" onclick="switchAdminTab('drives')">
@@ -92,22 +94,16 @@
     <button class="admin-tab-btn" id="tabBtnPlaced" onclick="switchAdminTab('placed')">
       <i class="fa-solid fa-award"></i> Placed Students
     </button>
-    <button class="admin-tab-btn" id="tabBtnAnalytics" onclick="switchAdminTab('analytics')">
-      <i class="fa-solid fa-chart-pie"></i> Analytics
-    </button>
   </nav>
 
   <!-- Alert -->
   <div id="adminAlert" class="hidden"></div>
 
   <!-- ========================================================
-       TAB 1: STUDENT ROSTER
+       TAB 1: ANALYTICS (CHARTS & GRAPHS)
        ======================================================== -->
-  <div id="adminTabStudents" class="tab-content">
+  <div id="adminTabAnalytics" class="tab-content">
 
-    <!-- ========================================================
-         EXECUTIVE PLACEMENT ANALYTICS (BEFORE STUDENT ROSTER)
-         ======================================================== -->
     <div class="analytics-pro-container" id="adminAnalyticsSection">
 
       <!-- Analytics Ribbon Header -->
@@ -289,6 +285,13 @@
       </div>
 
     </div><!-- /analytics-pro-container -->
+
+  </div><!-- /adminTabAnalytics -->
+
+  <!-- ========================================================
+       TAB 2: STUDENT ROSTER
+       ======================================================== -->
+  <div id="adminTabStudents" class="tab-content hidden">
 
     <div class="admin-panel-card">
       <div class="admin-panel-header">
