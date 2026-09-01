@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadDashboardStats();
   fetchStudentRoster();
+  loadAnalyticsCharts();
 });
 
 // ============================================================
@@ -122,6 +123,335 @@ async function loadDashboardStats() {
     }
   } catch (err) {
     console.error('Stats load error:', err);
+  }
+}
+
+// ============================================================
+// ANALYTICS CHARTS
+// ============================================================
+let _chartPlacedRoles        = null;
+let _chartDrivesRegistrations = null;
+let _chartYearComparison      = null;
+
+async function loadAnalyticsCharts() {
+  try {
+    await Promise.all([
+      loadPlacedRolesChart(),
+      loadDrivesRegistrationsChart(),
+      loadYearComparisonChart()
+    ]);
+  } catch (e) {
+    console.warn('Analytics charts load error:', e);
+  }
+}
+
+/* ---- Helpers ---- */
+function isTechnicalRole(role) {
+  const techKeywords = [
+    'software','developer','engineer','data','analyst','devops','cloud','ai','ml',
+    'machine learning','network','cyber','security','backend','frontend','full stack',
+    'fullstack','embedded','iot','it ','information technology','programmer','coding',
+    'architect','qa','testing','automation','blockchain','robotics','java','python',
+    'react','angular','node','ui/ux','design','product manager','technical'
+  ];
+  const r = (role || '').toLowerCase();
+  return techKeywords.some(kw => r.includes(kw));
+}
+
+function getChartColors() {
+  return {
+    techGrad:    'rgba(99,102,241,0.85)',
+    nonTechGrad: 'rgba(251,113,133,0.85)',
+    techBorder:  '#6366f1',
+    nonBorder:   '#fb7185',
+    currYr:      'rgba(16,185,129,0.8)',
+    lastYr:      'rgba(148,163,184,0.6)',
+    drives:      'rgba(8,145,178,0.8)',
+    regs:        'rgba(139,92,246,0.75)',
+  };
+}
+
+/* ---- Chart 1: Placed Students – Technical vs Non-Technical ---- */
+async function loadPlacedRolesChart() {
+  try {
+    // Fetch placed students via the applications endpoint (Selected status)
+    const res  = await fetch(`${API_BASE}/admin/analytics/placed-roles`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+
+    let technical = 0, nonTechnical = 0;
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.rows)) {
+        data.rows.forEach(r => {
+          if (isTechnicalRole(r.job_role)) technical += parseInt(r.cnt || 1);
+          else nonTechnical += parseInt(r.cnt || 1);
+        });
+      }
+    } else {
+      // Fallback: use already-fetched applications list if available
+      (currentFetchedApplications || []).filter(a => a.status === 'Selected').forEach(a => {
+        if (isTechnicalRole(a.job_role)) technical++;
+        else nonTechnical++;
+      });
+    }
+
+    const total = technical + nonTechnical;
+    const cEl = el('cstatPlacedTotal');
+    if (cEl) cEl.textContent = total || '0';
+
+    // Legend
+    const legendEl = el('placedRoleLegend');
+    if (legendEl) {
+      const c = getChartColors();
+      legendEl.innerHTML = `
+        <span class="chart-legend-pill">
+          <span class="chart-legend-dot" style="background:${c.techBorder};"></span>
+          Technical <strong style="margin-left:4px;color:#6366f1;">${technical}</strong>
+        </span>
+        <span class="chart-legend-pill">
+          <span class="chart-legend-dot" style="background:${c.nonBorder};"></span>
+          Non-Tech <strong style="margin-left:4px;color:#fb7185;">${nonTechnical}</strong>
+        </span>`;
+    }
+
+    const canvas = el('chartPlacedRoles');
+    if (!canvas) return;
+    const c = getChartColors();
+
+    if (_chartPlacedRoles) { _chartPlacedRoles.destroy(); _chartPlacedRoles = null; }
+
+    _chartPlacedRoles = new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Technical', 'Non-Technical'],
+        datasets: [{
+          data: [technical || 0, nonTechnical || 0],
+          backgroundColor: [c.techGrad, c.nonTechGrad],
+          borderColor:     [c.techBorder, c.nonBorder],
+          borderWidth: 2,
+          hoverOffset: 10,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.parsed} student${ctx.parsed !== 1 ? 's' : ''}`
+            }
+          }
+        },
+        animation: { animateRotate: true, duration: 900, easing: 'easeInOutQuart' }
+      }
+    });
+  } catch (e) {
+    console.warn('Chart 1 error:', e);
+  }
+}
+
+/* ---- Chart 2: Current Drives vs Registrations per Drive ---- */
+async function loadDrivesRegistrationsChart() {
+  try {
+    const res  = await fetch(`${API_BASE}/admin/analytics/drives-registrations`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+
+    let labels     = [];
+    let driveCounts = [];
+    let regCounts   = [];
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.rows)) {
+        data.rows.slice(0, 8).forEach(r => {
+          labels.push(r.company_name ? r.company_name.substring(0, 12) : 'Drive');
+          driveCounts.push(1);
+          regCounts.push(parseInt(r.registrations || 0));
+        });
+      }
+    }
+
+    // If API not ready, use fallback from drives already loaded in DOM
+    if (labels.length === 0) {
+      const driveRes = await fetch(`${API_BASE}/student/drives/0`, {
+        headers: { Authorization: `Bearer ${currentAdminToken}` }
+      });
+      const driveData = await driveRes.json();
+      if (driveData.success && Array.isArray(driveData.drives)) {
+        driveData.drives.slice(0, 8).forEach(d => {
+          labels.push((d.company_name || 'Drive').substring(0, 12));
+          driveCounts.push(1);
+          regCounts.push(parseInt(d.registered_count || d.applicant_count || 0));
+        });
+      }
+    }
+
+    const canvas = el('chartDrivesRegistrations');
+    if (!canvas) return;
+    const c = getChartColors();
+
+    if (_chartDrivesRegistrations) { _chartDrivesRegistrations.destroy(); _chartDrivesRegistrations = null; }
+
+    _chartDrivesRegistrations = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Active Drives',
+            data: driveCounts,
+            backgroundColor: c.drives,
+            borderColor: '#0891b2',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.55,
+          },
+          {
+            label: 'Registered Students',
+            data: regCounts,
+            backgroundColor: c.regs,
+            borderColor: '#8b5cf6',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.55,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { font: { size: 11, weight: '700' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' }
+          },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10.5, weight: '600' }, maxRotation: 30 } },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226,232,240,0.7)' },
+            ticks: { font: { size: 11 }, stepSize: 1, precision: 0 }
+          }
+        },
+        animation: { duration: 800, easing: 'easeInOutQuart' }
+      }
+    });
+  } catch (e) {
+    console.warn('Chart 2 error:', e);
+  }
+}
+
+/* ---- Chart 3: Last Year vs Current Year Drives by Month ---- */
+async function loadYearComparisonChart() {
+  try {
+    const now       = new Date();
+    const currYear  = now.getFullYear();
+    const lastYear  = currYear - 1;
+
+    const subtitleEl = el('yoyChartSubtitle');
+    if (subtitleEl) subtitleEl.textContent = `${lastYear} vs ${currYear} drives by month`;
+
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const currCounts = Array(12).fill(0);
+    const lastCounts = Array(12).fill(0);
+
+    const res = await fetch(`${API_BASE}/admin/analytics/yearly-drives`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.rows)) {
+        data.rows.forEach(r => {
+          const y = parseInt(r.yr);  const m = parseInt(r.mo) - 1;
+          if (y === currYear && m >= 0 && m < 12) currCounts[m] = parseInt(r.cnt || 0);
+          if (y === lastYear && m >= 0 && m < 12) lastCounts[m] = parseInt(r.cnt || 0);
+        });
+      }
+    } else {
+      // Fallback: try fetching all drives and group by created_at
+      const driveRes = await fetch(`${API_BASE}/student/drives/0`, {
+        headers: { Authorization: `Bearer ${currentAdminToken}` }
+      });
+      const driveData = await driveRes.json();
+      if (driveData.success && Array.isArray(driveData.drives)) {
+        driveData.drives.forEach(d => {
+          const dt = new Date(d.created_at || d.deadline || Date.now());
+          const y = dt.getFullYear(); const m = dt.getMonth();
+          if (y === currYear) currCounts[m]++;
+          if (y === lastYear) lastCounts[m]++;
+        });
+      }
+    }
+
+    const canvas = el('chartYearComparison');
+    if (!canvas) return;
+    const c = getChartColors();
+
+    if (_chartYearComparison) { _chartYearComparison.destroy(); _chartYearComparison = null; }
+
+    _chartYearComparison = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: monthNames,
+        datasets: [
+          {
+            label: `${lastYear} Drives`,
+            data: lastCounts,
+            backgroundColor: c.lastYr,
+            borderColor: '#94a3b8',
+            borderWidth: 1.5,
+            borderRadius: 5,
+            borderSkipped: false,
+            barPercentage: 0.55,
+          },
+          {
+            label: `${currYear} Drives`,
+            data: currCounts,
+            backgroundColor: c.currYr,
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            borderRadius: 5,
+            borderSkipped: false,
+            barPercentage: 0.55,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { font: { size: 11, weight: '700' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' }
+          },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10.5, weight: '600' } } },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226,232,240,0.7)' },
+            ticks: { font: { size: 11 }, stepSize: 1, precision: 0 }
+          }
+        },
+        animation: { duration: 800, easing: 'easeInOutQuart' }
+      }
+    });
+  } catch (e) {
+    console.warn('Chart 3 error:', e);
   }
 }
 

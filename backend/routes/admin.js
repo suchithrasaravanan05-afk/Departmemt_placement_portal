@@ -487,4 +487,67 @@ router.get("/placed-students", (req, res) => {
     });
 });
 
-module.exports = router;
+// ==========================================
+// ANALYTICS: PLACED STUDENTS BY ROLE TYPE
+// ==========================================
+router.get("/analytics/placed-roles", (req, res) => {
+    const sql = `
+        SELECT pd.job_role, COUNT(a.id) as cnt
+        FROM applications a
+        JOIN placement_drives pd ON a.drive_id = pd.id
+        WHERE a.status = 'Selected'
+        GROUP BY pd.job_role
+        ORDER BY cnt DESC
+    `;
+    db.query(sql, [], (err, results) => {
+        if (err) {
+            console.error("Analytics placed-roles error:", err);
+            return res.status(500).json({ success: false, message: "DB Error" });
+        }
+        res.json({ success: true, rows: results });
+    });
+});
+
+// ==========================================
+// ANALYTICS: DRIVES VS REGISTRATIONS
+// ==========================================
+router.get("/analytics/drives-registrations", (req, res) => {
+    const sql = `
+        SELECT pd.id, pd.company_name, pd.job_role,
+               COUNT(a.id) as registrations
+        FROM placement_drives pd
+        LEFT JOIN applications a ON a.drive_id = pd.id
+        GROUP BY pd.id, pd.company_name, pd.job_role
+        ORDER BY pd.created_at DESC
+        LIMIT 10
+    `;
+    db.query(sql, [], (err, results) => {
+        if (err) {
+            console.error("Analytics drives-registrations error:", err);
+            return res.status(500).json({ success: false, message: "DB Error" });
+        }
+        res.json({ success: true, rows: results });
+    });
+});
+
+// ==========================================
+// ANALYTICS: YEAR-OVER-YEAR DRIVES BY MONTH
+// ==========================================
+router.get("/analytics/yearly-drives", (req, res) => {
+    const sql = `
+        SELECT YEAR(created_at) as yr, MONTH(created_at) as mo, COUNT(*) as cnt
+        FROM placement_drives
+        WHERE YEAR(created_at) >= YEAR(CURDATE()) - 1
+        GROUP BY YEAR(created_at), MONTH(created_at)
+        ORDER BY yr ASC, mo ASC
+    `;
+    db.query(sql, [], (err, results) => {
+        if (err) {
+            console.error("Analytics yearly-drives error:", err);
+            return res.status(500).json({ success: false, message: "DB Error" });
+        }
+        res.json({ success: true, rows: results });
+    });
+});
+
+module.exports = router;

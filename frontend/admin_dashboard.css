@@ -689,4 +689,164 @@
 @media (max-width: 480px) {
   .admin-stats-grid { grid-template-columns: 1fr; }
 }
- 
+
+/* ============================================================
+   ANALYTICS CHARTS SECTION
+   ============================================================ */
+.charts-analytics-section {
+  display: grid;
+  grid-template-columns: 320px 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 22px;
+  align-items: start;
+}
+
+.chart-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 18px 18px 0 0;
+}
+
+.chart-card:nth-child(1)::before { background: linear-gradient(90deg,#6366f1,#8b5cf6); }
+.chart-card:nth-child(2)::before { background: linear-gradient(90deg,#0891b2,#06b6d4); }
+.chart-card:nth-child(3)::before { background: linear-gradient(90deg,#059669,#10b981); }
+
+.chart-card:hover {
+  box-shadow: 0 8px 24px rgba(15,23,42,0.1);
+  transform: translateY(-2px);
+}
+
+.chart-card-wide {
+  /* takes remaining columns naturally in CSS grid */
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.chart-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+.chart-card-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.chart-card-sub {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Pie chart wrapper with center overlay */
+.chart-canvas-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 260px;
+}
+
+.chart-center-stat {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.cstat-val {
+  font-size: 26px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.cstat-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+}
+
+/* Legend pills row */
+.chart-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.chart-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #374151;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.chart-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Responsive: stack on tablet/mobile */
+@media (max-width: 1200px) {
+  .charts-analytics-section {
+    grid-template-columns: 300px 1fr;
+  }
+  .chart-card:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-analytics-section {
+    grid-template-columns: 1fr;
+  }
+  .chart-card:nth-child(3) {
+    grid-column: unset;
+  }
+  .chart-canvas-wrap {
+    height: 220px;
+  }
+}

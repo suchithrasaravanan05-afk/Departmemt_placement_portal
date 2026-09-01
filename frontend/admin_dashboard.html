@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="admin_dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body class="admin-body">
 
@@ -100,6 +101,65 @@
        TAB 1: STUDENT ROSTER
        ======================================================== -->
   <div id="adminTabStudents" class="tab-content">
+
+    <!-- ===== ANALYTICS CHARTS ROW ===== -->
+    <div class="charts-analytics-section" id="analyticsChartsSection">
+
+      <!-- Chart 1: Year-wise Placed Students — Technical vs Non-Technical -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <div>
+            <div class="chart-card-title">Placed Students by Role Type</div>
+            <div class="chart-card-sub">Technical vs Non-Technical placements</div>
+          </div>
+        </div>
+        <div class="chart-legend-row" id="placedRoleLegend"></div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartPlacedRoles" width="260" height="260"></canvas>
+          <div class="chart-center-stat" id="chartPlacedCenter">
+            <div class="cstat-val" id="cstatPlacedTotal">—</div>
+            <div class="cstat-lbl">Placed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 2: Current Drives vs Registered Students per Drive -->
+      <div class="chart-card chart-card-wide">
+        <div class="chart-card-header">
+          <div class="chart-card-icon" style="background:linear-gradient(135deg,#0891b2,#06b6d4);">
+            <i class="fa-solid fa-chart-column"></i>
+          </div>
+          <div>
+            <div class="chart-card-title">Drives vs Student Registrations</div>
+            <div class="chart-card-sub">Current drives & registered applicants</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="chartDrivesRegistrations"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Last Year vs Current Year Drives -->
+      <div class="chart-card chart-card-wide">
+        <div class="chart-card-header">
+          <div class="chart-card-icon" style="background:linear-gradient(135deg,#059669,#10b981);">
+            <i class="fa-solid fa-chart-bar"></i>
+          </div>
+          <div>
+            <div class="chart-card-title">Year-over-Year Drive Comparison</div>
+            <div class="chart-card-sub" id="yoyChartSubtitle">Last year vs current year drives</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="chartYearComparison"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /analyticsChartsSection -->
+
     <div class="admin-panel-card">
       <div class="admin-panel-header">
         <div class="admin-panel-title">
