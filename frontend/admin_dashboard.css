@@ -95,6 +95,17 @@
   box-shadow: 0 0 16px rgba(37, 99, 235, 0.35);
 }
 
+.admin-logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
 .admin-logo-text h1 {
   font-size: 15px;
   font-weight: 800;
