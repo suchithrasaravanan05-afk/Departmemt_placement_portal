@@ -1,5 +1,6 @@
 const express = require("express");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const router = express.Router();
 const db = require("../db");
 const { supabaseAdmin, supabase } = require("../supabase");
@@ -381,6 +382,297 @@ router.post("/drives/:id/toggle-visibility", (req, res) => {
         });
     });
 });
+
+// ==========================================
+// CREATE NEW STUDENT (ADMIN DIRECT ADD)
+// ==========================================
+router.post("/students", async (req, res) => {
+    try {
+        const {
+            full_name,
+            register_number,
+            email,
+            password,
+            year,
+            department = "Computer Science and Business Systems",
+            phone,
+            dob,
+            tenth_percentage,
+            twelth_percentage,
+            diploma_percentage,
+            cgpa,
+            history_of_arrears,
+            history_arrears_count,
+            standing_of_arrears,
+            standing_arrears_count,
+            domain_interest,
+            linkedin_link,
+            github_link
+        } = req.body;
+
+        if (!full_name || !register_number || !email) {
+            return res.status(400).json({ success: false, message: "Full Name, Register Number, and Email are required." });
+        }
+
+        const studentPassword = (password && String(password).trim().length > 0)
+            ? String(password).trim()
+            : String(register_number).trim();
+
+        const client = supabaseAdmin || supabase;
+        if (!client) {
+            return res.status(500).json({ success: false, message: "Database client unavailable" });
+        }
+
+        const cleanReg = String(register_number).trim();
+        const cleanEmail = String(email).trim().toLowerCase();
+
+        // Step 1: Check if email or register_number already exists in users
+        const { data: existing, error: checkErr } = await client
+            .from("users")
+            .select("id, email, register_number")
+            .or(`email.eq.${cleanEmail},register_number.eq.${cleanReg}`);
+
+        if (existing && existing.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "A student with this Email or Register Number already exists in the system."
+            });
+        }
+
+        // Step 2: Encrypt password with bcrypt
+        const hashedPassword = await bcrypt.hash(studentPassword, 10);
+
+        // Step 3: Insert user into users table
+        const userPayload = {
+            full_name: String(full_name).trim(),
+            register_number: cleanReg,
+            email: cleanEmail,
+            password: hashedPassword,
+            role: "student",
+            year: year ? parseInt(year) : 4,
+            department: department || "Computer Science and Business Systems",
+            phone: phone ? String(phone).trim() : null
+        };
+
+        const { data: newUser, error: userErr } = await client
+            .from("users")
+            .insert([userPayload])
+            .select();
+
+        if (userErr || !newUser || newUser.length === 0) {
+            console.error("Error creating student user in Supabase:", userErr);
+            return res.status(500).json({ success: false, message: userErr?.message || "Failed to create student user account" });
+        }
+
+        const userId = newUser[0].id;
+
+        // Step 4: Insert/Upsert student profile record
+        const profilePayload = {
+            user_id: userId,
+            college_email: cleanEmail,
+            personal_email: cleanEmail,
+            department: department || "Computer Science and Business Systems",
+            phone_number: phone ? String(phone).trim() : null,
+            dob: dob || null,
+            tenth_percentage: tenth_percentage ? parseFloat(tenth_percentage) : null,
+            twelth_percentage: twelth_percentage ? parseFloat(twelth_percentage) : null,
+            diploma_percentage: diploma_percentage ? parseFloat(diploma_percentage) : null,
+            cgpa: cgpa ? parseFloat(cgpa) : 0,
+            history_of_arrears: (parseInt(history_arrears_count) > 0 || history_of_arrears === "yes") ? "yes" : "no",
+            history_arrears_count: parseInt(history_arrears_count) || 0,
+            standing_of_arrears: (parseInt(standing_arrears_count) > 0 || standing_of_arrears === "yes") ? "yes" : "no",
+            standing_arrears_count: parseInt(standing_arrears_count) || 0,
+            domain_interest: domain_interest || "General",
+            linkedin_link: linkedin_link || null,
+            github_link: github_link || null
+        };
+
+        await client.from("student_profiles").upsert(profilePayload, { onConflict: "user_id" });
+
+        return res.status(201).json({
+            success: true,
+            message: `Student ${full_name} created successfully! Student can now log in using Reg No: ${cleanReg}`,
+            student: { ...newUser[0], ...profilePayload }
+        });
+    } catch (ex) {
+        console.error("Exception in POST /students:", ex);
+        return res.status(500).json({ success: false, message: "Internal server error: " + (ex.message || ex) });
+    }
+});
+
+// ==========================================
+// GET SINGLE STUDENT DETAILS (FOR VIEW & EDIT PREFILL)
+// ==========================================
+router.get("/students/:id", async (req, res) => {
+    const userId = req.params.id;
+    try {
+        const client = supabaseAdmin || supabase;
+        if (!client) {
+            return res.status(500).json({ success: false, message: "Database client unavailable" });
+        }
+
+        const { data: userRows, error: uErr } = await client
+            .from("users")
+            .select("id, full_name, register_number, email, year, department, phone, role")
+            .eq("id", userId);
+
+        if (uErr || !userRows || userRows.length === 0) {
+            return res.status(404).json({ success: false, message: "Student account not found" });
+        }
+
+        const user = userRows[0];
+        const { data: profileRows } = await client
+            .from("student_profiles")
+            .select("*")
+            .eq("user_id", userId);
+
+        const profile = profileRows && profileRows.length > 0 ? profileRows[0] : {};
+
+        return res.json({
+            success: true,
+            student: {
+                ...user,
+                ...profile
+            }
+        });
+    } catch (ex) {
+        console.error("Exception in GET /students/:id:", ex);
+        return res.status(500).json({ success: false, message: ex.message || "Failed to fetch student details" });
+    }
+});
+
+// ==========================================
+// UPDATE / MODIFY STUDENT DETAILS (ADMIN)
+// ==========================================
+const handleUpdateStudent = async (req, res) => {
+    const userId = req.params.id;
+    try {
+        const {
+            full_name,
+            register_number,
+            email,
+            password,
+            year,
+            department,
+            phone,
+            dob,
+            personal_email,
+            college_email,
+            tenth_percentage,
+            twelth_percentage,
+            diploma_percentage,
+            sem1_gpa, sem2_gpa, sem3_gpa, sem4_gpa, sem5_gpa, sem6_gpa, sem7_gpa, sem8_gpa,
+            cgpa,
+            history_of_arrears,
+            history_arrears_count,
+            standing_of_arrears,
+            standing_arrears_count,
+            domain_interest,
+            linkedin_link,
+            github_link
+        } = req.body;
+
+        const client = supabaseAdmin || supabase;
+        if (!client) {
+            return res.status(500).json({ success: false, message: "Database client unavailable" });
+        }
+
+        const cleanReg = register_number ? String(register_number).trim() : null;
+        const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+
+        // Check if new reg_no or email conflicts with another student
+        if (cleanReg || cleanEmail) {
+            const { data: conflicts } = await client
+                .from("users")
+                .select("id, email, register_number")
+                .neq("id", userId)
+                .or(`email.eq.${cleanEmail || ''},register_number.eq.${cleanReg || ''}`);
+
+            if (conflicts && conflicts.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Another account already exists with this Email or Register Number."
+                });
+            }
+        }
+
+        // 1. Update `users` table
+        const userUpdateObj = {};
+        if (full_name) userUpdateObj.full_name = String(full_name).trim();
+        if (cleanReg) userUpdateObj.register_number = cleanReg;
+        if (cleanEmail) userUpdateObj.email = cleanEmail;
+        if (year !== undefined && year !== "") userUpdateObj.year = parseInt(year);
+        if (department) userUpdateObj.department = department;
+        if (phone !== undefined) userUpdateObj.phone = phone ? String(phone).trim() : null;
+
+        // If admin supplied a new password, encrypt & update it
+        if (password && String(password).trim().length > 0) {
+            userUpdateObj.password = await bcrypt.hash(String(password).trim(), 10);
+        }
+
+        if (Object.keys(userUpdateObj).length > 0) {
+            const { error: uErr } = await client
+                .from("users")
+                .update(userUpdateObj)
+                .eq("id", userId);
+
+            if (uErr) {
+                console.error("Error updating user record:", uErr);
+                return res.status(500).json({ success: false, message: "Failed to update user record: " + uErr.message });
+            }
+        }
+
+        // 2. Update `student_profiles` table
+        const profileUpdateObj = {
+            user_id: userId,
+            college_email: (college_email || cleanEmail || "").trim().toLowerCase(),
+            personal_email: (personal_email || cleanEmail || "").trim().toLowerCase(),
+            department: department || "Computer Science and Business Systems",
+            phone_number: phone ? String(phone).trim() : null,
+            dob: dob || null,
+            tenth_percentage: (tenth_percentage !== undefined && tenth_percentage !== "" && tenth_percentage !== null) ? parseFloat(tenth_percentage) : null,
+            twelth_percentage: (twelth_percentage !== undefined && twelth_percentage !== "" && twelth_percentage !== null) ? parseFloat(twelth_percentage) : null,
+            diploma_percentage: (diploma_percentage !== undefined && diploma_percentage !== "" && diploma_percentage !== null) ? parseFloat(diploma_percentage) : null,
+            sem1_gpa: (sem1_gpa !== undefined && sem1_gpa !== "" && sem1_gpa !== null) ? parseFloat(sem1_gpa) : null,
+            sem2_gpa: (sem2_gpa !== undefined && sem2_gpa !== "" && sem2_gpa !== null) ? parseFloat(sem2_gpa) : null,
+            sem3_gpa: (sem3_gpa !== undefined && sem3_gpa !== "" && sem3_gpa !== null) ? parseFloat(sem3_gpa) : null,
+            sem4_gpa: (sem4_gpa !== undefined && sem4_gpa !== "" && sem4_gpa !== null) ? parseFloat(sem4_gpa) : null,
+            sem5_gpa: (sem5_gpa !== undefined && sem5_gpa !== "" && sem5_gpa !== null) ? parseFloat(sem5_gpa) : null,
+            sem6_gpa: (sem6_gpa !== undefined && sem6_gpa !== "" && sem6_gpa !== null) ? parseFloat(sem6_gpa) : null,
+            sem7_gpa: (sem7_gpa !== undefined && sem7_gpa !== "" && sem7_gpa !== null) ? parseFloat(sem7_gpa) : null,
+            sem8_gpa: (sem8_gpa !== undefined && sem8_gpa !== "" && sem8_gpa !== null) ? parseFloat(sem8_gpa) : null,
+            cgpa: (cgpa !== undefined && cgpa !== "" && cgpa !== null) ? parseFloat(cgpa) : 0,
+            history_of_arrears: (parseInt(history_arrears_count) > 0 || history_of_arrears === "yes") ? "yes" : "no",
+            history_arrears_count: parseInt(history_arrears_count) || 0,
+            standing_of_arrears: (parseInt(standing_arrears_count) > 0 || standing_of_arrears === "yes") ? "yes" : "no",
+            standing_arrears_count: parseInt(standing_arrears_count) || 0,
+            domain_interest: domain_interest || "General",
+            linkedin_link: linkedin_link || null,
+            github_link: github_link || null
+        };
+
+        const { error: spErr } = await client
+            .from("student_profiles")
+            .upsert(profileUpdateObj, { onConflict: "user_id" });
+
+        if (spErr) {
+            console.error("Error upserting student profile:", spErr);
+            return res.status(500).json({ success: false, message: "Failed to update student profile: " + spErr.message });
+        }
+
+        return res.json({
+            success: true,
+            message: "Student profile & login details updated successfully!"
+        });
+    } catch (ex) {
+        console.error("Exception in update student:", ex);
+        return res.status(500).json({ success: false, message: "Internal server error: " + (ex.message || ex) });
+    }
+};
+
+router.put("/students/:id", handleUpdateStudent);
+router.post("/students/:id", handleUpdateStudent);
+router.post("/students/:id/edit", handleUpdateStudent);
 
 // ==========================================
 // DELETE STUDENT (admin only)

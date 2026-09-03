@@ -707,13 +707,22 @@ function renderStudentRoster(students, tbody) {
       </td>
       <td>${resumeHtml}</td>
       <td>
-        <button
-          onclick="deleteStudent(${s.user_id}, '${s.full_name.replace(/'/g, "\\'")}')"
-          class="btn btn-danger btn-sm"
-          title="Delete Student Profile"
-          style="padding:4px 8px;font-size:11px;">
-          <i class="fa-solid fa-trash"></i>
-        </button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button
+            onclick="openEditStudentModal(${s.user_id})"
+            class="btn btn-primary btn-sm"
+            title="Edit Student Profile & Login Details"
+            style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">
+            <i class="fa-solid fa-pen-to-square"></i> Edit
+          </button>
+          <button
+            onclick="deleteStudent(${s.user_id}, '${s.full_name.replace(/'/g, "\\'")}')"
+            class="btn btn-danger btn-sm"
+            title="Delete Student Profile"
+            style="padding:4px 8px;font-size:11px;">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
       </td>
     </tr>`;
   }).join('');
@@ -836,9 +845,272 @@ function closeStudentModal() {
   el('studentModal').classList.add('hidden');
 }
 
-// Close modal on overlay click
+// ============================================================
+// ADD NEW STUDENT MODAL (ADMIN DIRECT ACCOUNT CREATION)
+// ============================================================
+function openAddStudentModal() {
+  const form = el('addStudentForm');
+  if (form) form.reset();
+
+  const pwInput = el('addStudentPassword');
+  if (pwInput) pwInput.type = 'password';
+  const icon = el('addPwToggleIcon');
+  if (icon) icon.className = 'fa-solid fa-eye';
+
+  // Set default batch year if available
+  const defaultYear = portalSettings?.default_year_num || 4;
+  if (el('addStudentYear')) el('addStudentYear').value = String(defaultYear);
+
+  el('addStudentModal').classList.remove('hidden');
+}
+
+function closeAddStudentModal() {
+  el('addStudentModal').classList.add('hidden');
+}
+
+function syncDefaultPassword() {
+  const regNo = el('addStudentRegNo')?.value.trim() || '';
+  const pwInput = el('addStudentPassword');
+  if (pwInput && (!pwInput.dataset.manualEdit || pwInput.value === '')) {
+    pwInput.value = regNo;
+  }
+}
+
+function toggleAddPasswordVisibility() {
+  const pwInput = el('addStudentPassword');
+  const icon = el('addPwToggleIcon');
+  if (!pwInput) return;
+  if (pwInput.type === 'password') {
+    pwInput.type = 'text';
+    if (icon) icon.className = 'fa-solid fa-eye-slash';
+  } else {
+    pwInput.type = 'password';
+    if (icon) icon.className = 'fa-solid fa-eye';
+  }
+}
+
+async function handleAddStudentSubmit(e) {
+  e.preventDefault();
+
+  const btn = el('saveAddStudentBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Student Account...'; }
+
+  const payload = {
+    full_name: el('addStudentFullName')?.value.trim(),
+    register_number: el('addStudentRegNo')?.value.trim(),
+    email: el('addStudentEmail')?.value.trim().toLowerCase(),
+    password: el('addStudentPassword')?.value.trim(),
+    year: parseInt(el('addStudentYear')?.value || 4),
+    phone: el('addStudentPhone')?.value.trim(),
+    tenth_percentage: el('addStudentTenth')?.value || null,
+    twelth_percentage: el('addStudentTwelth')?.value || null,
+    diploma_percentage: el('addStudentDiploma')?.value || null,
+    cgpa: el('addStudentCgpa')?.value || 0,
+    standing_arrears_count: parseInt(el('addStudentStandingArrears')?.value || 0),
+    history_arrears_count: parseInt(el('addStudentHistoryArrears')?.value || 0),
+    domain_interest: el('addStudentDomain')?.value.trim() || 'General',
+    linkedin_link: el('addStudentLinkedin')?.value.trim() || null,
+    github_link: el('addStudentGithub')?.value.trim() || null
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/students`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert(data.message || 'Student account created successfully!', true);
+      closeAddStudentModal();
+      fetchStudentRoster();
+      loadDashboardStats();
+    } else {
+      showAdminAlert(data.message || 'Failed to create student account.');
+    }
+  } catch (err) {
+    console.error('Add student error:', err);
+    showAdminAlert('Network or server error while creating student account.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Student Account';
+    }
+  }
+}
+
+// ============================================================
+// EDIT STUDENT DETAILS MODAL (ADMIN MODIFY)
+// ============================================================
+async function openEditStudentModal(userId) {
+  const form = el('editStudentForm');
+  if (form) form.reset();
+
+  const pwInput = el('editStudentNewPassword');
+  if (pwInput) pwInput.type = 'password';
+  const icon = el('editPwToggleIcon');
+  if (icon) icon.className = 'fa-solid fa-eye';
+
+  el('editStudentUserId').value = userId;
+  el('editStudentModal').classList.remove('hidden');
+
+  const btn = el('saveEditStudentBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading details...'; }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/students/${userId}`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+
+    if (!data.success || !data.student) {
+      showAdminAlert(data.message || 'Failed to load student details.');
+      closeEditStudentModal();
+      return;
+    }
+
+    const s = data.student;
+
+    if (el('editStudentFullName'))  el('editStudentFullName').value  = s.full_name || '';
+    if (el('editStudentRegNo'))     el('editStudentRegNo').value     = s.register_number || '';
+    if (el('editStudentEmail'))     el('editStudentEmail').value     = s.email || s.college_email || '';
+    if (el('editStudentYear'))      el('editStudentYear').value      = String(s.year || 4);
+    if (el('editStudentPhone'))     el('editStudentPhone').value     = s.phone || s.phone_number || '';
+
+    if (el('editStudentTenth'))     el('editStudentTenth').value     = s.tenth_percentage ?? '';
+    if (el('editStudentTwelth'))    el('editStudentTwelth').value    = s.twelth_percentage ?? '';
+    if (el('editStudentDiploma'))   el('editStudentDiploma').value   = s.diploma_percentage ?? '';
+    if (el('editStudentCgpa'))      el('editStudentCgpa').value      = s.cgpa ?? '';
+
+    // Semester GPAs
+    for (let i = 1; i <= 8; i++) {
+      const semEl = el(`editStudentSem${i}`);
+      if (semEl) semEl.value = s[`sem${i}_gpa`] ?? '';
+    }
+
+    if (el('editStudentStandingArrears')) el('editStudentStandingArrears').value = s.standing_arrears_count ?? 0;
+    if (el('editStudentHistoryArrears'))  el('editStudentHistoryArrears').value  = s.history_arrears_count ?? 0;
+    if (el('editStudentDomain'))          el('editStudentDomain').value          = s.domain_interest || '';
+    if (el('editStudentLinkedin'))        el('editStudentLinkedin').value        = s.linkedin_link || '';
+    if (el('editStudentGithub'))          el('editStudentGithub').value          = s.github_link || '';
+
+  } catch (err) {
+    console.error('Error opening edit student modal:', err);
+    showAdminAlert('Failed to load student details.');
+    closeEditStudentModal();
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Student Details';
+    }
+  }
+}
+
+function closeEditStudentModal() {
+  el('editStudentModal').classList.add('hidden');
+}
+
+function toggleEditPasswordVisibility() {
+  const pwInput = el('editStudentNewPassword');
+  const icon = el('editPwToggleIcon');
+  if (!pwInput) return;
+  if (pwInput.type === 'password') {
+    pwInput.type = 'text';
+    if (icon) icon.className = 'fa-solid fa-eye-slash';
+  } else {
+    pwInput.type = 'password';
+    if (icon) icon.className = 'fa-solid fa-eye';
+  }
+}
+
+function calcEditStudentCgpa() {
+  let total = 0, count = 0;
+  for (let i = 1; i <= 8; i++) {
+    const semVal = parseFloat(el(`editStudentSem${i}`)?.value);
+    if (!isNaN(semVal) && semVal > 0) {
+      total += semVal;
+      count++;
+    }
+  }
+  if (count > 0 && el('editStudentCgpa')) {
+    el('editStudentCgpa').value = (total / count).toFixed(2);
+  }
+}
+
+async function handleEditStudentSubmit(e) {
+  e.preventDefault();
+
+  const userId = el('editStudentUserId')?.value;
+  if (!userId) return;
+
+  const btn = el('saveEditStudentBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving changes...'; }
+
+  const payload = {
+    full_name: el('editStudentFullName')?.value.trim(),
+    register_number: el('editStudentRegNo')?.value.trim(),
+    email: el('editStudentEmail')?.value.trim().toLowerCase(),
+    password: el('editStudentNewPassword')?.value.trim() || undefined,
+    year: parseInt(el('editStudentYear')?.value || 4),
+    phone: el('editStudentPhone')?.value.trim(),
+    tenth_percentage: el('editStudentTenth')?.value || null,
+    twelth_percentage: el('editStudentTwelth')?.value || null,
+    diploma_percentage: el('editStudentDiploma')?.value || null,
+    cgpa: el('editStudentCgpa')?.value || 0,
+    standing_arrears_count: parseInt(el('editStudentStandingArrears')?.value || 0),
+    history_arrears_count: parseInt(el('editStudentHistoryArrears')?.value || 0),
+    domain_interest: el('editStudentDomain')?.value.trim() || 'General',
+    linkedin_link: el('editStudentLinkedin')?.value.trim() || null,
+    github_link: el('editStudentGithub')?.value.trim() || null,
+    sem1_gpa: el('editStudentSem1')?.value || null,
+    sem2_gpa: el('editStudentSem2')?.value || null,
+    sem3_gpa: el('editStudentSem3')?.value || null,
+    sem4_gpa: el('editStudentSem4')?.value || null,
+    sem5_gpa: el('editStudentSem5')?.value || null,
+    sem6_gpa: el('editStudentSem6')?.value || null,
+    sem7_gpa: el('editStudentSem7')?.value || null,
+    sem8_gpa: el('editStudentSem8')?.value || null
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/students/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert(data.message || 'Student details updated successfully!', true);
+      closeEditStudentModal();
+      fetchStudentRoster();
+      loadDashboardStats();
+    } else {
+      showAdminAlert(data.message || 'Failed to update student details.');
+    }
+  } catch (err) {
+    console.error('Update student error:', err);
+    showAdminAlert('Network or server error while updating student details.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Student Details';
+    }
+  }
+}
+
+// Close modals on overlay click
 document.addEventListener('click', e => {
   if (e.target && e.target.id === 'studentModal') closeStudentModal();
+  if (e.target && e.target.id === 'addStudentModal') closeAddStudentModal();
+  if (e.target && e.target.id === 'editStudentModal') closeEditStudentModal();
 });
 
 // ============================================================
@@ -2139,20 +2411,26 @@ function populateAllAdminBatchDropdowns() {
   if (el('calloutFinalBatchName') && finalYearBatch) el('calloutFinalBatchName').innerText = finalYearBatch.name;
   if (el('calloutPassedBatchName') && passedOutBatch) el('calloutPassedBatchName').innerText = passedOutBatch.name;
 
-  // 2. Year-based filter dropdowns:
+  // 2. Year-based filter & student dropdowns:
   // - #filterPlacedNonPlacedYear (Analytics)
   // - #filterYear (Student Roster)
   // - #filterAppYear (Applications)
   // - #filterPlacedYear (Placed Students)
-  const yearSelectIds = ['filterPlacedNonPlacedYear', 'filterYear', 'filterAppYear', 'filterPlacedYear'];
+  // - #addStudentYear (Add Student Modal)
+  // - #editStudentYear (Edit Student Modal)
+  const yearSelectIds = ['filterPlacedNonPlacedYear', 'filterYear', 'filterAppYear', 'filterPlacedYear', 'addStudentYear', 'editStudentYear'];
   yearSelectIds.forEach(id => {
     const sel = el(id);
     if (!sel) return;
     const prevVal = sel.value;
 
-    let html = (id === 'filterPlacedNonPlacedYear')
-      ? '<option value="all">All Batches</option>'
-      : '<option value="">All Batches</option>';
+    const isFilter = (id !== 'addStudentYear' && id !== 'editStudentYear');
+    let html = '';
+    if (id === 'filterPlacedNonPlacedYear') {
+      html = '<option value="all">All Batches</option>';
+    } else if (isFilter) {
+      html = '<option value="">All Batches</option>';
+    }
 
     // Sort batches by year_num descending (5, 4, 3, 2, 1)
     const sorted = [...portalSettings.batches].sort((a, b) => (b.year_num || 0) - (a.year_num || 0));
@@ -2484,4 +2762,3 @@ async function deleteBatchAction(batchName) {
     showAdminAlert('Server error while deleting batch.');
   }
 }
-
