@@ -1,30 +1,63 @@
 /* =============================================
    FORM.CSS — Dedicated Styles for Form.html (Login & Register)
-   Unique Namespace: .form-
+   Clean Modern Institutional Design & Natural Scenic Background
    ============================================= */
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 .form-auth-bg {
-  background: linear-gradient(145deg, #0b1329 0%, #1e293b 50%, #0f172a 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #0f172a;
+  position: relative;
+  overflow-x: hidden;
 }
 
+/* Scenic Campus Backdrop with Clean Neutral Vignette (No Muddy Color Tints) */
+.form-auth-bg::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.40) 45%, rgba(15, 23, 42, 0.78) 100%),
+    url('clg_logo.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* =============================================
+   UNIFIED EXECUTIVE NAVBAR
+   ============================================= */
 .form-header-wrapper {
-  background: linear-gradient(135deg, #0b1329 0%, #1e293b 100%);
-  border-bottom: 3px solid #2563eb;
-  box-shadow: 0 4px 20px rgba(11, 19, 41, 0.5);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 20;
 }
 
 .form-header {
-  max-width: 1320px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 14px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
 }
 
 .form-logo-group {
@@ -33,29 +66,14 @@
   gap: 14px;
 }
 
-.form-logo-icon {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(99, 102, 241, 0.2));
-  border: 1.5px solid rgba(59, 130, 246, 0.4);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: #60a5fa;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-}
-
 .form-logo-img {
   width: 48px;
   height: 48px;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #ffffff;
-  padding: 3px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
 }
 
@@ -63,168 +81,103 @@
   font-size: 17px;
   font-weight: 800;
   color: #ffffff;
-  letter-spacing: -0.2px;
+  letter-spacing: 0.3px;
   line-height: 1.2;
 }
 
 .form-logo-text p {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #94a3b8;
-  font-weight: 500;
-  margin-top: 2px;
+  font-weight: 600;
+  margin-top: 3px;
 }
 
-.form-college-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(37, 99, 235, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: #93c5fd;
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 5px 14px;
-  border-radius: 9999px;
-  letter-spacing: 0.4px;
-}
-
-/* =============================================
-   DEPARTMENT BANNER — PROMINENT & BIGGER
-   ============================================= */
-.form-dept-banner {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #4f46e5 100%);
-  color: #ffffff;
-  padding: 16px 24px;
-  box-shadow: 0 4px 25px rgba(37, 99, 235, 0.4);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  position: relative;
-  z-index: 10;
-}
-
-.form-dept-banner-inner {
-  max-width: 1320px;
-  margin: 0 auto;
+.form-header-right {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
 }
 
-.form-dept-badge,
 .form-dept-logo-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #ffffff;
-  padding: 3px 10px;
-  border-radius: 9px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 0 0 1.5px rgba(255, 255, 255, 0.6);
+  padding: 6px 14px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-dept-logo-wrap:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 
 .form-dept-logo-img {
-  height: 38px;
+  height: 48px;
   width: auto;
-  max-width: 170px;
+  max-width: 220px;
   object-fit: contain;
   display: block;
 }
 
-.form-dept-title,
-.form-dept-portal-title,
-.form-dept-tag {
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.form-dept-divider {
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 700;
-  font-size: 18px;
-}
-
 /* =============================================
-   AUTH SECTION & CARD
+   AUTH SECTION & CRISP WHITE CARD
    ============================================= */
 .form-auth-wrapper {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 44px 20px;
+  padding: 38px 20px;
   position: relative;
-  overflow: hidden;
+  z-index: 1;
 }
-
-.form-bg-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0) 70%);
-  pointer-events: none;
-}
-.form-bg-circle.c1 { width: 500px; height: 500px; top: -150px; right: -100px; }
-.form-bg-circle.c2 { width: 350px; height: 350px; bottom: -50px; left: -80px; }
-.form-bg-circle.c3 { width: 220px; height: 220px; top: 35%; right: 10%; }
 
 .form-auth-card {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   background: #ffffff;
-  border-top: 5px solid #2563eb;
-  border-left: 1px solid rgba(226, 232, 240, 0.9);
-  border-right: 1px solid rgba(226, 232, 240, 0.9);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 24px;
-  box-shadow: 0 25px 65px rgba(15, 23, 42, 0.32);
-  padding: 42px 48px;
+  border-radius: 20px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+  padding: 38px 44px;
   width: 100%;
-  max-width: 510px;
+  max-width: 470px;
 }
 
 .form-auth-header {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .form-auth-logo-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 66px;
-  height: 66px;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  border-radius: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
 .form-auth-logo-wrap i {
-  font-size: 30px;
+  font-size: 26px;
   color: #ffffff;
 }
 
 .form-auth-header h2 {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   letter-spacing: -0.3px;
 }
 
 .form-auth-header p {
-  font-size: 14px;
+  font-size: 13.5px;
   color: #64748b;
   font-weight: 500;
 }
@@ -233,24 +186,24 @@
 .form-role-selector {
   display: flex;
   background: #f1f5f9;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 5px;
-  margin-bottom: 26px;
-  gap: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 22px;
+  gap: 4px;
 }
 
 .form-role-btn {
   flex: 1;
-  padding: 11px 18px;
+  padding: 10px 16px;
   border: none;
   background: transparent;
   color: #64748b;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 7px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   font-family: inherit;
   display: flex;
   align-items: center;
@@ -259,31 +212,31 @@
 }
 
 .form-role-btn:hover {
-  color: #1e293b;
-  background: rgba(255, 255, 255, 0.6);
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .form-role-btn.active {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: #2563eb;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 /* Fields & Inputs */
 .form-field-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .form-field-group label {
   display: flex;
   align-items: center;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   color: #334155;
 }
 
@@ -293,21 +246,21 @@
 
 .form-input-icon {
   position: absolute;
-  left: 16px;
+  left: 15px;
   top: 50%;
   transform: translateY(-50%);
   color: #64748b;
-  font-size: 15px;
+  font-size: 14px;
   pointer-events: none;
 }
 
 .form-input-control {
   width: 100%;
-  padding: 12px 16px;
-  padding-left: 44px;
+  padding: 11px 15px;
+  padding-left: 42px;
   border: 1.5px solid #cbd5e1;
   border-radius: 10px;
-  font-size: 14.5px;
+  font-size: 14px;
   font-family: inherit;
   color: #0f172a;
   background: #f8fafc;
@@ -318,7 +271,7 @@
 .form-input-control:focus {
   background: #ffffff;
   border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.15);
 }
 
 .form-password-wrapper {
@@ -326,17 +279,17 @@
 }
 
 .form-password-wrapper .form-input-control {
-  padding-right: 48px;
+  padding-right: 44px;
 }
 
 .form-toggle-pw {
   position: absolute;
-  right: 14px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   color: #64748b;
-  font-size: 16px;
+  font-size: 15px;
   border: none;
   background: none;
   padding: 4px;
@@ -344,14 +297,14 @@
 }
 
 .form-toggle-pw:hover {
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .form-grid-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .form-submit-btn {
@@ -359,31 +312,31 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 14px 22px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  gap: 8px;
+  padding: 13px 20px;
+  background: #2563eb;
   color: #ffffff;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
-  margin-top: 8px;
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+  margin-top: 6px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
 
 .form-submit-btn:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.4);
+  background: #1d4ed8;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
   transform: translateY(-1px);
 }
 
 .form-auth-switch {
   text-align: center;
-  margin-top: 22px;
-  font-size: 13.5px;
+  margin-top: 18px;
+  font-size: 13px;
   color: #64748b;
 }
 
@@ -398,14 +351,14 @@
 }
 
 .form-alert-box {
-  padding: 14px 18px;
-  border-radius: 10px;
-  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
   font-weight: 600;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   animation: formSlideDown 0.3s ease;
 }
 
@@ -432,24 +385,9 @@
 
 /* Responsive Mobile Rules */
 @media (max-width: 640px) {
-  .form-dept-logo-img {
-    height: 30px;
-    max-width: 130px;
-  }
-  .form-dept-title,
-  .form-dept-portal-title,
-  .form-dept-tag {
-    font-size: 14px;
-    text-align: center;
-  }
-  .form-dept-divider {
-    display: none;
-  }
-  .form-dept-banner-inner {
-    gap: 8px;
-  }
-  .form-auth-card { padding: 32px 22px; }
-  .form-auth-header h2 { font-size: 22px; }
-  .form-header { padding: 12px 16px; flex-direction: column; text-align: center; }
-  .form-grid-row { grid-template-columns: 1fr; gap: 12px; }
+  .form-auth-card { padding: 30px 20px; }
+  .form-auth-header h2 { font-size: 21px; }
+  .form-header { padding: 10px 16px; flex-direction: column; text-align: center; }
+  .form-header-right { margin-top: 6px; }
+  .form-grid-row { grid-template-columns: 1fr; gap: 10px; }
 }

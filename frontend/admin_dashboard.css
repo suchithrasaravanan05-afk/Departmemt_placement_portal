@@ -29,18 +29,32 @@
 .admin-body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f1f5f9;
-  background-image: 
-    linear-gradient(135deg, rgba(248, 250, 252, 0.84) 0%, rgba(241, 245, 249, 0.76) 50%, rgba(226, 232, 240, 0.84) 100%),
-    url('clg_logo.jpg');
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
   color: #0f172a;
   line-height: 1.6;
   min-height: 100vh;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.admin-body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(135deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.80) 50%, rgba(226, 232, 240, 0.88) 100%),
+    url('clg_logo.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: blur(2.5px) contrast(1.05);
+  transform: scale(1.03);
+  z-index: -1;
+  pointer-events: none;
 }
 
 /* =============================================
