@@ -806,21 +806,45 @@ function viewStudentModal(student) {
   const cgpa = student.cgpa ? parseFloat(student.cgpa).toFixed(2) : '—';
   const tenth = student.tenth_percentage ? `${parseFloat(student.tenth_percentage).toFixed(1)}%` : '—';
   const twelth = student.twelth_percentage ? `${parseFloat(student.twelth_percentage).toFixed(1)}%` : '—';
+  const diploma = student.diploma_percentage ? `${parseFloat(student.diploma_percentage).toFixed(1)}%` : '—';
   const arrears = student.standing_arrears_count !== null ? student.standing_arrears_count : 0;
+  const histArrears = student.history_arrears_count !== null ? student.history_arrears_count : 0;
   const yearText = (student.year == 5 || String(student.year).toLowerCase().includes('passed')) ? 'Passed Out' : (student.year ? student.year + ' Year' : '—');
 
+  // Semester GPAs list
+  const semGpas = [
+    { label: 'Sem 1', val: student.sem1_gpa },
+    { label: 'Sem 2', val: student.sem2_gpa },
+    { label: 'Sem 3', val: student.sem3_gpa },
+    { label: 'Sem 4', val: student.sem4_gpa },
+    { label: 'Sem 5', val: student.sem5_gpa },
+    { label: 'Sem 6', val: student.sem6_gpa },
+    { label: 'Sem 7', val: student.sem7_gpa },
+    { label: 'Sem 8', val: student.sem8_gpa }
+  ];
+  const gpaHtml = semGpas.map(s => {
+    const v = (s.val !== null && s.val !== undefined && s.val !== '') ? parseFloat(s.val).toFixed(2) : '—';
+    return `<div style="background:#f1f5f9;padding:6px 10px;border-radius:6px;text-align:center;">
+      <div style="font-size:10.5px;color:#64748b;font-weight:600;">${s.label}</div>
+      <div style="font-size:13px;font-weight:700;color:#0f172a;margin-top:2px;">${v}</div>
+    </div>`;
+  }).join('');
+
   el('studentModalBody').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
       <div class="detail-item"><span class="detail-label">Register No</span><span class="detail-value">${student.register_number || '—'}</span></div>
       <div class="detail-item"><span class="detail-label">Year</span><span class="detail-value">${yearText}</span></div>
-      <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value" style="font-size:12px;">${student.email}</span></div>
-      <div class="detail-item"><span class="detail-label">Phone</span><span class="detail-value">${student.phone || '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">College Email</span><span class="detail-value" style="font-size:12px;">${student.college_email || student.email || '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Personal Email</span><span class="detail-value" style="font-size:12px;">${student.personal_email || '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Mobile Phone</span><span class="detail-value">${student.phone || student.phone_number || '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">WhatsApp</span><span class="detail-value">${student.whatsapp_number || '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Date of Birth</span><span class="detail-value">${student.dob || '—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Degree &amp; Dept</span><span class="detail-value">${student.degree || 'B.Tech'} - ${student.department || 'CSBS'}</span></div>
       <div class="detail-item"><span class="detail-label">CGPA</span><span class="detail-value" style="color:#2563eb;font-weight:800;font-size:18px;">${cgpa}</span></div>
-      <div class="detail-item"><span class="detail-label">Standing Arrears</span><span class="detail-value">${arrears}</span></div>
-      <div class="detail-item"><span class="detail-label">10th %</span><span class="detail-value">${tenth}</span></div>
-      <div class="detail-item"><span class="detail-label">12th %</span><span class="detail-value">${twelth}</span></div>
-      <div class="detail-item"><span class="detail-label">Domain</span><span class="detail-value">${student.domain_interest || 'General'}</span></div>
-      <div class="detail-item">
+      <div class="detail-item"><span class="detail-label">Arrears (Standing / History)</span><span class="detail-value">${arrears} Standing / ${histArrears} History</span></div>
+      <div class="detail-item"><span class="detail-label">10th % / 12th % / Diploma</span><span class="detail-value">${tenth} / ${twelth} / ${diploma}</span></div>
+      <div class="detail-item"><span class="detail-label">Domain Interest</span><span class="detail-value">${student.domain_interest || 'General'}</span></div>
+      <div class="detail-item" style="grid-column:span 2;">
         <span class="detail-label">Resume</span>
         <span class="detail-value">
           ${student.resume_file
@@ -836,6 +860,13 @@ function viewStudentModal(student) {
         <span class="detail-label">GitHub</span>
         <span class="detail-value"><a href="${student.github_link}" target="_blank">${student.github_link}</a></span>
       </div>` : ''}
+    </div>
+    
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:11.5px;font-weight:700;color:#475569;margin-bottom:8px;text-transform:uppercase;">Semester GPAs (1 - 8)</div>
+      <div style="display:grid;grid-template-columns:repeat(8, 1fr);gap:6px;">
+        ${gpaHtml}
+      </div>
     </div>`;
 
   el('studentModal').classList.remove('hidden');
@@ -848,18 +879,35 @@ function closeStudentModal() {
 // ============================================================
 // ADD NEW STUDENT MODAL (ADMIN DIRECT ACCOUNT CREATION)
 // ============================================================
+// ADD NEW STUDENT MODAL (ADMIN DIRECT ACCOUNT CREATION)
+// ============================================================
 function openAddStudentModal() {
   const form = el('addStudentForm');
   if (form) form.reset();
 
   const pwInput = el('addStudentPassword');
-  if (pwInput) pwInput.type = 'password';
+  if (pwInput) {
+    pwInput.type = 'password';
+    delete pwInput.dataset.manualEdit;
+  }
   const icon = el('addPwToggleIcon');
   if (icon) icon.className = 'fa-solid fa-eye';
 
   // Set default batch year if available
   const defaultYear = portalSettings?.default_year_num || 4;
   if (el('addStudentYear')) el('addStudentYear').value = String(defaultYear);
+
+  if (el('addStudentDepartment')) el('addStudentDepartment').value = 'Computer Science and Business Systems';
+  if (el('addStudentDegree')) el('addStudentDegree').value = 'B.Tech';
+  if (el('addStudentDomain')) el('addStudentDomain').value = 'General';
+  if (el('addStudentPlacementWillingness')) el('addStudentPlacementWillingness').value = 'Interested';
+  if (el('addStudentStandingArrears')) el('addStudentStandingArrears').value = '0';
+  if (el('addStudentHistoryArrears')) el('addStudentHistoryArrears').value = '0';
+  if (el('addStudentCgpa')) el('addStudentCgpa').value = '';
+
+  for (let i = 1; i <= 8; i++) {
+    if (el(`addStudentSem${i}`)) el(`addStudentSem${i}`).value = '';
+  }
 
   el('addStudentModal').classList.remove('hidden');
 }
@@ -889,26 +937,58 @@ function toggleAddPasswordVisibility() {
   }
 }
 
+function calcAddStudentCgpa() {
+  let total = 0, count = 0;
+  for (let i = 1; i <= 8; i++) {
+    const val = parseFloat(el(`addStudentSem${i}`)?.value);
+    if (!isNaN(val) && val > 0) {
+      total += val;
+      count++;
+    }
+  }
+  const cgpaInput = el('addStudentCgpa');
+  if (cgpaInput && count > 0) {
+    cgpaInput.value = (total / count).toFixed(2);
+  }
+}
+
 async function handleAddStudentSubmit(e) {
   e.preventDefault();
 
   const btn = el('saveAddStudentBtn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Student Account...'; }
 
+  // Auto calculate CGPA from semester GPAs if needed
+  calcAddStudentCgpa();
+
   const payload = {
     full_name: el('addStudentFullName')?.value.trim(),
     register_number: el('addStudentRegNo')?.value.trim(),
     email: el('addStudentEmail')?.value.trim().toLowerCase(),
+    personal_email: el('addStudentPersonalEmail')?.value.trim().toLowerCase() || null,
     password: el('addStudentPassword')?.value.trim(),
     year: parseInt(el('addStudentYear')?.value || 4),
-    phone: el('addStudentPhone')?.value.trim(),
+    department: el('addStudentDepartment')?.value.trim() || 'Computer Science and Business Systems',
+    degree: el('addStudentDegree')?.value || 'B.Tech',
+    phone: el('addStudentPhone')?.value.trim() || null,
+    whatsapp_number: el('addStudentWhatsapp')?.value.trim() || null,
+    dob: el('addStudentDob')?.value || null,
+    domain_interest: el('addStudentDomain')?.value.trim() || 'General',
+    placement_willingness: el('addStudentPlacementWillingness')?.value || 'Interested',
     tenth_percentage: el('addStudentTenth')?.value || null,
     twelth_percentage: el('addStudentTwelth')?.value || null,
     diploma_percentage: el('addStudentDiploma')?.value || null,
+    sem1_gpa: el('addStudentSem1')?.value || null,
+    sem2_gpa: el('addStudentSem2')?.value || null,
+    sem3_gpa: el('addStudentSem3')?.value || null,
+    sem4_gpa: el('addStudentSem4')?.value || null,
+    sem5_gpa: el('addStudentSem5')?.value || null,
+    sem6_gpa: el('addStudentSem6')?.value || null,
+    sem7_gpa: el('addStudentSem7')?.value || null,
+    sem8_gpa: el('addStudentSem8')?.value || null,
     cgpa: el('addStudentCgpa')?.value || 0,
     standing_arrears_count: parseInt(el('addStudentStandingArrears')?.value || 0),
     history_arrears_count: parseInt(el('addStudentHistoryArrears')?.value || 0),
-    domain_interest: el('addStudentDomain')?.value.trim() || 'General',
     linkedin_link: el('addStudentLinkedin')?.value.trim() || null,
     github_link: el('addStudentGithub')?.value.trim() || null
   };

@@ -44,7 +44,10 @@ router.get("/students", (req, res) => {
     let sql = `
         SELECT u.id as user_id, u.full_name, u.register_number, u.email, u.year, u.department, u.phone,
                sp.cgpa, sp.history_arrears_count, sp.standing_arrears_count, sp.domain_interest,
-               sp.tenth_percentage, sp.twelth_percentage, sp.resume_file, sp.linkedin_link, sp.github_link
+               sp.tenth_percentage, sp.twelth_percentage, sp.diploma_percentage, sp.degree,
+               sp.sem1_gpa, sp.sem2_gpa, sp.sem3_gpa, sp.sem4_gpa, sp.sem5_gpa, sp.sem6_gpa, sp.sem7_gpa, sp.sem8_gpa,
+               sp.dob, sp.personal_email, sp.college_email, sp.whatsapp_number,
+               sp.resume_file, sp.linkedin_link, sp.github_link
         FROM users u
         LEFT JOIN student_profiles sp ON u.id = sp.user_id
         WHERE u.role = 'student'
@@ -392,20 +395,32 @@ router.post("/students", async (req, res) => {
             full_name,
             register_number,
             email,
+            personal_email,
             password,
             year,
             department = "Computer Science and Business Systems",
+            degree = "B.Tech",
             phone,
+            whatsapp_number,
             dob,
             tenth_percentage,
             twelth_percentage,
             diploma_percentage,
+            sem1_gpa,
+            sem2_gpa,
+            sem3_gpa,
+            sem4_gpa,
+            sem5_gpa,
+            sem6_gpa,
+            sem7_gpa,
+            sem8_gpa,
             cgpa,
             history_of_arrears,
             history_arrears_count,
             standing_of_arrears,
             standing_arrears_count,
             domain_interest,
+            placement_willingness,
             linkedin_link,
             github_link
         } = req.body;
@@ -425,6 +440,7 @@ router.post("/students", async (req, res) => {
 
         const cleanReg = String(register_number).trim();
         const cleanEmail = String(email).trim().toLowerCase();
+        const cleanPersonalEmail = personal_email ? String(personal_email).trim().toLowerCase() : cleanEmail;
 
         // Step 1: Check if email or register_number already exists in users
         const { data: existing, error: checkErr } = await client
@@ -466,18 +482,42 @@ router.post("/students", async (req, res) => {
 
         const userId = newUser[0].id;
 
+        // Calculate CGPA from sem GPAs if not explicitly given
+        let finalCgpa = (cgpa !== undefined && cgpa !== "" && cgpa !== null) ? parseFloat(cgpa) : 0;
+        if (!finalCgpa || finalCgpa === 0) {
+            let total = 0, count = 0;
+            [sem1_gpa, sem2_gpa, sem3_gpa, sem4_gpa, sem5_gpa, sem6_gpa, sem7_gpa, sem8_gpa].forEach(val => {
+                const num = parseFloat(val);
+                if (!isNaN(num) && num > 0) {
+                    total += num;
+                    count++;
+                }
+            });
+            if (count > 0) finalCgpa = parseFloat((total / count).toFixed(2));
+        }
+
         // Step 4: Insert/Upsert student profile record
         const profilePayload = {
             user_id: userId,
             college_email: cleanEmail,
-            personal_email: cleanEmail,
+            personal_email: cleanPersonalEmail,
             department: department || "Computer Science and Business Systems",
+            degree: degree || "B.Tech",
             phone_number: phone ? String(phone).trim() : null,
+            whatsapp_number: whatsapp_number ? String(whatsapp_number).trim() : null,
             dob: dob || null,
-            tenth_percentage: tenth_percentage ? parseFloat(tenth_percentage) : null,
-            twelth_percentage: twelth_percentage ? parseFloat(twelth_percentage) : null,
-            diploma_percentage: diploma_percentage ? parseFloat(diploma_percentage) : null,
-            cgpa: cgpa ? parseFloat(cgpa) : 0,
+            tenth_percentage: (tenth_percentage !== undefined && tenth_percentage !== "" && tenth_percentage !== null) ? parseFloat(tenth_percentage) : null,
+            twelth_percentage: (twelth_percentage !== undefined && twelth_percentage !== "" && twelth_percentage !== null) ? parseFloat(twelth_percentage) : null,
+            diploma_percentage: (diploma_percentage !== undefined && diploma_percentage !== "" && diploma_percentage !== null) ? parseFloat(diploma_percentage) : null,
+            sem1_gpa: (sem1_gpa !== undefined && sem1_gpa !== "" && sem1_gpa !== null) ? parseFloat(sem1_gpa) : null,
+            sem2_gpa: (sem2_gpa !== undefined && sem2_gpa !== "" && sem2_gpa !== null) ? parseFloat(sem2_gpa) : null,
+            sem3_gpa: (sem3_gpa !== undefined && sem3_gpa !== "" && sem3_gpa !== null) ? parseFloat(sem3_gpa) : null,
+            sem4_gpa: (sem4_gpa !== undefined && sem4_gpa !== "" && sem4_gpa !== null) ? parseFloat(sem4_gpa) : null,
+            sem5_gpa: (sem5_gpa !== undefined && sem5_gpa !== "" && sem5_gpa !== null) ? parseFloat(sem5_gpa) : null,
+            sem6_gpa: (sem6_gpa !== undefined && sem6_gpa !== "" && sem6_gpa !== null) ? parseFloat(sem6_gpa) : null,
+            sem7_gpa: (sem7_gpa !== undefined && sem7_gpa !== "" && sem7_gpa !== null) ? parseFloat(sem7_gpa) : null,
+            sem8_gpa: (sem8_gpa !== undefined && sem8_gpa !== "" && sem8_gpa !== null) ? parseFloat(sem8_gpa) : null,
+            cgpa: finalCgpa || 0,
             history_of_arrears: (parseInt(history_arrears_count) > 0 || history_of_arrears === "yes") ? "yes" : "no",
             history_arrears_count: parseInt(history_arrears_count) || 0,
             standing_of_arrears: (parseInt(standing_arrears_count) > 0 || standing_of_arrears === "yes") ? "yes" : "no",
@@ -491,7 +531,7 @@ router.post("/students", async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: `Student ${full_name} created successfully! Student can now log in using Reg No: ${cleanReg}`,
+            message: `Student account for ${full_name} (${cleanReg}) created successfully!`,
             student: { ...newUser[0], ...profilePayload }
         });
     } catch (ex) {

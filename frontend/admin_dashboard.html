@@ -1050,23 +1050,28 @@
           </tbody>
         </table>
       </div>
+      <div class="modal-footer" style="padding:14px 24px;display:flex;justify-content:flex-end;gap:10px;background:#f8fafc;border-top:1px solid #e2e8f0;">
+        <button type="button" class="btn btn-outline" onclick="closeDriveEligibleModal()">Close</button>
+      </div>
     </div>
+  </div>
+</div>
 
 <!-- Add New Student Modal -->
 <div id="addStudentModal" class="admin-modal-overlay hidden">
-  <div class="admin-modal" style="max-width:760px;width:95%;">
+  <div class="admin-modal" style="max-width:820px;width:95%;">
     <div class="modal-header" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:18px 24px;">
       <div class="modal-title" style="display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;color:#0f172a;">
-        <i class="fa-solid fa-user-plus" style="color:#2563eb;"></i> Add New Student Account
+        <i class="fa-solid fa-user-plus" style="color:#2563eb;"></i> Add New Student — Complete Student Details
       </div>
       <button class="modal-close" onclick="closeAddStudentModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <form id="addStudentForm" onsubmit="handleAddStudentSubmit(event)">
       <div class="modal-body" style="padding:22px 26px;max-height:75vh;overflow-y:auto;">
         
-        <!-- Section 1: Account Credentials -->
+        <!-- Section 1: Account & Personal Info -->
         <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#2563eb;letter-spacing:0.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-id-card"></i> 1. Account &amp; Login Credentials
+          <i class="fa-solid fa-id-card"></i> 1. Account &amp; Personal Details
         </div>
 
         <div class="form-grid form-grid-3 mb-3">
@@ -1079,12 +1084,16 @@
             <input type="text" id="addStudentRegNo" class="form-control" placeholder="e.g. 953623244001" maxlength="12" required oninput="syncDefaultPassword()">
           </div>
           <div class="form-group">
-            <label>College / Email <span style="color:#ef4444;">*</span></label>
-            <input type="email" id="addStudentEmail" class="form-control" placeholder="e.g. student@ritrjpm.ac.in" required>
+            <label>College Email <span style="color:#ef4444;">*</span></label>
+            <input type="email" id="addStudentEmail" class="form-control" placeholder="student@ritrjpm.ac.in" required>
           </div>
         </div>
 
         <div class="form-grid form-grid-3 mb-3">
+          <div class="form-group">
+            <label>Personal Email</label>
+            <input type="email" id="addStudentPersonalEmail" class="form-control" placeholder="personal@gmail.com">
+          </div>
           <div class="form-group">
             <label>Login Password <span style="color:#ef4444;">*</span></label>
             <div style="position:relative;">
@@ -1104,37 +1113,103 @@
               <option value="5">2022-2026 (Passed Out)</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" id="addStudentPhone" class="form-control" placeholder="10-digit mobile" maxlength="10">
-          </div>
         </div>
 
-        <!-- Section 2: Academic & Placement Info (Optional) -->
-        <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#059669;letter-spacing:0.5px;margin-top:20px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-graduation-cap"></i> 2. Academic Scores &amp; Profile (Optional)
-        </div>
-
-        <div class="form-grid form-grid-4 mb-3">
+        <div class="form-grid form-grid-3 mb-3">
           <div class="form-group">
-            <label>10th %</label>
-            <input type="number" step="0.01" min="0" max="100" id="addStudentTenth" class="form-control" placeholder="e.g. 85.5">
+            <label>Mobile Number</label>
+            <input type="tel" id="addStudentPhone" class="form-control" placeholder="10-digit number" maxlength="10">
           </div>
           <div class="form-group">
-            <label>12th %</label>
-            <input type="number" step="0.01" min="0" max="100" id="addStudentTwelth" class="form-control" placeholder="e.g. 82.0">
+            <label>WhatsApp Number</label>
+            <input type="tel" id="addStudentWhatsapp" class="form-control" placeholder="10-digit number" maxlength="10">
           </div>
           <div class="form-group">
-            <label>Diploma %</label>
-            <input type="number" step="0.01" min="0" max="100" id="addStudentDiploma" class="form-control" placeholder="Optional">
-          </div>
-          <div class="form-group">
-            <label>Current CGPA</label>
-            <input type="number" step="0.01" min="0" max="10" id="addStudentCgpa" class="form-control" placeholder="e.g. 8.25">
+            <label>Date of Birth</label>
+            <input type="date" id="addStudentDob" class="form-control">
           </div>
         </div>
 
         <div class="form-grid form-grid-3 mb-3">
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="addStudentDepartment" class="form-control" value="Computer Science and Business Systems" readonly>
+          </div>
+          <div class="form-group">
+            <label>Degree</label>
+            <select id="addStudentDegree" class="form-control">
+              <option value="B.Tech" selected>B.Tech</option>
+              <option value="B.E">B.E</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Domain Interest</label>
+            <select id="addStudentDomain" class="form-control">
+              <option value="General" selected>General</option>
+              <option value="Web Development">Web Development</option>
+              <option value="Mobile Development">Mobile Development</option>
+              <option value="Data Science / AI">Data Science / AI</option>
+              <option value="Cloud Computing">Cloud Computing</option>
+              <option value="Cybersecurity">Cybersecurity</option>
+              <option value="DevOps">DevOps</option>
+              <option value="Business Analytics">Business Analytics</option>
+              <option value="Full Stack Development">Full Stack Development</option>
+              <option value="Embedded Systems">Embedded Systems</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label>Campus Placement Willingness</label>
+          <select id="addStudentPlacementWillingness" class="form-control">
+            <option value="Interested" selected>Interested in Campus Placements</option>
+            <option value="Not Interested">Not Interested (Higher Studies / Opt Out)</option>
+          </select>
+        </div>
+
+        <!-- Section 2: Academic Scores -->
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#059669;letter-spacing:0.5px;margin-top:20px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-graduation-cap"></i> 2. Academic Scores &amp; Performance
+        </div>
+
+        <div class="form-grid form-grid-3 mb-3">
+          <div class="form-group">
+            <label>10th Percentage (%)</label>
+            <input type="number" step="0.01" min="0" max="100" id="addStudentTenth" class="form-control" placeholder="e.g. 88.5">
+          </div>
+          <div class="form-group">
+            <label>12th Percentage (%)</label>
+            <input type="number" step="0.01" min="0" max="100" id="addStudentTwelth" class="form-control" placeholder="e.g. 82.0">
+          </div>
+          <div class="form-group">
+            <label>Diploma Percentage (%)</label>
+            <input type="number" step="0.01" min="0" max="100" id="addStudentDiploma" class="form-control" placeholder="Optional">
+          </div>
+        </div>
+
+        <!-- Semester GPAs Grid -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:11.5px;font-weight:700;color:#475569;text-transform:uppercase;">Semester GPAs (1 - 8)</span>
+            <span style="font-size:11px;color:#64748b;">Enter semester GPAs for auto CGPA calculation</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(75px,1fr));gap:8px;">
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 1</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem1" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 2</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem2" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 3</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem3" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 4</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem4" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 5</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem5" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 6</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem6" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 7</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem7" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+            <div><label style="font-size:10.5px;color:#64748b;">Sem 8</label><input type="number" step="0.01" min="0" max="10" id="addStudentSem8" class="form-control" style="padding:6px 8px;font-size:12.5px;" placeholder="0.00" oninput="calcAddStudentCgpa()"></div>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-3 mb-3">
+          <div class="form-group">
+            <label>Calculated CGPA</label>
+            <input type="number" step="0.01" min="0" max="10" id="addStudentCgpa" class="form-control" placeholder="e.g. 8.25" style="font-weight:700;color:#2563eb;">
+          </div>
           <div class="form-group">
             <label>Standing Arrears</label>
             <input type="number" min="0" max="50" id="addStudentStandingArrears" class="form-control" value="0">
@@ -1143,10 +1218,11 @@
             <label>History of Arrears</label>
             <input type="number" min="0" max="50" id="addStudentHistoryArrears" class="form-control" value="0">
           </div>
-          <div class="form-group">
-            <label>Domain / Skill Interest</label>
-            <input type="text" id="addStudentDomain" class="form-control" placeholder="e.g. Full Stack / Cloud / AI">
-          </div>
+        </div>
+
+        <!-- Section 3: Professional & Social Links -->
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#7c3aed;letter-spacing:0.5px;margin-top:20px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-link"></i> 3. Professional &amp; Social Links
         </div>
 
         <div class="form-grid form-grid-2">
