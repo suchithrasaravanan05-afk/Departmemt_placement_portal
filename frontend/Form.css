@@ -1,65 +1,80 @@
-/* =============================================
-   FORM.CSS — Executive Brown & Warm Beige Theme
-   Ramco Institute of Technology — Department Portal CSBS
-   Ultra-Clean, Professional Institutional Design
-   ============================================= */
+/* ==========================================================================
+   FORM.CSS — RIT Department Portal CSBS (Modern University Portal UI)
+   Ramco Institute of Technology — Autonomous Institution
+   Color System: Deep Navy, White, Campus Orange & Building-Inspired Accents
+   ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-  /* Brown & Beige Palette */
-  --inst-espresso:      #20120a;
-  --inst-brown-deep:    #2c1810;
-  --inst-brown:         #3d2314;
-  --inst-brown-light:   #5a3520;
-  --inst-mocha:         #7a4b2a;
-  --inst-saddle:        #8b5e3c;
-  --inst-caramel:       #c68b59;
-  --inst-gold-accent:   #d4a373;
-  --inst-gold-border:   rgba(198, 139, 89, 0.45);
-  
-  /* Beige & Cream Surfaces */
-  --inst-canvas-bg:     #f8f4ee;
-  --inst-card-bg:       #ffffff;
-  --inst-card-inner:    #fdfbf8;
-  --inst-beige-subtle:  #f4ede4;
-  --inst-beige-border:  #dfcfc2;
-  --inst-beige-dark:    #cbb5a4;
-  
-  /* Text */
-  --inst-text-main:     #20120a;
-  --inst-text-sub:      #5c473b;
-  --inst-text-muted:    #8e7a6d;
-  
-  /* Social Platform Colors */
-  --yt-red:             #dc2626;
-  --yt-red-bg:          #fef2f2;
-  --li-blue:            #0a66c2;
-  --li-blue-bg:         #eff6ff;
-  --ig-pink:            #c13584;
-  --ig-gradient:        linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  --fb-blue:            #1877f2;
-  --fb-blue-bg:         #e7f3ff;
+  /* Design Tokens — Explicit University Portal Palette */
+  --header-main:        #0F2438; /* Main Header */
+  --nav-secondary:      #1E3A52; /* Secondary Navigation & Active Tabs */
+  --cta-primary:        #C94F24; /* Primary CTA Buttons (Campus Orange) */
+  --cta-hover:          #A83E1A; /* Button Hover */
+  --cta-active:         #8F3314; /* Button Active Press */
+  --gold-accent:        #D89A3D; /* Subtle Gold Accent */
+  --card-bg:            #FFFFFF; /* Cards (Solid White / 96% White) */
+  --card-bg-96:         rgba(255, 255, 255, 0.96);
+  --bg-soft:            #F5F8FA; /* Soft Backgrounds */
+  --input-bg:           #F8FAFC; /* Input Fields */
+  --text-primary:       #13283A; /* Primary Text */
+  --text-secondary:     #64748B; /* Secondary Text */
+  --text-muted:         #94A3B8; /* Muted Text */
+  --border-clean:       #D6E0E8; /* Clean Borders */
+
+  /* Navy Focus Ring */
+  --navy-focus-ring:    rgba(30, 58, 82, 0.18);
+  --navy-glow:          rgba(15, 36, 56, 0.12);
+
+  /* Status Tokens */
+  --status-success-bg:  #F0FDF4;
+  --status-success-txt: #166534;
+  --status-success-bdr: #86EFAC;
+  --status-error-bg:    #FEF2F2;
+  --status-error-txt:   #991B1B;
+  --status-error-bdr:   #FECACA;
+  --status-warn-bg:     #FFFBEB;
+  --status-warn-txt:    #92400E;
+  --status-warn-bdr:    #FDE68A;
+
+  /* Social Platform Brand Accents */
+  --yt-red:             #DC2626;
+  --yt-red-bg:          #FEF2F2;
+  --li-blue:            #0A66C2;
+  --li-blue-bg:         #EFF6FF;
+  --ig-pink:            #C13584;
+  --ig-gradient:        linear-gradient(45deg, #F09433 0%, #E6683C 25%, #DC2743 50%, #CC2366 75%, #BC1888 100%);
+  --fb-blue:            #1877F2;
+  --fb-blue-bg:         #E7F3FF;
 }
 
-* {
+/* ==========================================================================
+   RESET & FOUNDATIONAL STYLES
+   ========================================================================== */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-.form-auth-bg {
+body.form-auth-bg {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--inst-espresso);
+  background-color: var(--header-main);
   position: relative;
   overflow-x: hidden;
-  color: var(--inst-text-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scenic Campus Backdrop with Executive Warm Espresso & Mocha Vignette */
+/* ==========================================================================
+   CAMPUS BACKDROP OVERLAY
+   45–55% transparency dark navy gradient overlay so building is clearly visible
+   ========================================================================== */
 .form-auth-bg::before {
   content: '';
   position: fixed;
@@ -68,7 +83,7 @@
   right: 0;
   bottom: 0;
   background-image: 
-    linear-gradient(to bottom, rgba(32, 18, 10, 0.88) 0%, rgba(55, 31, 18, 0.62) 45%, rgba(28, 15, 8, 0.94) 100%),
+    linear-gradient(160deg, rgba(15, 36, 56, 0.52) 0%, rgba(30, 58, 82, 0.46) 50%, rgba(15, 36, 56, 0.55) 100%),
     url('clg_logo.jpg');
   background-size: cover;
   background-position: center center;
@@ -77,15 +92,13 @@
   pointer-events: none;
 }
 
-/* =============================================
-   EXECUTIVE COLLEGE NAVBAR (BROWN & BEIGE ACCENTS)
-   ============================================= */
+/* ==========================================================================
+   MAIN COLLEGE HEADER (#0F2438 with subtle Gold Accent #D89A3D)
+   ========================================================================== */
 .form-header-wrapper {
-  background: rgba(32, 18, 10, 0.97);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 2.5px solid var(--inst-caramel);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  background: var(--header-main);
+  border-bottom: 2.5px solid var(--gold-accent);
+  box-shadow: 0 4px 18px rgba(15, 36, 56, 0.35);
   position: relative;
   z-index: 25;
 }
@@ -93,7 +106,7 @@
 .form-header {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 14px 28px;
+  padding: 13px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -111,18 +124,18 @@
   height: 48px;
   object-fit: contain;
   border-radius: 10px;
-  background: #ffffff;
+  background: #FFFFFF;
   padding: 3px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-  border: 1.5px solid var(--inst-caramel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-clean);
   flex-shrink: 0;
 }
 
 .form-logo-text h1 {
   font-size: 17.5px;
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: 0.4px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: 0.3px;
   line-height: 1.25;
 }
 
@@ -132,8 +145,8 @@
 
 .form-logo-text p {
   font-size: 13px;
-  color: #f5ebe0;
-  font-weight: 800;
+  color: #D6E0E8;
+  font-weight: 700;
   margin-top: 2px;
   display: flex;
   align-items: center;
@@ -141,19 +154,20 @@
 }
 
 .form-logo-text p strong {
-  font-weight: 800;
-  color: #fdfaf7;
+  font-weight: 700;
+  color: #F8FAFC;
 }
 
 .form-logo-text .gold-tag {
   display: inline-block;
-  background: rgba(198, 139, 89, 0.25);
-  color: #fed7aa;
-  padding: 1px 8px;
+  background: rgba(216, 154, 61, 0.18);
+  color: var(--gold-accent);
+  padding: 1.5px 8px;
   border-radius: 4px;
   font-size: 11px;
-  border: 1px solid rgba(198, 139, 89, 0.5);
+  border: 1px solid rgba(216, 154, 61, 0.45);
   font-weight: 800;
+  letter-spacing: 0.4px;
 }
 
 .form-header-right {
@@ -166,222 +180,190 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: #FFFFFF;
   padding: 6px 14px;
   border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-clean);
   flex-shrink: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-dept-logo-wrap:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
 .form-dept-logo-img {
-  height: 46px;
+  height: 44px;
   width: auto;
   max-width: 220px;
   object-fit: contain;
   display: block;
 }
 
-/* =============================================
-   PRE-PAGE PORTAL SELECTOR DROPDOWN (BROWN/BEIGE)
-   ============================================= */
-.portal-selector-bar {
-  background: linear-gradient(90deg, #28150d 0%, #3e2417 50%, #28150d 100%);
-  border-bottom: 1.5px solid var(--inst-gold-border);
-  padding: 11px 24px;
-  position: relative;
-  z-index: 20;
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+/* ==========================================================================
+   SEGMENTED PORTAL TOGGLE AT CARD TOP
+   Modern segmented toggle: Placement Portal & Social Media inside the same card
+   ========================================================================== */
+.portal-segmented-nav {
+  display: flex;
+  background: var(--bg-soft);
+  border: 1.5px solid var(--border-clean);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 22px;
+  gap: 4px;
 }
 
-.portal-selector-inner {
-  max-width: 1440px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.portal-selector-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #fdfaf7;
+.portal-segment-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
   font-size: 13.5px;
-  font-weight: 800;
-  letter-spacing: 0.2px;
-}
-
-.portal-selector-label i {
-  color: var(--inst-caramel);
-  font-size: 16px;
-}
-
-.portal-dropdown-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-width: 340px;
-}
-
-.portal-dropdown-icon {
-  position: absolute;
-  left: 14px;
-  color: var(--inst-caramel);
-  font-size: 14px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.portal-dropdown-select {
-  width: 100%;
-  appearance: none;
-  -webkit-appearance: none;
-  background: #ffffff;
-  color: var(--inst-brown-deep);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  padding: 10px 38px 10px 42px;
-  border-radius: 10px;
-  border: 2px solid var(--inst-caramel);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.portal-dropdown-select:hover {
-  background: #fdfaf7;
-  border-color: #b27a4b;
-  box-shadow: 0 4px 14px rgba(198, 139, 89, 0.35);
-}
-
-.portal-dropdown-select:focus {
-  border-color: var(--inst-mocha);
-  box-shadow: 0 0 0 3.5px rgba(198, 139, 89, 0.25);
-}
-
-.portal-dropdown-arrow {
-  position: absolute;
-  right: 14px;
-  color: var(--inst-brown-deep);
-  font-size: 12px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.portal-active-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #f5ebe0;
-  padding: 6px 14px;
-  border-radius: 7px;
-  font-size: 12px;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  outline: none;
 }
 
-/* =============================================
-   MAIN CONTENT WRAPPER
-   ============================================= */
+.portal-segment-btn:hover {
+  color: var(--text-primary);
+  background: #FFFFFF;
+}
+
+.portal-segment-btn.active {
+  background: var(--nav-secondary);
+  color: #FFFFFF;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(30, 58, 82, 0.25);
+}
+
+.portal-segment-btn.active i {
+  color: #FFFFFF;
+}
+
+/* Smooth Fade / Slide Transition between states inside the same card */
+.portal-card-state {
+  animation: portalStateFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes portalStateFade {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   MAIN AUTH WRAPPER
+   ========================================================================== */
 .form-auth-wrapper {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px 52px;
+  padding: 44px 20px 56px;
   position: relative;
   z-index: 1;
 }
 
-/* =============================================
-   CRISP, HIGH-END FORM CARD (PROFESSIONAL & CLEAR)
-   ============================================= */
+/* ==========================================================================
+   PORTAL LOGIN CARD (Solid or 96% White, 20px Rounded, Soft Premium Shadow)
+   ========================================================================== */
 .form-auth-card {
   position: relative;
   z-index: 2;
-  background: var(--inst-card-bg);
-  border-radius: 22px;
-  box-shadow: 0 24px 60px rgba(32, 18, 10, 0.45);
-  padding: 40px 46px;
+  background: var(--card-bg-96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px -12px rgba(15, 36, 56, 0.22),
+    0 6px 16px -4px rgba(15, 36, 56, 0.10),
+    0 0 0 1px rgba(214, 224, 232, 0.7);
+  padding: 38px 42px;
   width: 100%;
-  max-width: 490px;
-  border: 1.5px solid var(--inst-beige-border);
-  animation: fadeInCard 0.3s ease;
+  max-width: 480px;
+  border: 1px solid var(--border-clean);
+  animation: fadeInCard 0.25s ease-out;
 }
 
 @keyframes fadeInCard {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .form-auth-header {
   text-align: center;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 
 .form-auth-logo-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 62px;
-  height: 62px;
-  background: linear-gradient(135deg, var(--inst-brown-deep) 0%, var(--inst-mocha) 100%);
-  border-radius: 17px;
-  margin-bottom: 14px;
-  box-shadow: 0 8px 22px rgba(44, 24, 16, 0.35);
-  border: 2px solid var(--inst-gold-border);
+  width: 58px;
+  height: 58px;
+  background: var(--header-main);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 14px rgba(15, 36, 56, 0.25);
+  border: 1.5px solid var(--gold-accent);
 }
 
 .form-auth-logo-wrap i {
-  font-size: 26px;
-  color: #fdfaf7;
+  font-size: 24px;
+  color: var(--gold-accent);
 }
 
 .form-auth-header h2 {
-  font-size: 25px;
-  font-weight: 900;
-  color: var(--inst-espresso);
-  margin-bottom: 5px;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 4px;
   letter-spacing: -0.3px;
 }
 
 .form-auth-header p {
   font-size: 13.5px;
-  color: var(--inst-text-sub);
-  font-weight: 600;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
-/* Role Selector Tabs (Clear & Distinct) */
+/* ==========================================================================
+   ROLE SELECTOR TABS (Soft Background #F5F8FA, Active Tab #1E3A52)
+   ========================================================================== */
 .form-role-selector {
   display: flex;
-  background: var(--inst-beige-subtle);
-  border: 1.5px solid var(--inst-beige-border);
+  background: var(--bg-soft);
+  border: 1px solid var(--border-clean);
   border-radius: 12px;
   padding: 4px;
-  margin-bottom: 24px;
-  gap: 5px;
+  margin-bottom: 22px;
+  gap: 4px;
 }
 
 .form-role-btn {
   flex: 1;
-  padding: 10px 16px;
+  padding: 9.5px 14px;
   border: none;
   background: transparent;
-  color: var(--inst-text-sub);
+  color: var(--text-secondary);
   font-size: 13.5px;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -393,19 +375,25 @@
 }
 
 .form-role-btn:hover {
-  color: var(--inst-espresso);
-  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-primary);
+  background: #FFFFFF;
 }
 
 .form-role-btn.active {
-  background: linear-gradient(135deg, var(--inst-brown-deep) 0%, var(--inst-brown-light) 100%);
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(44, 24, 16, 0.3);
+  background: var(--nav-secondary);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(30, 58, 82, 0.25);
 }
 
-/* Fields & Inputs (Ultra-Crisp, High Contrast) */
+.form-role-btn.active i {
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   FORM INPUTS & LABELS (Input Background #F8FAFC, Clean Border #D6E0E8, Navy Focus)
+   ========================================================================== */
 .form-field-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -418,7 +406,11 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--inst-brown-deep);
+  color: var(--text-primary);
+}
+
+.form-field-group label i {
+  color: var(--text-secondary);
 }
 
 .form-input-wrapper {
@@ -427,38 +419,48 @@
 
 .form-input-icon {
   position: absolute;
-  left: 15px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--inst-text-muted);
+  color: var(--text-muted);
   font-size: 14px;
   pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.form-input-wrapper:focus-within .form-input-icon {
+  color: var(--nav-secondary);
 }
 
 .form-input-control {
   width: 100%;
-  padding: 12px 16px;
+  padding: 11.5px 16px;
   padding-left: 42px;
-  border: 1.5px solid var(--inst-beige-border);
+  border: 1.5px solid var(--border-clean);
   border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
   font-weight: 600;
-  color: var(--inst-espresso);
-  background: var(--inst-card-inner);
+  color: var(--text-primary);
+  background: var(--input-bg);
   transition: all 0.2s ease;
   outline: none;
 }
 
 .form-input-control::placeholder {
-  color: var(--inst-text-muted);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
+.form-input-control:hover {
+  border-color: #B8CBD8;
+}
+
+/* Navy focus ring as specified */
 .form-input-control:focus {
-  background: #ffffff;
-  border-color: var(--inst-saddle);
-  box-shadow: 0 0 0 3.5px rgba(139, 94, 60, 0.2);
+  background: #FFFFFF;
+  border-color: var(--nav-secondary);
+  box-shadow: 0 0 0 3.5px var(--navy-focus-ring);
 }
 
 .form-password-wrapper {
@@ -466,6 +468,7 @@
 }
 
 .form-password-wrapper .form-input-control {
+  padding-left: 16px;
   padding-right: 44px;
 }
 
@@ -475,129 +478,148 @@
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: var(--inst-text-muted);
-  font-size: 15px;
+  color: var(--text-muted);
+  font-size: 14px;
   border: none;
   background: none;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 6px;
   transition: color 0.2s ease;
 }
 
 .form-toggle-pw:hover {
-  color: var(--inst-espresso);
+  color: var(--text-primary);
 }
 
 .form-grid-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
-/* Primary Submit Button (Brown & Gold) */
+/* ==========================================================================
+   PRIMARY CTA BUTTON (#C94F24 Campus Orange, Hover #A83E1A)
+   ========================================================================== */
 .form-submit-btn {
   width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  padding: 13.5px 20px;
-  background: linear-gradient(135deg, var(--inst-brown-deep) 0%, var(--inst-brown-light) 100%);
-  color: #ffffff;
-  font-size: 15px;
+  padding: 13px 20px;
+  background: var(--cta-primary);
+  color: #FFFFFF;
+  font-size: 14.5px;
   font-weight: 800;
   border: none;
-  border-radius: 11px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
   margin-top: 6px;
-  box-shadow: 0 4px 18px rgba(44, 24, 16, 0.35);
-  border: 1px solid var(--inst-gold-border);
+  box-shadow: 0 4px 14px rgba(201, 79, 36, 0.32);
+  letter-spacing: 0.2px;
 }
 
 .form-submit-btn:hover {
-  background: linear-gradient(135deg, var(--inst-espresso) 0%, var(--inst-brown-deep) 100%);
-  box-shadow: 0 6px 22px rgba(44, 24, 16, 0.45);
+  background: var(--cta-hover);
+  box-shadow: 0 6px 18px rgba(168, 62, 26, 0.40);
   transform: translateY(-1px);
+}
+
+.form-submit-btn:active {
+  background: var(--cta-active);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(168, 62, 26, 0.30);
 }
 
 .form-auth-switch {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 18px;
   font-size: 13px;
-  color: var(--inst-text-sub);
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .form-auth-switch span {
-  color: var(--inst-saddle);
-  font-weight: 800;
+  color: var(--cta-primary);
+  font-weight: 700;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .form-auth-switch span:hover {
   text-decoration: underline;
-  color: var(--inst-espresso);
+  color: var(--cta-hover);
 }
 
+/* ==========================================================================
+   ALERT BOXES (Minimal, Crisp, Accessible)
+   ========================================================================== */
 .form-alert-box {
-  padding: 12px 16px;
+  padding: 11px 15px;
   border-radius: 9px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   margin-bottom: 18px;
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: formSlideDown 0.3s ease;
+  animation: formSlideDown 0.25s ease-out;
 }
 
 @keyframes formSlideDown {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .form-alert-box.success {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1.5px solid #86efac;
+  background: var(--status-success-bg);
+  color: var(--status-success-txt);
+  border: 1px solid var(--status-success-bdr);
 }
 
 .form-alert-box.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1.5px solid #fca5a5;
+  background: var(--status-error-bg);
+  color: var(--status-error-txt);
+  border: 1px solid var(--status-error-bdr);
 }
 
 .form-alert-box.warning {
-  background: #fffbeb;
-  color: #92400e;
-  border: 1.5px solid #fcd34d;
+  background: var(--status-warn-bg);
+  color: var(--status-warn-txt);
+  border: 1px solid var(--status-warn-bdr);
 }
 
 .form-hidden {
   display: none !important;
 }
 
-/* =============================================
-   SOCIAL MEDIA PAGE STYLES (BROWN & BEIGE STUDIO)
-   ============================================= */
+/* ==========================================================================
+   VIEW 2: SOCIAL MEDIA SECTION (Unified Deep Navy & White Color System)
+   ========================================================================== */
 .social-container {
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
-  animation: fadeInCard 0.35s ease;
+  animation: fadeInCard 0.25s ease-out;
 }
 
-/* Social Login Gate Card */
+/* Social Media Login Gate Card */
 .social-login-card {
-  background: var(--inst-card-bg);
-  border-radius: 22px;
-  box-shadow: 0 24px 60px rgba(32, 18, 10, 0.45);
-  padding: 40px 46px;
-  max-width: 530px;
+  background: var(--card-bg-96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px -12px rgba(15, 36, 56, 0.22),
+    0 6px 16px -4px rgba(15, 36, 56, 0.10),
+    0 0 0 1px rgba(214, 224, 232, 0.7);
+  padding: 38px 44px;
+  max-width: 520px;
   margin: 0 auto;
-  border: 1.5px solid var(--inst-beige-border);
+  border: 1px solid var(--border-clean);
 }
 
 .social-role-badges {
@@ -609,12 +631,12 @@
 .social-role-btn {
   flex: 1;
   padding: 10px 8px;
-  border: 1.5px solid var(--inst-beige-border);
-  background: var(--inst-card-inner);
-  color: var(--inst-brown-deep);
-  font-weight: 800;
+  border: 1.5px solid var(--border-clean);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-weight: 700;
   font-size: 13px;
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -625,33 +647,38 @@
 }
 
 .social-role-btn i {
-  font-size: 16px;
-  color: var(--inst-text-sub);
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.social-role-btn:hover {
+  border-color: var(--nav-secondary);
+  background: #FFFFFF;
 }
 
 .social-role-btn.active {
-  border-color: var(--inst-caramel);
-  background: var(--inst-brown-deep);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(44, 24, 16, 0.3);
+  border-color: var(--nav-secondary);
+  background: var(--nav-secondary);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(30, 58, 82, 0.25);
 }
 
 .social-role-btn.active i {
-  color: var(--inst-caramel);
+  color: var(--gold-accent);
 }
 
 .social-badge-notice {
-  background: #fffbeb;
-  border: 1px solid #fef08a;
+  background: var(--status-warn-bg);
+  border: 1px solid var(--status-warn-bdr);
   border-radius: 10px;
   padding: 11px 15px;
   font-size: 12px;
-  color: #854d0e;
+  color: var(--status-warn-txt);
   font-weight: 600;
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   line-height: 1.45;
 }
 
@@ -661,49 +688,51 @@
   flex-wrap: wrap;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--inst-beige-border);
+  border-top: 1px solid var(--border-clean);
 }
 
 .quick-cred-btn {
-  padding: 6px 11px;
+  padding: 6px 12px;
   border-radius: 7px;
-  border: 1px solid var(--inst-beige-border);
-  background: var(--inst-beige-subtle);
+  border: 1px solid var(--border-clean);
+  background: var(--bg-soft);
   font-size: 11.5px;
-  font-weight: 800;
-  color: var(--inst-brown-deep);
+  font-weight: 700;
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .quick-cred-btn:hover {
-  background: var(--inst-brown-deep);
-  color: #ffffff;
-  border-color: var(--inst-brown-deep);
+  background: var(--nav-secondary);
+  color: #FFFFFF;
+  border-color: var(--nav-secondary);
 }
 
-/* =============================================
-   SOCIAL MEDIA STUDIO (BROWN & BEIGE STUDIO)
-   ============================================= */
+/* ==========================================================================
+   SOCIAL MEDIA STUDIO (Deep Navy Header, White Cards, Crisp Borders)
+   ========================================================================== */
 .social-studio-card {
-  background: #ffffff;
-  border-radius: 22px;
-  box-shadow: 0 24px 60px rgba(32, 18, 10, 0.45);
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px -12px rgba(15, 36, 56, 0.22),
+    0 6px 16px -4px rgba(15, 36, 56, 0.10);
   overflow: hidden;
-  border: 1.5px solid var(--inst-beige-border);
+  border: 1px solid var(--border-clean);
 }
 
 .social-studio-header {
-  background: linear-gradient(135deg, #24140e 0%, #3d2314 100%);
-  padding: 20px 28px;
+  background: var(--header-main);
+  padding: 18px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  border-bottom: 2.5px solid var(--inst-caramel);
-  color: #ffffff;
+  border-bottom: 2.5px solid var(--gold-accent);
+  color: #FFFFFF;
 }
 
 .studio-user-info {
@@ -713,40 +742,40 @@
 }
 
 .studio-user-avatar {
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
-  background: var(--inst-caramel);
-  color: var(--inst-espresso);
+  background: var(--gold-accent);
+  color: var(--header-main);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 900;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  border: 2px solid #ffffff;
+  border: 2px solid #FFFFFF;
 }
 
 .studio-user-details h3 {
-  font-size: 16.5px;
+  font-size: 16px;
   font-weight: 800;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .studio-user-details p {
   font-size: 12.5px;
-  color: #f5ebe0;
-  font-weight: 600;
+  color: #D6E0E8;
+  font-weight: 500;
 }
 
 .studio-role-tag {
   display: inline-block;
-  background: var(--inst-caramel);
-  color: var(--inst-espresso);
+  background: var(--gold-accent);
+  color: var(--header-main);
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 10.5px;
-  font-weight: 900;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-left: 6px;
@@ -754,9 +783,9 @@
 
 .btn-studio-logout {
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.10);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 8px;
   font-size: 12.5px;
   font-weight: 700;
@@ -769,17 +798,17 @@
 }
 
 .btn-studio-logout:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: #ef4444;
-  color: #fecaca;
+  background: rgba(220, 38, 38, 0.2);
+  border-color: #EF4444;
+  color: #FECACA;
 }
 
 .social-studio-body {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  gap: 28px;
-  padding: 28px;
-  background: var(--inst-canvas-bg);
+  gap: 24px;
+  padding: 26px;
+  background: var(--bg-soft);
 }
 
 @media (max-width: 992px) {
@@ -789,17 +818,17 @@
 }
 
 .social-composer-panel {
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 14px;
   padding: 24px;
-  border: 1.5px solid var(--inst-beige-border);
-  box-shadow: 0 4px 16px rgba(44, 24, 16, 0.04);
+  border: 1px solid var(--border-clean);
+  box-shadow: 0 2px 10px rgba(15, 36, 56, 0.04);
 }
 
 .panel-title {
-  font-size: 16px;
+  font-size: 15.5px;
   font-weight: 800;
-  color: var(--inst-espresso);
+  color: var(--text-primary);
   margin-bottom: 18px;
   display: flex;
   align-items: center;
@@ -807,7 +836,7 @@
 }
 
 .panel-title i {
-  color: var(--inst-caramel);
+  color: var(--gold-accent);
   margin-right: 6px;
 }
 
@@ -820,51 +849,56 @@
 
 .platform-toggle-btn {
   padding: 10px 8px;
-  border-radius: 10px;
-  border: 1.5px solid var(--inst-beige-border);
-  background: #ffffff;
+  border-radius: 9px;
+  border: 1.5px solid var(--border-clean);
+  background: var(--input-bg);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   transition: all 0.2s ease;
   font-family: inherit;
-  color: var(--inst-text-sub);
+  color: var(--text-secondary);
 }
 
 .platform-toggle-btn i {
-  font-size: 18px;
+  font-size: 17px;
+}
+
+.platform-toggle-btn:hover {
+  border-color: #B8CBD8;
+  background: #FFFFFF;
 }
 
 .platform-toggle-btn[data-platform="youtube"].selected {
   background: var(--yt-red-bg);
   border-color: var(--yt-red);
   color: var(--yt-red);
-  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.2);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
 }
 
 .platform-toggle-btn[data-platform="linkedin"].selected {
   background: var(--li-blue-bg);
   border-color: var(--li-blue);
   color: var(--li-blue);
-  box-shadow: 0 3px 10px rgba(10, 102, 194, 0.2);
+  box-shadow: 0 2px 8px rgba(10, 102, 194, 0.15);
 }
 
 .platform-toggle-btn[data-platform="instagram"].selected {
-  background: #fdf2f8;
-  border-color: #ec4899;
-  color: #be185d;
-  box-shadow: 0 3px 10px rgba(190, 24, 93, 0.2);
+  background: #FDF2F8;
+  border-color: #EC4899;
+  color: #BE185D;
+  box-shadow: 0 2px 8px rgba(190, 24, 93, 0.15);
 }
 
 .platform-toggle-btn[data-platform="facebook"].selected {
   background: var(--fb-blue-bg);
   border-color: var(--fb-blue);
   color: var(--fb-blue);
-  box-shadow: 0 3px 10px rgba(24, 119, 242, 0.2);
+  box-shadow: 0 2px 8px rgba(24, 119, 242, 0.15);
 }
 
 .social-field {
@@ -877,7 +911,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--inst-brown-deep);
+  color: var(--text-primary);
   margin-bottom: 6px;
 }
 
@@ -886,35 +920,37 @@
 .social-field textarea {
   width: 100%;
   padding: 10px 14px;
-  border: 1.5px solid var(--inst-beige-border);
+  border: 1.5px solid var(--border-clean);
   border-radius: 9px;
   font-size: 13.5px;
   font-family: inherit;
-  color: var(--inst-espresso);
-  background: var(--inst-card-inner);
+  color: var(--text-primary);
+  background: var(--input-bg);
   outline: none;
   transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .social-field input:focus,
 .social-field select:focus,
 .social-field textarea:focus {
-  background: #ffffff;
-  border-color: var(--inst-saddle);
-  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.18);
+  background: #FFFFFF;
+  border-color: var(--nav-secondary);
+  box-shadow: 0 0 0 3px var(--navy-focus-ring);
 }
 
 .social-field textarea {
-  min-height: 100px;
+  min-height: 95px;
   resize: vertical;
   line-height: 1.5;
 }
 
+/* CTA Publish Button (#C94F24) */
 .publish-submit-btn {
   width: 100%;
-  padding: 13.5px 20px;
-  background: linear-gradient(135deg, var(--inst-brown-deep) 0%, var(--inst-brown-light) 100%);
-  color: #ffffff;
+  padding: 13px 20px;
+  background: var(--cta-primary);
+  color: #FFFFFF;
   font-size: 14.5px;
   font-weight: 800;
   border: none;
@@ -926,43 +962,51 @@
   gap: 8px;
   transition: all 0.2s ease;
   font-family: inherit;
-  box-shadow: 0 4px 16px rgba(44, 24, 16, 0.35);
-  border: 1px solid var(--inst-gold-border);
+  box-shadow: 0 4px 14px rgba(201, 79, 36, 0.32);
 }
 
 .publish-submit-btn:hover {
-  background: linear-gradient(135deg, var(--inst-espresso) 0%, var(--inst-brown-deep) 100%);
+  background: var(--cta-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(44, 24, 16, 0.45);
+  box-shadow: 0 6px 18px rgba(168, 62, 26, 0.40);
 }
 
+.publish-submit-btn:active {
+  background: var(--cta-active);
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   LIVE MULTI-PLATFORM PREVIEW PANEL
+   ========================================================================== */
 .social-preview-panel {
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 14px;
   padding: 24px;
-  border: 1.5px solid var(--inst-beige-border);
-  box-shadow: 0 4px 16px rgba(44, 24, 16, 0.04);
+  border: 1px solid var(--border-clean);
+  box-shadow: 0 2px 10px rgba(15, 36, 56, 0.04);
   display: flex;
   flex-direction: column;
 }
 
 .preview-tabs-bar {
   display: flex;
-  background: var(--inst-beige-subtle);
+  background: var(--bg-soft);
   padding: 4px;
-  border-radius: 10px;
+  border-radius: 9px;
+  border: 1px solid var(--border-clean);
   gap: 4px;
   margin-bottom: 18px;
 }
 
 .preview-tab-btn {
   flex: 1;
-  padding: 8px 4px;
+  padding: 7.5px 4px;
   border: none;
   background: transparent;
-  color: var(--inst-text-sub);
+  color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 7px;
   cursor: pointer;
   display: flex;
@@ -973,23 +1017,32 @@
   font-family: inherit;
 }
 
+.preview-tab-btn:hover {
+  color: var(--text-primary);
+  background: #FFFFFF;
+}
+
 .preview-tab-btn.active {
-  background: #ffffff;
-  color: var(--inst-espresso);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--nav-secondary);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(30, 58, 82, 0.2);
+}
+
+.preview-tab-btn.active i {
+  color: #FFFFFF !important;
 }
 
 .preview-card-frame {
-  background: #ffffff;
-  border: 1.5px solid var(--inst-beige-border);
+  background: #FFFFFF;
+  border: 1px solid var(--border-clean);
   border-radius: 12px;
   padding: 16px;
   font-family: system-ui, -apple-system, sans-serif;
   margin-top: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(15, 36, 56, 0.04);
 }
 
-/* YouTube Mockup */
+/* YouTube Mockup Frame */
 .yt-preview-card {
   border-top: 3px solid var(--yt-red);
 }
@@ -997,14 +1050,14 @@
 .yt-video-thumb {
   width: 100%;
   height: 180px;
-  background: #2b1810;
+  background: var(--header-main);
   border-radius: 8px;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .yt-video-thumb img {
@@ -1015,16 +1068,16 @@
 
 .yt-play-icon {
   position: absolute;
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   background: rgba(220, 38, 38, 0.9);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  font-size: 19px;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .yt-video-details {
@@ -1034,33 +1087,34 @@
 }
 
 .yt-channel-avatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--inst-brown-deep);
+  background: var(--header-main);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #FFFFFF;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
+  border: 1px solid var(--border-clean);
 }
 
 .yt-video-meta h4 {
   font-size: 14px;
   font-weight: 700;
-  color: #24140e;
+  color: var(--text-primary);
   line-height: 1.3;
 }
 
 .yt-video-meta p {
   font-size: 12px;
-  color: #786457;
+  color: var(--text-secondary);
   margin-top: 3px;
 }
 
-/* LinkedIn Mockup */
+/* LinkedIn Mockup Frame */
 .li-preview-card {
   border-top: 3px solid var(--li-blue);
 }
@@ -1073,14 +1127,14 @@
 }
 
 .li-avatar {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 6px;
-  background: var(--inst-brown-deep);
+  background: var(--header-main);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #FFFFFF;
   font-weight: 800;
   font-size: 14px;
   flex-shrink: 0;
@@ -1089,17 +1143,17 @@
 .li-info h5 {
   font-size: 13.5px;
   font-weight: 700;
-  color: #24140e;
+  color: var(--text-primary);
 }
 
 .li-info p {
   font-size: 11.5px;
-  color: #786457;
+  color: var(--text-secondary);
 }
 
 .li-body-text {
   font-size: 13px;
-  color: #24140e;
+  color: var(--text-primary);
   line-height: 1.5;
   margin-bottom: 12px;
   white-space: pre-line;
@@ -1108,7 +1162,7 @@
 .li-media-box {
   width: 100%;
   height: 160px;
-  background: #f5ede4;
+  background: var(--bg-soft);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 12px;
@@ -1123,9 +1177,9 @@
 .li-actions-bar {
   display: flex;
   justify-content: space-around;
-  border-top: 1px solid var(--inst-beige-border);
+  border-top: 1px solid var(--border-clean);
   padding-top: 8px;
-  color: #786457;
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1137,9 +1191,9 @@
   cursor: pointer;
 }
 
-/* Instagram Mockup */
+/* Instagram Mockup Frame */
 .ig-preview-card {
-  border-top: 3px solid #e1306c;
+  border-top: 3px solid #E1306C;
 }
 
 .ig-header {
@@ -1150,8 +1204,8 @@
 }
 
 .ig-avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   padding: 2px;
   background: var(--ig-gradient);
@@ -1164,26 +1218,26 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #ffffff;
+  background: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 12px;
-  color: var(--inst-brown-deep);
+  font-size: 11.5px;
+  color: var(--text-primary);
 }
 
 .ig-username {
   font-size: 13px;
   font-weight: 700;
-  color: #24140e;
+  color: var(--text-primary);
 }
 
 .ig-media-box {
   width: 100%;
   aspect-ratio: 1/1;
   max-height: 200px;
-  background: #20120a;
+  background: var(--header-main);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 10px;
@@ -1201,7 +1255,7 @@
   justify-content: space-between;
   margin-bottom: 8px;
   font-size: 16px;
-  color: #24140e;
+  color: var(--text-primary);
 }
 
 .ig-actions-left {
@@ -1212,7 +1266,7 @@
 .ig-caption {
   font-size: 12.5px;
   line-height: 1.4;
-  color: #24140e;
+  color: var(--text-primary);
 }
 
 .ig-caption strong {
@@ -1220,7 +1274,7 @@
   margin-right: 4px;
 }
 
-/* Facebook Mockup */
+/* Facebook Mockup Frame */
 .fb-preview-card {
   border-top: 3px solid var(--fb-blue);
 }
@@ -1233,32 +1287,32 @@
 }
 
 .fb-avatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--fb-blue);
-  color: #ffffff;
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .fb-meta h5 {
   font-size: 13px;
   font-weight: 700;
-  color: #24140e;
+  color: var(--text-primary);
 }
 
 .fb-meta p {
   font-size: 11px;
-  color: #786457;
+  color: var(--text-secondary);
 }
 
 .fb-content {
   font-size: 13px;
-  color: #24140e;
+  color: var(--text-primary);
   margin-bottom: 10px;
   line-height: 1.45;
 }
@@ -1266,7 +1320,7 @@
 .fb-media {
   width: 100%;
   height: 160px;
-  background: #f5ede4;
+  background: var(--bg-soft);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 10px;
@@ -1281,20 +1335,20 @@
 .fb-reactions {
   display: flex;
   justify-content: space-around;
-  border-top: 1px solid var(--inst-beige-border);
+  border-top: 1px solid var(--border-clean);
   padding-top: 8px;
   font-size: 12px;
   font-weight: 600;
-  color: #786457;
+  color: var(--text-secondary);
 }
 
-/* =============================================
-   PUBLISHED FEED SECTION (WARM BEIGE CARDS)
-   ============================================= */
+/* ==========================================================================
+   PUBLISHED FEED SECTION (Soft Backgrounds, Clean Navy & Border Styling)
+   ========================================================================== */
 .social-feed-section {
   padding: 24px 28px 32px;
-  background: #ffffff;
-  border-top: 1.5px solid var(--inst-beige-border);
+  background: #FFFFFF;
+  border-top: 1px solid var(--border-clean);
 }
 
 .feed-header {
@@ -1307,16 +1361,16 @@
 }
 
 .feed-title {
-  font-size: 17px;
-  font-weight: 900;
-  color: var(--inst-espresso);
+  font-size: 16.5px;
+  font-weight: 800;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .feed-title i {
-  color: var(--inst-caramel);
+  color: var(--gold-accent);
 }
 
 .feed-filter-chips {
@@ -1326,22 +1380,28 @@
 }
 
 .feed-filter-btn {
-  padding: 6px 13px;
+  padding: 5.5px 13px;
   border-radius: 20px;
-  border: 1.5px solid var(--inst-beige-border);
-  background: var(--inst-canvas-bg);
+  border: 1px solid var(--border-clean);
+  background: var(--bg-soft);
   font-size: 12px;
   font-weight: 700;
-  color: var(--inst-text-sub);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
 }
 
+.feed-filter-btn:hover {
+  color: var(--text-primary);
+  border-color: #B8CBD8;
+}
+
 .feed-filter-btn.active {
-  background: var(--inst-brown-deep);
-  color: #ffffff;
-  border-color: var(--inst-brown-deep);
+  background: var(--nav-secondary);
+  color: #FFFFFF;
+  border-color: var(--nav-secondary);
+  box-shadow: 0 2px 6px rgba(30, 58, 82, 0.2);
 }
 
 .feed-grid {
@@ -1351,8 +1411,8 @@
 }
 
 .feed-card {
-  background: var(--inst-canvas-bg);
-  border: 1.5px solid var(--inst-beige-border);
+  background: var(--bg-soft);
+  border: 1px solid var(--border-clean);
   border-radius: 12px;
   padding: 16px;
   transition: all 0.2s ease;
@@ -1362,8 +1422,8 @@
 
 .feed-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(44, 24, 16, 0.08);
-  border-color: var(--inst-caramel);
+  box-shadow: 0 6px 20px rgba(15, 36, 56, 0.08);
+  border-color: #B8CBD8;
 }
 
 .feed-card-header {
@@ -1384,8 +1444,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--inst-brown-deep);
-  color: #ffffff;
+  background: var(--header-main);
+  color: #FFFFFF;
   font-weight: 800;
   font-size: 12px;
   display: flex;
@@ -1396,12 +1456,12 @@
 .feed-author-text h6 {
   font-size: 12.5px;
   font-weight: 800;
-  color: var(--inst-espresso);
+  color: var(--text-primary);
 }
 
 .feed-author-text span {
   font-size: 11px;
-  color: var(--inst-text-muted);
+  color: var(--text-muted);
 }
 
 .feed-platforms-list {
@@ -1417,25 +1477,25 @@
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 .feed-plat-badge.youtube { background: var(--yt-red); }
 .feed-plat-badge.linkedin { background: var(--li-blue); }
-.feed-plat-badge.instagram { background: #e1306c; }
+.feed-plat-badge.instagram { background: #E1306C; }
 .feed-plat-badge.facebook { background: var(--fb-blue); }
 
 .feed-card-title {
   font-size: 14px;
   font-weight: 800;
-  color: var(--inst-espresso);
+  color: var(--text-primary);
   margin-bottom: 6px;
   line-height: 1.35;
 }
 
 .feed-card-body {
   font-size: 12.5px;
-  color: var(--inst-text-sub);
+  color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 10px;
   flex: 1;
@@ -1443,7 +1503,7 @@
 
 .feed-card-tags {
   font-size: 11.5px;
-  color: var(--inst-saddle);
+  color: var(--cta-primary);
   font-weight: 700;
   margin-bottom: 8px;
 }
@@ -1452,17 +1512,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid var(--inst-beige-border);
+  border-top: 1px solid var(--border-clean);
   padding-top: 10px;
   margin-top: 6px;
   font-size: 11.5px;
-  color: var(--inst-text-muted);
+  color: var(--text-muted);
 }
 
 .feed-delete-btn {
   background: none;
   border: none;
-  color: #b91c1c;
+  color: #B91C1C;
   cursor: pointer;
   font-size: 12px;
   padding: 2px 6px;
@@ -1471,12 +1531,12 @@
 }
 
 .feed-delete-btn:hover {
-  background: #fef2f2;
+  background: #FEF2F2;
 }
 
-/* =============================================
+/* ==========================================================================
    RESPONSIVE ADJUSTMENTS
-   ============================================= */
+   ========================================================================== */
 @media (max-width: 768px) {
   .form-header {
     flex-direction: column;
@@ -1495,10 +1555,12 @@
     min-width: 100%;
   }
   .form-auth-card {
-    padding: 30px 20px;
+    padding: 30px 22px;
+    border-radius: 18px;
   }
   .social-login-card {
-    padding: 30px 20px;
+    padding: 30px 22px;
+    border-radius: 18px;
   }
   .social-studio-body {
     padding: 16px;

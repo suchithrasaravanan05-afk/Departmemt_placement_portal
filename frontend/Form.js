@@ -20,8 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check if returning to placement or social via hash or url params
   const hash = window.location.hash.replace('#', '');
   if (hash === 'social') {
-    const dropdown = document.getElementById('portalDropdown');
-    if (dropdown) dropdown.value = 'social';
     handlePortalSwitch('social');
   } else {
     // If already logged in as placement student or admin, redirect
@@ -31,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
       redirect(user.role);
       return;
     }
+    handlePortalSwitch('placement');
   }
 
   loadPortalRegistrationBatches();
@@ -39,29 +38,68 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================
-// PORTAL SWITCHER DROPDOWN LOGIC
+// UNIFIED CARD SEGMENTED PORTAL TOGGLE LOGIC
 // =============================================
 function handlePortalSwitch(portal) {
   currentPortal = portal;
-  const viewPlacement = document.getElementById('viewPlacementPortal');
-  const viewSocial = document.getElementById('viewSocialMedia');
-  const statusBadge = document.getElementById('portalStatusText');
-  const dropdownIcon = document.getElementById('portalDropdownIcon');
+  const tabPlacement = document.getElementById('tabPortalPlacement');
+  const tabSocial = document.getElementById('tabPortalSocial');
+  const statePlacement = document.getElementById('portalStatePlacement');
+  const stateSocial = document.getElementById('portalStateSocial');
+  const unifiedCard = document.getElementById('unifiedAuthCard');
+  const studioSection = document.getElementById('socialStudioSection');
 
   if (portal === 'social') {
-    if (viewPlacement) viewPlacement.classList.add('form-hidden');
-    if (viewSocial) viewSocial.classList.remove('form-hidden');
-    if (statusBadge) statusBadge.innerText = 'Service: Social Media Broadcasting';
-    if (dropdownIcon) dropdownIcon.className = 'fa-solid fa-share-nodes portal-dropdown-icon';
+    if (tabPlacement) {
+      tabPlacement.classList.remove('active');
+      tabPlacement.setAttribute('aria-selected', 'false');
+    }
+    if (tabSocial) {
+      tabSocial.classList.add('active');
+      tabSocial.setAttribute('aria-selected', 'true');
+    }
     window.location.hash = 'social';
 
-    checkSocialAuthSession();
+    const staffUser = getStoredStaffUser();
+    if (staffUser && ['faculty', 'hod', 'admin'].includes(staffUser.role?.toLowerCase())) {
+      // Authenticated staff member -> display Social Media Studio
+      if (unifiedCard) unifiedCard.classList.add('form-hidden');
+      if (studioSection) studioSection.classList.remove('form-hidden');
+      checkSocialAuthSession();
+    } else {
+      // Show Social login in the SAME login card
+      if (unifiedCard) unifiedCard.classList.remove('form-hidden');
+      if (studioSection) studioSection.classList.add('form-hidden');
+      if (statePlacement) statePlacement.classList.add('form-hidden');
+      if (stateSocial) {
+        stateSocial.classList.remove('form-hidden');
+        stateSocial.classList.remove('portal-card-state');
+        void stateSocial.offsetWidth; // trigger reflow for smooth animation
+        stateSocial.classList.add('portal-card-state');
+      }
+    }
     updateLivePreviews();
   } else {
-    if (viewSocial) viewSocial.classList.add('form-hidden');
-    if (viewPlacement) viewPlacement.classList.remove('form-hidden');
-    if (statusBadge) statusBadge.innerText = 'Service: Placement Portal Gateway';
-    if (dropdownIcon) dropdownIcon.className = 'fa-solid fa-graduation-cap portal-dropdown-icon';
+    // Placement Portal state
+    if (tabSocial) {
+      tabSocial.classList.remove('active');
+      tabSocial.setAttribute('aria-selected', 'false');
+    }
+    if (tabPlacement) {
+      tabPlacement.classList.add('active');
+      tabPlacement.setAttribute('aria-selected', 'true');
+    }
+
+    if (unifiedCard) unifiedCard.classList.remove('form-hidden');
+    if (studioSection) studioSection.classList.add('form-hidden');
+    if (stateSocial) stateSocial.classList.add('form-hidden');
+    if (statePlacement) {
+      statePlacement.classList.remove('form-hidden');
+      statePlacement.classList.remove('portal-card-state');
+      void statePlacement.offsetWidth; // trigger reflow for smooth animation
+      statePlacement.classList.add('portal-card-state');
+    }
+
     if (window.location.hash === '#social') {
       history.replaceState(null, null, ' ');
     }
@@ -416,11 +454,14 @@ function hideSocialAlert() {
 
 function checkSocialAuthSession() {
   const staffUser = getStoredStaffUser();
-  const loginSection = document.getElementById('socialLoginSection');
+  const unifiedCard = document.getElementById('unifiedAuthCard');
   const studioSection = document.getElementById('socialStudioSection');
+  const stateSocial = document.getElementById('portalStateSocial');
+
+  if (currentPortal !== 'social') return;
 
   if (staffUser && ['faculty', 'hod', 'admin'].includes(staffUser.role?.toLowerCase())) {
-    if (loginSection) loginSection.classList.add('form-hidden');
+    if (unifiedCard) unifiedCard.classList.add('form-hidden');
     if (studioSection) studioSection.classList.remove('form-hidden');
 
     // Populate Studio Header
@@ -437,8 +478,9 @@ function checkSocialAuthSession() {
     loadSocialFeed(currentFeedFilter);
     updateLivePreviews();
   } else {
-    if (loginSection) loginSection.classList.remove('form-hidden');
+    if (unifiedCard) unifiedCard.classList.remove('form-hidden');
     if (studioSection) studioSection.classList.add('form-hidden');
+    if (stateSocial) stateSocial.classList.remove('form-hidden');
   }
 }
 
@@ -504,14 +546,14 @@ async function handleSocialLogin(e) {
       }
 
       showSocialAlert(data.message || 'Invalid staff credentials. Only Faculty, HOD, and Admin can log in.');
-      setLoading('socialLoginBtn', false, 'Login as Staff Member', 'fa-solid fa-arrow-right-to-bracket');
+      setLoading('socialLoginBtn', false, 'Login to Social Media', 'fa-solid fa-arrow-right-to-bracket');
       return;
     }
 
     const role = (data.user?.role || '').toLowerCase();
     if (!['faculty', 'hod', 'admin'].includes(role)) {
       showSocialAlert('Access Denied: This portal is strictly restricted to Faculty, HOD, and Admin.', 'error');
-      setLoading('socialLoginBtn', false, 'Login as Staff Member', 'fa-solid fa-arrow-right-to-bracket');
+      setLoading('socialLoginBtn', false, 'Login to Social Media', 'fa-solid fa-arrow-right-to-bracket');
       return;
     }
 
@@ -545,14 +587,15 @@ async function handleSocialLogin(e) {
     }
 
     showSocialAlert('Unable to connect to server. Please try again.');
-    setLoading('socialLoginBtn', false, 'Login as Staff Member', 'fa-solid fa-arrow-right-to-bracket');
+    setLoading('socialLoginBtn', false, 'Login to Social Media', 'fa-solid fa-arrow-right-to-bracket');
   }
 }
 
 function handleSocialLogout() {
   localStorage.removeItem('csbs_social_staff_user');
   localStorage.removeItem('csbs_social_staff_token');
-  checkSocialAuthSession();
+  handlePortalSwitch('social');
+  showSocialAlert('Logged out successfully.', 'success');
 }
 
 // =============================================
