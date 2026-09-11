@@ -9,6 +9,7 @@ const db = require("./db");
 const authRoutes = require("./routes/auth");
 const studentRoutes = require("./routes/student");
 const adminRoutes = require("./routes/admin");
+const socialRoutes = require("./routes/social");
 
 const app = express();
 const PORT = process.env.PORT || 5500;
@@ -74,6 +75,7 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 app.use(["/api/auth", "/auth"], authRoutes);
 app.use(["/api/student", "/student"], studentRoutes);
 app.use(["/api/admin", "/admin"], adminRoutes);
+app.use(["/api/social", "/social"], socialRoutes);
 
 // Root Route
 app.get(["/api/health", "/health"], (req, res) => {
@@ -96,9 +98,9 @@ app.use((err, req, res, next) => {
     next(err);
 });
 
-// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads)
+// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social)
 app.get("*", (req, res) => {
-    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin")) {
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social")) {
         return res.status(404).json({ success: false, message: "Endpoint not found" });
     }
     res.sendFile(path.join(__dirname, "../frontend/Form.html"));

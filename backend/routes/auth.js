@@ -146,7 +146,51 @@ router.post("/login", (req, res) => {
         });
     }
 
-    // Database lookup for Student or registered Admin
+    // Default HOD Login shortcut
+    if ((idLower === "hod" || idUpper === "HOD001" || idLower === "hod@rit.ac.in") && password === "hod123") {
+        const token = jwt.sign(
+            { id: 901, email: "hod@rit.ac.in", role: "hod", full_name: "Dr. K. Vijayalakshmi (HOD)" },
+            JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+        return res.status(200).json({
+            success: true,
+            message: "HOD Login Successful!",
+            token,
+            user: {
+                id: 901,
+                full_name: "Dr. K. Vijayalakshmi",
+                designation: "Head of Department - CSBS",
+                register_number: "HOD-CSBS-01",
+                email: "hod@rit.ac.in",
+                role: "hod"
+            }
+        });
+    }
+
+    // Default Faculty Login shortcut
+    if ((idLower === "faculty" || idUpper === "FACULTY001" || idLower === "faculty@rit.ac.in") && password === "faculty123") {
+        const token = jwt.sign(
+            { id: 902, email: "faculty@rit.ac.in", role: "faculty", full_name: "Prof. S. Anand (Faculty)" },
+            JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+        return res.status(200).json({
+            success: true,
+            message: "Faculty Login Successful!",
+            token,
+            user: {
+                id: 902,
+                full_name: "Prof. S. Anand",
+                designation: "Assistant Professor - CSBS",
+                register_number: "FAC-CSBS-02",
+                email: "faculty@rit.ac.in",
+                role: "faculty"
+            }
+        });
+    }
+
+    // Database lookup for Student, Faculty, HOD or registered Admin
     db.query(
         "SELECT * FROM users WHERE register_number = ? OR email = ? OR (role = 'admin' AND (register_number = ? OR email = ?))",
         [identifier, identifier, identifier, identifier],

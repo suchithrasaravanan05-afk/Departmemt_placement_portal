@@ -32,12 +32,12 @@
 }
 
 .student-header-wrapper {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-bottom: 3px solid #2563eb;
+  background: linear-gradient(135deg, #071326 0%, #0b1d3a 100%);
+  border-bottom: 2.5px solid #c29b38;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 30px rgba(7, 19, 38, 0.35);
 }
 
 .student-college-header {
