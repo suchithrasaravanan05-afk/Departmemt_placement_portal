@@ -20,7 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check if returning to placement or social via hash or url params
   const hash = window.location.hash.replace('#', '');
   if (hash === 'social') {
-    handlePortalSwitch('social');
+    const staffUser = getStoredStaffUser();
+    if (staffUser && ['faculty', 'hod', 'admin'].includes(staffUser.role?.toLowerCase())) {
+      handlePortalSwitch('social', true);
+    } else {
+      const initialSelect = document.getElementById('initialServiceDropdown');
+      if (initialSelect) initialSelect.value = 'social';
+      handleInitialDropdownSelect('social');
+      handlePortalSwitch('social', false);
+    }
   } else {
     // If already logged in as placement student or admin, redirect
     const token = localStorage.getItem('token');
@@ -29,7 +37,19 @@ document.addEventListener('DOMContentLoaded', () => {
       redirect(user.role);
       return;
     }
-    handlePortalSwitch('placement');
+    handleInitialDropdownSelect('placement');
+    handlePortalSwitch('placement', false);
+  }
+
+  // Keyboard shortcut: pressing enter on service dropdown proceeds to login
+  const initialSelect = document.getElementById('initialServiceDropdown');
+  if (initialSelect) {
+    initialSelect.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        proceedToLoginCard();
+      }
+    });
   }
 
   loadPortalRegistrationBatches();
@@ -38,9 +58,79 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================
-// UNIFIED CARD SEGMENTED PORTAL TOGGLE LOGIC
+// SEPARATE SERVICE SELECTION BOX LOGIC (STEP 1)
+// Shown before login and password card is revealed
 // =============================================
-function handlePortalSwitch(portal) {
+function handleInitialDropdownSelect(portal) {
+  currentPortal = portal;
+  const icon = document.getElementById('initialDropdownIcon');
+  const chipText = document.getElementById('serviceFeatureText');
+
+  if (icon) {
+    icon.className = portal === 'social'
+      ? 'fa-solid fa-share-nodes portal-dropdown-current-icon'
+      : 'fa-solid fa-graduation-cap portal-dropdown-current-icon';
+  }
+
+  if (chipText) {
+    chipText.innerHTML = portal === 'social'
+      ? 'Includes official social media broadcasting for YouTube, LinkedIn, Instagram & Facebook with auto-generated captions and media uploads.'
+      : 'Includes student placement drives, offer tracking, resume repository & coordinator admin controls.';
+  }
+}
+
+function proceedToLoginCard() {
+  const dropdown = document.getElementById('initialServiceDropdown');
+  const selected = dropdown ? dropdown.value : currentPortal;
+
+  const selectBox = document.getElementById('serviceSelectCard');
+  const unifiedCard = document.getElementById('unifiedAuthCard');
+
+  if (selectBox) selectBox.classList.add('form-hidden');
+  if (unifiedCard) {
+    unifiedCard.classList.remove('form-hidden');
+    unifiedCard.classList.remove('form-auth-card');
+    void unifiedCard.offsetWidth; // force reflow for smooth animation
+    unifiedCard.classList.add('form-auth-card');
+  }
+
+  handlePortalSwitch(selected, true);
+
+  // Focus the first input field for convenience
+  setTimeout(() => {
+    if (selected === 'social') {
+      const el = document.getElementById('socialEmail');
+      if (el) el.focus();
+    } else {
+      const el = document.getElementById('loginEmail');
+      if (el) el.focus();
+    }
+  }, 100);
+}
+
+function backToServiceSelect() {
+  const selectBox = document.getElementById('serviceSelectCard');
+  const unifiedCard = document.getElementById('unifiedAuthCard');
+  const studioSection = document.getElementById('socialStudioSection');
+
+  if (unifiedCard) unifiedCard.classList.add('form-hidden');
+  if (studioSection) studioSection.classList.add('form-hidden');
+  if (selectBox) {
+    selectBox.classList.remove('form-hidden');
+    selectBox.classList.remove('service-select-box');
+    void selectBox.offsetWidth; // reflow for smooth animation
+    selectBox.classList.add('service-select-box');
+  }
+
+  const dropdown = document.getElementById('initialServiceDropdown');
+  if (dropdown) dropdown.value = currentPortal;
+  handleInitialDropdownSelect(currentPortal);
+}
+
+// =============================================
+// UNIFIED CARD SEGMENTED PORTAL TOGGLE LOGIC (STEP 2)
+// =============================================
+function handlePortalSwitch(portal, isConfirmedLogin = false) {
   currentPortal = portal;
   const tabPlacement = document.getElementById('tabPortalPlacement');
   const tabSocial = document.getElementById('tabPortalSocial');
@@ -48,14 +138,20 @@ function handlePortalSwitch(portal) {
   const stateSocial = document.getElementById('portalStateSocial');
   const unifiedCard = document.getElementById('unifiedAuthCard');
   const studioSection = document.getElementById('socialStudioSection');
-  const portalDropdown = document.getElementById('portalSelectDropdown');
-  const dropdownIcon = document.getElementById('portalDropdownCurrentIcon');
+  const selectBox = document.getElementById('serviceSelectCard');
 
-  if (portalDropdown) portalDropdown.value = portal;
-  if (dropdownIcon) {
-    dropdownIcon.className = portal === 'social'
-      ? 'fa-solid fa-share-nodes portal-dropdown-current-icon'
-      : 'fa-solid fa-graduation-cap portal-dropdown-current-icon';
+  // Update active service banner in the login card
+  const activeIcon = document.getElementById('activeServiceIcon');
+  const activeName = document.getElementById('activeServiceName');
+  if (activeIcon) {
+    activeIcon.className = portal === 'social'
+      ? 'fa-solid fa-share-nodes'
+      : 'fa-solid fa-graduation-cap';
+  }
+  if (activeName) {
+    activeName.textContent = portal === 'social'
+      ? 'Department Social Media Hub'
+      : 'Placement Portal (Student / Admin)';
   }
 
   if (portal === 'social') {
@@ -72,12 +168,16 @@ function handlePortalSwitch(portal) {
     const staffUser = getStoredStaffUser();
     if (staffUser && ['faculty', 'hod', 'admin'].includes(staffUser.role?.toLowerCase())) {
       // Authenticated staff member -> display Social Media Studio
+      if (selectBox) selectBox.classList.add('form-hidden');
       if (unifiedCard) unifiedCard.classList.add('form-hidden');
       if (studioSection) studioSection.classList.remove('form-hidden');
       checkSocialAuthSession();
     } else {
-      // Show Social login in the SAME login card
-      if (unifiedCard) unifiedCard.classList.remove('form-hidden');
+      // Show Social login in the login card
+      if (isConfirmedLogin || (unifiedCard && !unifiedCard.classList.contains('form-hidden'))) {
+        if (selectBox) selectBox.classList.add('form-hidden');
+        if (unifiedCard) unifiedCard.classList.remove('form-hidden');
+      }
       if (studioSection) studioSection.classList.add('form-hidden');
       if (statePlacement) statePlacement.classList.add('form-hidden');
       if (stateSocial) {
@@ -99,7 +199,10 @@ function handlePortalSwitch(portal) {
       tabPlacement.setAttribute('aria-selected', 'true');
     }
 
-    if (unifiedCard) unifiedCard.classList.remove('form-hidden');
+    if (isConfirmedLogin || (unifiedCard && !unifiedCard.classList.contains('form-hidden'))) {
+      if (selectBox) selectBox.classList.add('form-hidden');
+      if (unifiedCard) unifiedCard.classList.remove('form-hidden');
+    }
     if (studioSection) studioSection.classList.add('form-hidden');
     if (stateSocial) stateSocial.classList.add('form-hidden');
     if (statePlacement) {
@@ -603,7 +706,9 @@ async function handleSocialLogin(e) {
 function handleSocialLogout() {
   localStorage.removeItem('csbs_social_staff_user');
   localStorage.removeItem('csbs_social_staff_token');
-  handlePortalSwitch('social');
+  const studioSection = document.getElementById('socialStudioSection');
+  if (studioSection) studioSection.classList.add('form-hidden');
+  backToServiceSelect();
   showSocialAlert('Logged out successfully.', 'success');
 }
 

@@ -36,22 +36,68 @@
          UNIFIED CENTERED PORTAL LOGIN CARD
          Both Placement Portal & Social Media are selected via Dropdown
          ======================================================= -->
-    <div id="unifiedAuthCard" class="form-auth-card">
-
-      <!-- Separate Department Service Dropdown Selector -->
-      <div class="portal-dropdown-select-bar">
-        <label for="portalSelectDropdown" class="portal-dropdown-select-label">
+    <!-- =======================================================
+         SEPARATE SERVICE SELECTION CARD (STEP 1)
+         Shown before login & password to select the department portal service
+         ======================================================= -->
+    <div id="serviceSelectCard" class="form-auth-card service-select-box">
+      <div class="form-auth-header">
+        <div class="form-auth-logo-wrap">
           <i class="fa-solid fa-layer-group"></i>
-          <span>Select Department Service:</span>
+        </div>
+        <h2>Select Department Service</h2>
+        <p>Choose the portal module to proceed to login</p>
+      </div>
+
+      <div class="service-select-group">
+        <label for="initialServiceDropdown" class="portal-dropdown-select-label">
+          <i class="fa-solid fa-building-columns"></i>
+          <span>Department Portal Service:</span>
         </label>
         <div class="portal-dropdown-select-wrap">
-          <i class="fa-solid fa-graduation-cap portal-dropdown-current-icon" id="portalDropdownCurrentIcon"></i>
-          <select id="portalSelectDropdown" class="portal-dropdown-custom-select" onchange="handlePortalSwitch(this.value)">
-            <option value="placement" selected>🎓 Placement Portal (Student / Admin)</option>
+          <i class="fa-solid fa-graduation-cap portal-dropdown-current-icon" id="initialDropdownIcon"></i>
+          <select id="initialServiceDropdown" class="portal-dropdown-custom-select" onchange="handleInitialDropdownSelect(this.value)">
+            <option value="placement" selected>🎓 Placement Portal (Student / Placement Admin)</option>
             <option value="social">📱 Department Social Media Hub (Faculty / HOD / Admin)</option>
           </select>
           <i class="fa-solid fa-chevron-down portal-dropdown-custom-arrow"></i>
         </div>
+      </div>
+
+      <!-- Feature Chip reflecting the chosen service -->
+      <div class="service-feature-chip" id="serviceFeatureChip">
+        <i class="fa-solid fa-circle-check" style="color:var(--nav-secondary);"></i>
+        <span id="serviceFeatureText">Includes student placement drives, offer tracking, resume repository &amp; coordinator admin controls.</span>
+      </div>
+
+      <button type="button" class="form-submit-btn" id="btnContinueToAuth" onclick="proceedToLoginCard()">
+        <span>Continue to Login</span>
+        <i class="fa-solid fa-arrow-right" style="margin-left:8px;"></i>
+      </button>
+
+      <p class="form-auth-switch" style="margin-top:16px;">
+        Authorized CSBS Department Portal &bull; Ramco Institute of Technology
+      </p>
+    </div>
+
+    <!-- =======================================================
+         UNIFIED CENTERED PORTAL LOGIN CARD (STEP 2)
+         Shown after selecting service with login & password to enter main page
+         ======================================================= -->
+    <div id="unifiedAuthCard" class="form-auth-card form-hidden">
+
+      <!-- Active Service Header Bar (With quick Back to Service Selection) -->
+      <div class="active-service-bar">
+        <div class="active-service-meta">
+          <span class="active-service-pill" id="activeServicePill">
+            <i class="fa-solid fa-graduation-cap" id="activeServiceIcon"></i>
+            <span id="activeServiceName">Placement Portal</span>
+          </span>
+        </div>
+        <button type="button" class="btn-switch-service" onclick="backToServiceSelect()" title="Select a different department service">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Change Service</span>
+        </button>
       </div>
 
       <!-- =======================================================
