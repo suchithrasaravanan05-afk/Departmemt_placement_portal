@@ -34,34 +34,24 @@
 
     <!-- =======================================================
          UNIFIED CENTERED PORTAL LOGIN CARD
-         Both Placement Portal & Social Media are states of the SAME card
+         Both Placement Portal & Social Media are selected via Dropdown
          ======================================================= -->
     <div id="unifiedAuthCard" class="form-auth-card">
 
-      <!-- Modern Segmented Toggle at the Top of the Card -->
-      <div class="portal-segmented-nav" role="tablist" aria-label="Portal Selection">
-        <button
-          type="button"
-          class="portal-segment-btn active"
-          id="tabPortalPlacement"
-          role="tab"
-          aria-selected="true"
-          onclick="handlePortalSwitch('placement')"
-        >
-          <i class="fa-solid fa-graduation-cap"></i>
-          <span>Placement Portal</span>
-        </button>
-        <button
-          type="button"
-          class="portal-segment-btn"
-          id="tabPortalSocial"
-          role="tab"
-          aria-selected="false"
-          onclick="handlePortalSwitch('social')"
-        >
-          <i class="fa-solid fa-share-nodes"></i>
-          <span>Social Media</span>
-        </button>
+      <!-- Separate Department Service Dropdown Selector -->
+      <div class="portal-dropdown-select-bar">
+        <label for="portalSelectDropdown" class="portal-dropdown-select-label">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Select Department Service:</span>
+        </label>
+        <div class="portal-dropdown-select-wrap">
+          <i class="fa-solid fa-graduation-cap portal-dropdown-current-icon" id="portalDropdownCurrentIcon"></i>
+          <select id="portalSelectDropdown" class="portal-dropdown-custom-select" onchange="handlePortalSwitch(this.value)">
+            <option value="placement" selected>🎓 Placement Portal (Student / Admin)</option>
+            <option value="social">📱 Department Social Media Hub (Faculty / HOD / Admin)</option>
+          </select>
+          <i class="fa-solid fa-chevron-down portal-dropdown-custom-arrow"></i>
+        </div>
       </div>
 
       <!-- =======================================================
@@ -345,7 +335,7 @@
           <div class="social-composer-panel">
             <div class="panel-title">
               <span><i class="fa-solid fa-pen-nib"></i> Compose Social Announcement</span>
-              <span style="font-size:11.5px;color:var(--text-secondary);font-weight:600;">Broadcast to 4 Networks</span>
+              <span style="font-size:11.5px;color:var(--text-secondary);font-weight:600;">Multi-Platform Publishing</span>
             </div>
 
             <!-- Multi-Platform Selection Toggles -->
@@ -371,7 +361,7 @@
               </button>
             </div>
 
-            <!-- Post Title -->
+            <!-- Post Title / Announcement Topic -->
             <div class="social-field">
               <label>Announcement Headline / Title</label>
               <input
@@ -379,15 +369,15 @@
                 id="postTitle"
                 placeholder="e.g. 15 CSBS Students Placed at Zoho & TCS Digital Drives!"
                 value="Outstanding Campus Placement Milestone — CSBS Batch 2023-2027"
-                oninput="updateLivePreviews()"
+                oninput="handleContentInput()"
                 required
               >
             </div>
 
-            <!-- Category -->
+            <!-- Department Category -->
             <div class="social-field">
               <label>Department Category</label>
-              <select id="postCategory" onchange="updateLivePreviews()">
+              <select id="postCategory" onchange="handleContentInput()">
                 <option value="Placement Achievement" selected>🏆 Placement Milestone / Offer Letters</option>
                 <option value="Department Workshop">💡 Department Workshop / Symposium</option>
                 <option value="Student Project">🚀 Student Project / Hackathon Win</option>
@@ -397,45 +387,142 @@
               </select>
             </div>
 
-            <!-- Post Content -->
+            <!-- Media Upload Box (Photograph OR Video) -->
             <div class="social-field">
-              <label>Content / Post Description</label>
-              <textarea
-                id="postContent"
-                placeholder="Write the department post details..."
-                oninput="updateLivePreviews()"
-                required
-              >Proud to share that our department students have successfully cleared the technical evaluations for premium engineering roles! Special appreciation to the placement training coordinators and faculty mentors for their continuous guidance.</textarea>
-            </div>
+              <div class="media-field-header">
+                <label>Media / Photograph / Video</label>
+                <span class="media-type-indicator" id="mediaTypeBadge">
+                  <i class="fa-solid fa-photo-film"></i> Photo or Video
+                </span>
+              </div>
 
-            <!-- Media Selection -->
-            <div class="social-field">
-              <label>Media / Visual Banner</label>
-              <select id="postMediaSelect" onchange="handleMediaSelect(this.value)">
-                <option value="clg_logo.jpg" selected>🏛️ RIT Campus Aerial View</option>
-                <option value="csbs_logo.png">💻 CSBS Department Official Crest</option>
-                <option value="admin.png">🎓 Department Placement Drive Banner</option>
-                <option value="rit_logo.png">🛡️ Ramco Institute of Technology Insignia</option>
-                <option value="custom">🌐 Custom Image URL...</option>
-              </select>
+              <!-- Upload Zone -->
+              <div class="media-drop-zone" id="mediaDropZone" onclick="document.getElementById('mediaFileInput').click()">
+                <input
+                  type="file"
+                  id="mediaFileInput"
+                  class="form-hidden"
+                  accept="image/*,video/*"
+                  onchange="handleMediaFileUpload(this)"
+                >
+                <div class="media-drop-content">
+                  <div class="media-drop-icon">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <div class="media-drop-text">
+                    <p class="media-drop-main"><strong>Click to upload</strong> Photograph or Video</p>
+                    <p class="media-drop-sub">JPG, PNG, WebP (Images) or MP4, WebM, MOV (Videos up to 50MB)</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Uploaded Media Status Bar (Hidden by default until file is selected) -->
+              <div id="mediaUploadStatus" class="media-status-bar form-hidden">
+                <div class="media-status-left">
+                  <i class="fa-solid fa-circle-check media-status-check"></i>
+                  <div class="media-file-meta">
+                    <span id="mediaFileName" class="media-filename">file_name.jpg</span>
+                    <span id="mediaFileSize" class="media-filesize">2.4 MB • Video</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-remove-media" onclick="removeUploadedMedia()" title="Remove media">
+                  <i class="fa-solid fa-xmark"></i> Remove
+                </button>
+              </div>
+
+              <!-- Preset / Fallback Selection -->
+              <div class="media-preset-row">
+                <span>Or select college asset:</span>
+                <select id="postMediaSelect" onchange="handlePresetMediaSelect(this.value)">
+                  <option value="clg_logo.jpg" selected>🏛️ RIT Campus Aerial View</option>
+                  <option value="csbs_logo.png">💻 CSBS Department Official Crest</option>
+                  <option value="admin.png">🎓 Department Placement Drive Banner</option>
+                  <option value="rit_logo.png">🛡️ Ramco Institute of Technology Insignia</option>
+                  <option value="custom">🌐 Custom Media URL...</option>
+                </select>
+              </div>
+
               <input
                 type="text"
                 id="postMediaCustomUrl"
                 class="form-hidden"
                 style="margin-top:8px;"
                 placeholder="Enter custom image/video URL (e.g. https://...)"
-                oninput="updateLivePreviews()"
+                oninput="handleContentInput()"
               >
             </div>
 
-            <!-- Hashtags -->
+            <!-- Content Description & Auto-Generator -->
             <div class="social-field">
+              <div class="content-field-header">
+                <label>Announcement Details / Description</label>
+                <button type="button" class="btn-auto-magic" onclick="autoGenerateAllCaptions()" title="Auto-generate optimized posts for YouTube, LinkedIn, Instagram & Facebook">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Generate Platform Captions
+                </button>
+              </div>
+              <textarea
+                id="postContent"
+                placeholder="Write the department post details..."
+                oninput="handleContentInput()"
+                required
+              >Proud to share that our department students have successfully cleared the technical evaluations for premium engineering roles! Special appreciation to the placement training coordinators and faculty mentors for their continuous guidance.</textarea>
+            </div>
+
+            <!-- Platform-Specific Tailored Captions Expander -->
+            <div class="tailored-captions-box">
+              <div class="tailored-header" onclick="toggleTailoredBox()">
+                <div class="tailored-title">
+                  <i class="fa-solid fa-sliders"></i>
+                  <span>Platform-Specific Auto-Generated Text (Instagram, Facebook, LinkedIn, YouTube)</span>
+                </div>
+                <i class="fa-solid fa-chevron-down tailored-arrow" id="tailoredBoxArrow"></i>
+              </div>
+              <div id="tailoredBoxBody" class="tailored-body form-hidden">
+                <div class="tailored-tabs">
+                  <button type="button" class="tailored-tab-btn active" onclick="switchTailoredTab('ig', this)">
+                    <i class="fa-brands fa-instagram"></i> Instagram
+                  </button>
+                  <button type="button" class="tailored-tab-btn" onclick="switchTailoredTab('fb', this)">
+                    <i class="fa-brands fa-facebook"></i> Facebook
+                  </button>
+                  <button type="button" class="tailored-tab-btn" onclick="switchTailoredTab('li', this)">
+                    <i class="fa-brands fa-linkedin"></i> LinkedIn
+                  </button>
+                  <button type="button" class="tailored-tab-btn" onclick="switchTailoredTab('yt', this)">
+                    <i class="fa-brands fa-youtube"></i> YouTube
+                  </button>
+                </div>
+                <!-- Instagram Custom Area -->
+                <div id="tailoredTabIg" class="tailored-pane active">
+                  <label>Instagram Caption (Auto-Generated with Hook & Tags):</label>
+                  <textarea id="customCaptionIg" oninput="updateLivePreviews()"></textarea>
+                </div>
+                <!-- Facebook Custom Area -->
+                <div id="tailoredTabFb" class="tailored-pane form-hidden">
+                  <label>Facebook Post (Auto-Generated Campus Community Text):</label>
+                  <textarea id="customCaptionFb" oninput="updateLivePreviews()"></textarea>
+                </div>
+                <!-- LinkedIn Custom Area -->
+                <div id="tailoredTabLi" class="tailored-pane form-hidden">
+                  <label>LinkedIn Article (Executive Professional Tone):</label>
+                  <textarea id="customCaptionLi" oninput="updateLivePreviews()"></textarea>
+                </div>
+                <!-- YouTube Custom Area -->
+                <div id="tailoredTabYt" class="tailored-pane form-hidden">
+                  <label>YouTube Description & Chapter Tags:</label>
+                  <textarea id="customCaptionYt" oninput="updateLivePreviews()"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hashtags -->
+            <div class="social-field" style="margin-top:14px;">
               <label>Hashtags</label>
               <input
                 type="text"
                 id="postHashtags"
                 value="#RamcoInstituteOfTechnology #CSBS #EngineeringExcellence #Placements2026 #FutureReady"
-                oninput="updateLivePreviews()"
+                oninput="handleContentInput()"
               >
             </div>
 
@@ -448,6 +535,9 @@
           <div class="social-preview-panel">
             <div class="panel-title">
               <span><i class="fa-solid fa-eye"></i> Live Multi-Platform Preview</span>
+              <span id="previewLiveBadge" class="preview-mode-tag">
+                <i class="fa-solid fa-image"></i> Photo Preview
+              </span>
             </div>
 
             <!-- Preview Tabs -->
@@ -468,9 +558,10 @@
 
             <!-- Mockup Frame 1: YouTube -->
             <div id="previewYouTube" class="preview-card-frame yt-preview-card">
-              <div class="yt-video-thumb">
+              <div class="yt-video-thumb" id="ytMediaContainer">
                 <img id="ytMockImg" src="clg_logo.jpg" alt="Video Thumbnail">
-                <div class="yt-play-icon"><i class="fa-solid fa-play"></i></div>
+                <video id="ytMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
+                <div class="yt-play-icon" id="ytPlayIcon"><i class="fa-solid fa-play"></i></div>
               </div>
               <div class="yt-video-details">
                 <div class="yt-channel-avatar">RIT</div>
@@ -478,6 +569,10 @@
                   <h4 id="ytMockTitle">Outstanding Campus Placement Milestone — CSBS Batch 2023-2027</h4>
                   <p>Ramco Institute of Technology &bull; 1.4K views &bull; Just now</p>
                 </div>
+              </div>
+              <div class="yt-description-box" id="ytMockDescBox">
+                <div class="yt-desc-header">Description (Auto-Formatted):</div>
+                <div id="ytMockDesc" class="yt-desc-content"></div>
               </div>
             </div>
 
@@ -490,11 +585,10 @@
                   <p>Higher Education &bull; 5,200 followers &bull; Just now</p>
                 </div>
               </div>
-              <div class="li-body-text" id="liMockText">
-                Proud to share that our department students have successfully cleared the technical evaluations for premium engineering roles!
-              </div>
-              <div class="li-media-box">
+              <div class="li-body-text" id="liMockText"></div>
+              <div class="li-media-box" id="liMediaContainer">
                 <img id="liMockImg" src="clg_logo.jpg" alt="LinkedIn Media">
+                <video id="liMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
               </div>
               <div class="li-actions-bar">
                 <span><i class="fa-regular fa-thumbs-up"></i> Like</span>
@@ -511,9 +605,11 @@
                   <div class="ig-avatar-inner">RIT</div>
                 </div>
                 <div class="ig-username">rit_csbs_official</div>
+                <div class="ig-dots"><i class="fa-solid fa-ellipsis"></i></div>
               </div>
-              <div class="ig-media-box">
+              <div class="ig-media-box" id="igMediaContainer">
                 <img id="igMockImg" src="clg_logo.jpg" alt="Instagram Media">
+                <video id="igMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
               </div>
               <div class="ig-actions-bar">
                 <div class="ig-actions-left">
@@ -523,9 +619,10 @@
                 </div>
                 <i class="fa-regular fa-bookmark"></i>
               </div>
+              <div class="ig-likes-count">Liked by <strong>dr_vijayalakshmi</strong> and <strong>142 others</strong></div>
               <div class="ig-caption">
                 <strong>rit_csbs_official</strong>
-                <span id="igMockCaption">Proud to share that our department students have successfully cleared technical evaluations...</span>
+                <span id="igMockCaption"></span>
               </div>
             </div>
 
@@ -538,11 +635,14 @@
                   <p>Just now &bull; <i class="fa-solid fa-earth-americas"></i> Public</p>
                 </div>
               </div>
-              <div class="fb-content" id="fbMockContent">
-                Proud to share that our department students have successfully cleared the technical evaluations for premium engineering roles!
-              </div>
-              <div class="fb-media">
+              <div class="fb-content" id="fbMockContent"></div>
+              <div class="fb-media" id="fbMediaContainer">
                 <img id="fbMockImg" src="clg_logo.jpg" alt="Facebook Media">
+                <video id="fbMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
+              </div>
+              <div class="fb-engagement-stats">
+                <span><i class="fa-solid fa-thumbs-up" style="color:#1877f2;"></i> <i class="fa-solid fa-heart" style="color:#ef4444;"></i> 184</span>
+                <span>28 comments &bull; 15 shares</span>
               </div>
               <div class="fb-reactions">
                 <span><i class="fa-regular fa-thumbs-up" style="color:#1877f2;"></i> Like</span>

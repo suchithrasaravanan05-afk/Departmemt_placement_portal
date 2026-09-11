@@ -1,8 +1,37 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const multer = require(require.resolve("multer", { paths: [process.cwd()] }));
+const fs = require("fs");
+const path = require("path");
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
+
+// Media uploads directory for photos & videos
+const uploadServePath = process.env.VERCEL
+    ? "/tmp/uploads"
+    : path.join(__dirname, "../uploads");
+
+if (!fs.existsSync(uploadServePath)) {
+    try { fs.mkdirSync(uploadServePath, { recursive: true }); } catch (e) {}
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadServePath);
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname) || ".jpg";
+        const cleanBase = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 20);
+        const name = `social_${Date.now()}_${cleanBase}${ext}`;
+        cb(null, name);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB max for video/image
+});
 
 // Initial seed posts to make the social feed look realistic and active immediately
 let socialPosts = [
@@ -113,6 +142,32 @@ router.get("/posts", (req, res) => {
 });
 
 // =============================================
+// POST /api/social/upload - Upload Photograph or Video
+// =============================================
+router.post("/upload", upload.single("mediaFile"), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No media file provided." });
+        }
+        const isVideo = req.file.mimetype.startsWith("video/") || /\.(mp4|webm|mov|m4v|avi)$/i.test(req.file.originalname);
+        const mediaUrl = `/uploads/${req.file.filename}`;
+
+        res.json({
+            success: true,
+            message: `${isVideo ? "Video" : "Photograph"} uploaded successfully!`,
+            mediaUrl,
+            mediaType: isVideo ? "video" : "image",
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            size: req.file.size
+        });
+    } catch (err) {
+        console.error("Media upload error:", err);
+        res.status(500).json({ success: false, message: "Failed to process media upload." });
+    }
+});
+
+// =============================================
 // POST /api/social/publish - Publish Social Post
 // =============================================
 router.post("/publish", requireStaffAuth, (req, res) => {
@@ -123,7 +178,9 @@ router.post("/publish", requireStaffAuth, (req, res) => {
             category = "Department Announcement",
             platforms = [],
             mediaUrl = "",
-            hashtags = ""
+            mediaType = "image",
+            hashtags = "",
+            platformCaptions = {}
         } = req.body;
 
         if (!title || !content) {
@@ -152,6 +209,8 @@ router.post("/publish", requireStaffAuth, (req, res) => {
             });
         }
 
+        const detectedType = mediaType === "video" || /\.(mp4|webm|mov|m4v|avi)/i.test(mediaUrl) ? "video" : "image";
+
         const newPost = {
             id: `post-${Date.now()}`,
             title: title.trim(),
@@ -159,6 +218,8 @@ router.post("/publish", requireStaffAuth, (req, res) => {
             category: category.trim(),
             platforms: sanitizedPlatforms,
             mediaUrl: mediaUrl.trim() || "rit_logo.png",
+            mediaType: detectedType,
+            platformCaptions: typeof platformCaptions === "object" ? platformCaptions : {},
             authorName: req.user.full_name || "CSBS Faculty",
             authorRole: req.user.role || "faculty",
             authorDesignation: req.user.designation || (req.user.role === "hod" ? "Head of Department" : "Faculty Member"),
@@ -173,7 +234,7 @@ router.post("/publish", requireStaffAuth, (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: `Post successfully published to ${sanitizedPlatforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")}!`,
+            message: `Post successfully broadcast to ${sanitizedPlatforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")}!`,
             post: newPost
         });
     } catch (err) {
