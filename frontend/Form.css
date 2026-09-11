@@ -1338,6 +1338,14 @@ body.form-auth-bg {
   box-shadow: 0 3px 10px rgba(201, 79, 36, 0.25);
 }
 
+.btn-auto-magic.success-pulse {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.5) !important;
+  transform: scale(1.02);
+}
+
 /* Tailored Captions Accordion */
 .tailored-captions-box {
   background: var(--bg-soft);

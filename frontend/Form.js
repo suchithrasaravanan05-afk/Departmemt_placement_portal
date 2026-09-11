@@ -860,29 +860,88 @@ function getSelectedMediaUrl() {
 // =============================================
 // AUTOMATIC PLATFORM CONTENT & CAPTION GENERATOR
 // =============================================
-function autoGenerateAllCaptions() {
-  const title = document.getElementById('postTitle')?.value.trim() || 'Outstanding Campus Placement Milestone';
-  const category = document.getElementById('postCategory')?.value || 'Placement Achievement';
-  const rawContent = document.getElementById('postContent')?.value.trim() || 'Congratulations to our final-year CSBS students for exemplary performance in technical rounds!';
-  const hashtags = document.getElementById('postHashtags')?.value.trim() || '#RamcoInstituteOfTechnology #CSBS #EngineeringExcellence #FutureReady';
+function generateSmartDescription(title, category, isVideo) {
+  const cat = (category || '').toLowerCase();
+  const mediaNote = isVideo ? 'through this official department video broadcast' : 'with great pleasure';
+
+  if (cat.includes('placement')) {
+    return `Proud to announce ${mediaNote} that our final-year CSBS students have secured top engineering, analyst, and consulting roles in premier technology organizations! Hearty congratulations to all placed students, the departmental placement training coordinators, and faculty mentors for their continuous guidance.`;
+  } else if (cat.includes('workshop') || cat.includes('symposium')) {
+    return `Delighted to host a national-level hands-on workshop focused on applied business architectures, cloud intelligence, and emerging technologies. Students actively participated in technical sprints, live system prototyping, and interactive mentor sessions.`;
+  } else if (cat.includes('hackathon') || cat.includes('project')) {
+    return `Hearty congratulations to our innovative student team for clinching top honors in the national engineering hackathon! Their solution exemplified robust code design, real-world business viability, and exemplary collaborative execution.`;
+  } else if (cat.includes('faculty') || cat.includes('research')) {
+    return `Honored to share that our department faculty have achieved significant research milestones and industry recognitions, advancing our mission of bridging academic rigor with cutting-edge industry standards.`;
+  } else if (cat.includes('lecture') || cat.includes('guest')) {
+    return `Special technical lecture conducted by distinguished industry leaders, giving our CSBS engineering cohorts comprehensive insights into full-stack product development and corporate enterprise requirements.`;
+  } else {
+    return `Excited to present this official department update highlighting our students' academic dedication, hands-on engineering projects, and leadership in Computer Science & Business Systems.`;
+  }
+}
+
+function generateSmartHashtags(category) {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('placement')) {
+    return '#RamcoInstituteOfTechnology #CSBS #CampusPlacements #EngineeringExcellence #TCSDigital #FutureReady';
+  } else if (cat.includes('workshop') || cat.includes('symposium')) {
+    return '#RamcoInstituteOfTechnology #CSBS #TechWorkshop #Symposium #HandsOnLearning #InnovationLab';
+  } else if (cat.includes('hackathon') || cat.includes('project')) {
+    return '#RamcoInstituteOfTechnology #CSBS #HackathonWinners #StudentInnovation #EngineeringProject';
+  } else {
+    return '#RamcoInstituteOfTechnology #CSBS #AcademicExcellence #EngineeringLeaders #CampusLife';
+  }
+}
+
+function autoGenerateAllCaptions(isExplicitClick = false) {
+  const titleInput = document.getElementById('postTitle');
+  const categorySelect = document.getElementById('postCategory');
+  const contentInput = document.getElementById('postContent');
+  const hashtagsInput = document.getElementById('postHashtags');
   const isVideo = uploadedMediaType === 'video';
+
+  let title = titleInput?.value.trim();
+  if (!title) {
+    title = 'Outstanding Campus Placement Milestone — CSBS Batch 2023–2027';
+    if (isExplicitClick && titleInput) titleInput.value = title;
+  }
+
+  const category = categorySelect?.value || 'Placement Milestone / Offer Letters';
+
+  // If explicit button click, generate or refresh smart description in main textarea
+  if (isExplicitClick && contentInput) {
+    contentInput.value = generateSmartDescription(title, category, isVideo);
+  }
+
+  let rawContent = contentInput?.value.trim();
+  if (!rawContent) {
+    rawContent = generateSmartDescription(title, category, isVideo);
+    if (isExplicitClick && contentInput) contentInput.value = rawContent;
+  }
+
+  // If explicit button click and hashtags empty or default, generate fitting hashtags
+  if (isExplicitClick && hashtagsInput && (!hashtagsInput.value.trim() || hashtagsInput.value.includes('#CSBS'))) {
+    hashtagsInput.value = generateSmartHashtags(category);
+  }
+
+  const hashtags = hashtagsInput?.value.trim() || generateSmartHashtags(category);
 
   // Category-specific emoji & hook
   let hookEmoji = '🏆';
   let hookTitle = 'EXCELLENCE & MILESTONE UPDATE';
-  if (category.includes('Workshop') || category.includes('Symposium')) {
+  const catLower = category.toLowerCase();
+  if (catLower.includes('workshop') || catLower.includes('symposium')) {
     hookEmoji = '💡';
     hookTitle = 'WORKSHOP & INNOVATION HIGHLIGHTS';
-  } else if (category.includes('Project') || category.includes('Hackathon')) {
+  } else if (catLower.includes('project') || catLower.includes('hackathon')) {
     hookEmoji = '🚀';
     hookTitle = 'HACKATHON WIN & STUDENT PROJECT';
-  } else if (category.includes('Faculty')) {
+  } else if (catLower.includes('faculty')) {
     hookEmoji = '🎖️';
     hookTitle = 'FACULTY RESEARCH & ACHIEVEMENTS';
-  } else if (category.includes('Lecture')) {
+  } else if (catLower.includes('lecture')) {
     hookEmoji = '🎤';
     hookTitle = 'INDUSTRY EXPERT LECTURE';
-  } else if (category.includes('Placement')) {
+  } else if (catLower.includes('placement')) {
     hookEmoji = '🌟';
     hookTitle = 'CAMPUS PLACEMENT SUCCESS';
   }
@@ -973,17 +1032,29 @@ ${hashtags} #RamcoInstituteOfTechnology #DepartmentOfCSBS #EngineeringEducation`
   const customLi = document.getElementById('customCaptionLi');
   const customYt = document.getElementById('customCaptionYt');
 
-  if (customIg && (!customIg.value || customIg.dataset.auto !== 'false')) {
-    customIg.value = igCaptionText;
-  }
-  if (customFb && (!customFb.value || customFb.dataset.auto !== 'false')) {
-    customFb.value = fbPostText;
-  }
-  if (customLi && (!customLi.value || customLi.dataset.auto !== 'false')) {
-    customLi.value = liPost;
-  }
-  if (customYt && (!customYt.value || customYt.dataset.auto !== 'false')) {
-    customYt.value = ytDescription;
+  if (customIg) customIg.value = igCaptionText;
+  if (customFb) customFb.value = fbPostText;
+  if (customLi) customLi.value = liPost;
+  if (customYt) customYt.value = ytDescription;
+
+  // If clicked explicitly by user, open tailored captions expander and show success feedback
+  if (isExplicitClick) {
+    const body = document.getElementById('tailoredBoxBody');
+    const arrow = document.getElementById('tailoredBoxArrow');
+    if (body) {
+      body.classList.remove('form-hidden');
+      if (arrow) arrow.classList.add('rotated');
+    }
+
+    const magicBtn = document.getElementById('btnAutoMagic');
+    if (magicBtn) {
+      magicBtn.classList.add('success-pulse');
+      magicBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Captions Generated!';
+      setTimeout(() => {
+        magicBtn.classList.remove('success-pulse');
+        magicBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Generate Platform Captions';
+      }, 2200);
+    }
   }
 
   updateLivePreviews();
