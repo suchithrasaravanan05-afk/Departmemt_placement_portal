@@ -4,33 +4,33 @@
    ============================================= */
 
 :root {
-  --admin-primary: #1e40af;
-  --admin-primary-dark: #172554;
-  --admin-primary-light: #eff6ff;
-  --admin-primary-glow: rgba(30, 64, 175, 0.2);
-  --admin-gold: #c29b38;
-  --admin-accent-cyan: #06b6d4;
-  --admin-accent-purple: #7c3aed;
-  --admin-accent-emerald: #10b981;
-  --admin-accent-amber: #f59e0b;
-  --admin-accent-rose: #ef4444;
-  --admin-slate-50: #f8fafc;
-  --admin-slate-100: #f1f5f9;
-  --admin-slate-200: #e2e8f0;
-  --admin-slate-300: #cbd5e1;
-  --admin-slate-400: #94a3b8;
-  --admin-slate-500: #64748b;
-  --admin-slate-600: #475569;
-  --admin-slate-700: #334155;
-  --admin-slate-800: #1e293b;
-  --admin-slate-900: #0f172a;
-  --admin-navy-950: #0a0f1d;
+  --admin-primary: #3d2314;
+  --admin-primary-dark: #24140e;
+  --admin-primary-light: #fdf8f5;
+  --admin-primary-glow: rgba(139, 94, 60, 0.22);
+  --admin-gold: #c68b59;
+  --admin-accent-cyan: #0d9488;
+  --admin-accent-purple: #7e22ce;
+  --admin-accent-emerald: #15803d;
+  --admin-accent-amber: #b45309;
+  --admin-accent-rose: #b91c1c;
+  --admin-slate-50: #fdfaf7;
+  --admin-slate-100: #f8f4ee;
+  --admin-slate-200: #f4ede4;
+  --admin-slate-300: #dfcfc2;
+  --admin-slate-400: #cbb5a4;
+  --admin-slate-500: #8e7a6d;
+  --admin-slate-600: #6b574b;
+  --admin-slate-700: #4a3427;
+  --admin-slate-800: #331f15;
+  --admin-slate-900: #20120a;
+  --admin-navy-950: #140a05;
 }
 
 .admin-body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #f8f4ee;
+  color: #231610;
   line-height: 1.6;
   min-height: 100vh;
   font-size: 14px;
@@ -47,7 +47,7 @@
   right: 0;
   bottom: 0;
   background-image: 
-    linear-gradient(135deg, rgba(248, 250, 252, 0.18) 0%, rgba(241, 245, 249, 0.08) 50%, rgba(226, 232, 240, 0.18) 100%),
+    linear-gradient(135deg, rgba(248, 244, 238, 0.5) 0%, rgba(244, 237, 228, 0.35) 50%, rgba(222, 207, 194, 0.5) 100%),
     url('admin.png');
   background-size: cover;
   background-position: center center;
@@ -60,12 +60,12 @@
    EXECUTIVE HEADER & DEPT BANNER
    ============================================= */
 .admin-header-wrapper {
-  background: linear-gradient(135deg, #071326 0%, #0b1d3a 60%, #132b54 100%);
-  border-bottom: 2px solid rgba(194, 155, 56, 0.5);
+  background: linear-gradient(135deg, #24140e 0%, #3d2314 60%, #5a3520 100%);
+  border-bottom: 2.5px solid #c68b59;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 20px rgba(36, 20, 14, 0.35);
 }
 
 .admin-college-header {
@@ -79,15 +79,15 @@
 }
 
 .admin-dept-banner {
-  background: linear-gradient(90deg, #0b1d3a 0%, #132b54 50%, #0b1d3a 100%);
-  border-bottom: 1.5px solid rgba(194, 155, 56, 0.4);
+  background: linear-gradient(90deg, #2c1810 0%, #43281c 50%, #2c1810 100%);
+  border-bottom: 1.5px solid #c68b59;
   color: #ffffff;
   text-align: center;
   padding: 11px 24px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.3px;
-  box-shadow: 0 3px 12px rgba(11, 29, 58, 0.25);
+  box-shadow: 0 3px 12px rgba(44, 24, 16, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;

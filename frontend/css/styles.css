@@ -5,41 +5,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 :root {
-  /* Core Palette - Executive Academic Navy & Royal Sapphire */
-  --primary:        #0b1d3a;
-  --primary-light:  #162c54;
-  --accent:         #1e40af;
-  --accent-hover:   #172554;
-  --accent-light:   #eff6ff;
-  --accent-glow:    rgba(30, 64, 175, 0.2);
-  --gold:           #c29b38;
-  --gold-light:     #fef3c7;
+  /* Core Palette - Executive Brown & Warm Beige */
+  --primary:        #2b1810; /* Deep Espresso Brown */
+  --primary-light:  #43281c; /* Rich Mocha Brown */
+  --accent:         #8b5e3c; /* Warm Saddle Brown */
+  --accent-hover:   #6f4528; /* Darker Roasted Brown */
+  --accent-light:   #fdf8f5; /* Warm Soft Cream */
+  --accent-glow:    rgba(139, 94, 60, 0.22);
+  --gold:           #c68b59; /* Warm Caramel Bronze */
+  --gold-light:     #f8ede3; /* Pale Warm Beige */
+  --beige:          #f7f2ec; /* Soft Executive Beige */
+  --beige-border:   #dbc1ac; /* Warm Border Accent */
 
   /* Status Colors */
-  --success:        #10b981;
-  --success-bg:     #ecfdf5;
-  --success-border: #6ee7b7;
-  --warning:        #f59e0b;
+  --success:        #15803d;
+  --success-bg:     #f0fdf4;
+  --success-border: #86efac;
+  --warning:        #b45309;
   --warning-bg:     #fffbeb;
   --warning-border: #fcd34d;
-  --danger:         #ef4444;
+  --danger:         #b91c1c;
   --danger-bg:      #fef2f2;
   --danger-border:  #fca5a5;
-  --purple:         #8b5cf6;
-  --purple-bg:      #f5f3ff;
-  --orange:         #f97316;
+  --purple:         #7e22ce;
+  --purple-bg:      #faf5ff;
+  --orange:         #c2410c;
   --orange-bg:      #fff7ed;
 
-  /* Neutrals */
-  --bg-main:        #f1f5f9;
+  /* Neutrals - Warm Beige Architecture */
+  --bg-main:        #f8f4ee;
   --bg-card:        #ffffff;
-  --border:         #e2e8f0;
-  --border-focus:   #93c5fd;
+  --border:         #e2d7cd;
+  --border-focus:   #c68b59;
 
   /* Text */
-  --text-primary:   #0f172a;
-  --text-secondary: #475569;
-  --text-muted:     #94a3b8;
+  --text-primary:   #231610;
+  --text-secondary: #5e4a3e;
+  --text-muted:     #8f796a;
 
   /* Radii */
   --r-sm:  6px;

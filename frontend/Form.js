@@ -156,7 +156,7 @@ function updateUI() {
   const loginInput = document.getElementById('loginEmail');
   const loginIcon = document.getElementById('loginInputIcon');
   if (loginInput) {
-    loginInput.placeholder = isAdmin ? 'Enter your admin ID (e.g. admin)' : 'Enter your register number';
+    loginInput.placeholder = isAdmin ? 'Enter your admin ID (e.g. admin)' : 'Enter your 12-digit register number (e.g. 953623244001)';
     loginInput.setAttribute('autocomplete', isAdmin ? 'username' : 'off');
   }
   if (loginIcon) {
