@@ -39,15 +39,15 @@ router.get("/stats", (req, res) => {
 // GET ALL STUDENTS WITH FILTERING
 // ==========================================
 router.get("/students", (req, res) => {
-    const { year, search, minCgpa, maxArrears, minTenth, minTwelth } = req.query;
+    const { year, search, minCgpa, maxArrears, minArrears, arrears, standingArrears, arrearsOp, minTenth, minTwelth } = req.query;
 
     let sql = `
         SELECT u.id as user_id, u.full_name, u.register_number, u.email, u.year, u.department, u.phone,
-               sp.cgpa, sp.history_arrears_count, sp.standing_arrears_count, sp.domain_interest,
+               sp.cgpa, sp.history_of_arrears, sp.history_arrears_count, sp.standing_of_arrears, sp.standing_arrears_count, sp.domain_interest,
                sp.tenth_percentage, sp.twelth_percentage, sp.diploma_percentage, sp.degree,
                sp.sem1_gpa, sp.sem2_gpa, sp.sem3_gpa, sp.sem4_gpa, sp.sem5_gpa, sp.sem6_gpa, sp.sem7_gpa, sp.sem8_gpa,
-               sp.dob, sp.personal_email, sp.college_email, sp.whatsapp_number,
-               sp.resume_file, sp.linkedin_link, sp.github_link
+               sp.dob, sp.personal_email, sp.college_email, sp.phone_number, sp.whatsapp_number,
+               sp.resume_file, sp.profile_photo, sp.linkedin_link, sp.github_link
         FROM users u
         LEFT JOIN student_profiles sp ON u.id = sp.user_id
         WHERE u.role = 'student'
@@ -75,9 +75,29 @@ router.get("/students", (req, res) => {
         sql += " AND sp.twelth_percentage >= ?";
         params.push(parseFloat(minTwelth));
     }
-    if (maxArrears !== undefined && maxArrears !== "") {
-        sql += " AND sp.standing_arrears_count <= ?";
-        params.push(parseInt(maxArrears));
+
+    // Standing Arrears filtering:
+    // If arrears / standingArrears / minArrears / maxArrears is specified
+    const arrVal = arrears !== undefined && arrears !== "" ? arrears
+                 : standingArrears !== undefined && standingArrears !== "" ? standingArrears
+                 : minArrears !== undefined && minArrears !== "" ? minArrears
+                 : maxArrears !== undefined && maxArrears !== "" ? maxArrears
+                 : null;
+
+    if (arrVal !== null) {
+        const numArr = parseInt(arrVal, 10);
+        if (!isNaN(numArr)) {
+            const op = arrearsOp || (minArrears !== undefined ? ">=" : (maxArrears !== undefined ? "<=" : (numArr === 0 ? "=" : ">=")));
+            if (op === "<=") {
+                sql += " AND sp.standing_arrears_count <= ?";
+            } else if (op === "=") {
+                sql += " AND sp.standing_arrears_count = ?";
+            } else {
+                // Default: ">= 2 and above" as requested by user
+                sql += " AND sp.standing_arrears_count >= ?";
+            }
+            params.push(numArr);
+        }
     }
 
     sql += " ORDER BY u.year DESC, u.full_name ASC";
@@ -598,6 +618,8 @@ const handleUpdateStudent = async (req, res) => {
             dob,
             personal_email,
             college_email,
+            whatsapp_number,
+            degree,
             tenth_percentage,
             twelth_percentage,
             diploma_percentage,
@@ -609,7 +631,9 @@ const handleUpdateStudent = async (req, res) => {
             standing_arrears_count,
             domain_interest,
             linkedin_link,
-            github_link
+            github_link,
+            profile_photo,
+            resume_file
         } = req.body;
 
         const client = supabaseAdmin || supabase;
@@ -668,7 +692,9 @@ const handleUpdateStudent = async (req, res) => {
             college_email: (college_email || cleanEmail || "").trim().toLowerCase(),
             personal_email: (personal_email || cleanEmail || "").trim().toLowerCase(),
             department: department || "Computer Science and Business Systems",
+            degree: degree || "B.Tech",
             phone_number: phone ? String(phone).trim() : null,
+            whatsapp_number: whatsapp_number ? String(whatsapp_number).trim() : null,
             dob: dob || null,
             tenth_percentage: (tenth_percentage !== undefined && tenth_percentage !== "" && tenth_percentage !== null) ? parseFloat(tenth_percentage) : null,
             twelth_percentage: (twelth_percentage !== undefined && twelth_percentage !== "" && twelth_percentage !== null) ? parseFloat(twelth_percentage) : null,
@@ -690,6 +716,9 @@ const handleUpdateStudent = async (req, res) => {
             linkedin_link: linkedin_link || null,
             github_link: github_link || null
         };
+
+        if (profile_photo !== undefined) profileUpdateObj.profile_photo = profile_photo || null;
+        if (resume_file !== undefined) profileUpdateObj.resume_file = resume_file || null;
 
         const { error: spErr } = await client
             .from("student_profiles")

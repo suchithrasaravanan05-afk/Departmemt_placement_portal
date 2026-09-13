@@ -354,8 +354,15 @@
             <input type="number" step="0.1" min="0" max="100" id="filterMinTwelth" class="form-control" placeholder="e.g. 70" oninput="fetchStudentRoster()">
           </div>
           <div class="form-group">
-            <label>Max Standing Arrears</label>
-            <input type="number" min="0" id="filterMaxArrears" class="form-control" placeholder="e.g. 0" oninput="fetchStudentRoster()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <label style="margin-bottom:0;">Standing Arrears</label>
+              <select id="filterArrearsOp" class="form-control" style="width:auto;padding:1px 5px;font-size:11px;height:22px;border-radius:4px;border-color:#cbd5e1;background:#f8fafc;" onchange="fetchStudentRoster()" title="Comparison Operator">
+                <option value=">=" selected>&ge; At least</option>
+                <option value="<=">&le; At most</option>
+                <option value="=">= Exact</option>
+              </select>
+            </div>
+            <input type="number" min="0" id="filterMaxArrears" class="form-control" placeholder="e.g. 2 for 2+ arrears" oninput="fetchStudentRoster()">
           </div>
           <div class="form-group">
             <label>Search</label>
@@ -1260,9 +1267,9 @@
       <input type="hidden" id="editStudentUserId">
       <div class="modal-body" style="padding:22px 26px;max-height:75vh;overflow-y:auto;">
         
-        <!-- Section 1: Account & Credentials -->
+        <!-- Section 1: Account & Personal Info -->
         <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#2563eb;letter-spacing:0.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-id-card"></i> 1. Basic &amp; Login Details
+          <i class="fa-solid fa-id-card"></i> 1. Basic &amp; Personal Details
         </div>
 
         <div class="form-grid form-grid-3 mb-3">
@@ -1301,8 +1308,43 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" id="editStudentPhone" class="form-control" placeholder="10-digit mobile" maxlength="10">
+            <label>Department</label>
+            <input type="text" id="editStudentDept" class="form-control" value="Computer Science and Business Systems">
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-3 mb-3">
+          <div class="form-group">
+            <label>Degree</label>
+            <select id="editStudentDegree" class="form-control">
+              <option value="B.Tech" selected>B.Tech</option>
+              <option value="B.E">B.E</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" id="editStudentDob" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Personal Email</label>
+            <input type="email" id="editStudentPersonalEmail" class="form-control" placeholder="personal@gmail.com">
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-2 mb-3">
+          <div class="form-group">
+            <label>Phone / Mobile Number</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-phone input-icon"></i>
+              <input type="tel" id="editStudentPhone" class="form-control" placeholder="10-digit mobile" maxlength="10">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>WhatsApp Number</label>
+            <div class="input-with-icon">
+              <i class="fa-brands fa-whatsapp input-icon"></i>
+              <input type="tel" id="editStudentWhatsapp" class="form-control" placeholder="10-digit WhatsApp number" maxlength="10">
+            </div>
           </div>
         </div>
 
@@ -1311,7 +1353,7 @@
           <i class="fa-solid fa-chart-line"></i> 2. Academic Scores &amp; CGPA
         </div>
 
-        <div class="form-grid form-grid-4 mb-3">
+        <div class="form-grid form-grid-3 mb-3">
           <div class="form-group">
             <label>10th (%)</label>
             <input type="number" step="0.01" min="0" max="100" id="editStudentTenth" class="form-control" placeholder="e.g. 85.0">
@@ -1324,15 +1366,14 @@
             <label>Diploma (%)</label>
             <input type="number" step="0.01" min="0" max="100" id="editStudentDiploma" class="form-control" placeholder="Optional">
           </div>
-          <div class="form-group">
-            <label>Cumulative CGPA</label>
-            <input type="number" step="0.01" min="0" max="10" id="editStudentCgpa" class="form-control" placeholder="e.g. 8.50">
-          </div>
         </div>
 
         <!-- Semester GPAs Grid -->
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-          <div style="font-size:11.5px;font-weight:700;color:#475569;margin-bottom:8px;text-transform:uppercase;">Semester GPAs (1 - 8)</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-size:11.5px;font-weight:700;color:#475569;text-transform:uppercase;">Semester GPAs (1 - 8)</div>
+            <span style="font-size:11px;color:#64748b;">Auto-calculates CGPA</span>
+          </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(70px,1fr));gap:8px;">
             <div><label style="font-size:10.5px;color:#64748b;">Sem 1</label><input type="number" step="0.01" min="0" max="10" id="editStudentSem1" class="form-control" style="padding:6px 8px;font-size:12.5px;" oninput="calcEditStudentCgpa()"></div>
             <div><label style="font-size:10.5px;color:#64748b;">Sem 2</label><input type="number" step="0.01" min="0" max="10" id="editStudentSem2" class="form-control" style="padding:6px 8px;font-size:12.5px;" oninput="calcEditStudentCgpa()"></div>
@@ -1345,14 +1386,36 @@
           </div>
         </div>
 
+        <div class="form-group mb-3">
+          <label>Cumulative CGPA</label>
+          <input type="number" step="0.01" min="0" max="10" id="editStudentCgpa" class="form-control" placeholder="e.g. 8.50" style="font-weight:700;color:#2563eb;font-size:15px;">
+        </div>
+
+        <!-- Section 3: Arrears & Domain Interest -->
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#d97706;letter-spacing:0.5px;margin-top:20px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-file-circle-check"></i> 3. Arrears Status &amp; Domain
+        </div>
+
         <div class="form-grid form-grid-3 mb-3">
           <div class="form-group">
-            <label>Standing Arrears</label>
-            <input type="number" min="0" max="50" id="editStudentStandingArrears" class="form-control" value="0">
+            <label>Standing Arrears Status</label>
+            <div style="display:flex;gap:8px;">
+              <select id="editStudentStandingSelect" class="form-control" style="width:100px;" onchange="syncEditArrearsToggle('standing')">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+              <input type="number" min="0" max="50" id="editStudentStandingArrears" class="form-control" value="0" placeholder="Count" title="Standing Arrears Count" oninput="syncEditArrearsCount('standing')">
+            </div>
           </div>
           <div class="form-group">
-            <label>History of Arrears</label>
-            <input type="number" min="0" max="50" id="editStudentHistoryArrears" class="form-control" value="0">
+            <label>History of Arrears Status</label>
+            <div style="display:flex;gap:8px;">
+              <select id="editStudentHistorySelect" class="form-control" style="width:100px;" onchange="syncEditArrearsToggle('history')">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+              <input type="number" min="0" max="50" id="editStudentHistoryArrears" class="form-control" value="0" placeholder="Count" title="History Arrears Count" oninput="syncEditArrearsCount('history')">
+            </div>
           </div>
           <div class="form-group">
             <label>Domain / Skill Interest</label>
@@ -1360,14 +1423,47 @@
           </div>
         </div>
 
-        <div class="form-grid form-grid-2">
+        <!-- Section 4: Online Profiles & Documents -->
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#7c3aed;letter-spacing:0.5px;margin-top:20px;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-link"></i> 4. Online Profiles &amp; Documents
+        </div>
+
+        <div class="form-grid form-grid-2 mb-3">
           <div class="form-group">
             <label>LinkedIn URL</label>
-            <input type="url" id="editStudentLinkedin" class="form-control">
+            <div class="input-with-icon">
+              <i class="fa-brands fa-linkedin input-icon"></i>
+              <input type="url" id="editStudentLinkedin" class="form-control" placeholder="https://linkedin.com/in/...">
+            </div>
           </div>
           <div class="form-group">
             <label>GitHub URL</label>
-            <input type="url" id="editStudentGithub" class="form-control">
+            <div class="input-with-icon">
+              <i class="fa-brands fa-github input-icon"></i>
+              <input type="url" id="editStudentGithub" class="form-control" placeholder="https://github.com/...">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label>Profile Photo URL</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="editStudentPhotoUrl" class="form-control" placeholder="/uploads/... or https://...">
+              <div id="editPhotoPreviewWrap" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#f1f5f9;display:flex;align-items:center;justify-content:center;border:1px solid #cbd5e1;flex-shrink:0;">
+                <i class="fa-solid fa-user" id="editPhotoPreviewPlaceholder" style="color:#94a3b8;font-size:16px;"></i>
+                <img id="editPhotoPreviewImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Preview">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Resume File URL</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="editStudentResumeUrl" class="form-control" placeholder="/uploads/... or https://...">
+              <a id="editResumeViewBtn" href="#" target="_blank" class="btn btn-outline-primary btn-sm hidden" style="white-space:nowrap;padding:7px 10px;" title="Open Resume">
+                <i class="fa-solid fa-file-pdf"></i> View
+              </a>
+            </div>
           </div>
         </div>
 

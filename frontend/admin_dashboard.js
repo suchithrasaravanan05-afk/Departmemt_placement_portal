@@ -605,12 +605,13 @@ async function loadChartTechNonTechYear() {
 // STUDENT ROSTER
 // ============================================================
 async function fetchStudentRoster() {
-  const year      = el('filterYear')?.value || '';
-  const minCgpa   = el('filterMinCgpa')?.value || '';
-  const minTenth  = el('filterMinTenth')?.value || '';
-  const minTwelth = el('filterMinTwelth')?.value || '';
-  const maxArrears = el('filterMaxArrears')?.value ?? '';
-  const search    = el('filterSearch')?.value.trim() || '';
+  const year       = el('filterYear')?.value || '';
+  const minCgpa    = el('filterMinCgpa')?.value || '';
+  const minTenth   = el('filterMinTenth')?.value || '';
+  const minTwelth  = el('filterMinTwelth')?.value || '';
+  const arrVal     = el('filterMaxArrears')?.value ?? '';
+  const arrOp      = el('filterArrearsOp')?.value || '>=';
+  const search     = el('filterSearch')?.value.trim() || '';
 
   updateFilterChips();
 
@@ -619,7 +620,10 @@ async function fetchStudentRoster() {
   if (minCgpa)    query.append('minCgpa', minCgpa);
   if (minTenth)   query.append('minTenth', minTenth);
   if (minTwelth)  query.append('minTwelth', minTwelth);
-  if (maxArrears !== '') query.append('maxArrears', maxArrears);
+  if (arrVal !== '') {
+    query.append('arrears', arrVal);
+    query.append('arrearsOp', arrOp);
+  }
   if (search)     query.append('search', search);
 
   const tbody = el('studentRosterTableBody');
@@ -746,6 +750,8 @@ function clearAllFilters() {
     const e = el(id);
     if (e) e.value = '';
   });
+  const op = el('filterArrearsOp');
+  if (op) op.value = '>=';
   fetchStudentRoster();
 }
 
@@ -759,14 +765,21 @@ function updateFilterChips() {
   const minTenth  = el('filterMinTenth')?.value;
   const minTwelth = el('filterMinTwelth')?.value;
   const year      = el('filterYear')?.value;
-  const maxArr    = el('filterMaxArrears')?.value;
+  const arrVal    = el('filterMaxArrears')?.value;
+  const arrOp     = el('filterArrearsOp')?.value || '>=';
   const search    = el('filterSearch')?.value;
 
-  if (year)     chips.push(`Year: ${year == 5 ? 'Passed Out' : year}`);
+  if (year) {
+    const bMap = getBatchMap();
+    chips.push(`Batch: ${bMap[year] || year}`);
+  }
   if (minCgpa)  chips.push(`Min CGPA ≥ ${minCgpa}`);
   if (minTenth) chips.push(`10th ≥ ${minTenth}%`);
   if (minTwelth) chips.push(`12th ≥ ${minTwelth}%`);
-  if (maxArr !== '') chips.push(`Arrears ≤ ${maxArr}`);
+  if (arrVal !== '') {
+    const opSym = arrOp === '<=' ? '≤' : (arrOp === '=' ? '=' : '≥');
+    chips.push(arrVal === '0' && arrOp === '=' ? 'Zero Arrears' : `Standing Arrears ${opSym} ${arrVal}`);
+  }
   if (search)   chips.push(`Search: "${search}"`);
 
   container.innerHTML = chips.map(c => `<span class="filter-chip"><i class="fa-solid fa-tag"></i> ${c}</span>`).join('');
@@ -1055,16 +1068,21 @@ async function openEditStudentModal(userId) {
 
     const s = data.student;
 
-    if (el('editStudentFullName'))  el('editStudentFullName').value  = s.full_name || '';
-    if (el('editStudentRegNo'))     el('editStudentRegNo').value     = s.register_number || '';
-    if (el('editStudentEmail'))     el('editStudentEmail').value     = s.email || s.college_email || '';
-    if (el('editStudentYear'))      el('editStudentYear').value      = String(s.year || 4);
-    if (el('editStudentPhone'))     el('editStudentPhone').value     = s.phone || s.phone_number || '';
+    if (el('editStudentFullName'))      el('editStudentFullName').value      = s.full_name || '';
+    if (el('editStudentRegNo'))         el('editStudentRegNo').value         = s.register_number || '';
+    if (el('editStudentEmail'))         el('editStudentEmail').value         = s.email || s.college_email || '';
+    if (el('editStudentYear'))          el('editStudentYear').value          = String(s.year || 4);
+    if (el('editStudentDept'))          el('editStudentDept').value          = s.department || 'Computer Science and Business Systems';
+    if (el('editStudentDegree'))        el('editStudentDegree').value        = s.degree || 'B.Tech';
+    if (el('editStudentDob'))           el('editStudentDob').value           = s.dob ? String(s.dob).slice(0, 10) : '';
+    if (el('editStudentPersonalEmail')) el('editStudentPersonalEmail').value = s.personal_email || '';
+    if (el('editStudentPhone'))         el('editStudentPhone').value         = s.phone || s.phone_number || '';
+    if (el('editStudentWhatsapp'))      el('editStudentWhatsapp').value      = s.whatsapp_number || '';
 
-    if (el('editStudentTenth'))     el('editStudentTenth').value     = s.tenth_percentage ?? '';
-    if (el('editStudentTwelth'))    el('editStudentTwelth').value    = s.twelth_percentage ?? '';
-    if (el('editStudentDiploma'))   el('editStudentDiploma').value   = s.diploma_percentage ?? '';
-    if (el('editStudentCgpa'))      el('editStudentCgpa').value      = s.cgpa ?? '';
+    if (el('editStudentTenth'))         el('editStudentTenth').value         = s.tenth_percentage ?? '';
+    if (el('editStudentTwelth'))        el('editStudentTwelth').value        = s.twelth_percentage ?? '';
+    if (el('editStudentDiploma'))       el('editStudentDiploma').value       = s.diploma_percentage ?? '';
+    if (el('editStudentCgpa'))          el('editStudentCgpa').value          = s.cgpa ?? '';
 
     // Semester GPAs
     for (let i = 1; i <= 8; i++) {
@@ -1072,11 +1090,46 @@ async function openEditStudentModal(userId) {
       if (semEl) semEl.value = s[`sem${i}_gpa`] ?? '';
     }
 
-    if (el('editStudentStandingArrears')) el('editStudentStandingArrears').value = s.standing_arrears_count ?? 0;
-    if (el('editStudentHistoryArrears'))  el('editStudentHistoryArrears').value  = s.history_arrears_count ?? 0;
+    // Standing Arrears
+    const standingCount = s.standing_arrears_count !== null && s.standing_arrears_count !== undefined ? parseInt(s.standing_arrears_count) : 0;
+    if (el('editStudentStandingArrears')) el('editStudentStandingArrears').value = standingCount;
+    if (el('editStudentStandingSelect'))  el('editStudentStandingSelect').value  = (standingCount > 0 || s.standing_of_arrears === 'yes') ? 'yes' : 'no';
+
+    // History of Arrears
+    const historyCount = s.history_arrears_count !== null && s.history_arrears_count !== undefined ? parseInt(s.history_arrears_count) : 0;
+    if (el('editStudentHistoryArrears')) el('editStudentHistoryArrears').value = historyCount;
+    if (el('editStudentHistorySelect'))  el('editStudentHistorySelect').value  = (historyCount > 0 || s.history_of_arrears === 'yes') ? 'yes' : 'no';
+
     if (el('editStudentDomain'))          el('editStudentDomain').value          = s.domain_interest || '';
     if (el('editStudentLinkedin'))        el('editStudentLinkedin').value        = s.linkedin_link || '';
     if (el('editStudentGithub'))          el('editStudentGithub').value          = s.github_link || '';
+
+    // Profile Photo & Preview
+    const photoUrl = s.profile_photo || '';
+    if (el('editStudentPhotoUrl')) el('editStudentPhotoUrl').value = photoUrl;
+    const photoImg = el('editPhotoPreviewImg');
+    const photoPlc = el('editPhotoPreviewPlaceholder');
+    if (photoUrl && photoImg && photoPlc) {
+      photoImg.src = getFullFileUrl(photoUrl);
+      photoImg.style.display = 'block';
+      photoPlc.style.display = 'none';
+    } else if (photoImg && photoPlc) {
+      photoImg.style.display = 'none';
+      photoPlc.style.display = 'block';
+    }
+
+    // Resume Document & View Link
+    const resumeUrl = s.resume_file || '';
+    if (el('editStudentResumeUrl')) el('editStudentResumeUrl').value = resumeUrl;
+    const resumeBtn = el('editResumeViewBtn');
+    if (resumeBtn) {
+      if (resumeUrl) {
+        resumeBtn.href = getFullFileUrl(resumeUrl);
+        resumeBtn.classList.remove('hidden');
+      } else {
+        resumeBtn.classList.add('hidden');
+      }
+    }
 
   } catch (err) {
     console.error('Error opening edit student modal:', err);
@@ -1087,6 +1140,36 @@ async function openEditStudentModal(userId) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Student Details';
     }
+  }
+}
+
+function syncEditArrearsToggle(type) {
+  if (type === 'standing') {
+    const isYes = el('editStudentStandingSelect')?.value === 'yes';
+    const countInput = el('editStudentStandingArrears');
+    if (countInput) {
+      if (!isYes) countInput.value = 0;
+      else if (parseInt(countInput.value || 0) === 0) countInput.value = 1;
+    }
+  } else if (type === 'history') {
+    const isYes = el('editStudentHistorySelect')?.value === 'yes';
+    const countInput = el('editStudentHistoryArrears');
+    if (countInput) {
+      if (!isYes) countInput.value = 0;
+      else if (parseInt(countInput.value || 0) === 0) countInput.value = 1;
+    }
+  }
+}
+
+function syncEditArrearsCount(type) {
+  if (type === 'standing') {
+    const count = parseInt(el('editStudentStandingArrears')?.value || 0);
+    const select = el('editStudentStandingSelect');
+    if (select) select.value = count > 0 ? 'yes' : 'no';
+  } else if (type === 'history') {
+    const count = parseInt(el('editStudentHistoryArrears')?.value || 0);
+    const select = el('editStudentHistorySelect');
+    if (select) select.value = count > 0 ? 'yes' : 'no';
   }
 }
 
@@ -1136,16 +1219,26 @@ async function handleEditStudentSubmit(e) {
     email: el('editStudentEmail')?.value.trim().toLowerCase(),
     password: el('editStudentNewPassword')?.value.trim() || undefined,
     year: parseInt(el('editStudentYear')?.value || 4),
-    phone: el('editStudentPhone')?.value.trim(),
+    department: el('editStudentDept')?.value.trim() || 'Computer Science and Business Systems',
+    degree: el('editStudentDegree')?.value || 'B.Tech',
+    dob: el('editStudentDob')?.value || null,
+    personal_email: el('editStudentPersonalEmail')?.value.trim().toLowerCase() || null,
+    college_email: el('editStudentEmail')?.value.trim().toLowerCase(),
+    phone: el('editStudentPhone')?.value.trim() || null,
+    whatsapp_number: el('editStudentWhatsapp')?.value.trim() || null,
     tenth_percentage: el('editStudentTenth')?.value || null,
     twelth_percentage: el('editStudentTwelth')?.value || null,
     diploma_percentage: el('editStudentDiploma')?.value || null,
     cgpa: el('editStudentCgpa')?.value || 0,
+    standing_of_arrears: el('editStudentStandingSelect')?.value || 'no',
     standing_arrears_count: parseInt(el('editStudentStandingArrears')?.value || 0),
+    history_of_arrears: el('editStudentHistorySelect')?.value || 'no',
     history_arrears_count: parseInt(el('editStudentHistoryArrears')?.value || 0),
     domain_interest: el('editStudentDomain')?.value.trim() || 'General',
     linkedin_link: el('editStudentLinkedin')?.value.trim() || null,
     github_link: el('editStudentGithub')?.value.trim() || null,
+    profile_photo: el('editStudentPhotoUrl')?.value.trim() || null,
+    resume_file: el('editStudentResumeUrl')?.value.trim() || null,
     sem1_gpa: el('editStudentSem1')?.value || null,
     sem2_gpa: el('editStudentSem2')?.value || null,
     sem3_gpa: el('editStudentSem3')?.value || null,
@@ -2253,47 +2346,229 @@ async function updateAppStatus(appId, newStatus, selectEl) {
 // ============================================================
 // EXCEL EXPORT
 // ============================================================
+// EXCEL EXPORT (PROFESSIONALLY STYLED & BRANDED)
+// ============================================================
 function downloadStudentExcel() {
   if (!currentFetchedStudents || currentFetchedStudents.length === 0) {
     showAdminAlert('No student data to export. Apply filters first if needed.');
     return;
   }
 
-  const rows = currentFetchedStudents.map((s, i) => ({
-    'S.No':              i + 1,
-    'Register Number':   s.register_number || '',
-    'Student Name':      s.full_name || '',
-    'Email':             s.email || '',
-    'Year':              s.year || '',
-    '10th %':            s.tenth_percentage || '',
-    '12th %':            s.twelth_percentage || '',
-    'CGPA':              s.cgpa || '',
-    'Standing Arrears':  s.standing_arrears_count || 0,
-    'Domain Interest':   s.domain_interest || '',
-    'LinkedIn':          s.linkedin_link || '',
-    'GitHub':            s.github_link || '',
-    'Resume URL':        s.resume_file || ''
-  }));
+  const BATCH_MAP = getBatchMap();
+  const selectedYear = el('filterYear')?.value;
+  const batchLabel = selectedYear ? (BATCH_MAP[selectedYear] || `Year ${selectedYear}`) : 'All Batches (2022-2030)';
 
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
+  const headers = [
+    'S.No',
+    'Register Number',
+    'Student Name',
+    'College Email',
+    'Personal Email',
+    'Phone Number',
+    'WhatsApp Number',
+    'Batch / Year',
+    'Degree',
+    'Department',
+    '10th %',
+    '12th %',
+    'Diploma %',
+    'CGPA',
+    'Standing Arrears',
+    'History of Arrears',
+    'Domain Interest',
+    'LinkedIn Profile',
+    'GitHub Profile',
+    'Resume URL',
+    'Placement Status'
+  ];
 
-  // Style header row
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let C = range.s.c; C <= range.e.c; C++) {
-    const addr = XLSX.utils.encode_cell({ r: 0, c: C });
-    if (!ws[addr]) continue;
+  const colCount = headers.length;
+
+  // Row 1: College Name Banner
+  const row1 = new Array(colCount).fill('');
+  row1[0] = 'RAMCO INSTITUTE OF TECHNOLOGY — DEPARTMENT PLACEMENT CELL';
+
+  // Row 2: Department and Batch Banner
+  const row2 = new Array(colCount).fill('');
+  row2[0] = `DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS — BATCH: ${batchLabel.toUpperCase()}`;
+
+  // Row 3: Column Titles
+  const row3 = headers;
+
+  // Data rows (Row 4 onwards)
+  const dataRows = currentFetchedStudents.map((s, i) => {
+    const sYr = parseInt(s.year);
+    const yrText = (sYr === 5 || String(s.year).toLowerCase().includes('passed'))
+      ? (BATCH_MAP[5] || 'Passed Out')
+      : (BATCH_MAP[sYr] || (s.year ? `Year ${s.year}` : '—'));
+
+    const resumeLink = s.resume_file ? getFullFileUrl(s.resume_file) : 'Not uploaded';
+    const placedText = s.placed_company ? `Placed @ ${s.placed_company}` : 'Not Placed';
+
+    return [
+      i + 1,
+      s.register_number || '—',
+      s.full_name || '—',
+      s.email || s.college_email || '—',
+      s.personal_email || '—',
+      s.phone || s.phone_number || '—',
+      s.whatsapp_number || '—',
+      yrText,
+      s.degree || 'B.Tech',
+      s.department || 'Computer Science and Business Systems',
+      s.tenth_percentage !== null && s.tenth_percentage !== undefined ? `${parseFloat(s.tenth_percentage).toFixed(1)}%` : '—',
+      s.twelth_percentage !== null && s.twelth_percentage !== undefined ? `${parseFloat(s.twelth_percentage).toFixed(1)}%` : '—',
+      s.diploma_percentage !== null && s.diploma_percentage !== undefined ? `${parseFloat(s.diploma_percentage).toFixed(1)}%` : '—',
+      s.cgpa ? parseFloat(s.cgpa).toFixed(2) : '—',
+      s.standing_arrears_count !== null && s.standing_arrears_count !== undefined ? parseInt(s.standing_arrears_count) : 0,
+      s.history_arrears_count !== null && s.history_arrears_count !== undefined ? parseInt(s.history_arrears_count) : 0,
+      s.domain_interest || 'General',
+      s.linkedin_link || '—',
+      s.github_link || '—',
+      resumeLink,
+      placedText
+    ];
+  });
+
+  const aoa = [row1, row2, row3, ...dataRows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Merges for Row 1 and Row 2 across all columns
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } }
+  ];
+
+  // Row heights
+  ws['!rows'] = [
+    { hpt: 32 }, // Row 1
+    { hpt: 26 }, // Row 2
+    { hpt: 26 }  // Row 3
+  ];
+  for (let r = 0; r < dataRows.length; r++) {
+    ws['!rows'].push({ hpt: 22 });
+  }
+
+  // Border styles
+  const thinBorder = {
+    top:    { style: 'thin', color: { rgb: 'CBD5E1' } },
+    bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    left:   { style: 'thin', color: { rgb: 'CBD5E1' } },
+    right:  { style: 'thin', color: { rgb: 'CBD5E1' } }
+  };
+
+  const headerBorder = {
+    top:    { style: 'thin', color: { rgb: '475569' } },
+    bottom: { style: 'medium', color: { rgb: '2563EB' } },
+    left:   { style: 'thin', color: { rgb: '475569' } },
+    right:  { style: 'thin', color: { rgb: '475569' } }
+  };
+
+  // 1. Highlight Row 1: College Header Banner
+  for (let c = 0; c < colCount; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c });
+    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
     ws[addr].s = {
-      fill: { fgColor: { rgb: '2563EB' } },
-      font: { bold: true, color: { rgb: 'FFFFFF' } },
-      alignment: { horizontal: 'center' }
+      fill: { fgColor: { rgb: '1E3A8A' } }, // Deep Navy Blue
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 14, name: 'Calibri' },
+      alignment: { horizontal: 'center', vertical: 'center' }
     };
   }
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Students');
+  // 2. Highlight Row 2: Department and Batch Banner
+  for (let c = 0; c < colCount; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 1, c });
+    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+    ws[addr].s = {
+      fill: { fgColor: { rgb: '2563EB' } }, // Royal Blue
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11, name: 'Calibri' },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    };
+  }
+
+  // 3. Style Row 3: Column Titles
+  for (let c = 0; c < colCount; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 2, c });
+    if (!ws[addr]) continue;
+    ws[addr].s = {
+      fill: { fgColor: { rgb: '0F172A' } }, // Dark Slate
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10, name: 'Calibri' },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: headerBorder
+    };
+  }
+
+  // 4. Style Data Rows (Row 4 onwards)
+  for (let r = 0; r < dataRows.length; r++) {
+    const rowIdx = 3 + r;
+    const isEven = r % 2 === 0;
+    const rowBg = isEven ? 'FFFFFF' : 'F8FAFC';
+
+    for (let c = 0; c < colCount; c++) {
+      const addr = XLSX.utils.encode_cell({ r: rowIdx, c });
+      if (!ws[addr]) continue;
+
+      const isCenterCol = [0, 1, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 20].includes(c);
+      const isArrearsCol = (c === 14);
+      const hasArrears = isArrearsCol && parseInt(ws[addr].v) > 0;
+      const isPlacedCol = (c === 20);
+      const isPlaced = isPlacedCol && String(ws[addr].v).startsWith('Placed');
+
+      let fontColor = '1E293B';
+      let fontBold = false;
+      if (hasArrears) {
+        fontColor = 'DC2626'; // Red for standing arrears > 0
+        fontBold = true;
+      } else if (isPlaced) {
+        fontColor = '059669'; // Green for placed
+        fontBold = true;
+      } else if (c === 13) {
+        fontColor = '2563EB'; // Blue for CGPA
+        fontBold = true;
+      }
+
+      ws[addr].s = {
+        fill: { fgColor: { rgb: rowBg } },
+        font: { sz: 10, name: 'Calibri', color: { rgb: fontColor }, bold: fontBold },
+        alignment: { horizontal: isCenterCol ? 'center' : 'left', vertical: 'center' },
+        border: thinBorder
+      };
+    }
+  }
+
+  // Column Widths with generous padding to prevent truncation
+  const colWidths = [
+    { wch: 8 },   // S.No
+    { wch: 18 },  // Register Number
+    { wch: 22 },  // Student Name
+    { wch: 30 },  // College Email
+    { wch: 30 },  // Personal Email
+    { wch: 16 },  // Phone Number
+    { wch: 16 },  // WhatsApp Number
+    { wch: 20 },  // Batch / Year
+    { wch: 10 },  // Degree
+    { wch: 28 },  // Department
+    { wch: 11 },  // 10th %
+    { wch: 11 },  // 12th %
+    { wch: 12 },  // Diploma %
+    { wch: 10 },  // CGPA
+    { wch: 18 },  // Standing Arrears
+    { wch: 18 },  // History of Arrears
+    { wch: 20 },  // Domain Interest
+    { wch: 36 },  // LinkedIn Profile
+    { wch: 36 },  // GitHub Profile
+    { wch: 42 },  // Resume URL
+    { wch: 26 }   // Placement Status
+  ];
+
+  ws['!cols'] = colWidths;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Student Roster');
   const timestamp = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `RIT_CSBS_Students_${timestamp}.xlsx`);
-  showAdminAlert(`Exported ${rows.length} student records to Excel.`, true);
+  const cleanBatchName = batchLabel.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20);
+  XLSX.writeFile(wb, `RIT_CSBS_Students_${cleanBatchName}_${timestamp}.xlsx`);
+  showAdminAlert(`Exported ${dataRows.length} student records to formatted Excel spreadsheet.`, true);
 }
 
 // ============================================================
@@ -2406,39 +2681,166 @@ function downloadPlacedExcel() {
     return;
   }
 
-  const rows = currentPlacedStudents.map((p, i) => ({
-    'S.No':              i + 1,
-    'Student Name':      p.full_name || '',
-    'Register Number':   p.register_number || '',
-    'Company Placed':    p.company_name || '',
-    'Designation / Role':p.job_role || '',
-    'Package (CTC)':     p.package_ctc || '',
-    'Year':              p.year || '',
-    'CGPA':              p.cgpa || '',
-    'Email':             p.email || '',
-    'Phone':             p.phone || '',
-    'Selection Date':    fmtDate(p.applied_at),
-    'Resume URL':        p.resume_file || ''
-  }));
+  const BATCH_MAP = getBatchMap();
+  const selectedYear = el('filterPlacedYear')?.value;
+  const batchLabel = selectedYear ? (BATCH_MAP[selectedYear] || `Year ${selectedYear}`) : 'All Batches (2022-2030)';
 
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
+  const headers = [
+    'S.No',
+    'Register Number',
+    'Student Name',
+    'Company Placed',
+    'Designation / Role',
+    'Package (CTC)',
+    'Batch / Year',
+    'CGPA',
+    'Standing Arrears',
+    'College Email',
+    'Phone Number',
+    'Selection Date',
+    'Resume URL'
+  ];
 
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let C = range.s.c; C <= range.e.c; C++) {
-    const addr = XLSX.utils.encode_cell({ r: 0, c: C });
-    if (!ws[addr]) continue;
+  const colCount = headers.length;
+
+  const row1 = new Array(colCount).fill('');
+  row1[0] = 'RAMCO INSTITUTE OF TECHNOLOGY — PLACEMENT CELL';
+
+  const row2 = new Array(colCount).fill('');
+  row2[0] = `DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS — PLACED STUDENTS: ${batchLabel.toUpperCase()}`;
+
+  const row3 = headers;
+
+  const dataRows = currentPlacedStudents.map((p, i) => {
+    const sYr = parseInt(p.year);
+    const yrText = (sYr === 5 || String(p.year).toLowerCase().includes('passed'))
+      ? (BATCH_MAP[5] || 'Passed Out')
+      : (BATCH_MAP[sYr] || (p.year ? `Year ${p.year}` : '—'));
+
+    return [
+      i + 1,
+      p.register_number || '—',
+      p.full_name || '—',
+      p.company_name || '—',
+      p.job_role || '—',
+      p.package_ctc || '—',
+      yrText,
+      p.cgpa ? parseFloat(p.cgpa).toFixed(2) : '—',
+      p.standing_arrears_count !== null && p.standing_arrears_count !== undefined ? parseInt(p.standing_arrears_count) : 0,
+      p.email || '—',
+      p.phone || '—',
+      fmtDate(p.applied_at),
+      p.resume_file ? getFullFileUrl(p.resume_file) : 'Not uploaded'
+    ];
+  });
+
+  const aoa = [row1, row2, row3, ...dataRows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } }
+  ];
+
+  ws['!rows'] = [
+    { hpt: 32 },
+    { hpt: 26 },
+    { hpt: 26 }
+  ];
+  for (let r = 0; r < dataRows.length; r++) {
+    ws['!rows'].push({ hpt: 22 });
+  }
+
+  const thinBorder = {
+    top:    { style: 'thin', color: { rgb: 'CBD5E1' } },
+    bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+    left:   { style: 'thin', color: { rgb: 'CBD5E1' } },
+    right:  { style: 'thin', color: { rgb: 'CBD5E1' } }
+  };
+
+  const headerBorder = {
+    top:    { style: 'thin', color: { rgb: '047857' } },
+    bottom: { style: 'medium', color: { rgb: '059669' } },
+    left:   { style: 'thin', color: { rgb: '047857' } },
+    right:  { style: 'thin', color: { rgb: '047857' } }
+  };
+
+  for (let c = 0; c < colCount; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c });
+    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
     ws[addr].s = {
-      fill: { fgColor: { rgb: '10B981' } },
-      font: { bold: true, color: { rgb: 'FFFFFF' } },
-      alignment: { horizontal: 'center' }
+      fill: { fgColor: { rgb: '065F46' } }, // Deep Emerald
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 14, name: 'Calibri' },
+      alignment: { horizontal: 'center', vertical: 'center' }
     };
   }
 
+  for (let c = 0; c < colCount; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 1, c });
+    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+    ws[addr].s = {
+      fill: { fgColor: { rgb: '059669' } }, // Emerald Green
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11, name: 'Calibri' },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    };
+  }
+
+  for (let c = 0; c < colCount; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 2, c });
+    if (!ws[addr]) continue;
+    ws[addr].s = {
+      fill: { fgColor: { rgb: '0F172A' } },
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10, name: 'Calibri' },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: headerBorder
+    };
+  }
+
+  for (let r = 0; r < dataRows.length; r++) {
+    const rowIdx = 3 + r;
+    const isEven = r % 2 === 0;
+    const rowBg = isEven ? 'FFFFFF' : 'F8FAFC';
+
+    for (let c = 0; c < colCount; c++) {
+      const addr = XLSX.utils.encode_cell({ r: rowIdx, c });
+      if (!ws[addr]) continue;
+
+      const isCenterCol = [0, 1, 6, 7, 8, 10, 11].includes(c);
+      let fontColor = '1E293B';
+      let fontBold = false;
+      if (c === 3) { fontColor = '059669'; fontBold = true; } // Company Placed
+      else if (c === 7) { fontColor = '2563EB'; fontBold = true; } // CGPA
+
+      ws[addr].s = {
+        fill: { fgColor: { rgb: rowBg } },
+        font: { sz: 10, name: 'Calibri', color: { rgb: fontColor }, bold: fontBold },
+        alignment: { horizontal: isCenterCol ? 'center' : 'left', vertical: 'center' },
+        border: thinBorder
+      };
+    }
+  }
+
+  ws['!cols'] = [
+    { wch: 8 },   // S.No
+    { wch: 18 },  // Register Number
+    { wch: 22 },  // Student Name
+    { wch: 26 },  // Company Placed
+    { wch: 24 },  // Designation / Role
+    { wch: 16 },  // Package (CTC)
+    { wch: 18 },  // Batch / Year
+    { wch: 10 },  // CGPA
+    { wch: 18 },  // Standing Arrears
+    { wch: 30 },  // College Email
+    { wch: 16 },  // Phone Number
+    { wch: 16 },  // Selection Date
+    { wch: 38 }   // Resume URL
+  ];
+
+  const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Placed Students');
   const timestamp = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `RIT_CSBS_Placed_Students_${timestamp}.xlsx`);
-  showAdminAlert(`Exported ${rows.length} placed student records to Excel.`, true);
+  showAdminAlert(`Exported ${dataRows.length} placed student records to formatted Excel spreadsheet.`, true);
 }
 
 // ============================================================

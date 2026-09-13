@@ -212,7 +212,7 @@ async function querySupabase(sql, params = [], callback) {
             let pIdx = 0;
             if (cleanSql.includes("u.year = ?")) {
                 const yearVal = parseInt(params[pIdx++]);
-                combined = combined.filter(s => s.year === yearVal);
+                combined = combined.filter(s => parseInt(s.year) === yearVal);
             }
             if (cleanSql.includes("LIKE ?")) {
                 const searchVal = String(params[pIdx]).replace(/%/g, "").toLowerCase();
@@ -238,6 +238,12 @@ async function querySupabase(sql, params = [], callback) {
             if (cleanSql.includes("sp.standing_arrears_count <= ?")) {
                 const maxArrears = parseInt(params[pIdx++]);
                 combined = combined.filter(s => parseInt(s.standing_arrears_count || 0) <= maxArrears);
+            } else if (cleanSql.includes("sp.standing_arrears_count >= ?")) {
+                const minArrears = parseInt(params[pIdx++]);
+                combined = combined.filter(s => parseInt(s.standing_arrears_count || 0) >= minArrears);
+            } else if (cleanSql.includes("sp.standing_arrears_count = ?")) {
+                const eqArrears = parseInt(params[pIdx++]);
+                combined = combined.filter(s => parseInt(s.standing_arrears_count || 0) === eqArrears);
             }
 
             return callback(null, combined);
