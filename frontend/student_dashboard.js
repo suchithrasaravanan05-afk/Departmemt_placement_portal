@@ -323,6 +323,25 @@ function populateViewMode(p) {
   const cgpa = parseFloat(p.cgpa || 0);
   el('viewCgpaNum').innerText = cgpa > 0 ? cgpa.toFixed(2) : '--';
 
+  // Dynamic CGPA Star Rating:
+  // >= 9.0 : 3 stars
+  // >= 8.0 : 2 stars
+  // >= 7.0 : 1 star
+  // < 7.0  : 0 stars
+  const starsEl = el('viewCgpaStars');
+  if (starsEl) {
+    let starCount = 0;
+    if (cgpa >= 9.0) starCount = 3;
+    else if (cgpa >= 8.0) starCount = 2;
+    else if (cgpa >= 7.0) starCount = 1;
+
+    let starsHtml = '';
+    for (let i = 0; i < starCount; i++) {
+      starsHtml += '<i class="fa-solid fa-star"></i>';
+    }
+    starsEl.innerHTML = starsHtml;
+  }
+
   // Profile photo
   const avatarEl = el('viewAvatar');
   const navAvEl  = el('navAvatar');
@@ -695,6 +714,163 @@ function evaluateDriveEligibility(d, profile) {
 }
 
 // ============================================================
+// DRIVE NOTIFICATIONS & LIVE AUTO-SYNC LOGIC
+// ============================================================
+function getReadDriveIds() {
+  try {
+    const key = `rit_read_drives_${currentUser?.id || 'default'}`;
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveReadDriveIds(ids) {
+  try {
+    const key = `rit_read_drives_${currentUser?.id || 'default'}`;
+    localStorage.setItem(key, JSON.stringify(ids));
+  } catch (e) {
+    console.error('Failed to save read drive IDs:', e);
+  }
+}
+
+function renderDriveNotifications(drives) {
+  cachedStudentDrives = drives || [];
+  const listEl = el('notifList');
+  const badgeEl = el('notifBadge');
+  if (!listEl) return;
+
+  if (!drives || drives.length === 0) {
+    listEl.innerHTML = `
+      <div style="padding:28px 16px;text-align:center;color:#94a3b8;">
+        <i class="fa-regular fa-bell-slash" style="font-size:26px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
+        <p style="font-size:13px;font-weight:600;color:#64748b;">No drive announcements yet.</p>
+        <p style="font-size:11px;margin-top:2px;">New placement drives posted by admin will appear here.</p>
+      </div>`;
+    if (badgeEl) badgeEl.classList.add('hidden');
+    return;
+  }
+
+  const readList = getReadDriveIds();
+  const readIds = new Set(Array.isArray(readList) ? readList : []);
+  const unreadCount = drives.filter(d => !readIds.has(d.id)).length;
+
+  if (badgeEl) {
+    if (unreadCount > 0) {
+      badgeEl.innerText = unreadCount > 99 ? '99+' : unreadCount;
+      badgeEl.classList.remove('hidden');
+    } else {
+      badgeEl.classList.add('hidden');
+    }
+  }
+
+  listEl.innerHTML = drives.map(d => {
+    const isUnread = !readIds.has(d.id);
+    const deadlineStr = d.deadline ? fmtDate(d.deadline) : 'Open';
+    const isExpired = d.deadline && new Date(d.deadline) < new Date();
+    const applied = !!d.app_status;
+
+    let statusPill = '';
+    if (applied) {
+      statusPill = `<span class="badge badge-purple" style="font-size:10px;padding:2px 6px;"><i class="fa-solid fa-check"></i> Applied (${escapeHtml(d.app_status)})</span>`;
+    } else if (isUnread) {
+      statusPill = `<span class="badge badge-green" style="font-size:10px;padding:2px 6px;background:#dcfce7;color:#15803d;border:1px solid #86efac;"><i class="fa-solid fa-sparkles"></i> NEW</span>`;
+    }
+
+    return `
+    <div class="student-notif-item ${isUnread ? 'is-unread' : ''}" onclick="handleNotificationClick(${d.id})">
+      <div class="student-notif-item-icon">
+        <i class="fa-solid fa-building"></i>
+      </div>
+      <div class="student-notif-item-content">
+        <div class="student-notif-item-company">
+          <span>${escapeHtml(d.company_name)}</span>
+          ${statusPill}
+        </div>
+        <div class="student-notif-item-role">${escapeHtml(d.job_role)} • <strong style="color:#2563eb;">${escapeHtml(d.package_ctc)}</strong></div>
+        <div class="student-notif-item-meta">
+          <span><i class="fa-regular fa-calendar-days" style="color:${isExpired ? '#ef4444' : '#64748b'};margin-right:3px;"></i>${isExpired ? 'Closed' : 'Deadline: ' + deadlineStr}</span>
+          <span>•</span>
+          <span><i class="fa-solid fa-location-dot" style="margin-right:2px;"></i>${escapeHtml(d.job_location || 'Flexible')}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function handleNotificationClick(driveId) {
+  const readList = getReadDriveIds();
+  const readIds = new Set(Array.isArray(readList) ? readList : []);
+  readIds.add(driveId);
+  saveReadDriveIds(Array.from(readIds));
+
+  // Update badge and notif list
+  renderDriveNotifications(cachedStudentDrives);
+
+  // Close dropdown
+  el('notifDropdown')?.classList.add('hidden');
+
+  // Switch to drives tab
+  switchTab('drives');
+
+  // Highlight/scroll to drive card if on screen
+  setTimeout(() => {
+    const driveCard = document.querySelector(`.pro-drive-card[data-drive-id="${driveId}"]`) ||
+                      document.querySelector(`.drive-card[data-drive-id="${driveId}"]`);
+    if (driveCard) {
+      driveCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      driveCard.style.outline = '3px solid #2563eb';
+      driveCard.style.boxShadow = '0 0 25px rgba(37,99,235,0.45)';
+      setTimeout(() => {
+        driveCard.style.transition = 'all 1s ease';
+        driveCard.style.outline = 'none';
+        driveCard.style.boxShadow = '';
+      }, 2500);
+    }
+  }, 200);
+}
+
+function toggleNotifDropdown(e) {
+  if (e) e.stopPropagation();
+  const dropdown = el('notifDropdown');
+  if (dropdown) dropdown.classList.toggle('hidden');
+}
+
+function markAllNotificationsRead(e) {
+  if (e) e.stopPropagation();
+  const allIds = (cachedStudentDrives || []).map(d => d.id);
+  saveReadDriveIds(allIds);
+  renderDriveNotifications(cachedStudentDrives);
+  showStudentAlert('All notifications marked as read.', true);
+}
+
+function viewAllDrivesFromNotif() {
+  el('notifDropdown')?.classList.add('hidden');
+  switchTab('drives');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  const notifWrapper = document.querySelector('.student-notif-wrapper');
+  if (notifWrapper && !notifWrapper.contains(e.target)) {
+    el('notifDropdown')?.classList.add('hidden');
+  }
+});
+
+function showDriveLiveToast(drive) {
+  showStudentAlert(`🚀 New Drive Announced: ${drive.company_name} (${drive.job_role || 'Role'})! Check placement drives.`, true);
+}
+
+function startDrivesAutoSync() {
+  if (autoSyncTimer) clearInterval(autoSyncTimer);
+  autoSyncTimer = setInterval(() => {
+    loadPlacementDrives(true); // silent sync every 30s
+  }, 30000);
+}
+
+// ============================================================
 // LOAD PLACEMENT DRIVES (WITH LIVE SILENT SYNC)
 // ============================================================
 async function loadPlacementDrives(silent = false) {
@@ -871,7 +1047,14 @@ function renderDrivesWithFilter() {
   // Render Grid of Drive Cards
   container.innerHTML = `
     <div class="drives-grid">
-      ${displayList.map(item => buildDriveCard(item.drive, item.evalRes)).join('')}
+      ${displayList.map(item => {
+        try {
+          return buildDriveCard(item.drive, item.evalRes);
+        } catch (cardErr) {
+          console.error('Error rendering card for drive:', item?.drive, cardErr);
+          return '';
+        }
+      }).join('')}
     </div>`;
 }
 
@@ -1054,10 +1237,12 @@ function getCompanyAvatarColor(name) {
  * Builds the HTML markup for a single placement drive card (Student Dashboard).
  */
 function buildDriveCard(d, evalRes) {
+  if (!d) return '';
+  const evalData = evalRes || (typeof evaluateDriveEligibility === 'function' ? evaluateDriveEligibility(d, currentProfile) : { isEligible: true, isExpired: false, reasons: [] });
   const minCgpa       = parseFloat(d.min_cgpa || 0);
   const maxArrears    = parseInt(d.max_standing_arrears || 0);
-  const isEligible    = evalRes.isEligible;
-  const isExpired     = evalRes.isExpired;
+  const isEligible    = !!evalData.isEligible;
+  const isExpired     = !!evalData.isExpired;
   const alreadyApplied = !!d.app_status;
   const companyName   = d.company_name || 'Company';
   const logoHtml      = getCompanyLogoHtml(companyName);
@@ -1083,12 +1268,12 @@ function buildDriveCard(d, evalRes) {
 
   // Ineligible reason message banner
   let ineligibleBanner = '';
-  if (!isEligible && !alreadyApplied && evalRes.reasons.length > 0) {
+  if (!isEligible && !alreadyApplied && Array.isArray(evalData.reasons) && evalData.reasons.length > 0) {
     ineligibleBanner = `
       <div class="drive-ineligible-banner">
         <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px;flex-shrink:0;"></i>
         <div>
-          <strong>Criteria not met:</strong> ${evalRes.reasons.map(r => escapeHtml(r)).join('; ')}
+          <strong>Criteria not met:</strong> ${evalData.reasons.map(r => escapeHtml(r)).join('; ')}
         </div>
       </div>`;
   }
