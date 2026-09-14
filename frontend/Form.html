@@ -559,11 +559,17 @@
             <!-- Mockup Frame 1: YouTube -->
             <div id="previewYouTube" class="preview-card-frame yt-preview-card">
               <div class="yt-video-thumb" id="ytMediaContainer" onclick="handlePreviewMediaClick('youtube')">
-                <img id="ytMockImg" src="csbs_logo.png" alt="Broadcast Image">
+                <img id="ytMockImg" src="" alt="Broadcast Image" class="form-hidden">
                 <video id="ytMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
                 <!-- Play symbol ONLY visible when video is uploaded -->
                 <div class="yt-play-icon form-hidden" id="ytPlayIcon" onclick="playMockVideo(event, 'ytMockVideo')">
                   <i class="fa-solid fa-play"></i>
+                </div>
+                <!-- Clean text announcement fallback when no media is uploaded -->
+                <div id="ytNoMediaNotice" class="yt-no-media-box">
+                  <i class="fa-solid fa-bullhorn"></i>
+                  <p id="ytNoMediaTitle">Department Official Broadcast</p>
+                  <span>Text Announcement Mode (No Media Attached)</span>
                 </div>
               </div>
               <div class="yt-video-details">
@@ -589,8 +595,8 @@
                 </div>
               </div>
               <div class="li-body-text" id="liMockText"></div>
-              <div class="li-media-box" id="liMediaContainer" onclick="handlePreviewMediaClick('linkedin')">
-                <img id="liMockImg" src="csbs_logo.png" alt="LinkedIn Media">
+              <div class="li-media-box form-hidden" id="liMediaContainer" onclick="handlePreviewMediaClick('linkedin')">
+                <img id="liMockImg" src="" alt="LinkedIn Media" class="form-hidden">
                 <video id="liMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
               </div>
               <div class="li-actions-bar">
@@ -611,8 +617,13 @@
                 <div class="ig-dots"><i class="fa-solid fa-ellipsis"></i></div>
               </div>
               <div class="ig-media-box" id="igMediaContainer" onclick="handlePreviewMediaClick('instagram')">
-                <img id="igMockImg" src="csbs_logo.png" alt="Instagram Media">
+                <img id="igMockImg" src="" alt="Instagram Media" class="form-hidden">
                 <video id="igMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
+                <div id="igNoMediaNotice" class="ig-no-media-box">
+                  <div class="ig-quote-icon"><i class="fa-solid fa-quote-left"></i></div>
+                  <div id="igTextCardSnippet" class="ig-text-card-snippet">CSBS Department Announcement</div>
+                  <span class="ig-text-card-badge">CSBS • RIT</span>
+                </div>
               </div>
               <div class="ig-actions-bar">
                 <div class="ig-actions-left">
@@ -639,8 +650,8 @@
                 </div>
               </div>
               <div class="fb-content" id="fbMockContent"></div>
-              <div class="fb-media" id="fbMediaContainer" onclick="handlePreviewMediaClick('facebook')">
-                <img id="fbMockImg" src="csbs_logo.png" alt="Facebook Media">
+              <div class="fb-media form-hidden" id="fbMediaContainer" onclick="handlePreviewMediaClick('facebook')">
+                <img id="fbMockImg" src="" alt="Facebook Media" class="form-hidden">
                 <video id="fbMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
               </div>
               <div class="fb-engagement-stats">

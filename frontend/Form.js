@@ -714,7 +714,8 @@ function handleSocialLogout() {
 
 // =============================================
 // PLATFORM TOGGLES & MEDIA STATE
-// ========================================let uploadedMediaFile = null;
+// =============================================
+let uploadedMediaFile = null;
 let uploadedMediaUrl = '';
 let uploadedMediaType = 'none'; // 'none' | 'image' | 'video'
 let feedSearchQuery = '';
@@ -1007,7 +1008,8 @@ function updateLivePreviews() {
   const category = document.getElementById('postCategory')?.value || 'Department Symposium';
   const hashtags = document.getElementById('postHashtags')?.value.trim() || '#RITCSBS #CSBSDepartment';
   const mediaUrl = getSelectedMediaUrl();
-  const isVideo = uploadedMediaType === 'video' || /\.(mp4|webm|mov|m4v|avi)$/i.test(mediaUrl);
+  const isVideo = (uploadedMediaType === 'video' || /\.(mp4|webm|mov|m4v|avi)$/i.test(mediaUrl)) && Boolean(mediaUrl);
+  const isImage = (uploadedMediaType === 'image' || Boolean(mediaUrl)) && !isVideo && Boolean(mediaUrl);
 
   const staff = getStoredStaffUser();
   const authorName = staff?.full_name || 'Dr. K. Vijayalakshmi';
@@ -1016,9 +1018,13 @@ function updateLivePreviews() {
   // Update preview badge in preview panel title
   const liveBadge = document.getElementById('previewLiveBadge');
   if (liveBadge) {
-    liveBadge.innerHTML = isVideo 
-      ? '<i class="fa-solid fa-video" style="color:#dc2626;"></i> Video Broadcast (Playable)' 
-      : '<i class="fa-solid fa-image" style="color:#0a66c2;"></i> Photo Broadcast';
+    if (isVideo) {
+      liveBadge.innerHTML = '<i class="fa-solid fa-video" style="color:#dc2626;"></i> Video Broadcast (Playable)';
+    } else if (isImage) {
+      liveBadge.innerHTML = '<i class="fa-solid fa-image" style="color:#0a66c2;"></i> Photo Broadcast';
+    } else {
+      liveBadge.innerHTML = '<i class="fa-solid fa-align-left" style="color:#10b981;"></i> Text Broadcast (No Media)';
+    }
   }
 
   // 1. YouTube Preview
@@ -1027,8 +1033,11 @@ function updateLivePreviews() {
   const ytVideo = document.getElementById('ytMockVideo');
   const ytPlayIcon = document.getElementById('ytPlayIcon');
   const ytDesc = document.getElementById('ytMockDesc');
+  const ytNoMedia = document.getElementById('ytNoMediaNotice');
+  const ytNoMediaTitle = document.getElementById('ytNoMediaTitle');
 
   if (ytTitle) ytTitle.innerText = `${title} | Department of CSBS, RIT`;
+  if (ytNoMediaTitle) ytNoMediaTitle.innerText = title;
   if (ytDesc) {
     ytDesc.innerText = 
 `${title}
@@ -1045,32 +1054,36 @@ ${hashtags}`;
   }
 
   if (isVideo) {
-    if (ytImg) ytImg.classList.add('form-hidden');
+    if (ytNoMedia) ytNoMedia.classList.add('form-hidden');
+    if (ytImg) { ytImg.classList.add('form-hidden'); ytImg.src = ''; }
     if (ytVideo) {
       ytVideo.classList.remove('form-hidden');
-      if (ytVideo.src !== mediaUrl && mediaUrl) ytVideo.src = mediaUrl;
+      if (ytVideo.src !== mediaUrl) ytVideo.src = mediaUrl;
       ytVideo.onplay = () => { if (ytPlayIcon) ytPlayIcon.classList.add('form-hidden'); };
       ytVideo.onpause = () => { if (ytPlayIcon) ytPlayIcon.classList.remove('form-hidden'); };
     }
-    // Only show play icon if video is uploaded and currently paused
     if (ytPlayIcon && (!ytVideo || ytVideo.paused)) {
       ytPlayIcon.classList.remove('form-hidden');
     }
-  } else {
-    // IMAGE ONLY: STRICTLY HIDE PLAY ICON
+  } else if (isImage) {
     if (ytPlayIcon) ytPlayIcon.classList.add('form-hidden');
-    if (ytVideo) {
-      ytVideo.pause();
-      ytVideo.classList.add('form-hidden');
-    }
+    if (ytVideo) { ytVideo.pause(); ytVideo.classList.add('form-hidden'); }
+    if (ytNoMedia) ytNoMedia.classList.add('form-hidden');
     if (ytImg) {
       ytImg.classList.remove('form-hidden');
       ytImg.src = mediaUrl;
     }
+  } else {
+    // NO MEDIA ATTACHED
+    if (ytPlayIcon) ytPlayIcon.classList.add('form-hidden');
+    if (ytVideo) { ytVideo.pause(); ytVideo.classList.add('form-hidden'); }
+    if (ytImg) { ytImg.classList.add('form-hidden'); ytImg.src = ''; }
+    if (ytNoMedia) ytNoMedia.classList.remove('form-hidden');
   }
 
   // 2. LinkedIn Preview (Same delivered content)
   const liTextEl = document.getElementById('liMockText');
+  const liContainer = document.getElementById('liMediaContainer');
   const liImg = document.getElementById('liMockImg');
   const liVideo = document.getElementById('liMockVideo');
 
@@ -1088,26 +1101,33 @@ ${hashtags}`;
   }
 
   if (isVideo) {
-    if (liImg) liImg.classList.add('form-hidden');
+    if (liContainer) liContainer.classList.remove('form-hidden');
+    if (liImg) { liImg.classList.add('form-hidden'); liImg.src = ''; }
     if (liVideo) {
       liVideo.classList.remove('form-hidden');
-      if (liVideo.src !== mediaUrl && mediaUrl) liVideo.src = mediaUrl;
+      if (liVideo.src !== mediaUrl) liVideo.src = mediaUrl;
     }
-  } else {
-    if (liVideo) {
-      liVideo.pause();
-      liVideo.classList.add('form-hidden');
-    }
+  } else if (isImage) {
+    if (liContainer) liContainer.classList.remove('form-hidden');
+    if (liVideo) { liVideo.pause(); liVideo.classList.add('form-hidden'); }
     if (liImg) {
       liImg.classList.remove('form-hidden');
       liImg.src = mediaUrl;
     }
+  } else {
+    // Pure text post on LinkedIn - media container hidden completely
+    if (liVideo) { liVideo.pause(); liVideo.classList.add('form-hidden'); }
+    if (liImg) { liImg.classList.add('form-hidden'); liImg.src = ''; }
+    if (liContainer) liContainer.classList.add('form-hidden');
   }
 
   // 3. Instagram Preview (Same delivered content)
   const igCaption = document.getElementById('igMockCaption');
+  const igContainer = document.getElementById('igMediaContainer');
   const igImg = document.getElementById('igMockImg');
   const igVideo = document.getElementById('igMockVideo');
+  const igNoMedia = document.getElementById('igNoMediaNotice');
+  const igSnippet = document.getElementById('igTextCardSnippet');
 
   if (igCaption) {
     igCaption.innerText = 
@@ -1122,24 +1142,30 @@ ${hashtags}`;
   }
 
   if (isVideo) {
-    if (igImg) igImg.classList.add('form-hidden');
+    if (igNoMedia) igNoMedia.classList.add('form-hidden');
+    if (igImg) { igImg.classList.add('form-hidden'); igImg.src = ''; }
     if (igVideo) {
       igVideo.classList.remove('form-hidden');
-      if (igVideo.src !== mediaUrl && mediaUrl) igVideo.src = mediaUrl;
+      if (igVideo.src !== mediaUrl) igVideo.src = mediaUrl;
     }
-  } else {
-    if (igVideo) {
-      igVideo.pause();
-      igVideo.classList.add('form-hidden');
-    }
+  } else if (isImage) {
+    if (igNoMedia) igNoMedia.classList.add('form-hidden');
+    if (igVideo) { igVideo.pause(); igVideo.classList.add('form-hidden'); }
     if (igImg) {
       igImg.classList.remove('form-hidden');
       igImg.src = mediaUrl;
     }
+  } else {
+    // Clean text announcement card on Instagram
+    if (igVideo) { igVideo.pause(); igVideo.classList.add('form-hidden'); }
+    if (igImg) { igImg.classList.add('form-hidden'); igImg.src = ''; }
+    if (igNoMedia) igNoMedia.classList.remove('form-hidden');
+    if (igSnippet) igSnippet.innerText = `${title}\n\n${rawContent.slice(0, 120)}${rawContent.length > 120 ? '...' : ''}`;
   }
 
   // 4. Facebook Preview (Same delivered content)
   const fbContent = document.getElementById('fbMockContent');
+  const fbContainer = document.getElementById('fbMediaContainer');
   const fbImg = document.getElementById('fbMockImg');
   const fbVideo = document.getElementById('fbMockVideo');
 
@@ -1158,20 +1184,24 @@ ${hashtags}`;
   }
 
   if (isVideo) {
-    if (fbImg) fbImg.classList.add('form-hidden');
+    if (fbContainer) fbContainer.classList.remove('form-hidden');
+    if (fbImg) { fbImg.classList.add('form-hidden'); fbImg.src = ''; }
     if (fbVideo) {
       fbVideo.classList.remove('form-hidden');
-      if (fbVideo.src !== mediaUrl && mediaUrl) fbVideo.src = mediaUrl;
+      if (fbVideo.src !== mediaUrl) fbVideo.src = mediaUrl;
     }
-  } else {
-    if (fbVideo) {
-      fbVideo.pause();
-      fbVideo.classList.add('form-hidden');
-    }
+  } else if (isImage) {
+    if (fbContainer) fbContainer.classList.remove('form-hidden');
+    if (fbVideo) { fbVideo.pause(); fbVideo.classList.add('form-hidden'); }
     if (fbImg) {
       fbImg.classList.remove('form-hidden');
       fbImg.src = mediaUrl;
     }
+  } else {
+    // Pure text post on Facebook - media container hidden completely
+    if (fbVideo) { fbVideo.pause(); fbVideo.classList.add('form-hidden'); }
+    if (fbImg) { fbImg.classList.add('form-hidden'); fbImg.src = ''; }
+    if (fbContainer) fbContainer.classList.add('form-hidden');
   }
 }
 
@@ -1235,8 +1265,8 @@ async function handlePublishPost() {
     content,
     category,
     platforms: [...selectedPlatforms],
-    mediaUrl,
-    mediaType: isVideo ? 'video' : 'image',
+    mediaUrl: mediaUrl || '',
+    mediaType: !mediaUrl ? 'none' : (isVideo ? 'video' : 'image'),
     hashtags,
     authorName: staff.full_name || 'CSBS Department Staff',
     authorRole: staff.role || 'faculty',
@@ -1298,83 +1328,16 @@ function saveLocalPost(post) {
 
 function getLocalPosts() {
   try {
-    return JSON.parse(localStorage.getItem('csbs_social_posts_cache') || '[]');
+    const raw = JSON.parse(localStorage.getItem('csbs_social_posts_cache') || '[]');
+    // Filter out any previous dummy/inbuilt seed posts so only user broadcasts exist
+    const valid = raw.filter(p => p && p.id && !p.id.startsWith('csbs-archive-') && !p.id.startsWith('post-'));
+    if (valid.length !== raw.length) {
+      localStorage.setItem('csbs_social_posts_cache', JSON.stringify(valid));
+    }
+    return valid;
   } catch {
     return [];
   }
-}
-
-// =============================================
-// DEFAULT CSBS DEPARTMENT SEED ARCHIVES
-// Authentic Department records demonstrating Whom, When, What was Delivered
-// =============================================
-function getDefaultCSBSDepartmentBroadcasts() {
-  return [
-    {
-      id: "csbs-archive-1",
-      title: "CSBS Department Signs Strategic MoU with IT Industry Leaders for Student Internships & Projects",
-      content: "The Department of Computer Science and Business Systems (CSBS) is pleased to announce the formal signing of a strategic industry collaboration and MoU with premier enterprise technology partners. This agreement will facilitate paid semester internships, continuous curriculum advisory, corporate guest lectures, and collaborative engineering research in cloud business architectures.",
-      category: "Industry MoU",
-      platforms: ["linkedin", "facebook", "youtube"],
-      mediaUrl: "csbs_logo.png",
-      mediaType: "image",
-      authorName: "Dr. K. Vijayalakshmi",
-      authorRole: "hod",
-      authorDesignation: "Head of Department — CSBS",
-      hashtags: "#RITCSBS #CSBSDepartment #IndustryMoU #CorporateCollab #ComputerScienceAndBusinessSystems #BusinessWithTech",
-      publishedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-      likes: 184,
-      shares: 38
-    },
-    {
-      id: "csbs-archive-2",
-      title: "1st Prize Honors at National Engineering AI Hackathon — CSBS Student Innovators",
-      content: "Proud moment for the Department of Computer Science and Business Systems! Our third-year student team clinched the First Prize with a cash award at the National Level Smart Systems Hackathon. Their product integrated automated enterprise inventory tracking with real-time neural computer vision. Congratulations to the winning cohort and mentor faculty!",
-      category: "Student Innovation",
-      platforms: ["instagram", "linkedin", "facebook"],
-      mediaUrl: "clg_logo.jpg",
-      mediaType: "image",
-      authorName: "Prof. S. Anand",
-      authorRole: "faculty",
-      authorDesignation: "Assistant Professor — CSBS",
-      hashtags: "#RITCSBS #CSBSDepartment #HackathonWinners #StudentInnovators #AIandBusiness #RITEngineers",
-      publishedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-      likes: 245,
-      shares: 52
-    },
-    {
-      id: "csbs-archive-3",
-      title: "CSBS Batch 2027 Campus Placement Drive — Lucrative Offers at Premier IT Corporations",
-      content: "Hearty congratulations to our talented CSBS final-year students for securing high-CTC engineering, product development, and consulting roles across marquee campus recruitment drives! Gratitude to our departmental placement coordinators, training mentors, and industry trainers for their relentless support.",
-      category: "Placement Milestone",
-      platforms: ["linkedin", "facebook", "youtube", "instagram"],
-      mediaUrl: "admin.png",
-      mediaType: "image",
-      authorName: "Placement Admin",
-      authorRole: "admin",
-      authorDesignation: "CSBS Placement Coordinator",
-      hashtags: "#RITCSBS #CSBSDepartment #CSBSPlacements #CampusRecruitment #Batch2027 #FutureReady",
-      publishedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-      likes: 198,
-      shares: 44
-    },
-    {
-      id: "csbs-archive-4",
-      title: "Faculty Research Milestone: IEEE Transactions Paper on Enterprise Business Intelligence",
-      content: "The Department of CSBS takes pride in sharing that our faculty members have published groundbreaking research in the IEEE Transactions on Applied Business Systems & Machine Intelligence. This research explores resilient distributed computing architectures for real-time supply chain analytics.",
-      category: "Faculty Research",
-      platforms: ["linkedin", "facebook"],
-      mediaUrl: "rit_logo.png",
-      mediaType: "image",
-      authorName: "Dr. K. Vijayalakshmi",
-      authorRole: "hod",
-      authorDesignation: "Head of Department — CSBS",
-      hashtags: "#RITCSBS #CSBSDepartment #FacultyResearch #IEEE #Publications #AcademicExcellence",
-      publishedAt: new Date(Date.now() - 3600000 * 72).toISOString(),
-      likes: 162,
-      shares: 29
-    }
-  ];
 }
 
 // =============================================
@@ -1394,7 +1357,8 @@ async function loadSocialFeed(filterPlatform = 'all') {
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
-        posts = data.posts;
+        // Filter out any legacy dummy/inbuilt seed posts from server response
+        posts = data.posts.filter(p => p && p.id && !p.id.startsWith('csbs-archive-') && !p.id.startsWith('post-'));
       }
     }
   } catch (e) {
@@ -1403,22 +1367,19 @@ async function loadSocialFeed(filterPlatform = 'all') {
 
   // Merge with locally published posts
   const localPosts = getLocalPosts();
-  const defaultSeeds = getDefaultCSBSDepartmentBroadcasts();
 
   const postMap = new Map();
   // Local first
   localPosts.forEach(p => postMap.set(p.id, p));
   // Server posts
   posts.forEach(p => { if (!postMap.has(p.id)) postMap.set(p.id, p); });
-  // Default CSBS archives if list is small
-  defaultSeeds.forEach(p => { if (!postMap.has(p.id)) postMap.set(p.id, p); });
 
   allSocialPosts = Array.from(postMap.values());
 
   // Update Stats Bar
   const totalCount = allSocialPosts.length;
   const videoCount = allSocialPosts.filter(p => p.mediaType === 'video' || /\.(mp4|webm|mov|m4v)/i.test(p.mediaUrl || '')).length;
-  const photoCount = totalCount - videoCount;
+  const photoCount = allSocialPosts.filter(p => p.mediaType === 'image' && Boolean(p.mediaUrl)).length;
 
   const statTotal = document.getElementById('statTotalPosts');
   const statVid = document.getElementById('statTotalVideos');
@@ -1427,6 +1388,18 @@ async function loadSocialFeed(filterPlatform = 'all') {
   if (statTotal) statTotal.innerText = totalCount;
   if (statVid) statVid.innerText = videoCount;
   if (statPho) statPho.innerText = photoCount;
+
+  // If no broadcasts exist at all yet
+  if (allSocialPosts.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-feed-state">
+        <i class="fa-solid fa-tower-broadcast empty-feed-icon"></i>
+        <h5>No Department Broadcasts Yet</h5>
+        <p>Compose and broadcast an announcement using the composer above to record it in this department history log.</p>
+      </div>
+    `;
+    return;
+  }
 
   // Filter by Platform
   let filtered = [...allSocialPosts];
@@ -1449,9 +1422,9 @@ async function loadSocialFeed(filterPlatform = 'all') {
   if (filtered.length === 0) {
     grid.innerHTML = `
       <div class="empty-feed-state">
-        <i class="fa-solid fa-box-archive empty-feed-icon"></i>
-        <h5>No CSBS broadcasts found for this filter.</h5>
-        <p>Broadcast an announcement using the composer above to record it in this department history log.</p>
+        <i class="fa-solid fa-filter-circle-xmark empty-feed-icon"></i>
+        <h5>No broadcasts found matching this filter.</h5>
+        <p>Try selecting "All Platforms" or clearing your search term.</p>
       </div>
     `;
     return;

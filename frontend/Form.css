@@ -2774,6 +2774,90 @@ body.form-auth-bg {
 }
 
 /* ==========================================================================
+   CLEAN TEXT-ONLY ANNOUNCEMENT PREVIEW STYLES (No Inbuilt Photos)
+   ========================================================================== */
+.yt-no-media-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  background: linear-gradient(135deg, #0F2438 0%, #1E3A52 100%);
+  color: #FFFFFF;
+  text-align: center;
+  padding: 16px;
+}
+
+.yt-no-media-box i {
+  font-size: 32px;
+  color: #D89A3D;
+}
+
+.yt-no-media-box p {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+  color: #FFFFFF;
+  max-width: 90%;
+  line-height: 1.35;
+}
+
+.yt-no-media-box span {
+  font-size: 11px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.ig-no-media-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  background: linear-gradient(135deg, #0F2438 0%, #1E3A52 100%);
+  color: #FFFFFF;
+  text-align: center;
+  padding: 20px;
+  position: relative;
+}
+
+.ig-quote-icon {
+  font-size: 24px;
+  color: #D89A3D;
+  opacity: 0.85;
+}
+
+.ig-text-card-snippet {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #F8FAFC;
+  max-width: 90%;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ig-text-card-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  background: rgba(216, 154, 61, 0.2);
+  color: #D89A3D;
+  border: 1px solid rgba(216, 154, 61, 0.4);
+  padding: 3px 9px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
    RESPONSIVE ADJUSTMENTS
    ========================================================================== */
 @media (max-width: 768px) {

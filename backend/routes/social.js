@@ -33,73 +33,9 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB max for video/image
 });
 
-// Initial seed posts to make the social feed look realistic and active immediately
-let socialPosts = [
-    {
-        id: "post-1",
-        title: "CSBS Department Signs Strategic MoU with IT Industry Leaders for Student Internships & Projects",
-        content: "The Department of Computer Science and Business Systems (CSBS) is pleased to announce the formal signing of a strategic industry collaboration and MoU with premier enterprise technology partners. This agreement will facilitate paid semester internships, continuous curriculum advisory, corporate guest lectures, and collaborative engineering research in cloud business architectures.",
-        category: "Industry MoU",
-        platforms: ["linkedin", "facebook", "youtube"],
-        mediaUrl: "",
-        mediaType: "none",
-        authorName: "Dr. K. Vijayalakshmi",
-        authorRole: "hod",
-        authorDesignation: "Head of Department — CSBS",
-        hashtags: "#RITCSBS #CSBSDepartment #IndustryMoU #CorporateCollab #ComputerScienceAndBusinessSystems #BusinessWithTech",
-        publishedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-        likes: 184,
-        shares: 38
-    },
-    {
-        id: "post-2",
-        title: "1st Prize Honors at National Engineering AI Hackathon — CSBS Student Innovators",
-        content: "Proud moment for the Department of Computer Science and Business Systems! Our third-year student team clinched the First Prize with a cash award at the National Level Smart Systems Hackathon. Their product integrated automated enterprise inventory tracking with real-time neural computer vision. Congratulations to the winning cohort and mentor faculty!",
-        category: "Student Innovation",
-        platforms: ["instagram", "linkedin", "facebook"],
-        mediaUrl: "",
-        mediaType: "none",
-        authorName: "Prof. S. Anand",
-        authorRole: "faculty",
-        authorDesignation: "Assistant Professor — CSBS",
-        hashtags: "#RITCSBS #CSBSDepartment #HackathonWinners #StudentInnovators #AIandBusiness #RITEngineers",
-        publishedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-        likes: 245,
-        shares: 52
-    },
-    {
-        id: "post-3",
-        title: "CSBS Batch 2027 Campus Placement Drive — Lucrative Offers at Premier IT Corporations",
-        content: "Hearty congratulations to our talented CSBS final-year students for securing high-CTC engineering, product development, and consulting roles across marquee campus recruitment drives! Gratitude to our departmental placement coordinators, training mentors, and industry trainers for their relentless support.",
-        category: "Placement Milestone",
-        platforms: ["linkedin", "facebook", "youtube", "instagram"],
-        mediaUrl: "",
-        mediaType: "none",
-        authorName: "Placement Admin",
-        authorRole: "admin",
-        authorDesignation: "CSBS Placement Coordinator",
-        hashtags: "#RITCSBS #CSBSDepartment #CSBSPlacements #CampusRecruitment #Batch2027 #FutureReady",
-        publishedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-        likes: 198,
-        shares: 44
-    },
-    {
-        id: "post-4",
-        title: "Faculty Research Milestone: IEEE Transactions Paper on Enterprise Business Intelligence",
-        content: "The Department of CSBS takes pride in sharing that our faculty members have published groundbreaking research in the IEEE Transactions on Applied Business Systems & Machine Intelligence. This research explores resilient distributed computing architectures for real-time supply chain analytics.",
-        category: "Faculty Research",
-        platforms: ["linkedin", "facebook"],
-        mediaUrl: "",
-        mediaType: "none",
-        authorName: "Dr. K. Vijayalakshmi",
-        authorRole: "hod",
-        authorDesignation: "Head of Department — CSBS",
-        hashtags: "#RITCSBS #CSBSDepartment #FacultyResearch #IEEE #Publications #AcademicExcellence",
-        publishedAt: new Date(Date.now() - 3600000 * 72).toISOString(),
-        likes: 162,
-        shares: 29
-    }
-];
+// Storage for broadcast posts submitted by department staff (starts empty)
+let socialPosts = [];
+
 
 // Middleware: Authenticate & Authorize Faculty / HOD / Admin ONLY
 function requireStaffAuth(req, res, next) {
