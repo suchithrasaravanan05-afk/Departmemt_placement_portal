@@ -876,7 +876,6 @@ function getSelectedMediaUrl() {
   const custom = document.getElementById('postMediaCustomUrl')?.value.trim();
   if (custom) return custom;
   return '';
-}s_logo.png';
 }
 
 // =============================================
