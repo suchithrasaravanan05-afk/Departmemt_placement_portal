@@ -439,9 +439,9 @@
             <!-- Media Upload Box (Photograph OR Video) -->
             <div class="social-field">
               <div class="media-field-header">
-                <label>Media / Photograph / Video</label>
+                <label>Media / Photograph / Video (Optional)</label>
                 <span class="media-type-indicator" id="mediaTypeBadge">
-                  <i class="fa-solid fa-camera"></i> Photo Selected
+                  <i class="fa-regular fa-image"></i> No Media Attached
                 </span>
               </div>
 
@@ -475,30 +475,19 @@
                   </div>
                 </div>
                 <button type="button" class="btn-remove-media" onclick="removeUploadedMedia()" title="Remove media">
-                  <i class="fa-solid fa-xmark"></i> Remove
+                  <i class="fa-solid fa-xmark"></i> Remove Media
                 </button>
               </div>
 
-              <!-- Preset Selection -->
-              <div class="media-preset-row">
-                <span>Or select CSBS asset:</span>
-                <select id="postMediaSelect" onchange="handlePresetMediaSelect(this.value)">
-                  <option value="csbs_logo.png" selected>💻 CSBS Department Official Crest</option>
-                  <option value="clg_logo.jpg">🏛️ Campus Aerial View</option>
-                  <option value="admin.png">🎓 CSBS Placement & Achievement Banner</option>
-                  <option value="rit_logo.png">🛡️ Ramco Institute of Technology Insignia</option>
-                  <option value="custom">🌐 Custom Media URL...</option>
-                </select>
+              <!-- Custom URL Input (Optional) -->
+              <div class="media-custom-url-row" style="margin-top:10px;">
+                <input
+                  type="text"
+                  id="postMediaCustomUrl"
+                  placeholder="Or paste external image/video link (optional, e.g. https://...)"
+                  oninput="handleCustomUrlInput(this.value)"
+                >
               </div>
-
-              <input
-                type="text"
-                id="postMediaCustomUrl"
-                class="form-hidden"
-                style="margin-top:8px;"
-                placeholder="Enter custom image or video URL (e.g. https://...)"
-                oninput="handleContentInput()"
-              >
             </div>
 
             <!-- Content Description & Auto-Enhancer -->
