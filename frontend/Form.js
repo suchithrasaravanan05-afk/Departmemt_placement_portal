@@ -714,10 +714,9 @@ function handleSocialLogout() {
 
 // =============================================
 // PLATFORM TOGGLES & MEDIA STATE
-// =============================================
-let uploadedMediaFile = null;
+// ========================================let uploadedMediaFile = null;
 let uploadedMediaUrl = '';
-let uploadedMediaType = 'image'; // 'image' | 'video'
+let uploadedMediaType = 'none'; // 'none' | 'image' | 'video'
 let feedSearchQuery = '';
 
 function togglePlatform(btn, platform) {
@@ -803,8 +802,8 @@ function handleMediaFileUpload(input) {
   const badge = document.getElementById('mediaTypeBadge');
   if (badge) {
     badge.innerHTML = isVideo
-      ? '<i class="fa-solid fa-video" style="color:#ef4444;"></i> Playable Video'
-      : '<i class="fa-solid fa-camera" style="color:#0a66c2;"></i> Photograph';
+      ? '<i class="fa-solid fa-video" style="color:#ef4444;"></i> Playable Video Attached'
+      : '<i class="fa-solid fa-camera" style="color:#0a66c2;"></i> Photograph Attached';
   }
 
   // Show uploaded status bar with file meta
@@ -815,22 +814,9 @@ function handleMediaFileUpload(input) {
   if (nameEl) nameEl.innerText = file.name;
   if (sizeEl) {
     const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-    sizeEl.innerText = `${sizeMb} MB • ${isVideo ? 'Video Uploaded (Playable)' : 'Photo Uploaded'}`;
+    sizeEl.innerText = `${sizeMb} MB • ${isVideo ? 'Video' : 'Photo'}`;
   }
   if (statusBar) statusBar.classList.remove('form-hidden');
-
-  // Insert "Uploaded Media" into dropdown if not present
-  const sel = document.getElementById('postMediaSelect');
-  if (sel) {
-    let uploadedOpt = sel.querySelector('option[value="uploaded"]');
-    if (!uploadedOpt) {
-      uploadedOpt = document.createElement('option');
-      uploadedOpt.value = 'uploaded';
-      sel.insertBefore(uploadedOpt, sel.firstChild);
-    }
-    uploadedOpt.innerText = isVideo ? `🎥 ${file.name}` : `📷 ${file.name}`;
-    sel.value = 'uploaded';
-  }
 
   updateLivePreviews();
 }
@@ -838,63 +824,59 @@ function handleMediaFileUpload(input) {
 function removeUploadedMedia() {
   uploadedMediaFile = null;
   uploadedMediaUrl = '';
-  uploadedMediaType = 'image';
+  uploadedMediaType = 'none';
 
   const fileInput = document.getElementById('mediaFileInput');
   if (fileInput) fileInput.value = '';
+
+  const customInput = document.getElementById('postMediaCustomUrl');
+  if (customInput) customInput.value = '';
 
   const statusBar = document.getElementById('mediaUploadStatus');
   if (statusBar) statusBar.classList.add('form-hidden');
 
   const badge = document.getElementById('mediaTypeBadge');
   if (badge) {
-    badge.innerHTML = '<i class="fa-solid fa-camera"></i> Photo Selected';
-  }
-
-  const sel = document.getElementById('postMediaSelect');
-  if (sel) {
-    const uploadedOpt = sel.querySelector('option[value="uploaded"]');
-    if (uploadedOpt) uploadedOpt.remove();
-    sel.value = 'csbs_logo.png';
+    badge.innerHTML = '<i class="fa-regular fa-image"></i> No Media Attached';
   }
 
   updateLivePreviews();
 }
 
-function handlePresetMediaSelect(val) {
-  const customInput = document.getElementById('postMediaCustomUrl');
-  if (customInput) {
-    customInput.classList.toggle('form-hidden', val !== 'custom');
-  }
-  if (val !== 'uploaded') {
-    uploadedMediaFile = null;
-    uploadedMediaUrl = '';
-    const statusBar = document.getElementById('mediaUploadStatus');
-    if (statusBar) statusBar.classList.add('form-hidden');
-    uploadedMediaType = (val === 'custom' && /\.(mp4|webm|mov|m4v)/i.test(customInput?.value || '')) ? 'video' : 'image';
-  }
+function handleCustomUrlInput(val) {
+  const url = (val || '').trim();
+  uploadedMediaFile = null;
+  const statusBar = document.getElementById('mediaUploadStatus');
+  if (statusBar) statusBar.classList.add('form-hidden');
 
-  const badge = document.getElementById('mediaTypeBadge');
-  if (badge) {
-    badge.innerHTML = uploadedMediaType === 'video'
-      ? '<i class="fa-solid fa-video" style="color:#ef4444;"></i> Playable Video'
-      : '<i class="fa-solid fa-camera" style="color:#0a66c2;"></i> Photo Selected';
+  if (url) {
+    uploadedMediaUrl = url;
+    const isVid = /\.(mp4|webm|mov|m4v|avi)/i.test(url);
+    uploadedMediaType = isVid ? 'video' : 'image';
+    const badge = document.getElementById('mediaTypeBadge');
+    if (badge) {
+      badge.innerHTML = isVid
+        ? '<i class="fa-solid fa-video" style="color:#ef4444;"></i> Playable Video URL'
+        : '<i class="fa-solid fa-camera" style="color:#0a66c2;"></i> Image URL';
+    }
+  } else {
+    uploadedMediaUrl = '';
+    uploadedMediaType = 'none';
+    const badge = document.getElementById('mediaTypeBadge');
+    if (badge) {
+      badge.innerHTML = '<i class="fa-regular fa-image"></i> No Media Attached';
+    }
   }
 
   updateLivePreviews();
 }
 
 function getSelectedMediaUrl() {
-  const sel = document.getElementById('postMediaSelect');
-  if (uploadedMediaUrl && sel && sel.value === 'uploaded') {
-    return uploadedMediaUrl;
-  }
-  if (!sel) return 'csbs_logo.png';
-  if (sel.value === 'custom') {
-    const custom = document.getElementById('postMediaCustomUrl')?.value.trim();
-    return custom || 'csbs_logo.png';
-  }
-  return sel.value || 'csbs_logo.png';
+  if (uploadedMediaUrl) return uploadedMediaUrl;
+  const custom = document.getElementById('postMediaCustomUrl')?.value.trim();
+  if (custom) return custom;
+  return '';
+}s_logo.png';
 }
 
 // =============================================
