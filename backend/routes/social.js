@@ -228,7 +228,8 @@ router.post("/publish", requireStaffAuth, (req, res) => {
             });
         }
 
-        const detectedType = mediaType === "video" || /\.(mp4|webm|mov|m4v|avi)/i.test(mediaUrl) ? "video" : "image";
+        const cleanMediaUrl = (mediaUrl || "").trim();
+        const detectedType = !cleanMediaUrl ? "none" : (mediaType === "video" || /\.(mp4|webm|mov|m4v|avi)/i.test(cleanMediaUrl) ? "video" : "image");
 
         const newPost = {
             id: `post-${Date.now()}`,
@@ -236,7 +237,7 @@ router.post("/publish", requireStaffAuth, (req, res) => {
             content: content.trim(),
             category: category.trim(),
             platforms: sanitizedPlatforms,
-            mediaUrl: mediaUrl.trim() || "rit_logo.png",
+            mediaUrl: cleanMediaUrl,
             mediaType: detectedType,
             platformCaptions: typeof platformCaptions === "object" ? platformCaptions : {},
             authorName: req.user.full_name || "CSBS Faculty",
