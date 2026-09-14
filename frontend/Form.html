@@ -380,13 +380,14 @@
           <!-- Left Column: Post Composer -->
           <div class="social-composer-panel">
             <div class="panel-title">
-              <span><i class="fa-solid fa-pen-nib"></i> Compose Social Announcement</span>
-              <span style="font-size:11.5px;color:var(--text-secondary);font-weight:600;">Multi-Platform Publishing</span>
+              <span><i class="fa-solid fa-bullhorn"></i> CSBS Department Social Broadcast</span>
+              <span class="dept-badge-pill">CSBS Department Only</span>
             </div>
 
             <!-- Multi-Platform Selection Toggles -->
-            <label style="display:block;font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--text-primary);margin-bottom:8px;">
+            <label class="field-label-main">
               Select Target Platforms (Multi-Select):
+              <span class="field-hint">Same unified content will be broadcast to all selected channels</span>
             </label>
             <div class="platform-toggles-grid">
               <button type="button" class="platform-toggle-btn selected" data-platform="youtube" onclick="togglePlatform(this, 'youtube')">
@@ -413,8 +414,8 @@
               <input
                 type="text"
                 id="postTitle"
-                placeholder="e.g. 15 CSBS Students Placed at Zoho & TCS Digital Drives!"
-                value="Outstanding Campus Placement Milestone — CSBS Batch 2023-2027"
+                placeholder="e.g. CSBS Department National Symposium on Applied AI & Business Systems"
+                value="National Symposium on Applied AI & Enterprise Business Systems — CSBS Department"
                 oninput="handleContentInput()"
                 required
               >
@@ -423,13 +424,15 @@
             <!-- Department Category -->
             <div class="social-field">
               <label>Department Category</label>
-              <select id="postCategory" onchange="handleContentInput()">
-                <option value="Placement Achievement" selected>🏆 Placement Milestone / Offer Letters</option>
-                <option value="Department Workshop">💡 Department Workshop / Symposium</option>
-                <option value="Student Project">🚀 Student Project / Hackathon Win</option>
-                <option value="Faculty Achievement">🎖️ Faculty Milestone / Research Publication</option>
-                <option value="Guest Lecture">🎤 Industry Guest Lecture / Expert Talk</option>
-                <option value="General Announcement">📢 Department Announcement</option>
+              <select id="postCategory" onchange="handleCategoryChange(this.value)">
+                <option value="Department Symposium" selected>💡 Department Symposium & Technical Events</option>
+                <option value="Student Innovation">🚀 Student Hackathons, Projects & Competitions</option>
+                <option value="Placement Milestone">💼 Placement & Internship Milestones (CSBS Cohorts)</option>
+                <option value="Industry MoU">🤝 Industry MoUs & Industrial Visits</option>
+                <option value="Academic Excellence">🎓 Academic Excellence & Anna University Honors</option>
+                <option value="Faculty Research">🔬 Faculty Research, Patents & Publications</option>
+                <option value="Guest Lecture">🎤 Industry Guest Lectures & Expert Mentorship</option>
+                <option value="Department Notice">📢 Department Circulars & Student Notices</option>
               </select>
             </div>
 
@@ -438,7 +441,7 @@
               <div class="media-field-header">
                 <label>Media / Photograph / Video</label>
                 <span class="media-type-indicator" id="mediaTypeBadge">
-                  <i class="fa-solid fa-photo-film"></i> Photo or Video
+                  <i class="fa-solid fa-camera"></i> Photo Selected
                 </span>
               </div>
 
@@ -456,8 +459,8 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i>
                   </div>
                   <div class="media-drop-text">
-                    <p class="media-drop-main"><strong>Click to upload</strong> Photograph or Video</p>
-                    <p class="media-drop-sub">JPG, PNG, WebP (Images) or MP4, WebM, MOV (Videos up to 50MB)</p>
+                    <p class="media-drop-main"><strong>Click to upload</strong> Department Photograph or Video</p>
+                    <p class="media-drop-sub">JPG, PNG, WebP (Photos) or MP4, WebM, MOV (Playable Videos up to 50MB)</p>
                   </div>
                 </div>
               </div>
@@ -476,13 +479,13 @@
                 </button>
               </div>
 
-              <!-- Preset / Fallback Selection -->
+              <!-- Preset Selection -->
               <div class="media-preset-row">
-                <span>Or select college asset:</span>
+                <span>Or select CSBS asset:</span>
                 <select id="postMediaSelect" onchange="handlePresetMediaSelect(this.value)">
-                  <option value="clg_logo.jpg" selected>🏛️ RIT Campus Aerial View</option>
-                  <option value="csbs_logo.png">💻 CSBS Department Official Crest</option>
-                  <option value="admin.png">🎓 Department Placement Drive Banner</option>
+                  <option value="csbs_logo.png" selected>💻 CSBS Department Official Crest</option>
+                  <option value="clg_logo.jpg">🏛️ Campus Aerial View</option>
+                  <option value="admin.png">🎓 CSBS Placement & Achievement Banner</option>
                   <option value="rit_logo.png">🛡️ Ramco Institute of Technology Insignia</option>
                   <option value="custom">🌐 Custom Media URL...</option>
                 </select>
@@ -493,87 +496,49 @@
                 id="postMediaCustomUrl"
                 class="form-hidden"
                 style="margin-top:8px;"
-                placeholder="Enter custom image/video URL (e.g. https://...)"
+                placeholder="Enter custom image or video URL (e.g. https://...)"
                 oninput="handleContentInput()"
               >
             </div>
 
-            <!-- Content Description & Auto-Generator -->
+            <!-- Content Description & Auto-Enhancer -->
             <div class="social-field">
               <div class="content-field-header">
                 <label>Announcement Details / Description</label>
-                <button type="button" class="btn-auto-magic" id="btnAutoMagic" onclick="autoGenerateAllCaptions(true)" title="Auto-generate optimized posts for YouTube, LinkedIn, Instagram & Facebook">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Generate Platform Captions
+                <button type="button" class="btn-auto-magic" id="btnAutoMagic" onclick="autoEnhanceContent(true)" title="Auto-format and polish content for CSBS department broadcast">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Format Department Text
                 </button>
               </div>
               <textarea
                 id="postContent"
-                placeholder="Write the department post details..."
+                placeholder="Write the CSBS department announcement details..."
                 oninput="handleContentInput()"
                 required
-              >Proud to share that our department students have successfully cleared the technical evaluations for premium engineering roles! Special appreciation to the placement training coordinators and faculty mentors for their continuous guidance.</textarea>
-            </div>
-
-            <!-- Platform-Specific Tailored Captions Expander -->
-            <div class="tailored-captions-box">
-              <div class="tailored-header" onclick="toggleTailoredBox()">
-                <div class="tailored-title">
-                  <i class="fa-solid fa-sliders"></i>
-                  <span>Platform-Specific Auto-Generated Text (Instagram, Facebook, LinkedIn, YouTube)</span>
-                </div>
-                <i class="fa-solid fa-chevron-down tailored-arrow" id="tailoredBoxArrow"></i>
-              </div>
-              <div id="tailoredBoxBody" class="tailored-body form-hidden">
-                <div class="tailored-tabs">
-                  <button type="button" class="tailored-tab-btn active" onclick="switchTailoredTab('ig', this)">
-                    <i class="fa-brands fa-instagram"></i> Instagram
-                  </button>
-                  <button type="button" class="tailored-tab-btn" onclick="switchTailoredTab('fb', this)">
-                    <i class="fa-brands fa-facebook"></i> Facebook
-                  </button>
-                  <button type="button" class="tailored-tab-btn" onclick="switchTailoredTab('li', this)">
-                    <i class="fa-brands fa-linkedin"></i> LinkedIn
-                  </button>
-                  <button type="button" class="tailored-tab-btn" onclick="switchTailoredTab('yt', this)">
-                    <i class="fa-brands fa-youtube"></i> YouTube
-                  </button>
-                </div>
-                <!-- Instagram Custom Area -->
-                <div id="tailoredTabIg" class="tailored-pane active">
-                  <label>Instagram Caption (Auto-Generated with Hook & Tags):</label>
-                  <textarea id="customCaptionIg" oninput="updateLivePreviews()"></textarea>
-                </div>
-                <!-- Facebook Custom Area -->
-                <div id="tailoredTabFb" class="tailored-pane form-hidden">
-                  <label>Facebook Post (Auto-Generated Campus Community Text):</label>
-                  <textarea id="customCaptionFb" oninput="updateLivePreviews()"></textarea>
-                </div>
-                <!-- LinkedIn Custom Area -->
-                <div id="tailoredTabLi" class="tailored-pane form-hidden">
-                  <label>LinkedIn Article (Executive Professional Tone):</label>
-                  <textarea id="customCaptionLi" oninput="updateLivePreviews()"></textarea>
-                </div>
-                <!-- YouTube Custom Area -->
-                <div id="tailoredTabYt" class="tailored-pane form-hidden">
-                  <label>YouTube Description & Chapter Tags:</label>
-                  <textarea id="customCaptionYt" oninput="updateLivePreviews()"></textarea>
-                </div>
+              >The Department of Computer Science and Business Systems (CSBS) is proud to announce the National Symposium on Applied AI & Enterprise Business Systems. Featuring distinguished keynote speakers from premier IT corporations, hands-on coding hackathons, technical paper tracks, and student project exhibitions. Open to all engineering students!</textarea>
+              <div class="same-content-notice">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>This identical broadcast content is automatically delivered across all selected platforms.</span>
               </div>
             </div>
 
-            <!-- Hashtags -->
+            <!-- Department-Specific Hashtags -->
             <div class="social-field" style="margin-top:14px;">
-              <label>Hashtags</label>
+              <div class="hashtags-header">
+                <label>Department Hashtags</label>
+                <button type="button" class="btn-reset-tags" onclick="resetDepartmentHashtags()" title="Reset to suggested department tags">
+                  <i class="fa-solid fa-rotate-left"></i> Reset Tags
+                </button>
+              </div>
               <input
                 type="text"
                 id="postHashtags"
-                value="#RamcoInstituteOfTechnology #CSBS #EngineeringExcellence #Placements2026 #FutureReady"
+                value="#RITCSBS #CSBSDepartment #ComputerScienceAndBusinessSystems #BusinessWithTech #CSBSSymposium #EngineeringExcellence"
                 oninput="handleContentInput()"
               >
             </div>
 
             <button type="button" class="publish-submit-btn" id="publishBtn" onclick="handlePublishPost()">
-              <i class="fa-solid fa-paper-plane"></i> Publish to Selected Platforms
+              <i class="fa-solid fa-paper-plane"></i> Broadcast to Selected Platforms
             </button>
           </div>
 
@@ -582,7 +547,7 @@
             <div class="panel-title">
               <span><i class="fa-solid fa-eye"></i> Live Multi-Platform Preview</span>
               <span id="previewLiveBadge" class="preview-mode-tag">
-                <i class="fa-solid fa-image"></i> Photo Preview
+                <i class="fa-solid fa-image"></i> Photo Broadcast
               </span>
             </div>
 
@@ -604,20 +569,23 @@
 
             <!-- Mockup Frame 1: YouTube -->
             <div id="previewYouTube" class="preview-card-frame yt-preview-card">
-              <div class="yt-video-thumb" id="ytMediaContainer">
-                <img id="ytMockImg" src="clg_logo.jpg" alt="Video Thumbnail">
+              <div class="yt-video-thumb" id="ytMediaContainer" onclick="handlePreviewMediaClick('youtube')">
+                <img id="ytMockImg" src="csbs_logo.png" alt="Broadcast Image">
                 <video id="ytMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
-                <div class="yt-play-icon" id="ytPlayIcon"><i class="fa-solid fa-play"></i></div>
+                <!-- Play symbol ONLY visible when video is uploaded -->
+                <div class="yt-play-icon form-hidden" id="ytPlayIcon" onclick="playMockVideo(event, 'ytMockVideo')">
+                  <i class="fa-solid fa-play"></i>
+                </div>
               </div>
               <div class="yt-video-details">
-                <div class="yt-channel-avatar">RIT</div>
+                <div class="yt-channel-avatar">CSBS</div>
                 <div class="yt-video-meta">
-                  <h4 id="ytMockTitle">Outstanding Campus Placement Milestone — CSBS Batch 2023-2027</h4>
-                  <p>Ramco Institute of Technology &bull; 1.4K views &bull; Just now</p>
+                  <h4 id="ytMockTitle">National Symposium on Applied AI & Enterprise Business Systems</h4>
+                  <p>Department of CSBS &bull; Ramco Institute of Technology &bull; Just now</p>
                 </div>
               </div>
               <div class="yt-description-box" id="ytMockDescBox">
-                <div class="yt-desc-header">Description (Auto-Formatted):</div>
+                <div class="yt-desc-header"><i class="fa-solid fa-align-left"></i> Broadcast Description (Delivered Content):</div>
                 <div id="ytMockDesc" class="yt-desc-content"></div>
               </div>
             </div>
@@ -625,15 +593,15 @@
             <!-- Mockup Frame 2: LinkedIn -->
             <div id="previewLinkedIn" class="preview-card-frame li-preview-card form-hidden">
               <div class="li-header">
-                <div class="li-avatar"><i class="fa-solid fa-building-columns"></i></div>
+                <div class="li-avatar"><i class="fa-solid fa-graduation-cap"></i></div>
                 <div class="li-info">
-                  <h5>Department of CSBS — Ramco Institute of Technology</h5>
-                  <p>Higher Education &bull; 5,200 followers &bull; Just now</p>
+                  <h5>Department of Computer Science and Business Systems (CSBS)</h5>
+                  <p>Ramco Institute of Technology &bull; Official Department Update &bull; Just now</p>
                 </div>
               </div>
               <div class="li-body-text" id="liMockText"></div>
-              <div class="li-media-box" id="liMediaContainer">
-                <img id="liMockImg" src="clg_logo.jpg" alt="LinkedIn Media">
+              <div class="li-media-box" id="liMediaContainer" onclick="handlePreviewMediaClick('linkedin')">
+                <img id="liMockImg" src="csbs_logo.png" alt="LinkedIn Media">
                 <video id="liMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
               </div>
               <div class="li-actions-bar">
@@ -648,13 +616,13 @@
             <div id="previewInstagram" class="preview-card-frame ig-preview-card form-hidden">
               <div class="ig-header">
                 <div class="ig-avatar">
-                  <div class="ig-avatar-inner">RIT</div>
+                  <div class="ig-avatar-inner">CSBS</div>
                 </div>
                 <div class="ig-username">rit_csbs_official</div>
                 <div class="ig-dots"><i class="fa-solid fa-ellipsis"></i></div>
               </div>
-              <div class="ig-media-box" id="igMediaContainer">
-                <img id="igMockImg" src="clg_logo.jpg" alt="Instagram Media">
+              <div class="ig-media-box" id="igMediaContainer" onclick="handlePreviewMediaClick('instagram')">
+                <img id="igMockImg" src="csbs_logo.png" alt="Instagram Media">
                 <video id="igMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
               </div>
               <div class="ig-actions-bar">
@@ -665,7 +633,7 @@
                 </div>
                 <i class="fa-regular fa-bookmark"></i>
               </div>
-              <div class="ig-likes-count">Liked by <strong>dr_vijayalakshmi</strong> and <strong>142 others</strong></div>
+              <div class="ig-likes-count">Liked by <strong>dr_vijayalakshmi</strong> and <strong>185 others</strong></div>
               <div class="ig-caption">
                 <strong>rit_csbs_official</strong>
                 <span id="igMockCaption"></span>
@@ -675,20 +643,20 @@
             <!-- Mockup Frame 4: Facebook -->
             <div id="previewFacebook" class="preview-card-frame fb-preview-card form-hidden">
               <div class="fb-header">
-                <div class="fb-avatar"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="fb-avatar"><i class="fa-solid fa-laptop-code"></i></div>
                 <div class="fb-meta">
-                  <h5>Ramco Institute of Technology — CSBS Department</h5>
-                  <p>Just now &bull; <i class="fa-solid fa-earth-americas"></i> Public</p>
+                  <h5>Department of CSBS — Ramco Institute of Technology</h5>
+                  <p>Just now &bull; <i class="fa-solid fa-earth-americas"></i> Public Broadcast</p>
                 </div>
               </div>
               <div class="fb-content" id="fbMockContent"></div>
-              <div class="fb-media" id="fbMediaContainer">
-                <img id="fbMockImg" src="clg_logo.jpg" alt="Facebook Media">
+              <div class="fb-media" id="fbMediaContainer" onclick="handlePreviewMediaClick('facebook')">
+                <img id="fbMockImg" src="csbs_logo.png" alt="Facebook Media">
                 <video id="fbMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
               </div>
               <div class="fb-engagement-stats">
-                <span><i class="fa-solid fa-thumbs-up" style="color:#1877f2;"></i> <i class="fa-solid fa-heart" style="color:#ef4444;"></i> 184</span>
-                <span>28 comments &bull; 15 shares</span>
+                <span><i class="fa-solid fa-thumbs-up" style="color:#1877f2;"></i> <i class="fa-solid fa-heart" style="color:#ef4444;"></i> 210</span>
+                <span>34 comments &bull; 19 shares</span>
               </div>
               <div class="fb-reactions">
                 <span><i class="fa-regular fa-thumbs-up" style="color:#1877f2;"></i> Like</span>
@@ -700,19 +668,50 @@
           </div>
         </div>
 
-        <!-- Published Posts Feed Stream -->
-        <div class="social-feed-section">
-          <div class="feed-header">
-            <div class="feed-title">
-              <i class="fa-solid fa-rss"></i>
-              <span>Published Department Broadcasts</span>
+        <!-- =======================================================
+             PAST BROADCASTS & DELIVERED CONTENT AUDIT LOG
+             Shows: Whom it was delivered by, When delivered, What content delivered, Where delivered
+             ======================================================= -->
+        <div class="social-feed-section" id="broadcastHistorySection">
+          <div class="feed-header-main">
+            <div>
+              <div class="feed-title">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Department Broadcast History &amp; Delivered Content</span>
+              </div>
+              <p class="feed-subtitle">Complete audit record of announcements broadcast by CSBS department staff, including author, exact delivery time, platforms, and delivered content.</p>
             </div>
+
+            <!-- Quick Stats Pills -->
+            <div class="feed-stats-bar">
+              <div class="feed-stat-item">
+                <span class="stat-num" id="statTotalPosts">0</span>
+                <span class="stat-lbl">Broadcasts</span>
+              </div>
+              <div class="feed-stat-item">
+                <span class="stat-num" id="statTotalVideos">0</span>
+                <span class="stat-lbl">Videos</span>
+              </div>
+              <div class="feed-stat-item">
+                <span class="stat-num" id="statTotalPhotos">0</span>
+                <span class="stat-lbl">Photos</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter & Search Controls -->
+          <div class="feed-controls-row">
             <div class="feed-filter-chips">
               <button type="button" class="feed-filter-btn active" onclick="filterFeed('all', this)">All Platforms</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('youtube', this)">YouTube</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('linkedin', this)">LinkedIn</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('instagram', this)">Instagram</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('facebook', this)">Facebook</button>
+              <button type="button" class="feed-filter-btn" onclick="filterFeed('youtube', this)"><i class="fa-brands fa-youtube" style="color:#dc2626;"></i> YouTube</button>
+              <button type="button" class="feed-filter-btn" onclick="filterFeed('linkedin', this)"><i class="fa-brands fa-linkedin" style="color:#0a66c2;"></i> LinkedIn</button>
+              <button type="button" class="feed-filter-btn" onclick="filterFeed('instagram', this)"><i class="fa-brands fa-instagram" style="color:#c13584;"></i> Instagram</button>
+              <button type="button" class="feed-filter-btn" onclick="filterFeed('facebook', this)"><i class="fa-brands fa-facebook" style="color:#1877f2;"></i> Facebook</button>
+            </div>
+
+            <div class="feed-search-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="feedSearchInput" placeholder="Search delivered content or author..." oninput="handleFeedSearch(this.value)">
             </div>
           </div>
 
@@ -721,6 +720,67 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- =======================================================
+         DELIVERY DETAILS MODAL (Inspect full delivered content)
+         ======================================================= -->
+    <div id="deliveryModal" class="delivery-modal-backdrop form-hidden" onclick="closeDeliveryModal(event)">
+      <div class="delivery-modal-content" onclick="event.stopPropagation()">
+        <div class="delivery-modal-header">
+          <div class="modal-title-wrap">
+            <i class="fa-solid fa-file-lines"></i>
+            <div>
+              <h4 id="modalPostTitle">Delivered Broadcast Details</h4>
+              <span id="modalCategoryBadge" class="modal-cat-tag">Symposium</span>
+            </div>
+          </div>
+          <button type="button" class="btn-modal-close" onclick="closeDeliveryModal()" title="Close Details">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="delivery-modal-body">
+          <div class="modal-meta-grid">
+            <div class="modal-meta-item">
+              <span class="meta-lbl"><i class="fa-solid fa-user-tie"></i> Delivered By:</span>
+              <strong id="modalAuthor">Dr. K. Vijayalakshmi (HOD)</strong>
+              <small id="modalDesignation">Head of Department — CSBS</small>
+            </div>
+            <div class="modal-meta-item">
+              <span class="meta-lbl"><i class="fa-solid fa-calendar-check"></i> Delivered At:</span>
+              <strong id="modalTimestamp">Monday, Sep 14, 2026 • 10:45 AM</strong>
+              <small id="modalRelativeTime">2 days ago</small>
+            </div>
+            <div class="modal-meta-item" style="grid-column: 1 / -1;">
+              <span class="meta-lbl"><i class="fa-solid fa-share-nodes"></i> Target Platforms Reached:</span>
+              <div id="modalPlatforms" class="modal-platforms-row"></div>
+            </div>
+          </div>
+
+          <div class="modal-content-section">
+            <label class="meta-lbl"><i class="fa-solid fa-bullhorn"></i> Delivered Content Text:</label>
+            <div id="modalBodyText" class="modal-content-box"></div>
+          </div>
+
+          <div class="modal-content-section">
+            <label class="meta-lbl"><i class="fa-solid fa-hashtag"></i> Delivered Hashtags:</label>
+            <div id="modalHashtags" class="modal-tags-box"></div>
+          </div>
+
+          <div id="modalMediaSection" class="modal-media-wrap form-hidden">
+            <label class="meta-lbl"><i class="fa-solid fa-photo-film"></i> Attached Media:</label>
+            <div id="modalMediaDisplay" class="modal-media-box"></div>
+          </div>
+        </div>
+        <div class="delivery-modal-footer">
+          <button type="button" class="btn-copy-modal" onclick="copyModalContent()">
+            <i class="fa-solid fa-copy"></i> Copy Delivered Text
+          </button>
+          <button type="button" class="btn-close-modal" onclick="closeDeliveryModal()">
+            Close
+          </button>
+        </div>
       </div>
     </div>
 
