@@ -5,17 +5,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 :root {
-  /* Core Palette - Royal Purple & Electric Violet */
-  --primary:        #2e1065; /* Royal Deep Violet */
-  --primary-light:  #3b0764; /* Imperial Rich Purple */
-  --accent:         #7c3aed; /* Vivid Electric Violet */
-  --accent-hover:   #6d28d9; /* Deep Electric Violet */
-  --accent-light:   #f5f3ff; /* Soft Lilac Mist */
-  --accent-glow:    rgba(124, 58, 237, 0.28);
-  --gold:           #a855f7; /* Radiant Purple Accent */
-  --gold-light:     #ede9fe; /* Pale Lavender Tint */
-  --beige:          #f5f3ff; /* Soft Lavender Light */
-  --beige-border:   #ddd6fe; /* Lavender Violet Border */
+  /* Core Palette - Professional Light Purple & Lavender (#AB47BC & #CE93D8) */
+  --primary:        #AB47BC; /* Primary Purple (colors.purple.shade400) */
+  --primary-light:  #8E24AA; /* Rich Purple Accent */
+  --accent:         #AB47BC; /* Primary Purple Accent */
+  --accent-hover:   #8E24AA; /* Hover State */
+  --accent-light:   #F3E5F5; /* Very Light Purple Mist */
+  --accent-glow:    rgba(171, 71, 188, 0.28);
+  --gold:           #CE93D8; /* Secondary Light Purple (colors.purple.shade200) */
+  --gold-light:     #F3E5F5; /* Pale Lavender Tint */
+  --beige:          #FAF5FB; /* Soft Lavender Light */
+  --beige-border:   #E1BEE7; /* Clean Lavender Border */
 
   /* Status Colors */
   --success:        #15803d;
@@ -27,21 +27,21 @@
   --danger:         #b91c1c;
   --danger-bg:      #fef2f2;
   --danger-border:  #fca5a5;
-  --purple:         #7c3aed;
-  --purple-bg:      #faf5ff;
+  --purple:         #AB47BC;
+  --purple-bg:      #FAF5FB;
   --orange:         #c2410c;
   --orange-bg:      #fff7ed;
 
-  /* Neutrals - Clean Violet Architecture */
-  --bg-main:        #f8f7fc;
+  /* Neutrals - Clean Architecture */
+  --bg-main:        #FAF5FB;
   --bg-card:        #ffffff;
-  --border:         #e9d5ff;
-  --border-focus:   #7c3aed;
+  --border:         #E1BEE7;
+  --border-focus:   #AB47BC;
 
   /* Text */
-  --text-primary:   #1e1b4b;
-  --text-secondary: #4c1d95;
-  --text-muted:     #6b21a8;
+  --text-primary:   #2D2438;
+  --text-secondary: #4A3C59;
+  --text-muted:     #7B6E8B;
 
   /* Radii */
   --r-sm:  6px;
@@ -91,7 +91,7 @@ img { max-width: 100%; display: block; }
    ============================================= */
 .college-header-wrapper {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  border-bottom: 3px solid var(--accent);
+  border-bottom: 3px solid var(--gold);
   position: sticky;
   top: 0;
   z-index: 100;

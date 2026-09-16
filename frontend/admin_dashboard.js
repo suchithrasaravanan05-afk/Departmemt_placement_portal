@@ -286,33 +286,38 @@ async function loadChartPlacedNonPlaced() {
 
 function updatePlacedNonPlacedChart() {
   const filterVal = el('filterPlacedNonPlacedYear')?.value || 'all';
-  let rows = _analyticsPlacedNonPlacedData;
-  if (filterVal !== 'all') {
-    rows = rows.filter(r => String(r.year) === filterVal);
-  }
-  renderPlacedNonPlacedChart(rows, filterVal);
+  renderPlacedNonPlacedChart(_analyticsPlacedNonPlacedData, filterVal);
 }
 
 function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
   const canvas = el('chartPlacedNonPlaced');
   if (!canvas) return;
 
-  const yearLabels = getYearLabels();
+  const defYearNum = portalSettings?.default_year_num || 4;
+  const passedYearNum = 5;
 
-  let labels, placed, nonPlaced;
+  // Requirement: The graph must show ONLY Default Year and Passed Out
+  const targetYears = [defYearNum, passedYearNum];
+  let chartRows = (rows || []).filter(r => targetYears.includes(parseInt(r.year)));
 
-  if (filterVal !== 'all' && rows.length === 1) {
-    const r = rows[0];
-    const p = parseInt(r.placed_count || 0);
-    const t = parseInt(r.total_count || 0);
-    labels    = [yearLabels[r.year] || `Year ${r.year}`];
-    placed    = [p];
-    nonPlaced = [Math.max(0, t - p)];
-  } else {
-    labels    = rows.map(r => yearLabels[r.year] || `Year ${r.year}`);
-    placed    = rows.map(r => parseInt(r.placed_count || 0));
-    nonPlaced = rows.map(r => Math.max(0, parseInt(r.total_count || 0) - parseInt(r.placed_count || 0)));
+  if (filterVal !== 'all') {
+    const filterNum = parseInt(filterVal);
+    chartRows = chartRows.filter(r => parseInt(r.year) === filterNum);
   }
+
+  // Consistent ordering: Default Year first, then Passed Out
+  chartRows.sort((a, b) => {
+    if (parseInt(a.year) === defYearNum) return -1;
+    if (parseInt(b.year) === defYearNum) return 1;
+    return 0;
+  });
+
+  const labels = chartRows.map(r => {
+    return parseInt(r.year) === defYearNum ? 'Default Year' : 'Passed Out';
+  });
+
+  const placed = chartRows.map(r => parseInt(r.placed_count || 0));
+  const nonPlaced = chartRows.map(r => Math.max(0, parseInt(r.total_count || 0) - parseInt(r.placed_count || 0)));
 
   // Update Stat Pills
   const totalPlaced = placed.reduce((s, v) => s + v, 0);
@@ -333,24 +338,24 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
         {
           label: 'Placed Students',
           data: placed,
-          backgroundColor: 'rgba(37, 99, 235, 0.88)',
-          borderColor: '#2563eb',
+          backgroundColor: '#AB47BC', // Primary purple.shade400
+          borderColor: '#8E24AA',
           borderWidth: 1.5,
           borderRadius: 8,
           borderSkipped: false,
-          barPercentage: 0.55,
-          categoryPercentage: 0.7
+          barPercentage: 0.45,
+          categoryPercentage: 0.6
         },
         {
           label: 'Non-Placed Students',
           data: nonPlaced,
-          backgroundColor: 'rgba(226, 232, 240, 0.95)',
-          borderColor: '#cbd5e1',
+          backgroundColor: '#E1BEE7', // Supporting light purple tint (shade100/200)
+          borderColor: '#CE93D8',     // Secondary purple.shade200
           borderWidth: 1.5,
           borderRadius: 8,
           borderSkipped: false,
-          barPercentage: 0.55,
-          categoryPercentage: 0.7
+          barPercentage: 0.45,
+          categoryPercentage: 0.6
         }
       ]
     },
@@ -360,7 +365,7 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#0f172a',
+          backgroundColor: '#2D2438',
           titleFont: { ...CHART_FONT, size: 12, weight: '700' },
           bodyFont: { ...CHART_FONT, size: 12 },
           padding: 10,
@@ -368,6 +373,15 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
           mode: 'index',
           intersect: false,
           callbacks: {
+            title: items => {
+              const idx = items[0]?.dataIndex;
+              const r = chartRows[idx];
+              if (!r) return items[0]?.label || '';
+              if (parseInt(r.year) === defYearNum) {
+                return `Default Year (${portalSettings?.default_year || '2023-2027'})`;
+              }
+              return 'Passed Out (2022-2026)';
+            },
             footer: items => `Total: ${items.reduce((s,i)=>s+i.parsed.y,0)} students`
           }
         }
@@ -375,12 +389,12 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { font: { ...CHART_FONT, size: 11, weight: '700' }, color: '#475569' }
+          ticks: { font: { ...CHART_FONT, size: 12, weight: '700' }, color: '#4A3C59' }
         },
         y: {
           beginAtZero: true,
-          grid: { color: GRID_COLOR },
-          ticks: { font: { ...CHART_FONT, size: 11 }, color: '#94a3b8', stepSize: 1, precision: 0 }
+          grid: { color: 'rgba(206, 147, 216, 0.25)' },
+          ticks: { font: { ...CHART_FONT, size: 11 }, color: '#756788', stepSize: 1, precision: 0 }
         }
       },
       animation: { duration: 750, easing: 'easeInOutQuart' }
@@ -587,8 +601,8 @@ async function loadChartTechNonTechYear() {
           {
             label: 'Technical Roles',
             data: tech,
-            backgroundColor: 'rgba(99, 102, 241, 0.88)',
-            borderColor: '#6366f1',
+            backgroundColor: '#AB47BC',
+            borderColor: '#8E24AA',
             borderWidth: 1.5,
             borderRadius: 6,
             borderSkipped: false,
@@ -598,8 +612,8 @@ async function loadChartTechNonTechYear() {
           {
             label: 'Non-Technical Roles',
             data: nonTech,
-            backgroundColor: 'rgba(251, 113, 133, 0.88)',
-            borderColor: '#fb7185',
+            backgroundColor: '#E1BEE7',
+            borderColor: '#CE93D8',
             borderWidth: 1.5,
             borderRadius: 6,
             borderSkipped: false,
@@ -614,7 +628,7 @@ async function loadChartTechNonTechYear() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#0f172a',
+            backgroundColor: '#2D2438',
             titleFont: { ...CHART_FONT, size: 12, weight: '700' },
             bodyFont: { ...CHART_FONT, size: 12 },
             padding: 10,
@@ -2953,13 +2967,19 @@ function populateAllAdminBatchDropdowns() {
     if (!sel) return;
     const prevVal = sel.value;
 
-    const isFilter = (id !== 'addStudentYear' && id !== 'editStudentYear');
-    let html = '';
     if (id === 'filterPlacedNonPlacedYear') {
-      html = '<option value="all">All Batches</option>';
-    } else if (isFilter) {
-      html = '<option value="">All Batches</option>';
+      const defBatch = portalSettings.batches.find(b => b.name === defaultBatchName || b.year_num === defaultYearNum) || { year_num: 4, name: '2023-2027' };
+      const passedBatch = portalSettings.batches.find(b => b.status === 'passed_out' || b.year_num === 5) || { year_num: 5, name: '2022-2026' };
+      sel.innerHTML = `
+        <option value="all" ${prevVal === 'all' || !prevVal ? 'selected' : ''}>Default vs Passed Out</option>
+        <option value="${defBatch.year_num}" ${prevVal === String(defBatch.year_num) ? 'selected' : ''}>${escapeHtml(defBatch.name)} (Default Year)</option>
+        <option value="${passedBatch.year_num}" ${prevVal === String(passedBatch.year_num) ? 'selected' : ''}>${escapeHtml(passedBatch.name)} (Passed Out)</option>
+      `;
+      return;
     }
+
+    const isFilter = (id !== 'addStudentYear' && id !== 'editStudentYear');
+    let html = isFilter ? '<option value="">All Batches</option>' : '';
 
     // Sort batches by year_num descending (5, 4, 3, 2, 1)
     const sorted = [...portalSettings.batches].sort((a, b) => (b.year_num || 0) - (a.year_num || 0));
