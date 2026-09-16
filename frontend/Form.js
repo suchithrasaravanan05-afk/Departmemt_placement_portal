@@ -112,7 +112,9 @@ function backToServiceSelect() {
   const selectBox = document.getElementById('serviceSelectCard');
   const unifiedCard = document.getElementById('unifiedAuthCard');
   const studioSection = document.getElementById('socialStudioSection');
+  const splitLayout = document.getElementById('landingSplitLayout');
 
+  if (splitLayout) splitLayout.classList.remove('form-hidden');
   if (unifiedCard) unifiedCard.classList.add('form-hidden');
   if (studioSection) studioSection.classList.add('form-hidden');
   if (selectBox) {
@@ -139,6 +141,7 @@ function handlePortalSwitch(portal, isConfirmedLogin = false) {
   const unifiedCard = document.getElementById('unifiedAuthCard');
   const studioSection = document.getElementById('socialStudioSection');
   const selectBox = document.getElementById('serviceSelectCard');
+  const splitLayout = document.getElementById('landingSplitLayout');
 
   // Update active service banner in the login card
   const activeIcon = document.getElementById('activeServiceIcon');
@@ -151,7 +154,7 @@ function handlePortalSwitch(portal, isConfirmedLogin = false) {
   if (activeName) {
     activeName.textContent = portal === 'social'
       ? 'Department Social Media Hub'
-      : 'Placement Portal (Student / Admin)';
+      : 'Placement Portal (Student / Faculty / Admin)';
   }
 
   if (portal === 'social') {
@@ -167,13 +170,15 @@ function handlePortalSwitch(portal, isConfirmedLogin = false) {
 
     const staffUser = getStoredStaffUser();
     if (staffUser && ['faculty', 'hod', 'admin'].includes(staffUser.role?.toLowerCase())) {
-      // Authenticated staff member -> display Social Media Studio
+      // Authenticated staff member -> display Social Media Studio across full width
+      if (splitLayout) splitLayout.classList.add('form-hidden');
       if (selectBox) selectBox.classList.add('form-hidden');
       if (unifiedCard) unifiedCard.classList.add('form-hidden');
       if (studioSection) studioSection.classList.remove('form-hidden');
       checkSocialAuthSession();
     } else {
       // Show Social login in the login card
+      if (splitLayout) splitLayout.classList.remove('form-hidden');
       if (isConfirmedLogin || (unifiedCard && !unifiedCard.classList.contains('form-hidden'))) {
         if (selectBox) selectBox.classList.add('form-hidden');
         if (unifiedCard) unifiedCard.classList.remove('form-hidden');
@@ -190,6 +195,7 @@ function handlePortalSwitch(portal, isConfirmedLogin = false) {
     updateLivePreviews();
   } else {
     // Placement Portal state
+    if (splitLayout) splitLayout.classList.remove('form-hidden');
     if (tabSocial) {
       tabSocial.classList.remove('active');
       tabSocial.setAttribute('aria-selected', 'false');
@@ -256,7 +262,8 @@ function safeParseUser() {
 }
 
 function redirect(role) {
-  window.location.href = role === 'admin' ? 'admin_dashboard.html' : 'student_dashboard.html';
+  const r = (role || '').toLowerCase();
+  window.location.href = (r === 'admin' || r === 'faculty' || r === 'hod') ? 'admin_dashboard.html' : 'student_dashboard.html';
 }
 
 // =============================================
@@ -266,13 +273,18 @@ function setRole(role) {
   selectedRole = role;
 
   const btnStudent = document.getElementById('btnRoleStudent');
-  const btnAdmin = document.getElementById('btnRoleAdmin');
-  const roleIcon = document.getElementById('roleHeaderIcon');
+  const btnFaculty = document.getElementById('btnRoleFaculty');
+  const btnAdmin   = document.getElementById('btnRoleAdmin');
+  const roleIcon   = document.getElementById('roleHeaderIcon');
 
   if (btnStudent) btnStudent.classList.toggle('active', role === 'student');
-  if (btnAdmin) btnAdmin.classList.toggle('active', role === 'admin');
+  if (btnFaculty) btnFaculty.classList.toggle('active', role === 'faculty');
+  if (btnAdmin)   btnAdmin.classList.toggle('active', role === 'admin');
+
   if (roleIcon) {
-    roleIcon.className = role === 'admin' ? 'fa-solid fa-user-shield' : 'fa-solid fa-user-graduate';
+    if (role === 'admin') roleIcon.className = 'fa-solid fa-user-shield';
+    else if (role === 'faculty') roleIcon.className = 'fa-solid fa-chalkboard-user';
+    else roleIcon.className = 'fa-solid fa-user-graduate';
   }
 
   updateUI();
@@ -280,48 +292,88 @@ function setRole(role) {
 }
 
 function updateUI() {
-  const isAdmin = selectedRole === 'admin';
+  const isFaculty = selectedRole === 'faculty';
+  const isAdmin   = selectedRole === 'admin';
+  const isStudent = selectedRole === 'student';
 
   const formTitle = document.getElementById('formTitle');
   if (formTitle) {
-    formTitle.innerText = isAdmin
-      ? (isRegisterMode ? 'Placement Admin Registration' : 'Placement Admin Login')
-      : (isRegisterMode ? 'Student Registration' : 'Student Login');
+    if (isFaculty) {
+      formTitle.innerText = isRegisterMode ? 'Faculty Registration' : 'Faculty Login';
+    } else if (isAdmin) {
+      formTitle.innerText = isRegisterMode ? 'Placement Admin Registration' : 'Placement Admin Login';
+    } else {
+      formTitle.innerText = isRegisterMode ? 'Student Registration' : 'Student Login';
+    }
   }
 
   const formSub = document.getElementById('formSub');
   if (formSub) {
-    formSub.innerText = isAdmin
-      ? (isRegisterMode ? 'Create admin placement portal account' : 'Sign in with your admin ID')
-      : (isRegisterMode ? 'Create student placement portal account' : 'Sign in with your register number');
+    if (isFaculty) {
+      formSub.innerText = isRegisterMode ? 'Create faculty placement portal account' : 'Sign in with your staff ID or email';
+    } else if (isAdmin) {
+      formSub.innerText = isRegisterMode ? 'Create admin placement portal account' : 'Sign in with your admin ID';
+    } else {
+      formSub.innerText = isRegisterMode ? 'Create student placement portal account' : 'Sign in with your register number';
+    }
   }
 
   const lblEmail = document.getElementById('lblLoginEmail');
   if (lblEmail) {
-    lblEmail.innerHTML = isAdmin
-      ? '<i class="fa-solid fa-user-shield" style="margin-right:4px;"></i> ADMIN ID'
-      : '<i class="fa-solid fa-id-card" style="margin-right:4px;"></i> REGISTER NUMBER';
+    if (isFaculty) {
+      lblEmail.innerHTML = '<i class="fa-solid fa-chalkboard-user" style="margin-right:4px;"></i> STAFF ID / OFFICIAL EMAIL';
+    } else if (isAdmin) {
+      lblEmail.innerHTML = '<i class="fa-solid fa-user-shield" style="margin-right:4px;"></i> ADMIN ID';
+    } else {
+      lblEmail.innerHTML = '<i class="fa-solid fa-id-card" style="margin-right:4px;"></i> REGISTER NUMBER';
+    }
   }
 
   const loginInput = document.getElementById('loginEmail');
-  const loginIcon = document.getElementById('loginInputIcon');
+  const loginIcon  = document.getElementById('loginInputIcon');
   if (loginInput) {
-    loginInput.placeholder = isAdmin ? 'Enter your admin ID (e.g. admin)' : 'Enter your 12-digit register number (e.g. 953623244001)';
-    loginInput.setAttribute('autocomplete', isAdmin ? 'username' : 'off');
+    if (isFaculty) {
+      loginInput.placeholder = 'Enter Staff ID or Email (e.g. faculty or faculty@rit.ac.in)';
+      loginInput.setAttribute('autocomplete', 'username');
+    } else if (isAdmin) {
+      loginInput.placeholder = 'Enter your admin ID (e.g. admin)';
+      loginInput.setAttribute('autocomplete', 'username');
+    } else {
+      loginInput.placeholder = 'Enter your 12-digit register number (e.g. 953623244001)';
+      loginInput.setAttribute('autocomplete', 'off');
+    }
   }
   if (loginIcon) {
-    loginIcon.className = isAdmin ? 'fa-solid fa-user-shield form-input-icon' : 'fa-solid fa-hashtag form-input-icon';
+    if (isFaculty) loginIcon.className = 'fa-solid fa-chalkboard-user form-input-icon';
+    else if (isAdmin) loginIcon.className = 'fa-solid fa-user-shield form-input-icon';
+    else loginIcon.className = 'fa-solid fa-hashtag form-input-icon';
   }
 
-  const grpReg = document.getElementById('grpRegisterNo');
-  const grpDetails = document.getElementById('grpStudentDetails');
-  if (grpReg) { grpReg.classList.toggle('form-hidden', isAdmin); }
-  if (grpDetails) { grpDetails.classList.toggle('form-hidden', isAdmin); }
+  // Registration Fields Visibility
+  const grpReg        = document.getElementById('grpRegisterNo');
+  const lblRegIdent   = document.getElementById('lblRegIdentifier');
+  const regIdentInput = document.getElementById('regRegisterNo');
+  const regIdentIcon  = document.getElementById('regIdentifierIcon');
+  const grpFacultyDes = document.getElementById('grpFacultyDesignation');
+  const grpStudentDet = document.getElementById('grpStudentDetails');
+  const grpFacultyPh  = document.getElementById('grpFacultyPhone');
 
-  const switchWrap = document.getElementById('switchAuthModeWrap');
-  if (switchWrap && isAdmin) {
-    // Keep switch option for admin registration or clear view
+  if (grpReg) {
+    grpReg.classList.toggle('form-hidden', isAdmin);
+    if (isFaculty) {
+      if (lblRegIdent) lblRegIdent.innerHTML = '<i class="fa-solid fa-id-badge" style="margin-right:4px;"></i> Staff / Faculty ID';
+      if (regIdentInput) regIdentInput.placeholder = 'e.g. FAC-CSBS-01';
+      if (regIdentIcon) regIdentIcon.className = 'fa-solid fa-id-badge form-input-icon';
+    } else {
+      if (lblRegIdent) lblRegIdent.innerHTML = '<i class="fa-solid fa-id-badge" style="margin-right:4px;"></i> Register Number <span style="color:#94a3b8;font-weight:500;">(12-digit)</span>';
+      if (regIdentInput) regIdentInput.placeholder = 'e.g. 953623244001';
+      if (regIdentIcon) regIdentIcon.className = 'fa-solid fa-hashtag form-input-icon';
+    }
   }
+
+  if (grpFacultyDes) grpFacultyDes.classList.toggle('form-hidden', !isFaculty);
+  if (grpStudentDet) grpStudentDet.classList.toggle('form-hidden', !isStudent);
+  if (grpFacultyPh)  grpFacultyPh.classList.toggle('form-hidden', !isFaculty);
 }
 
 // =============================================
@@ -394,9 +446,11 @@ async function handleLogin(e) {
   const password   = document.getElementById('loginPassword').value;
 
   if (!identifier || !password) {
-    showAlert(selectedRole === 'admin' 
-      ? 'Please enter your Admin ID and password.' 
-      : 'Please enter your Register Number and password.');
+    showAlert(selectedRole === 'faculty'
+      ? 'Please enter your Staff ID or official email and password.'
+      : (selectedRole === 'admin' 
+        ? 'Please enter your Admin ID and password.' 
+        : 'Please enter your Register Number and password.'));
     return;
   }
 
@@ -428,6 +482,17 @@ async function handleLogin(e) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
 
+    const role = (data.user?.role || selectedRole).toLowerCase();
+    if (role === 'faculty' || role === 'hod' || role === 'admin') {
+      localStorage.setItem('csbs_social_staff_user', JSON.stringify({
+        id: data.user.id,
+        role: role,
+        full_name: data.user.full_name,
+        designation: data.user.designation || (role === 'faculty' ? 'Assistant Professor — CSBS' : 'Placement Administrator'),
+        email: data.user.email
+      }));
+    }
+
     showAlert('Login successful! Entering Placement Portal...', true);
     setTimeout(() => redirect(data.user?.role), 900);
 
@@ -449,11 +514,24 @@ async function handleRegister(e) {
   const register_number = document.getElementById('regRegisterNo')?.value.trim() || '';
   const email           = document.getElementById('regEmail').value.trim();
   const password        = document.getElementById('regPassword').value;
-  const year            = document.getElementById('regYear')?.value || '3';
-  const phone           = document.getElementById('regPhone')?.value.trim() || '';
+  const year            = document.getElementById('regYear')?.value || '4';
+  const designation     = document.getElementById('regDesignation')?.value || 'Assistant Professor';
+  const phone           = (selectedRole === 'faculty'
+    ? document.getElementById('regFacultyPhone')?.value.trim()
+    : document.getElementById('regPhone')?.value.trim()) || '';
 
   if (!full_name || !email || !password) {
     showAlert('Please fill in all required fields.');
+    return;
+  }
+
+  if (selectedRole === 'faculty' && !register_number) {
+    showAlert('Please enter your Staff / Faculty ID.');
+    return;
+  }
+
+  if (selectedRole === 'student' && !register_number) {
+    showAlert('Please enter your 12-digit Register Number.');
     return;
   }
 
@@ -467,10 +545,11 @@ async function handleRegister(e) {
   try {
     const payload = {
       full_name,
-      register_number: selectedRole === 'student' ? register_number : null,
+      register_number: (selectedRole === 'student' || selectedRole === 'faculty') ? register_number : null,
       email,
       password,
       role: selectedRole,
+      designation: selectedRole === 'faculty' ? designation : undefined,
       year: selectedRole === 'student' ? parseInt(year) : null,
       phone: phone || null
     };
@@ -499,6 +578,17 @@ async function handleRegister(e) {
 
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
+
+    const role = (data.user?.role || selectedRole).toLowerCase();
+    if (role === 'faculty' || role === 'hod' || role === 'admin') {
+      localStorage.setItem('csbs_social_staff_user', JSON.stringify({
+        id: data.user.id,
+        role: role,
+        full_name: data.user.full_name,
+        designation: designation || data.user.designation || 'Faculty Member',
+        email: data.user.email
+      }));
+    }
 
     showAlert('Account created! Entering Placement Portal...', true);
     setTimeout(() => redirect(data.user?.role), 1000);

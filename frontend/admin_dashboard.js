@@ -67,12 +67,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentAdminToken = localStorage.getItem('token');
   currentAdminUser  = safeParseUser();
 
-  if (!currentAdminToken || !currentAdminUser || currentAdminUser.role !== 'admin') {
+  const role = (currentAdminUser?.role || '').toLowerCase();
+  const isAuthorizedStaff = (role === 'admin' || role === 'faculty' || role === 'hod');
+
+  if (!currentAdminToken || !currentAdminUser || !isAuthorizedStaff) {
     window.location.href = 'Form.html';
     return;
   }
 
-  el('adminUserName').innerText = currentAdminUser.full_name || 'Placement Admin';
+  const isFaculty = (role === 'faculty');
+  const isHOD = (role === 'hod');
+
+  // Update user header details
+  if (el('adminUserName')) {
+    el('adminUserName').innerText = currentAdminUser.full_name || (isFaculty ? 'Prof. Faculty Member' : 'Placement Admin');
+  }
+  if (el('adminUserRole')) {
+    el('adminUserRole').innerText = isFaculty ? 'Faculty Member (View Only)' : (isHOD ? 'Head of Department' : 'Administrator');
+  }
+  if (el('adminUserAvatar')) {
+    el('adminUserAvatar').style.background = isFaculty ? '#9333ea' : '#7c3aed';
+  }
+  if (el('adminAvatarIcon')) {
+    el('adminAvatarIcon').className = isFaculty ? 'fa-solid fa-chalkboard-user' : (isHOD ? 'fa-solid fa-building-columns' : 'fa-solid fa-user-shield');
+  }
+
+  // Quick Social Media Hub Access: Below Profile for Faculty, Admin, HOD
+  const socialHubBar = el('profileSocialHubBar');
+  if (socialHubBar) {
+    socialHubBar.style.display = 'block';
+  }
+
+  // Faculty Read-Only Banner and UI Restrictions
+  const facultyBanner = el('facultyReadonlyBanner');
+  if (facultyBanner) {
+    facultyBanner.classList.toggle('hidden', !isFaculty);
+  }
+
+  if (isFaculty) {
+    // Hide Add New Student button
+    const btnAdd = el('btnAddStudent');
+    if (btnAdd) btnAdd.style.display = 'none';
+
+    // Hide Settings Tab
+    const tabSettings = el('tabBtnSettings');
+    if (tabSettings) tabSettings.style.display = 'none';
+  }
 
   // Load Portal Settings first so batch dropdowns and default year are applied across all pages
   await loadPortalSettings();
@@ -665,6 +705,7 @@ function getFullFileUrl(pathStr) {
 
 function renderStudentRoster(students, tbody) {
   const BATCH_MAP = getBatchMap();
+  const isFaculty = (currentAdminUser?.role || '').toLowerCase() === 'faculty';
 
   tbody.innerHTML = students.map(s => {
     const cgpa     = s.cgpa ? parseFloat(s.cgpa).toFixed(2) : '—';
@@ -690,6 +731,27 @@ function renderStudentRoster(students, tbody) {
       ? `<br/><span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;margin-top:4px;"><i class="fa-solid fa-briefcase"></i> Placed @ ${escapeHtml(s.placed_company)}</span>`
       : '';
 
+    const actionsColHtml = isFaculty
+      ? `<span class="badge" style="background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;white-space:nowrap;">
+           <i class="fa-solid fa-lock"></i> View Only
+         </span>`
+      : `<div style="display:flex;gap:6px;align-items:center;">
+          <button
+            onclick="openEditStudentModal(${s.user_id})"
+            class="btn btn-primary btn-sm"
+            title="Edit Student Profile & Login Details"
+            style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">
+            <i class="fa-solid fa-pen-to-square"></i> Edit
+          </button>
+          <button
+            onclick="deleteStudent(${s.user_id}, '${s.full_name.replace(/'/g, "\\'")}')"
+            class="btn btn-danger btn-sm"
+            title="Delete Student Profile"
+            style="padding:4px 8px;font-size:11px;">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>`;
+
     return `
     <tr>
       <td>${yearStr}</td>
@@ -711,22 +773,7 @@ function renderStudentRoster(students, tbody) {
       </td>
       <td>${resumeHtml}</td>
       <td>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <button
-            onclick="openEditStudentModal(${s.user_id})"
-            class="btn btn-primary btn-sm"
-            title="Edit Student Profile & Login Details"
-            style="padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px;">
-            <i class="fa-solid fa-pen-to-square"></i> Edit
-          </button>
-          <button
-            onclick="deleteStudent(${s.user_id}, '${s.full_name.replace(/'/g, "\\'")}')"
-            class="btn btn-danger btn-sm"
-            title="Delete Student Profile"
-            style="padding:4px 8px;font-size:11px;">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
+        ${actionsColHtml}
       </td>
     </tr>`;
   }).join('');

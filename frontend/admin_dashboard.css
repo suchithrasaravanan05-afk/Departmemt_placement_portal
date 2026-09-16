@@ -4,33 +4,33 @@
    ============================================= */
 
 :root {
-  --admin-primary: #3d2314;
-  --admin-primary-dark: #24140e;
-  --admin-primary-light: #fdf8f5;
-  --admin-primary-glow: rgba(139, 94, 60, 0.22);
-  --admin-gold: #c68b59;
+  --admin-primary: #3b0764;
+  --admin-primary-dark: #1e0836;
+  --admin-primary-light: #f5f3ff;
+  --admin-primary-glow: rgba(124, 58, 237, 0.28);
+  --admin-gold: #c084fc;
   --admin-accent-cyan: #0d9488;
-  --admin-accent-purple: #7e22ce;
+  --admin-accent-purple: #7c3aed;
   --admin-accent-emerald: #15803d;
   --admin-accent-amber: #b45309;
   --admin-accent-rose: #b91c1c;
-  --admin-slate-50: #fdfaf7;
-  --admin-slate-100: #f8f4ee;
-  --admin-slate-200: #f4ede4;
-  --admin-slate-300: #dfcfc2;
-  --admin-slate-400: #cbb5a4;
-  --admin-slate-500: #8e7a6d;
-  --admin-slate-600: #6b574b;
-  --admin-slate-700: #4a3427;
-  --admin-slate-800: #331f15;
-  --admin-slate-900: #20120a;
-  --admin-navy-950: #140a05;
+  --admin-slate-50: #faf5ff;
+  --admin-slate-100: #f5f3ff;
+  --admin-slate-200: #ede9fe;
+  --admin-slate-300: #ddd6fe;
+  --admin-slate-400: #c4b5fd;
+  --admin-slate-500: #8b5cf6;
+  --admin-slate-600: #7c3aed;
+  --admin-slate-700: #6d28d9;
+  --admin-slate-800: #3b0764;
+  --admin-slate-900: #1e0836;
+  --admin-navy-950: #0f031d;
 }
 
 .admin-body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8f4ee;
-  color: #231610;
+  background-color: #f8f7fc;
+  color: #1e1b4b;
   line-height: 1.6;
   min-height: 100vh;
   font-size: 14px;
@@ -47,7 +47,7 @@
   right: 0;
   bottom: 0;
   background-image: 
-    linear-gradient(135deg, rgba(248, 244, 238, 0.5) 0%, rgba(244, 237, 228, 0.35) 50%, rgba(222, 207, 194, 0.5) 100%),
+    linear-gradient(135deg, rgba(248, 247, 252, 0.70) 0%, rgba(245, 243, 255, 0.55) 50%, rgba(237, 233, 254, 0.70) 100%),
     url('admin.png');
   background-size: cover;
   background-position: center center;
@@ -60,12 +60,12 @@
    EXECUTIVE HEADER & DEPT BANNER
    ============================================= */
 .admin-header-wrapper {
-  background: linear-gradient(135deg, #24140e 0%, #3d2314 60%, #5a3520 100%);
-  border-bottom: 2.5px solid #c68b59;
+  background: linear-gradient(135deg, #1e0836 0%, #3b0764 60%, #4c1d95 100%);
+  border-bottom: 2.5px solid #c084fc;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(36, 20, 14, 0.35);
+  box-shadow: 0 4px 20px rgba(30, 8, 54, 0.35);
 }
 
 .admin-college-header {
@@ -79,15 +79,15 @@
 }
 
 .admin-dept-banner {
-  background: linear-gradient(90deg, #2c1810 0%, #43281c 50%, #2c1810 100%);
-  border-bottom: 1.5px solid #c68b59;
+  background: linear-gradient(90deg, #1e0836 0%, #3b0764 50%, #1e0836 100%);
+  border-bottom: 1.5px solid #c084fc;
   color: #ffffff;
   text-align: center;
   padding: 11px 24px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.3px;
-  box-shadow: 0 3px 12px rgba(44, 24, 16, 0.25);
+  box-shadow: 0 3px 12px rgba(30, 8, 54, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -232,6 +232,99 @@
   border-color: #ef4444;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
   transform: translateY(-1px);
+}
+
+/* User Profile Wrapper with Social Media Hub link below profile */
+.admin-user-profile-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.profile-social-hub-bar {
+  width: 100%;
+}
+
+.profile-social-hub-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+  color: #ffffff !important;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none !important;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.35);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  transition: all 0.2s ease;
+}
+
+.profile-social-hub-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(124, 58, 237, 0.5);
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+}
+
+.profile-social-hub-link i {
+  color: #f5f3ff;
+  font-size: 12px;
+}
+
+/* Faculty Read-Only Notice Banner */
+.faculty-readonly-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(147, 51, 234, 0.08) 100%);
+  border: 1.5px solid rgba(192, 132, 252, 0.4);
+  border-radius: 14px;
+  padding: 14px 20px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.12);
+  color: #3b0764;
+}
+
+.faculty-readonly-banner.hidden {
+  display: none !important;
+}
+
+.faculty-notice-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #7c3aed;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.35);
+}
+
+.faculty-notice-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4c1d95;
+  flex: 1;
+}
+
+.faculty-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #7c3aed;
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
 }
 
 /* =============================================

@@ -1,9 +1,29 @@
 const express = require("express");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
 const db = require("../db");
 const { supabaseAdmin, supabase } = require("../supabase");
+
+const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
+
+function checkAdminWritePermission(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        try {
+            const token = authHeader.split(" ")[1];
+            const decoded = jwt.verify(token, JWT_SECRET);
+            if (decoded && decoded.role === "faculty") {
+                return res.status(403).json({
+                    success: false,
+                    message: "View-only access: Faculty members cannot add, modify, or delete student records or placement configurations."
+                });
+            }
+        } catch (e) {}
+    }
+    next();
+}
 
 
 // ==========================================
@@ -409,7 +429,7 @@ router.post("/drives/:id/toggle-visibility", (req, res) => {
 // ==========================================
 // CREATE NEW STUDENT (ADMIN DIRECT ADD)
 // ==========================================
-router.post("/students", async (req, res) => {
+router.post("/students", checkAdminWritePermission, async (req, res) => {
     try {
         const {
             full_name,
@@ -739,15 +759,15 @@ const handleUpdateStudent = async (req, res) => {
     }
 };
 
-router.put("/students/:id", handleUpdateStudent);
-router.post("/students/:id", handleUpdateStudent);
-router.post("/students/:id/edit", handleUpdateStudent);
+router.put("/students/:id", checkAdminWritePermission, handleUpdateStudent);
+router.post("/students/:id", checkAdminWritePermission, handleUpdateStudent);
+router.post("/students/:id/edit", checkAdminWritePermission, handleUpdateStudent);
 
 // ==========================================
 // DELETE STUDENT (admin only)
 // Removes: applications → student_profile → user
 // ==========================================
-router.delete("/students/:id", (req, res) => {
+router.delete("/students/:id", checkAdminWritePermission, (req, res) => {
     const userId = req.params.id;
 
     // Step 1: Delete applications

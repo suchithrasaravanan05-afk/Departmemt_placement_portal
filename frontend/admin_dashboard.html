@@ -26,26 +26,48 @@
       </div>
     </div>
     
-    <div class="admin-nav-user-pill">
-      <div class="nav-user-avatar" style="background:#7c3aed;">
-        <i class="fa-solid fa-user-shield" style="font-size:16px;"></i>
+    <div class="admin-user-profile-wrap">
+      <div class="admin-nav-user-pill">
+        <div class="nav-user-avatar" id="adminUserAvatar" style="background:#7c3aed;">
+          <i class="fa-solid fa-user-shield" id="adminAvatarIcon" style="font-size:16px;"></i>
+        </div>
+        <div class="nav-user-info">
+          <div class="nav-user-name" id="adminUserName">Placement Admin</div>
+          <div class="nav-user-role" id="adminUserRole">Administrator</div>
+        </div>
+        <button class="btn-logout" onclick="handleLogout()" title="Logout from Portal">
+          <i class="fa-solid fa-power-off"></i> Logout
+        </button>
       </div>
-      <div class="nav-user-info">
-        <div class="nav-user-name" id="adminUserName">Placement Admin</div>
-        <div class="nav-user-role">Administrator</div>
+
+      <!-- Quick Social Media Hub Access: Below Profile for Faculty, Admin, HOD -->
+      <div class="profile-social-hub-bar" id="profileSocialHubBar">
+        <a href="Form.html#social" class="profile-social-hub-link" title="Open Department Social Media Hub">
+          <i class="fa-solid fa-share-nodes"></i>
+          <span>Department Social Media Hub</span>
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;margin-left:auto;"></i>
+        </a>
       </div>
-      <button class="btn-logout" onclick="handleLogout()" title="Logout from Admin Portal">
-        <i class="fa-solid fa-power-off"></i> Logout
-      </button>
     </div>
   </div>
 </header>
 <div class="admin-dept-banner">
-  <i class="fa-solid fa-graduation-cap"></i> <strong>Department Portal CSBS</strong> — Placement Cell Admin Dashboard
+  <i class="fa-solid fa-graduation-cap"></i> <strong>Department Portal CSBS</strong> — Placement Cell Dashboard
 </div>
 
 <!-- ===== MAIN ===== -->
 <div class="admin-app-container">
+
+  <!-- Faculty Read-Only Notice Banner (Shown when role === 'faculty') -->
+  <div id="facultyReadonlyBanner" class="faculty-readonly-banner hidden">
+    <div class="faculty-notice-icon">
+      <i class="fa-solid fa-eye"></i>
+    </div>
+    <div class="faculty-notice-text">
+      <strong>Faculty View-Only Mode:</strong> You are signed in as Faculty. You can inspect student profiles, academic rosters, and placement records. Addition, editing, and deletion operations are restricted to Placement Administrators.
+    </div>
+    <span class="faculty-pill-tag"><i class="fa-solid fa-lock"></i> Read-Only</span>
+  </div>
 
   <!-- Stats Overview -->
   <div class="admin-stats-grid">
@@ -304,7 +326,7 @@
           <i class="fa-solid fa-users"></i> Student Roster &amp; Management
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-primary btn-sm" onclick="openAddStudentModal()" style="display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(37,99,235,0.3);">
+          <button class="btn btn-primary btn-sm" id="btnAddStudent" onclick="openAddStudentModal()" style="display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(124,58,237,0.3);">
             <i class="fa-solid fa-user-plus"></i> Add New Student
           </button>
           <button class="btn btn-success btn-sm" onclick="downloadStudentExcel()" style="display:inline-flex;align-items:center;gap:6px;">

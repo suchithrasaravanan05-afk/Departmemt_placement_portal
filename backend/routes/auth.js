@@ -90,12 +90,14 @@ router.post("/register", async (req, res) => {
                         success: true,
                         message: "Registration successful!",
                         token,
+                        adminToken: (role === "admin" || role === "faculty" || role === "hod") ? token : undefined,
                         user: {
                             id: userId,
                             full_name,
                             register_number,
                             email,
                             role,
+                            designation: req.body.designation || (role === "faculty" ? "Assistant Professor — CSBS" : undefined),
                             year,
                             department,
                             phone
@@ -229,7 +231,7 @@ router.post("/login", (req, res) => {
                     success: true,
                     message: "Login successful!",
                     token,
-                    adminToken: user.role === "admin" ? token : undefined,
+                    adminToken: (user.role === "admin" || user.role === "faculty" || user.role === "hod") ? token : undefined,
                     user: {
                         id: user.id,
                         full_name: user.full_name,

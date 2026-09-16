@@ -7,25 +7,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-  /* Design Tokens — Explicit University Portal Palette */
-  --header-main:        #0F2438; /* Main Header */
-  --nav-secondary:      #1E3A52; /* Secondary Navigation & Active Tabs */
-  --cta-primary:        #C94F24; /* Primary CTA Buttons (Campus Orange) */
-  --cta-hover:          #A83E1A; /* Button Hover */
-  --cta-active:         #8F3314; /* Button Active Press */
-  --gold-accent:        #D89A3D; /* Subtle Gold Accent */
-  --card-bg:            #FFFFFF; /* Cards (Solid White / 96% White) */
-  --card-bg-96:         rgba(255, 255, 255, 0.96);
-  --bg-soft:            #F5F8FA; /* Soft Backgrounds */
-  --input-bg:           #F8FAFC; /* Input Fields */
-  --text-primary:       #13283A; /* Primary Text */
-  --text-secondary:     #64748B; /* Secondary Text */
-  --text-muted:         #94A3B8; /* Muted Text */
-  --border-clean:       #D6E0E8; /* Clean Borders */
+  /* Design Tokens — Explicit Purple & Violet University Portal Palette */
+  --header-main:        #1e0836; /* Deep Imperial Violet */
+  --nav-secondary:      #2e1065; /* Royal Deep Violet */
+  --cta-primary:        #7c3aed; /* Primary CTA Buttons (Vivid Violet) */
+  --cta-hover:          #6d28d9; /* Button Hover */
+  --cta-active:         #5b21b6; /* Button Active Press */
+  --gold-accent:        #c084fc; /* Radiant Amethyst / Violet Accent */
+  --card-bg:            #FFFFFF; /* Cards (Solid White) */
+  --card-bg-96:         rgba(255, 255, 255, 0.97);
+  --bg-soft:            #f5f3ff; /* Soft Lilac Backgrounds */
+  --input-bg:           #faf5ff; /* Input Fields */
+  --text-primary:       #1e1b4b; /* Primary Dark Indigo/Violet */
+  --text-secondary:     #4c1d95; /* Secondary Violet */
+  --text-muted:         #6b21a8; /* Muted Violet */
+  --border-clean:       #e9d5ff; /* Clean Lavender Borders */
 
-  /* Navy Focus Ring */
-  --navy-focus-ring:    rgba(30, 58, 82, 0.18);
-  --navy-glow:          rgba(15, 36, 56, 0.12);
+  /* Violet Focus Ring */
+  --navy-focus-ring:    rgba(124, 58, 237, 0.25);
+  --navy-glow:          rgba(124, 58, 237, 0.15);
 
   /* Status Tokens */
   --status-success-bg:  #F0FDF4;
@@ -73,7 +73,7 @@ body.form-auth-bg {
 
 /* ==========================================================================
    CAMPUS BACKDROP OVERLAY
-   45–55% transparency dark navy gradient overlay so building is clearly visible
+   Rich royal purple & deep violet transparent gradient overlay
    ========================================================================== */
 .form-auth-bg::before {
   content: '';
@@ -83,7 +83,7 @@ body.form-auth-bg {
   right: 0;
   bottom: 0;
   background-image: 
-    linear-gradient(160deg, rgba(15, 36, 56, 0.52) 0%, rgba(30, 58, 82, 0.46) 50%, rgba(15, 36, 56, 0.55) 100%),
+    linear-gradient(160deg, rgba(30, 8, 54, 0.72) 0%, rgba(59, 7, 100, 0.62) 50%, rgba(30, 8, 54, 0.75) 100%),
     url('clg_logo.jpg');
   background-size: cover;
   background-position: center center;
@@ -469,16 +469,205 @@ body.form-auth-bg {
 }
 
 /* ==========================================================================
-   MAIN AUTH WRAPPER
+   MAIN AUTH WRAPPER & TWO-COLUMN SPLIT LAYOUT
+   Left: About Department CSBS | Right: Service Selection & Auth Card
    ========================================================================== */
 .form-auth-wrapper {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 44px 20px 56px;
+  padding: 36px 24px 50px;
   position: relative;
   z-index: 1;
+}
+
+.form-split-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr;
+  gap: 36px;
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .form-split-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    max-width: 600px;
+  }
+}
+
+/* ==========================================================================
+   ABOUT THE DEPARTMENT PANEL (Left Column Showcase)
+   ========================================================================== */
+.about-dept-panel {
+  background: rgba(30, 8, 54, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(192, 132, 252, 0.35);
+  border-radius: 24px;
+  padding: 34px 36px;
+  color: #ffffff;
+  box-shadow: 
+    0 24px 50px rgba(15, 3, 28, 0.55),
+    0 0 0 1px rgba(192, 132, 252, 0.2);
+  animation: fadeInCard 0.3s ease-out;
+}
+
+.about-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(124, 58, 237, 0.35);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #e9d5ff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.about-badge i {
+  color: #c084fc;
+  font-size: 12px;
+}
+
+.about-dept-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+  margin-bottom: 12px;
+  letter-spacing: -0.3px;
+}
+
+.about-highlight {
+  color: #c084fc;
+  background: linear-gradient(135deg, #c084fc 0%, #e9d5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.about-dept-desc {
+  font-size: 13.5px;
+  color: #e2d9f3;
+  line-height: 1.65;
+  margin-bottom: 22px;
+}
+
+.about-grid-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 640px) {
+  .about-grid-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-feat-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(192, 132, 252, 0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.about-feat-card:hover {
+  background: rgba(124, 58, 237, 0.22);
+  border-color: rgba(192, 132, 252, 0.45);
+  transform: translateY(-2px);
+}
+
+.about-feat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #ffffff;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.35);
+}
+
+.about-feat-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f5f3ff;
+}
+
+.about-feat-desc {
+  font-size: 11.5px;
+  color: #c4b5fd;
+  line-height: 1.45;
+}
+
+.about-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(192, 132, 252, 0.22);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .about-stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+.about-stat-item .num {
+  font-size: 17px;
+  font-weight: 800;
+  color: #c084fc;
+  display: block;
+  line-height: 1.2;
+}
+
+.about-stat-item .lbl {
+  font-size: 10.5px;
+  color: #ddd6fe;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.about-vision-box {
+  background: rgba(124, 58, 237, 0.16);
+  border-left: 3.5px solid #c084fc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 18px;
+  font-size: 12px;
+  color: #ede9fe;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.portal-cards-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 /* ==========================================================================
@@ -492,12 +681,12 @@ body.form-auth-bg {
   -webkit-backdrop-filter: blur(12px);
   border-radius: 20px;
   box-shadow: 
-    0 20px 40px -12px rgba(15, 36, 56, 0.22),
-    0 6px 16px -4px rgba(15, 36, 56, 0.10),
-    0 0 0 1px rgba(214, 224, 232, 0.7);
+    0 20px 40px -12px rgba(30, 8, 54, 0.28),
+    0 6px 16px -4px rgba(30, 8, 54, 0.14),
+    0 0 0 1px rgba(233, 213, 255, 0.75);
   padding: 38px 42px;
   width: 100%;
-  max-width: 480px;
+  max-width: 490px;
   border: 1px solid var(--border-clean);
   animation: fadeInCard 0.25s ease-out;
 }
