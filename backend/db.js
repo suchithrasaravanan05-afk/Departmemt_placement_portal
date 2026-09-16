@@ -1,9 +1,21 @@
 const bcrypt = require("bcryptjs");
-
 const { supabase, supabaseAdmin, testSupabaseConnection } = require("./supabase");
+const { getDepartmentById, normalizeDepartment } = require("./utils/departmentNormalizer");
 
 // Always use Supabase Cloud — no MySQL or local database
 const dbMode = "supabase";
+
+function enrichUserWithDepartment(u) {
+    if (!u) return u;
+    const dept = getDepartmentById(u.department_id || 1);
+    return {
+        ...u,
+        department_id: dept.id,
+        department_code: dept.department_code,
+        department_name: dept.department_name,
+        department: dept.department_name // backwards-compatibility for frontend
+    };
+}
 
 // Verify Supabase connection on startup
 testSupabaseConnection().then(res => {
@@ -67,7 +79,7 @@ async function querySupabase(sql, params = [], callback) {
                     .select("*")
                     .or(`register_number.eq.${searchVal},email.eq.${searchVal}`);
                 if (error) return callback(error, null);
-                return callback(null, data || []);
+                return callback(null, (data || []).map(enrichUserWithDepartment));
             }
 
             if (cleanSql.includes("email = ? OR (register_number")) {
@@ -81,42 +93,65 @@ async function querySupabase(sql, params = [], callback) {
                 }
                 const { data, error } = await query;
                 if (error) return callback(error, null);
-                return callback(null, data || []);
+                return callback(null, (data || []).map(enrichUserWithDepartment));
             }
 
             if (cleanSql.includes("email = ? OR register_number = ?")) {
                 const searchVal = params[0];
                 const { data, error } = await client.from("users").select("*").or(`email.eq.${searchVal},register_number.eq.${searchVal}`);
                 if (error) return callback(error, null);
-                return callback(null, data || []);
+                return callback(null, (data || []).map(enrichUserWithDepartment));
             }
 
             if (cleanSql.includes("WHERE email = ?")) {
                 const { data, error } = await client.from("users").select("*").eq("email", params[0]);
                 if (error) return callback(error, null);
-                return callback(null, data || []);
+                return callback(null, (data || []).map(enrichUserWithDepartment));
             }
 
             if (cleanSql.includes("WHERE id = ?")) {
                 const { data, error } = await client.from("users").select("*").eq("id", params[0]);
                 if (error) return callback(error, null);
-                return callback(null, data || []);
+                return callback(null, (data || []).map(enrichUserWithDepartment));
             }
 
             // Fallback: generic select all users (e.g. /auth/me with register_number lookup)
             if (cleanSql.includes("register_number, email, role") || cleanSql.includes("id, full_name, register_number")) {
                 const userId = params[0];
-                const { data, error } = await client.from("users").select("id, full_name, register_number, email, role, year, department, phone").eq("id", userId);
+                const { data, error } = await client.from("users").select("*").eq("id", userId);
                 if (error) return callback(error, null);
-                return callback(null, data || []);
+                return callback(null, (data || []).map(enrichUserWithDepartment));
             }
         }
 
         if (cleanSql.startsWith("INSERT INTO users")) {
-            const [full_name, register_number, email, password, role, year, department, phone] = params;
-            const { data, error } = await client.from("users").insert([{
-                full_name, register_number, email, password, role, year, department, phone
-            }]).select();
+            const [full_name, register_number, email, password, role, year, departmentOrId, phone] = params;
+            const deptNorm = normalizeDepartment(departmentOrId || "CSBS");
+            const deptId = deptNorm.success ? deptNorm.department_id : 1;
+
+            // 3NF: Store ONLY department_id in users
+            const userObj = {
+                full_name,
+                register_number: register_number || null,
+                email,
+                password,
+                role: role || "student",
+                year: year ? parseInt(year) : null,
+                department_id: deptId,
+                phone: phone || null
+            };
+
+            let { data, error } = await client.from("users").insert([userObj]).select();
+
+            // Graceful fallback if Supabase users table hasn't added department_id column yet
+            if (error && (error.message || "").includes("department_id")) {
+                delete userObj.department_id;
+                userObj.department = deptNorm.department_name;
+                const resFallback = await client.from("users").insert([userObj]).select();
+                data = resFallback.data;
+                error = resFallback.error;
+            }
+
             if (error) return callback(error, null);
             const inserted = data && data[0] ? data[0] : {};
             return callback(null, { insertId: inserted.id, affectedRows: 1 });
@@ -134,6 +169,7 @@ async function querySupabase(sql, params = [], callback) {
             const user = uData[0];
             const { data: spData } = await client.from("student_profiles").select("*").eq("user_id", userId);
             const profile = spData && spData[0] ? spData[0] : {};
+            const deptInfo = getDepartmentById(user.department_id || 1);
 
             const merged = {
                 user_id: user.id,
@@ -141,7 +177,10 @@ async function querySupabase(sql, params = [], callback) {
                 register_number: user.register_number,
                 email: user.email,
                 year: user.year,
-                department: user.department,
+                department_id: deptInfo.id,
+                department_code: deptInfo.department_code,
+                department_name: deptInfo.department_name,
+                department: deptInfo.department_name,
                 phone: user.phone,
                 ...profile
             };
@@ -172,6 +211,7 @@ async function querySupabase(sql, params = [], callback) {
             let combined = (users || []).map(u => {
                 const sp = profMap.get(u.id) || {};
                 const placedArr = placedMap.get(u.id) || [];
+                const deptInfo = getDepartmentById(u.department_id || 1);
                 return {
                     ...sp,
                     user_id: u.id,
@@ -179,7 +219,10 @@ async function querySupabase(sql, params = [], callback) {
                     register_number: u.register_number,
                     email: u.email,
                     year: u.year,
-                    department: u.department,
+                    department_id: deptInfo.id,
+                    department_code: deptInfo.department_code,
+                    department_name: deptInfo.department_name,
+                    department: deptInfo.department_name,
                     phone: u.phone,
                     cgpa: sp.cgpa,
                     history_arrears_count: sp.history_arrears_count,

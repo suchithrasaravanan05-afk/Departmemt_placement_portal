@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const db = require("../db");
+const { normalizeDepartment, getDepartmentById } = require("../utils/departmentNormalizer");
 
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
 
@@ -18,12 +19,21 @@ router.post("/register", async (req, res) => {
             password,
             role = "student",
             year,
-            department = "Computer Science and Business Systems",
+            department,
             phone
         } = req.body;
 
         if (!full_name || !email || !password) {
             return res.status(400).json({ success: false, message: "Name, email, and password are required." });
+        }
+
+        // 3NF Department Validation & Normalization
+        const deptNorm = normalizeDepartment(department || req.body.department_id || "CSBS");
+        if (!deptNorm.success) {
+            return res.status(400).json({
+                success: false,
+                message: deptNorm.error
+            });
         }
 
         // Check if email or register number already exists
@@ -45,8 +55,9 @@ router.post("/register", async (req, res) => {
             // Encrypt Password
             const hashedPassword = await bcrypt.hash(password, 10);
 
+            // 3NF: Store ONLY department_id in users (NO redundant department name or code)
             const sql = `
-                INSERT INTO users (full_name, register_number, email, password, role, year, department, phone)
+                INSERT INTO users (full_name, register_number, email, password, role, year, department_id, phone)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
@@ -59,13 +70,13 @@ router.post("/register", async (req, res) => {
                     hashedPassword,
                     role,
                     year ? parseInt(year) : null,
-                    department,
+                    deptNorm.department_id,
                     phone || null
                 ],
                 (err, result) => {
                     if (err) {
                         console.error("Registration Failed:", err);
-                        return res.status(500).json({ success: false, message: "Registration Failed" });
+                        return res.status(500).json({ success: false, message: "Registration Failed: " + (err.message || err) });
                     }
 
                     const userId = result.insertId;
@@ -74,7 +85,7 @@ router.post("/register", async (req, res) => {
                     if (role === "student" && userId) {
                         db.query(
                             "INSERT INTO student_profiles (user_id, college_email, department, phone_number) VALUES (?, ?, ?, ?)",
-                            [userId, email, department, phone || null],
+                            [userId, email, deptNorm.department_name, phone || null],
                             () => {}
                         );
                     }
@@ -99,7 +110,10 @@ router.post("/register", async (req, res) => {
                             role,
                             designation: req.body.designation || (role === "faculty" ? "Assistant Professor — CSBS" : undefined),
                             year,
-                            department,
+                            department_id: deptNorm.department_id,
+                            department_code: deptNorm.department_code,
+                            department_name: deptNorm.department_name,
+                            department: deptNorm.department_name, // backwards-compatibility
                             phone
                         }
                     });
@@ -227,6 +241,8 @@ router.post("/login", (req, res) => {
                     { expiresIn: "7d" }
                 );
 
+                const deptInfo = getDepartmentById(user.department_id || 1);
+
                 res.status(200).json({
                     success: true,
                     message: "Login successful!",
@@ -239,7 +255,10 @@ router.post("/login", (req, res) => {
                         email: user.email,
                         role: user.role || "student",
                         year: user.year,
-                        department: user.department,
+                        department_id: deptInfo.id,
+                        department_code: deptInfo.department_code,
+                        department_name: deptInfo.department_name,
+                        department: deptInfo.department_name, // backwards-compatibility
                         phone: user.phone
                     }
                 });
@@ -263,11 +282,22 @@ router.get("/me", (req, res) => {
     const token = authHeader.split(" ")[1];
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        db.query("SELECT id, full_name, register_number, email, role, year, department, phone FROM users WHERE id = ?", [decoded.id], (err, results) => {
+        db.query("SELECT id, full_name, register_number, email, role, year, department_id, department, phone FROM users WHERE id = ?", [decoded.id], (err, results) => {
             if (err || !results || results.length === 0) {
                 return res.status(404).json({ success: false, message: "User not found" });
             }
-            res.json({ success: true, user: results[0] });
+            const rawUser = results[0];
+            const deptInfo = getDepartmentById(rawUser.department_id || 1);
+            res.json({
+                success: true,
+                user: {
+                    ...rawUser,
+                    department_id: deptInfo.id,
+                    department_code: deptInfo.department_code,
+                    department_name: deptInfo.department_name,
+                    department: deptInfo.department_name
+                }
+            });
         });
     } catch (err) {
         return res.status(401).json({ success: false, message: "Invalid or expired token" });

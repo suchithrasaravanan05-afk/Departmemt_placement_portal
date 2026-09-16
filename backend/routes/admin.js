@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 const db = require("../db");
 const { supabaseAdmin, supabase } = require("../supabase");
+const { normalizeDepartment, getDepartmentById } = require("../utils/departmentNormalizer");
 
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
 
@@ -498,7 +499,13 @@ router.post("/students", checkAdminWritePermission, async (req, res) => {
         // Step 2: Encrypt password with bcrypt
         const hashedPassword = await bcrypt.hash(studentPassword, 10);
 
-        // Step 3: Insert user into users table
+        // 3NF: Normalize department input and resolve department_id
+        const deptNorm = normalizeDepartment(department || req.body.department_id || "CSBS");
+        if (!deptNorm.success) {
+            return res.status(400).json({ success: false, message: deptNorm.error });
+        }
+
+        // Step 3: Insert user into users table (store ONLY department_id)
         const userPayload = {
             full_name: String(full_name).trim(),
             register_number: cleanReg,
@@ -506,14 +513,23 @@ router.post("/students", checkAdminWritePermission, async (req, res) => {
             password: hashedPassword,
             role: "student",
             year: year ? parseInt(year) : 4,
-            department: department || "Computer Science and Business Systems",
+            department_id: deptNorm.department_id,
             phone: phone ? String(phone).trim() : null
         };
 
-        const { data: newUser, error: userErr } = await client
+        let { data: newUser, error: userErr } = await client
             .from("users")
             .insert([userPayload])
             .select();
+
+        // Fallback if department_id column not added to Supabase yet
+        if (userErr && (userErr.message || "").includes("department_id")) {
+            delete userPayload.department_id;
+            userPayload.department = deptNorm.department_name;
+            const resFallback = await client.from("users").insert([userPayload]).select();
+            newUser = resFallback.data;
+            userErr = resFallback.error;
+        }
 
         if (userErr || !newUser || newUser.length === 0) {
             console.error("Error creating student user in Supabase:", userErr);
@@ -541,7 +557,7 @@ router.post("/students", checkAdminWritePermission, async (req, res) => {
             user_id: userId,
             college_email: cleanEmail,
             personal_email: cleanPersonalEmail,
-            department: department || "Computer Science and Business Systems",
+            department: deptNorm.department_name,
             degree: degree || "B.Tech",
             phone_number: phone ? String(phone).trim() : null,
             whatsapp_number: whatsapp_number ? String(whatsapp_number).trim() : null,
@@ -572,7 +588,14 @@ router.post("/students", checkAdminWritePermission, async (req, res) => {
         return res.status(201).json({
             success: true,
             message: `Student account for ${full_name} (${cleanReg}) created successfully!`,
-            student: { ...newUser[0], ...profilePayload }
+            student: {
+                ...newUser[0],
+                department_id: deptNorm.department_id,
+                department_code: deptNorm.department_code,
+                department_name: deptNorm.department_name,
+                department: deptNorm.department_name,
+                ...profilePayload
+            }
         });
     } catch (ex) {
         console.error("Exception in POST /students:", ex);
@@ -593,14 +616,23 @@ router.get("/students/:id", async (req, res) => {
 
         const { data: userRows, error: uErr } = await client
             .from("users")
-            .select("id, full_name, register_number, email, year, department, phone, role")
+            .select("*")
             .eq("id", userId);
 
         if (uErr || !userRows || userRows.length === 0) {
             return res.status(404).json({ success: false, message: "Student account not found" });
         }
 
-        const user = userRows[0];
+        const rawUser = userRows[0];
+        const deptInfo = getDepartmentById(rawUser.department_id || 1);
+        const user = {
+            ...rawUser,
+            department_id: deptInfo.id,
+            department_code: deptInfo.department_code,
+            department_name: deptInfo.department_name,
+            department: deptInfo.department_name
+        };
+
         const { data: profileRows } = await client
             .from("student_profiles")
             .select("*")
@@ -686,7 +718,15 @@ const handleUpdateStudent = async (req, res) => {
         if (cleanReg) userUpdateObj.register_number = cleanReg;
         if (cleanEmail) userUpdateObj.email = cleanEmail;
         if (year !== undefined && year !== "") userUpdateObj.year = parseInt(year);
-        if (department) userUpdateObj.department = department;
+        
+        let deptNorm = null;
+        if (department !== undefined && department !== null && String(department).trim().length > 0) {
+            deptNorm = normalizeDepartment(department);
+            if (!deptNorm.success) {
+                return res.status(400).json({ success: false, message: deptNorm.error });
+            }
+            userUpdateObj.department_id = deptNorm.department_id;
+        }
         if (phone !== undefined) userUpdateObj.phone = phone ? String(phone).trim() : null;
 
         // If admin supplied a new password, encrypt & update it
@@ -695,10 +735,18 @@ const handleUpdateStudent = async (req, res) => {
         }
 
         if (Object.keys(userUpdateObj).length > 0) {
-            const { error: uErr } = await client
+            let { error: uErr } = await client
                 .from("users")
                 .update(userUpdateObj)
                 .eq("id", userId);
+
+            // Fallback if department_id column doesn't exist yet on Supabase
+            if (uErr && (uErr.message || "").includes("department_id")) {
+                delete userUpdateObj.department_id;
+                userUpdateObj.department = deptNorm ? deptNorm.department_name : "Computer Science and Business Systems";
+                const resFallback = await client.from("users").update(userUpdateObj).eq("id", userId);
+                uErr = resFallback.error;
+            }
 
             if (uErr) {
                 console.error("Error updating user record:", uErr);
@@ -711,7 +759,7 @@ const handleUpdateStudent = async (req, res) => {
             user_id: userId,
             college_email: (college_email || cleanEmail || "").trim().toLowerCase(),
             personal_email: (personal_email || cleanEmail || "").trim().toLowerCase(),
-            department: department || "Computer Science and Business Systems",
+            department: deptNorm ? deptNorm.department_name : (department || "Computer Science and Business Systems"),
             degree: degree || "B.Tech",
             phone_number: phone ? String(phone).trim() : null,
             whatsapp_number: whatsapp_number ? String(whatsapp_number).trim() : null,

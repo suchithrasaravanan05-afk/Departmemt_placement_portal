@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const multer = require(require.resolve("multer", { paths: [process.cwd()] }));
 const db = require("../db");
-const { supabaseAdmin } = require("../supabase");
+const { supabaseAdmin, supabase } = require("../supabase");
+const { normalizeDepartment, getDepartmentById } = require("../utils/departmentNormalizer");
 
 // ==========================================
 // Multer: memory storage (no disk writes)
@@ -75,7 +76,7 @@ router.get("/profile/:userId", (req, res) => {
     const userId = req.params.userId;
 
     const sql = `
-        SELECT u.id as user_id, u.full_name, u.register_number, u.email, u.year, u.department, u.phone,
+        SELECT u.id as user_id, u.full_name, u.register_number, u.email, u.year, u.department_id, u.phone,
                sp.*
         FROM users u
         LEFT JOIN student_profiles sp ON u.id = sp.user_id
@@ -92,7 +93,17 @@ router.get("/profile/:userId", (req, res) => {
             return res.status(404).json({ success: false, message: "Student profile not found" });
         }
 
-        res.json({ success: true, profile: results[0] });
+        const rawProfile = results[0];
+        const deptInfo = getDepartmentById(rawProfile.department_id || 1);
+        const enriched = {
+            ...rawProfile,
+            department_id: deptInfo.id,
+            department_code: deptInfo.department_code,
+            department_name: deptInfo.department_name,
+            department: deptInfo.department_name // backwards-compatibility
+        };
+
+        res.json({ success: true, profile: enriched });
     });
 });
 
@@ -157,6 +168,24 @@ router.post("/profile/save", cpUpload, async (req, res) => {
         });
         const calculatedCgpa = count > 0 ? (total / count).toFixed(2) : (b.cgpa || 0);
 
+        // 3NF: Department validation & normalization
+        let deptNorm = null;
+        if (b.department !== undefined && b.department !== null && String(b.department).trim().length > 0) {
+            deptNorm = normalizeDepartment(b.department);
+            if (!deptNorm.success) {
+                return res.status(400).json({ success: false, message: deptNorm.error });
+            }
+            // Update users table with department_id (store ONLY department_id in users)
+            const client = supabaseAdmin || supabase;
+            if (client) {
+                const { error: uErr } = await client.from("users").update({ department_id: deptNorm.department_id }).eq("id", userId);
+                if (uErr && (uErr.message || "").includes("department_id")) {
+                    await client.from("users").update({ department: deptNorm.department_name }).eq("id", userId);
+                }
+            }
+        }
+        const officialDeptName = deptNorm ? deptNorm.department_name : "Computer Science and Business Systems";
+
         // Check if profile row exists
         db.query("SELECT * FROM student_profiles WHERE user_id = ?", [userId], (err, existing) => {
             if (err) {
@@ -185,7 +214,7 @@ router.post("/profile/save", cpUpload, async (req, res) => {
                 db.query(updateSql, [
                     b.dob || null, b.personal_email || null, b.college_email || null, b.domain_interest || null,
                     b.tenth_percentage || null, b.twelth_percentage || null, b.diploma_percentage || null,
-                    b.degree || "B.Tech", b.department || "CSBS",
+                    b.degree || "B.Tech", officialDeptName,
                     b.sem1_gpa || null, b.sem2_gpa || null, b.sem3_gpa || null, b.sem4_gpa || null,
                     b.sem5_gpa || null, b.sem6_gpa || null, b.sem7_gpa || null, b.sem8_gpa || null,
                     calculatedCgpa, b.phone_number || null, b.whatsapp_number || null,
@@ -198,7 +227,15 @@ router.post("/profile/save", cpUpload, async (req, res) => {
                         console.error("Error updating profile:", err2);
                         return res.status(500).json({ success: false, message: "Failed to update profile" });
                     }
-                    res.json({ success: true, message: "Profile updated successfully!", cgpa: calculatedCgpa });
+                    res.json({
+                        success: true,
+                        message: "Profile updated successfully!",
+                        cgpa: calculatedCgpa,
+                        department_id: deptNorm ? deptNorm.department_id : 1,
+                        department_code: deptNorm ? deptNorm.department_code : "CSBS",
+                        department_name: officialDeptName,
+                        department: officialDeptName
+                    });
                 });
             } else {
                 // INSERT
@@ -215,7 +252,7 @@ router.post("/profile/save", cpUpload, async (req, res) => {
                 db.query(insertSql, [
                     userId, b.dob || null, b.personal_email || null, b.college_email || null, b.domain_interest || null,
                     b.tenth_percentage || null, b.twelth_percentage || null, b.diploma_percentage || null,
-                    b.degree || "B.Tech", b.department || "CSBS",
+                    b.degree || "B.Tech", officialDeptName,
                     b.sem1_gpa || null, b.sem2_gpa || null, b.sem3_gpa || null, b.sem4_gpa || null,
                     b.sem5_gpa || null, b.sem6_gpa || null, b.sem7_gpa || null, b.sem8_gpa || null,
                     calculatedCgpa, b.phone_number || null, b.whatsapp_number || null,
@@ -227,7 +264,15 @@ router.post("/profile/save", cpUpload, async (req, res) => {
                         console.error("Error inserting profile:", err2);
                         return res.status(500).json({ success: false, message: "Failed to save profile" });
                     }
-                    res.json({ success: true, message: "Profile saved successfully!", cgpa: calculatedCgpa });
+                    res.json({
+                        success: true,
+                        message: "Profile saved successfully!",
+                        cgpa: calculatedCgpa,
+                        department_id: deptNorm ? deptNorm.department_id : 1,
+                        department_code: deptNorm ? deptNorm.department_code : "CSBS",
+                        department_name: officialDeptName,
+                        department: officialDeptName
+                    });
                 });
             }
         });
