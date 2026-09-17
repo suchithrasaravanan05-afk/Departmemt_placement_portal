@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSBS Social Media Hub — Ramco Institute of Technology</title>
+  <meta name="description" content="Department Social Media Administration and Broadcast Studio for CSBS, Ramco Institute of Technology.">
+
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="social_dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="social-hub-body">
+
+  <!-- =======================================================
+       TOP APPLICATION HEADER WITH MODULE SWITCHER
+       ======================================================= -->
+  <header class="social-header-wrapper">
+    <div class="social-header-inner">
+      <div class="social-brand-group">
+        <img src="rit_logo.png" alt="Ramco Institute of Technology" class="social-inst-logo">
+        <div class="social-brand-text">
+          <div class="social-inst-title">RAMCO INSTITUTE OF TECHNOLOGY</div>
+          <div class="social-dept-title">
+            <span>Department of CSBS</span>
+            <span class="hub-pill-tag"><i class="fa-solid fa-share-nodes"></i> Social Media Hub</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="social-header-right">
+        <!-- Module Switcher (Visible when user has both Placement + Social permissions) -->
+        <div class="portal-switcher-box" id="portalSwitcherWrap" style="display:none;">
+          <div class="switcher-label">Current Portal:</div>
+          <div class="switcher-dropdown-container">
+            <button type="button" class="switcher-dropdown-btn" id="switcherBtn" onclick="togglePortalSwitcherDropdown()">
+              <i class="fa-solid fa-share-nodes" style="color:#2563EB;"></i>
+              <span id="currentPortalLabel">Social Media Hub</span>
+              <i class="fa-solid fa-chevron-down switcher-caret"></i>
+            </button>
+            <div class="switcher-dropdown-menu form-hidden" id="switcherDropdownMenu">
+              <a href="javascript:void(0)" class="switcher-menu-item" onclick="switchToPortal('placement')">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <div class="menu-item-text">
+                  <strong>Placement Portal</strong>
+                  <span>Manage drives, applications &amp; students</span>
+                </div>
+              </a>
+              <a href="javascript:void(0)" class="switcher-menu-item active" onclick="switchToPortal('social')">
+                <i class="fa-solid fa-share-nodes"></i>
+                <div class="menu-item-text">
+                  <strong>Social Media Hub</strong>
+                  <span>Broadcast announcements &amp; posts</span>
+                </div>
+                <i class="fa-solid fa-check checkmark"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Profile Pill -->
+        <div class="social-user-pill">
+          <div class="user-avatar-circle" id="userAvatarCircle">F</div>
+          <div class="user-meta">
+            <span class="user-display-name" id="userDisplayName">Faculty Member</span>
+            <span class="user-role-badge" id="userRoleBadge">Faculty</span>
+          </div>
+        </div>
+
+        <!-- Logout Action -->
+        <button type="button" class="btn-portal-logout" onclick="handleSocialLogout()" title="Sign out of portal">
+          <i class="fa-solid fa-power-off"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =======================================================
+       FULL-WIDTH DASHBOARD CONTAINER (NO DEPARTMENT DETAILS PANEL)
+       ======================================================= -->
+  <main class="social-hub-container">
+    
+    <!-- Top Hub Stats Overview -->
+    <section class="hub-metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon blue"><i class="fa-solid fa-bullhorn"></i></div>
+        <div class="metric-data">
+          <span class="metric-num" id="statTotalBroadcasts">0</span>
+          <span class="metric-title">Published Broadcasts</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon green"><i class="fa-solid fa-circle-nodes"></i></div>
+        <div class="metric-data">
+          <span class="metric-num">4 / 4</span>
+          <span class="metric-title">Channels Connected</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon amber"><i class="fa-solid fa-heart"></i></div>
+        <div class="metric-data">
+          <span class="metric-num" id="statTotalEngagements">0</span>
+          <span class="metric-title">Recorded Engagements</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon purple"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="metric-data">
+          <span class="metric-num">Real-Time</span>
+          <span class="metric-title">Broadcast Status</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="hub-nav-tabs">
+      <button type="button" class="hub-tab-btn active" id="tabBtnBroadcast" onclick="switchSocialTab('broadcast')">
+        <i class="fa-solid fa-tower-broadcast"></i>
+        <span>Create Announcement &amp; Broadcast</span>
+      </button>
+      <button type="button" class="hub-tab-btn" id="tabBtnFeed" onclick="switchSocialTab('feed')">
+        <i class="fa-solid fa-newspaper"></i>
+        <span>Published Post History</span>
+      </button>
+      <button type="button" class="hub-tab-btn" id="tabBtnChannels" onclick="switchSocialTab('channels')">
+        <i class="fa-solid fa-satellite-dish"></i>
+        <span>Channel Integrations</span>
+      </button>
+    </nav>
+
+    <!-- Alert / Toast Banner -->
+    <div id="socialHubAlert" class="social-alert-banner form-hidden"></div>
+
+    <!-- =======================================================
+         TAB 1: BROADCAST STUDIO
+         ======================================================= -->
+    <section id="panelBroadcast" class="hub-tab-panel active">
+      <div class="broadcast-studio-layout">
+        
+        <!-- Left: Composer Form -->
+        <div class="composer-card">
+          <div class="card-section-header">
+            <div>
+              <h3><i class="fa-solid fa-pen-nib"></i> Compose Department Announcement</h3>
+              <p>Prepare synchronized multi-channel content for official department handles</p>
+            </div>
+          </div>
+
+          <form id="broadcastForm" onsubmit="handleBroadcastSubmit(event)">
+            <!-- Target Platforms Selector -->
+            <div class="form-section">
+              <label class="section-label">
+                <span>Select Target Platforms (Multi-Select):</span>
+                <span class="sub-hint">Will publish simultaneously to chosen channels</span>
+              </label>
+              <div class="platform-toggles-row">
+                <button type="button" class="platform-toggle-btn active" data-platform="youtube" onclick="toggleChannel(this, 'youtube')">
+                  <i class="fa-brands fa-youtube" style="color:#DC2626;"></i>
+                  <span>YouTube</span>
+                </button>
+                <button type="button" class="platform-toggle-btn active" data-platform="linkedin" onclick="toggleChannel(this, 'linkedin')">
+                  <i class="fa-brands fa-linkedin" style="color:#0A66C2;"></i>
+                  <span>LinkedIn</span>
+                </button>
+                <button type="button" class="platform-toggle-btn active" data-platform="instagram" onclick="toggleChannel(this, 'instagram')">
+                  <i class="fa-brands fa-instagram" style="color:#C13584;"></i>
+                  <span>Instagram</span>
+                </button>
+                <button type="button" class="platform-toggle-btn active" data-platform="facebook" onclick="toggleChannel(this, 'facebook')">
+                  <i class="fa-brands fa-facebook" style="color:#1877F2;"></i>
+                  <span>Facebook</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Title Input -->
+            <div class="form-section">
+              <label for="postHeadline" class="section-label">Announcement Title / Headline</label>
+              <input 
+                type="text" 
+                id="postHeadline" 
+                class="form-input" 
+                placeholder="e.g. National Symposium on Applied AI & Business Systems — CSBS" 
+                value="National Symposium on Applied AI & Enterprise Business Systems — CSBS Department"
+                oninput="updatePreviewFromInput()" 
+                required
+              >
+            </div>
+
+            <!-- Department Category -->
+            <div class="form-section">
+              <label for="postCategory" class="section-label">Department Category</label>
+              <select id="postCategory" class="form-select" onchange="updatePreviewFromInput()">
+                <option value="Department Symposium" selected>Department Symposium &amp; Technical Events</option>
+                <option value="Student Innovation">Student Hackathons, Projects &amp; Competitions</option>
+                <option value="Placement Milestone">Placement &amp; Internship Milestones (CSBS Cohorts)</option>
+                <option value="Industry MoU">Industry MoUs &amp; Industrial Visits</option>
+                <option value="Academic Excellence">Academic Excellence &amp; University Honors</option>
+                <option value="Faculty Research">Faculty Research, Patents &amp; Publications</option>
+                <option value="Guest Lecture">Industry Guest Lectures &amp; Expert Mentorship</option>
+                <option value="Department Notice">Department Circulars &amp; Student Notices</option>
+              </select>
+            </div>
+
+            <!-- Media Upload (Photograph / Video) -->
+            <div class="form-section">
+              <div class="media-upload-header">
+                <label class="section-label">Media Attachment (Photo or Video)</label>
+                <span class="media-badge" id="mediaStatusBadge"><i class="fa-regular fa-image"></i> Optional</span>
+              </div>
+
+              <div class="media-dropzone" id="mediaDropzone" onclick="triggerFileInput()">
+                <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display:none;" onchange="handleMediaFileSelect(event)">
+                <div id="dropzoneEmpty">
+                  <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                  <div class="drop-title">Click to upload or drag &amp; drop media</div>
+                  <div class="drop-sub">Supports PNG, JPG, MP4, WebM (Max 50MB)</div>
+                </div>
+
+                <div id="dropzonePreview" class="media-preview-container form-hidden">
+                  <div class="media-file-info">
+                    <span id="previewFileName">filename.jpg</span>
+                    <button type="button" class="btn-remove-media" onclick="removeSelectedMedia(event)" title="Remove media">&times;</button>
+                  </div>
+                  <div id="previewMediaBox"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description & Captions -->
+            <div class="form-section">
+              <label for="postDescription" class="section-label">Announcement Description / Caption</label>
+              <textarea 
+                id="postDescription" 
+                class="form-textarea" 
+                rows="5" 
+                placeholder="Enter complete post description, event dates, registration links and faculty coordinators..."
+                oninput="updatePreviewFromInput()"
+                required
+              >We are proud to announce the Department of Computer Science and Business Systems is organizing a state-of-the-art National Symposium focusing on Applied AI, Generative Business Models, and Enterprise Architecture. All enthusiastic students and industry leaders are cordially invited!</textarea>
+            </div>
+
+            <!-- Hashtags -->
+            <div class="form-section">
+              <label for="postHashtags" class="section-label">Department Hashtags</label>
+              <input 
+                type="text" 
+                id="postHashtags" 
+                class="form-input" 
+                value="#RamcoInstituteOfTechnology #CSBS #AppliedAI #EngineeringExcellence" 
+                oninput="updatePreviewFromInput()"
+              >
+            </div>
+
+            <!-- Submit Action Buttons -->
+            <div class="composer-actions-bar">
+              <button type="submit" class="btn-broadcast-now" id="btnBroadcast">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Broadcast Announcement</span>
+              </button>
+              <button type="button" class="btn-schedule-later" onclick="handleSchedulePost()">
+                <i class="fa-regular fa-calendar-plus"></i>
+                <span>Schedule</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right: Live Social Preview Panel -->
+        <div class="preview-card">
+          <div class="card-section-header">
+            <div>
+              <h3><i class="fa-solid fa-eye"></i> Live Multi-Platform Preview</h3>
+              <p>Verify simulated post layout before broadcasting</p>
+            </div>
+          </div>
+
+          <!-- Platform Tab Previews -->
+          <div class="preview-platform-bar">
+            <button type="button" class="preview-pill active" onclick="setPreviewPlatform('youtube', this)">
+              <i class="fa-brands fa-youtube" style="color:#DC2626;"></i> YouTube
+            </button>
+            <button type="button" class="preview-pill" onclick="setPreviewPlatform('linkedin', this)">
+              <i class="fa-brands fa-linkedin" style="color:#0A66C2;"></i> LinkedIn
+            </button>
+            <button type="button" class="preview-pill" onclick="setPreviewPlatform('instagram', this)">
+              <i class="fa-brands fa-instagram" style="color:#C13584;"></i> Instagram
+            </button>
+            <button type="button" class="preview-pill" onclick="setPreviewPlatform('facebook', this)">
+              <i class="fa-brands fa-facebook" style="color:#1877F2;"></i> Facebook
+            </button>
+          </div>
+
+          <!-- Mock Feed Card -->
+          <div class="mock-feed-card" id="mockFeedCard">
+            <div class="mock-header">
+              <img src="rit_logo.png" alt="RIT" class="mock-avatar">
+              <div class="mock-author-info">
+                <strong id="mockAuthorTitle">Ramco Institute of Technology — CSBS</strong>
+                <span id="mockPostMeta">Department Announcement &bull; Just now</span>
+              </div>
+              <span class="mock-platform-badge" id="mockPlatformBadge"><i class="fa-brands fa-youtube"></i> YouTube</span>
+            </div>
+
+            <div class="mock-body">
+              <h4 id="mockPreviewHeadline" class="mock-headline">National Symposium on Applied AI</h4>
+              <p id="mockPreviewText" class="mock-text">Post caption content preview...</p>
+              <div id="mockPreviewMedia" class="mock-media-wrap form-hidden"></div>
+              <div id="mockPreviewTags" class="mock-tags">#RamcoInstituteOfTechnology #CSBS</div>
+            </div>
+
+            <div class="mock-footer">
+              <span><i class="fa-regular fa-thumbs-up"></i> 24 Likes</span>
+              <span><i class="fa-regular fa-comment"></i> 6 Comments</span>
+              <span><i class="fa-solid fa-share"></i> Share</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================
+         TAB 2: PUBLISHED POST HISTORY & FEED
+         ======================================================= -->
+    <section id="panelFeed" class="hub-tab-panel form-hidden">
+      <div class="feed-filter-bar">
+        <div class="feed-filter-group">
+          <label>Filter by Channel:</label>
+          <select id="feedPlatformFilter" class="filter-select" onchange="filterPublishedPosts()">
+            <option value="all">All Channels</option>
+            <option value="youtube">YouTube</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn-refresh-feed" onclick="loadPublishedPosts()" title="Refresh posts feed">
+          <i class="fa-solid fa-rotate-right"></i> Refresh Feed
+        </button>
+      </div>
+
+      <div id="publishedPostsList" class="published-posts-grid">
+        <div class="empty-state-box">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <p>Loading published department broadcasts...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================
+         TAB 3: CHANNELS STATUS
+         ======================================================= -->
+    <section id="panelChannels" class="hub-tab-panel form-hidden">
+      <div class="channels-grid">
+        <div class="channel-card">
+          <div class="channel-icon-circle yt"><i class="fa-brands fa-youtube"></i></div>
+          <div class="channel-info">
+            <h4>YouTube Channel</h4>
+            <p>@RIT_CSBS_Official &bull; Connected &bull; Broadcast Ready</p>
+          </div>
+          <span class="status-indicator-tag active"><i class="fa-solid fa-circle-check"></i> Connected</span>
+        </div>
+
+        <div class="channel-card">
+          <div class="channel-icon-circle li"><i class="fa-brands fa-linkedin"></i></div>
+          <div class="channel-info">
+            <h4>LinkedIn Department Page</h4>
+            <p>RIT Department of CSBS &bull; Connected &bull; Broadcast Ready</p>
+          </div>
+          <span class="status-indicator-tag active"><i class="fa-solid fa-circle-check"></i> Connected</span>
+        </div>
+
+        <div class="channel-card">
+          <div class="channel-icon-circle ig"><i class="fa-brands fa-instagram"></i></div>
+          <div class="channel-info">
+            <h4>Instagram Handle</h4>
+            <p>@rit_csbs_dept &bull; Connected &bull; Broadcast Ready</p>
+          </div>
+          <span class="status-indicator-tag active"><i class="fa-solid fa-circle-check"></i> Connected</span>
+        </div>
+
+        <div class="channel-card">
+          <div class="channel-icon-circle fb"><i class="fa-brands fa-facebook"></i></div>
+          <div class="channel-info">
+            <h4>Facebook Department Page</h4>
+            <p>RIT CSBS Official &bull; Connected &bull; Broadcast Ready</p>
+          </div>
+          <span class="status-indicator-tag active"><i class="fa-solid fa-circle-check"></i> Connected</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="social_dashboard.js"></script>
+</body>
+</html>

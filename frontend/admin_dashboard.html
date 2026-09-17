@@ -27,8 +27,37 @@
     </div>
     
     <div class="admin-user-profile-wrap">
+      <!-- Module Switcher (Visible when user has both Placement & Social permissions) -->
+      <div class="portal-switcher-box" id="adminPortalSwitcher" style="display:none;">
+        <div class="switcher-label">Current Portal:</div>
+        <div class="switcher-dropdown-container">
+          <button type="button" class="switcher-dropdown-btn" id="adminSwitcherBtn" onclick="toggleAdminPortalSwitcher()">
+            <i class="fa-solid fa-graduation-cap" style="color:#2563EB;"></i>
+            <span>Placement Portal</span>
+            <i class="fa-solid fa-chevron-down switcher-caret"></i>
+          </button>
+          <div class="switcher-dropdown-menu form-hidden" id="adminSwitcherMenu">
+            <a href="javascript:void(0)" class="switcher-menu-item active">
+              <i class="fa-solid fa-graduation-cap"></i>
+              <div class="menu-item-text">
+                <strong>Placement Portal</strong>
+                <span>Drives, applications &amp; students</span>
+              </div>
+              <i class="fa-solid fa-check checkmark"></i>
+            </a>
+            <a href="javascript:void(0)" class="switcher-menu-item" onclick="switchToSocialMedia()">
+              <i class="fa-solid fa-share-nodes"></i>
+              <div class="menu-item-text">
+                <strong>Social Media Hub</strong>
+                <span>Broadcast announcements &amp; posts</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div class="admin-nav-user-pill">
-        <div class="nav-user-avatar" id="adminUserAvatar" style="background:#7c3aed;">
+        <div class="nav-user-avatar" id="adminUserAvatar">
           <i class="fa-solid fa-user-shield" id="adminAvatarIcon" style="font-size:16px;"></i>
         </div>
         <div class="nav-user-info">
@@ -38,15 +67,6 @@
         <button class="btn-logout" onclick="handleLogout()" title="Logout from Portal">
           <i class="fa-solid fa-power-off"></i> Logout
         </button>
-      </div>
-
-      <!-- Quick Social Media Hub Access: Below Profile for Faculty, Admin, HOD -->
-      <div class="profile-social-hub-bar" id="profileSocialHubBar">
-        <a href="Form.html#social" class="profile-social-hub-link" title="Open Department Social Media Hub">
-          <i class="fa-solid fa-share-nodes"></i>
-          <span>Department Social Media Hub</span>
-          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;margin-left:auto;"></i>
-        </a>
       </div>
     </div>
   </div>

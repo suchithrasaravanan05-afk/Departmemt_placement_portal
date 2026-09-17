@@ -115,9 +115,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ============================================================
-// HELPERS
+// HELPERS & LOGOUT
 // ============================================================
 function el(id) { return document.getElementById(id); }
+
+function handleLogout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('csbs_active_portal');
+  sessionStorage.clear();
+  window.location.replace('Form.html');
+}
 
 function safeParseUser() {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); }

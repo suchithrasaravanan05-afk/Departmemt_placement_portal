@@ -98,6 +98,15 @@ app.use((err, req, res, next) => {
     next(err);
 });
 
+// Page route helpers
+app.get("/placement", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/admin_dashboard.html"));
+});
+
+app.get("/social-media", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/social_dashboard.html"));
+});
+
 // Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social)
 app.get("*", (req, res) => {
     if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social")) {

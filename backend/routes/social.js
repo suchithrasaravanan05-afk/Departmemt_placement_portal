@@ -67,6 +67,12 @@ function requireStaffAuth(req, res, next) {
                 message: "Access Denied: Only Faculty, HOD, and Administrators are authorized to access the Social Media Page."
             });
         }
+        if (decoded.social_media_access === false) {
+            return res.status(403).json({
+                success: false,
+                message: "Access Denied: Your account does not have permission to access the Social Media Hub."
+            });
+        }
         req.user = decoded;
         next();
     } catch (err) {

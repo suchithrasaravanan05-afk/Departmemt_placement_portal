@@ -15,16 +15,44 @@ function checkAdminWritePermission(req, res, next) {
         try {
             const token = authHeader.split(" ")[1];
             const decoded = jwt.verify(token, JWT_SECRET);
+            if (decoded && decoded.placement_access === false) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Access Denied: Your account does not have permission to access the Placement Portal."
+                });
+            }
             if (decoded && decoded.role === "faculty") {
                 return res.status(403).json({
                     success: false,
                     message: "View-only access: Faculty members cannot add, modify, or delete student records or placement configurations."
                 });
             }
+            req.user = decoded;
         } catch (e) {}
     }
     next();
 }
+
+// Read-level check for placement access
+function checkPlacementAccess(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        try {
+            const token = authHeader.split(" ")[1];
+            const decoded = jwt.verify(token, JWT_SECRET);
+            if (decoded && decoded.placement_access === false) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Access Denied: Your account does not have permission to access the Placement Portal."
+                });
+            }
+            req.user = decoded;
+        } catch (e) {}
+    }
+    next();
+}
+
+router.use(checkPlacementAccess);
 
 
 // ==========================================

@@ -71,9 +71,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   const isAuthorizedStaff = (role === 'admin' || role === 'faculty' || role === 'hod');
 
   if (!currentAdminToken || !currentAdminUser || !isAuthorizedStaff) {
+    if (role === 'student') {
+      window.location.href = 'student_dashboard.html';
+      return;
+    }
     window.location.href = 'Form.html';
     return;
   }
+
+  // Strict Permission Check: placement_access must not be false
+  const hasPlacement = currentAdminUser.placement_access !== false;
+  const hasSocial = currentAdminUser.social_media_access === true;
+
+  if (!hasPlacement) {
+    if (hasSocial) {
+      // User only has Social Media Hub permission
+      window.location.href = 'social_dashboard.html';
+      return;
+    } else {
+      alert('Access Denied: Your account does not have permission to access the Placement Portal.');
+      window.location.href = 'Form.html';
+      return;
+    }
+  }
+
+  localStorage.setItem('csbs_active_portal', 'placement');
 
   const isFaculty = (role === 'faculty');
   const isHOD = (role === 'hod');
@@ -86,16 +108,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     el('adminUserRole').innerText = isFaculty ? 'Faculty Member (View Only)' : (isHOD ? 'Head of Department' : 'Administrator');
   }
   if (el('adminUserAvatar')) {
-    el('adminUserAvatar').style.background = isFaculty ? '#9333ea' : '#7c3aed';
+    el('adminUserAvatar').style.background = isFaculty ? '#1e293b' : '#172033';
   }
   if (el('adminAvatarIcon')) {
     el('adminAvatarIcon').className = isFaculty ? 'fa-solid fa-chalkboard-user' : (isHOD ? 'fa-solid fa-building-columns' : 'fa-solid fa-user-shield');
   }
 
-  // Quick Social Media Hub Access: Below Profile for Faculty, Admin, HOD
-  const socialHubBar = el('profileSocialHubBar');
-  if (socialHubBar) {
-    socialHubBar.style.display = 'block';
+  // Module Switcher Display: Only when staff has BOTH permissions
+  const switcher = el('adminPortalSwitcher');
+  if (switcher) {
+    switcher.style.display = (hasPlacement && hasSocial) ? 'flex' : 'none';
   }
 
   // Faculty Read-Only Banner and UI Restrictions
@@ -121,6 +143,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   fetchStudentRoster();
   loadAnalyticsCharts();
 });
+
+// Module Switcher & Logout Functions
+function toggleAdminPortalSwitcher() {
+  const menu = el('adminSwitcherMenu');
+  if (menu) menu.classList.toggle('form-hidden');
+}
+
+// Close switcher dropdown on outside click
+document.addEventListener('click', (e) => {
+  const switcherBox = el('adminPortalSwitcher');
+  const menu = el('adminSwitcherMenu');
+  if (switcherBox && menu && !switcherBox.contains(e.target)) {
+    menu.classList.add('form-hidden');
+  }
+});
+
+function switchToSocialMedia() {
+  localStorage.setItem('csbs_active_portal', 'social');
+  window.location.href = 'social_dashboard.html';
+}
+
+function handleLogout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('csbs_active_portal');
+  sessionStorage.clear();
+  window.location.replace('Form.html');
+}
 
 // ============================================================
 // HELPERS

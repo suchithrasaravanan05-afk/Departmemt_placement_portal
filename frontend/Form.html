@@ -3,860 +3,344 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RAMCO INSTITUTE OF TECHNOLOGY — Department Portal CSBS</title>
-  <meta name="description" content="Department Portal CSBS — Ramco Institute of Technology. Access Placement Portal and Social Media Management.">
+  <title>RAMCO INSTITUTE OF TECHNOLOGY — CSBS Department Portal</title>
+  <meta name="description" content="Official Department Portal for Computer Science and Business Systems, Ramco Institute of Technology. Access Placement Management and Social Media Hub.">
+  
+  <!-- Modern Inter Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="Form.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="form-auth-bg">
+<body class="enterprise-auth-body">
 
-  <!-- Unified College Header -->
-  <header class="form-header-wrapper">
-    <div class="form-header">
-      <div class="form-logo-group">
-        <img src="rit_logo.png" alt="Ramco Institute of Technology Logo" class="form-logo-img">
-        <div class="form-logo-text">
-          <h1><strong>RAMCO INSTITUTE OF TECHNOLOGY</strong></h1>
-          <p><strong>Department Portal CSBS</strong> <span class="gold-tag">Autonomous</span></p>
+  <!-- =======================================================
+       HEADER / INSTITUTE BRANDING
+       ======================================================= -->
+  <header class="portal-main-header">
+    <div class="portal-header-inner">
+      <div class="header-brand-group">
+        <img src="rit_logo.png" alt="Ramco Institute of Technology" class="header-inst-logo">
+        <div class="header-brand-titles">
+          <span class="inst-name">RAMCO INSTITUTE OF TECHNOLOGY</span>
+          <span class="inst-sub">Department of Computer Science and Business Systems <span class="inst-tag">Autonomous</span></span>
         </div>
       </div>
-      <div class="form-header-right">
-        <div class="form-dept-logo-wrap" title="Department of Computer Science and Business Systems">
-          <img src="csbs_logo.png" alt="Department of Computer Science and Business Systems Logo" class="form-dept-logo-img">
-        </div>
+      <div class="header-dept-badge">
+        <img src="csbs_logo_clean.png" alt="CSBS Department" class="header-csbs-logo" onerror="this.src='csbs_logo.png'">
       </div>
     </div>
   </header>
 
-  <!-- Main Content Wrapper (Split Layout: Left = About Dept, Right = Portal Card) -->
-  <main class="form-auth-wrapper">
-
-    <div class="form-split-layout" id="landingSplitLayout">
-
-      <!-- =======================================================
-           LEFT COLUMN: ABOUT THE DEPARTMENT (CSBS)
-           ======================================================= -->
-      <div class="about-dept-panel" id="aboutDeptPanel">
-        <div class="about-badge">
+  <!-- =======================================================
+       PORTAL MAIN LAYOUT (Split: Left = Dept Info, Right = Auth)
+       ======================================================= -->
+  <main class="portal-auth-layout">
+    <div class="portal-auth-container">
+      
+      <!-- LEFT SECTION: DEPARTMENT DETAILS -->
+      <section class="dept-info-section" aria-label="Department Overview">
+        <div class="dept-info-badge">
           <i class="fa-solid fa-graduation-cap"></i>
           <span>Academic Excellence &bull; Autonomous</span>
         </div>
 
-        <h2 class="about-dept-title">
+        <h1 class="dept-main-title">
           COMPUTER SCIENCE AND BUSINESS SYSTEMS DEPARTMENT
-        </h2>
+        </h1>
 
-        <p class="about-dept-desc">
-          The Department of Computer Science and Business Systems was established in the academic year 2022-23 with intake of 60. The vision of the department is to build competent, industry-ready professionals to largely contribute the society, by imparting the knowledge in the domains of computer science and business systems. The department has a team of well-qualified, highly experienced faculty members and world class infrastructure sufficient to foster the development of the young mind for global fulfillment.
+        <p class="dept-overview-text">
+          Established to foster industry-ready professionals, the Department of Computer Science and Business Systems (CSBS) blends core computational principles with modern enterprise business technologies.
         </p>
 
-        <!-- Professional Curriculum & Career Readiness Section -->
-        <div class="about-curriculum-box">
-          <div class="about-section-subtitle">
-            <i class="fa-solid fa-compass-drafting"></i>
-            <span>Curriculum &amp; Industry Preparedness</span>
-          </div>
-          <p class="about-curriculum-text">
-            This emerging course strives to impart knowledge of cutting-edge technologies and business skills through practical experience to make the students industry-ready. The fundamental objective of this course is to ensure that the students have a solid foundation in computer science as well as to develop an equal interest in and appreciation for humanity, value-added science, and other interrelated topics.
-          </p>
-          <p class="about-curriculum-text">
-            Moreover, the student will be gained experience for the workplace through the use of cutting-edge subjects like computational statistics, software development models, design thinking, cognitive science &amp; analytics, machine learning, financial management, services science and service operational management, marketing research, and marketing management.
-          </p>
-        </div>
-      </div>
-
-      <!-- =======================================================
-           RIGHT COLUMN: DEPARTMENT PORTAL CARDS
-           ======================================================= -->
-      <div class="portal-cards-column">
-
-        <!-- =======================================================
-             SEPARATE SERVICE SELECTION CARD (STEP 1)
-             Shown before login & password to select the department portal service
-             ======================================================= -->
-        <div id="serviceSelectCard" class="form-auth-card service-select-box">
-          <div class="form-auth-header">
-            <div class="form-auth-logo-wrap">
-              <i class="fa-solid fa-layer-group"></i>
-            </div>
-            <h2>Select Department Service</h2>
-            <p>Choose the portal module to proceed to login</p>
-          </div>
-
-          <div class="service-select-group">
-            <label for="initialServiceDropdown" class="portal-dropdown-select-label">
-              <i class="fa-solid fa-building-columns"></i>
-              <span>Department Portal Service:</span>
-            </label>
-            <div class="portal-dropdown-select-wrap">
-              <i class="fa-solid fa-graduation-cap portal-dropdown-current-icon" id="initialDropdownIcon"></i>
-              <select id="initialServiceDropdown" class="portal-dropdown-custom-select" onchange="handleInitialDropdownSelect(this.value)">
-                <option value="placement" selected>🎓 Placement Portal (Student / Faculty / Admin)</option>
-                <option value="social">📱 Department Social Media Hub (Faculty / HOD / Admin)</option>
-              </select>
-              <i class="fa-solid fa-chevron-down portal-dropdown-custom-arrow"></i>
+        <div class="dept-highlights-list">
+          <div class="dept-highlight-item">
+            <div class="highlight-icon"><i class="fa-solid fa-microchip"></i></div>
+            <div class="highlight-content">
+              <strong>Industry-Aligned Curriculum</strong>
+              <span>Focusing on AI, cloud engineering, enterprise systems &amp; financial computing.</span>
             </div>
           </div>
 
-          <!-- Feature Chip reflecting the chosen service -->
-          <div class="service-feature-chip" id="serviceFeatureChip">
-            <i class="fa-solid fa-circle-check" style="color:var(--nav-secondary);"></i>
-            <span id="serviceFeatureText">Includes student placement drives, offer tracking, resume repository &amp; coordinator admin controls.</span>
+          <div class="dept-highlight-item">
+            <div class="highlight-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <div class="highlight-content">
+              <strong>Placement &amp; Corporate Excellence</strong>
+              <span>High-tier corporate drives, industrial internships &amp; professional mentoring.</span>
+            </div>
           </div>
 
-          <button type="button" class="form-submit-btn" id="btnContinueToAuth" onclick="proceedToLoginCard()">
-            <span>Continue to Login</span>
-            <i class="fa-solid fa-arrow-right" style="margin-left:8px;"></i>
-          </button>
-
-          <p class="form-auth-switch" style="margin-top:16px;">
-            Authorized CSBS Department Portal &bull; Ramco Institute of Technology
-          </p>
+          <div class="dept-highlight-item">
+            <div class="highlight-icon"><i class="fa-solid fa-share-nodes"></i></div>
+            <div class="highlight-content">
+              <strong>Department Social Media Hub</strong>
+              <span>Broadcasts, symposiums, technical achievements &amp; collaborative student projects.</span>
+            </div>
+          </div>
         </div>
 
-        <!-- =======================================================
-             UNIFIED CENTERED PORTAL LOGIN CARD (STEP 2)
-             Shown after selecting service with login & password to enter main page
-             ======================================================= -->
-        <div id="unifiedAuthCard" class="form-auth-card form-hidden">
-
-          <!-- Active Service Header Bar (With quick Back to Service Selection) -->
-          <div class="active-service-bar">
-            <div class="active-service-meta">
-              <span class="active-service-pill" id="activeServicePill">
-                <i class="fa-solid fa-graduation-cap" id="activeServiceIcon"></i>
-                <span id="activeServiceName">Placement Portal</span>
-              </span>
-            </div>
-            <button type="button" class="btn-switch-service" onclick="backToServiceSelect()" title="Select a different department service">
-              <i class="fa-solid fa-arrow-left"></i>
-              <span>Change Service</span>
-            </button>
-          </div>
-
-          <!-- =======================================================
-               STATE 1: PLACEMENT PORTAL LOGIN & REGISTRATION
-               ======================================================= -->
-          <div id="portalStatePlacement" class="portal-card-state active">
-            <div class="form-auth-header">
-              <div class="form-auth-logo-wrap">
-                <i class="fa-solid fa-user-graduate" id="roleHeaderIcon"></i>
-              </div>
-              <h2 id="formTitle">Student Login</h2>
-              <p id="formSub">Sign in with your register number</p>
-            </div>
-
-            <!-- Role Selector (Student vs Faculty vs Placement Admin) -->
-            <div class="form-role-selector">
-              <button type="button" class="form-role-btn active" id="btnRoleStudent" onclick="setRole('student')">
-                <i class="fa-solid fa-user-graduate"></i> Student
-              </button>
-              <button type="button" class="form-role-btn" id="btnRoleFaculty" onclick="setRole('faculty')">
-                <i class="fa-solid fa-chalkboard-user"></i> Faculty
-              </button>
-              <button type="button" class="form-role-btn" id="btnRoleAdmin" onclick="setRole('admin')">
-                <i class="fa-solid fa-user-shield"></i> Placement Admin
-              </button>
-            </div>
-
-            <!-- Alert Box -->
-            <div id="authAlert" class="form-hidden"></div>
-
-            <!-- ===== LOGIN FORM ===== -->
-            <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
-              <div class="form-field-group">
-                <label id="lblLoginEmail">
-                  <i class="fa-solid fa-id-card" style="margin-right:4px;"></i>
-                  Register Number
-                </label>
-                <div class="form-input-wrapper">
-                  <i class="fa-solid fa-hashtag form-input-icon" id="loginInputIcon"></i>
-                  <input
-                    type="text"
-                    id="loginEmail"
-                    class="form-input-control"
-                    placeholder="Enter your 12-digit register number (e.g. 953623244001)"
-                    required
-                    autocomplete="off"
-                  >
-                </div>
-              </div>
-
-              <div class="form-field-group">
-                <label>
-                  <i class="fa-solid fa-lock" style="margin-right:4px;"></i>
-                  Password
-                </label>
-                <div class="form-password-wrapper">
-                  <input
-                    type="password"
-                    id="loginPassword"
-                    class="form-input-control"
-                    placeholder="Enter your password"
-                    required
-                    autocomplete="current-password"
-                  >
-                  <button type="button" class="form-toggle-pw" onclick="togglePw('loginPassword', this)">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-
-              <button type="submit" class="form-submit-btn" id="loginBtn">
-                <i class="fa-solid fa-right-to-bracket"></i> Login to Portal
-              </button>
-
-              <p class="form-auth-switch" id="switchAuthModeWrap">
-                New user? <span onclick="toggleAuthMode()">Create an account</span>
-              </p>
-            </form>
-
-            <!-- ===== REGISTER FORM ===== -->
-            <form id="registerForm" class="form-hidden" onsubmit="handleRegister(event)" novalidate>
-              <div class="form-field-group">
-                <label>
-                  <i class="fa-solid fa-user" style="margin-right:4px;"></i>
-                  Full Name
-                </label>
-                <div class="form-input-wrapper">
-                  <i class="fa-solid fa-user form-input-icon"></i>
-                  <input type="text" id="regFullName" class="form-input-control" placeholder="e.g. Anand Kumar S" required autocomplete="name">
-                </div>
-              </div>
-
-              <div class="form-field-group" id="grpRegisterNo">
-                <label id="lblRegIdentifier">
-                  <i class="fa-solid fa-id-badge" style="margin-right:4px;"></i>
-                  Register Number <span style="color:#94a3b8;font-weight:500;">(12-digit)</span>
-                </label>
-                <div class="form-input-wrapper">
-                  <i class="fa-solid fa-hashtag form-input-icon" id="regIdentifierIcon"></i>
-                  <input type="text" id="regRegisterNo" class="form-input-control" placeholder="e.g. 953623244001" maxlength="15" autocomplete="off">
-                </div>
-              </div>
-
-              <!-- Faculty Academic Designation (Shown only when Faculty is selected) -->
-              <div class="form-field-group form-hidden" id="grpFacultyDesignation">
-                <label>
-                  <i class="fa-solid fa-award" style="margin-right:4px;"></i>
-                  Academic Designation
-                </label>
-                <div class="form-input-wrapper">
-                  <i class="fa-solid fa-chalkboard-user form-input-icon"></i>
-                  <select id="regDesignation" class="form-input-control" style="padding-left:42px;">
-                    <option value="Assistant Professor" selected>Assistant Professor</option>
-                    <option value="Associate Professor">Associate Professor</option>
-                    <option value="Professor">Professor</option>
-                    <option value="Placement Faculty Coordinator">Placement Faculty Coordinator</option>
-                    <option value="Head of Department">Head of Department (HOD)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-field-group">
-                <label id="lblRegEmail">
-                  <i class="fa-solid fa-envelope" style="margin-right:4px;"></i>
-                  Email Address
-                </label>
-                <div class="form-input-wrapper">
-                  <i class="fa-solid fa-envelope form-input-icon"></i>
-                  <input type="email" id="regEmail" class="form-input-control" placeholder="e.g. student@rit.ac.in" required autocomplete="email">
-                </div>
-              </div>
-
-              <div class="form-field-group">
-                <label>
-                  <i class="fa-solid fa-lock" style="margin-right:4px;"></i>
-                  Password <span style="color:#94a3b8;font-weight:500;">(min 6 chars)</span>
-                </label>
-                <div class="form-password-wrapper">
-                  <input type="password" id="regPassword" class="form-input-control" placeholder="Create a strong password" required minlength="6" autocomplete="new-password">
-                  <button type="button" class="form-toggle-pw" onclick="togglePw('regPassword', this)">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-
-              <div class="form-grid-row" id="grpStudentDetails">
-                <div class="form-field-group" style="margin-bottom:0;">
-                  <label>Academic Year</label>
-                  <select id="regYear" class="form-input-control" style="padding-left:14px;">
-                    <option value="5">2022-2026 (Passed Out)</option>
-                    <option value="4" selected>2023-2027 (Default Year)</option>
-                    <option value="3">2024-2028</option>
-                    <option value="2">2025-2029</option>
-                    <option value="1">2026-2030</option>
-                  </select>
-                </div>
-                <div class="form-field-group" style="margin-bottom:0;" id="grpPhoneWrapper">
-                  <label>Phone Number</label>
-                  <div class="form-input-wrapper">
-                    <i class="fa-solid fa-phone form-input-icon"></i>
-                    <input type="tel" id="regPhone" class="form-input-control" placeholder="10-digit mobile" maxlength="10" autocomplete="tel">
-                  </div>
-                </div>
-              </div>
-
-              <!-- Faculty Phone Field (when grpStudentDetails is hidden) -->
-              <div class="form-field-group form-hidden" id="grpFacultyPhone">
-                <label>
-                  <i class="fa-solid fa-phone" style="margin-right:4px;"></i>
-                  Contact Phone Number
-                </label>
-                <div class="form-input-wrapper">
-                  <i class="fa-solid fa-phone form-input-icon"></i>
-                  <input type="tel" id="regFacultyPhone" class="form-input-control" placeholder="10-digit mobile" maxlength="10" autocomplete="tel">
-                </div>
-              </div>
-
-              <button type="submit" class="form-submit-btn" id="registerBtn">
-                <i class="fa-solid fa-user-plus"></i> Register Account
-              </button>
-
-              <p class="form-auth-switch">
-                Already registered? <span onclick="toggleAuthMode()">Back to Login</span>
-              </p>
-            </form>
-          </div>
-
-      <!-- =======================================================
-           STATE 2: SOCIAL MEDIA LOGIN (INSIDE THE EXACT SAME CARD)
-           ======================================================= -->
-      <div id="portalStateSocial" class="portal-card-state form-hidden">
-        <div class="form-auth-header">
-          <div class="form-auth-logo-wrap">
-            <i class="fa-solid fa-share-nodes"></i>
-          </div>
-          <h2>Social Media Login</h2>
-          <p>Multi-Platform Publishing for YouTube, LinkedIn, Instagram & Facebook</p>
+        <div class="dept-footer-meta">
+          <span><i class="fa-solid fa-shield-halved"></i> Affiliated to Anna University &bull; Approved by AICTE</span>
         </div>
+      </section>
 
-        <!-- Staff Role Toggle -->
-        <div class="social-role-badges">
-          <button type="button" class="social-role-btn active" id="btnStaffFaculty" onclick="setSocialStaffRole('faculty')">
-            <i class="fa-solid fa-chalkboard-user"></i>
-            <span>Faculty</span>
-          </button>
-          <button type="button" class="social-role-btn" id="btnStaffHOD" onclick="setSocialStaffRole('hod')">
-            <i class="fa-solid fa-building-columns"></i>
-            <span>HOD</span>
-          </button>
-          <button type="button" class="social-role-btn" id="btnStaffAdmin" onclick="setSocialStaffRole('admin')">
-            <i class="fa-solid fa-user-shield"></i>
-            <span>Admin</span>
-          </button>
-        </div>
-
-        <!-- Alert Box for Social Auth -->
-        <div id="socialAlert" class="form-hidden"></div>
-
-        <!-- ===== SOCIAL LOGIN FORM ===== -->
-        <form id="socialLoginForm" onsubmit="handleSocialLogin(event)" novalidate>
-          <div class="form-field-group">
-            <label id="lblSocialUser">
-              <i class="fa-solid fa-id-badge" style="margin-right:4px;"></i>
-              Username / Official Email
-            </label>
-            <div class="form-input-wrapper">
-              <i class="fa-solid fa-user-tie form-input-icon" id="socialInputIcon"></i>
-              <input
-                type="text"
-                id="socialEmail"
-                class="form-input-control"
-                placeholder="Enter Staff ID or Email (e.g. faculty)"
-                required
-                autocomplete="username"
-              >
-            </div>
-          </div>
-
-          <div class="form-field-group">
-            <label>
-              <i class="fa-solid fa-lock" style="margin-right:4px;"></i>
-              Password
-            </label>
-            <div class="form-password-wrapper">
-              <input
-                type="password"
-                id="socialPassword"
-                class="form-input-control"
-                placeholder="Enter staff password"
-                required
-                autocomplete="current-password"
-              >
-              <button type="button" class="form-toggle-pw" onclick="togglePw('socialPassword', this)">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" class="form-submit-btn" id="socialLoginBtn">
-            <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Social Media
-          </button>
-
-          <!-- Quick Test Credentials for One-Click Convenience -->
-          <div class="quick-cred-pills">
-            <span style="font-size:11.5px;color:var(--text-secondary);font-weight:700;width:100%;">Quick Test Logins:</span>
-            <button type="button" class="quick-cred-btn" onclick="fillSocialCreds('faculty', 'faculty123', 'faculty')">
-              <i class="fa-solid fa-chalkboard-user"></i> Faculty
-            </button>
-            <button type="button" class="quick-cred-btn" onclick="fillSocialCreds('hod', 'hod123', 'hod')">
-              <i class="fa-solid fa-building-columns"></i> HOD
-            </button>
-            <button type="button" class="quick-cred-btn" onclick="fillSocialCreds('admin', 'admin123', 'admin')">
-              <i class="fa-solid fa-user-shield"></i> Admin
-            </button>
-          </div>
-
-          <p class="form-auth-switch" style="margin-top:14px;">
-            Authorized CSBS Staff & Coordinators only.
-          </p>
-          </form>
-        </div><!-- End portalStateSocial -->
-
-      </div><!-- End unifiedAuthCard -->
-
-    </div><!-- End portal-cards-column -->
-
-  </div><!-- End landingSplitLayout -->
-
-    <!-- =======================================================
-         AUTHENTICATED SOCIAL MEDIA STUDIO (Shown when Staff logs in)
-         ======================================================= -->
-    <div id="socialStudioSection" class="social-container form-hidden">
-      <div class="social-studio-card">
+      <!-- RIGHT SECTION: AUTHENTICATION FLOW -->
+      <section class="portal-auth-card-section" aria-label="Portal Authentication">
         
-        <!-- Studio Header -->
-        <div class="social-studio-header">
-          <div class="studio-user-info">
-            <div class="studio-user-avatar" id="studioAvatar">H</div>
-            <div class="studio-user-details">
-              <h3>
-                <span id="studioUserName">Dr. K. Vijayalakshmi</span>
-                <span class="studio-role-tag" id="studioRoleTag">HOD</span>
-              </h3>
-              <p id="studioUserDesc">Head of Department — Computer Science & Business Systems</p>
-            </div>
+        <!-- STEP 1: CHOICE SCREEN (Student Login vs Faculty Login) -->
+        <div id="viewPortalChoice" class="auth-panel-card active">
+          <div class="panel-card-header">
+            <div class="panel-icon-circle"><i class="fa-solid fa-building-columns"></i></div>
+            <h2>CSBS Department Portal</h2>
+            <p>Select your login portal to proceed</p>
           </div>
-          <div class="studio-header-actions">
-            <button type="button" class="btn-studio-logout" onclick="handleSocialLogout()">
-              <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+
+          <div class="choice-options-group">
+            <!-- Choice A: Student Login -->
+            <button type="button" class="choice-card-btn" id="btnChooseStudent" onclick="showStudentAuth()">
+              <div class="choice-icon-wrap blue">
+                <i class="fa-solid fa-user-graduate"></i>
+              </div>
+              <div class="choice-text-wrap">
+                <span class="choice-title">Student Login</span>
+                <span class="choice-desc">Access placement drives, applications &amp; resume profile</span>
+              </div>
+              <div class="choice-arrow"><i class="fa-solid fa-arrow-right"></i></div>
             </button>
+
+            <!-- Choice B: Faculty Login -->
+            <button type="button" class="choice-card-btn" id="btnChooseFaculty" onclick="showStaffRoleSelect()">
+              <div class="choice-icon-wrap navy">
+                <i class="fa-solid fa-user-tie"></i>
+              </div>
+              <div class="choice-text-wrap">
+                <span class="choice-title">Faculty Login</span>
+                <span class="choice-desc">Faculty, Head of Department &amp; Administrator access</span>
+              </div>
+              <div class="choice-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            </button>
+          </div>
+
+          <div class="portal-card-footer">
+            <i class="fa-solid fa-lock"></i>
+            <span>Authorized institutional credentials required</span>
           </div>
         </div>
 
-        <!-- Studio Body -->
-        <div class="social-studio-body">
-          
-          <!-- Left Column: Post Composer -->
-          <div class="social-composer-panel">
-            <div class="panel-title">
-              <span><i class="fa-solid fa-bullhorn"></i> CSBS Department Social Broadcast</span>
-              <span class="dept-badge-pill">CSBS Department Only</span>
-            </div>
+        <!-- STEP 2: STUDENT LOGIN FORM -->
+        <div id="viewStudentAuth" class="auth-panel-card form-hidden">
+          <div class="panel-card-header">
+            <button type="button" class="btn-back-nav" onclick="showPortalChoice()" title="Back to choices">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <div class="panel-icon-circle blue"><i class="fa-solid fa-user-graduate"></i></div>
+            <h2>Student Login</h2>
+            <p>Enter your institutional register number &amp; password</p>
+          </div>
 
-            <!-- Multi-Platform Selection Toggles -->
-            <label class="field-label-main">
-              Select Target Platforms (Multi-Select):
-              <span class="field-hint">Same unified content will be broadcast to all selected channels</span>
-            </label>
-            <div class="platform-toggles-grid">
-              <button type="button" class="platform-toggle-btn selected" data-platform="youtube" onclick="togglePlatform(this, 'youtube')">
-                <i class="fa-brands fa-youtube" style="color:#dc2626;"></i>
-                <span>YouTube</span>
-              </button>
-              <button type="button" class="platform-toggle-btn selected" data-platform="linkedin" onclick="togglePlatform(this, 'linkedin')">
-                <i class="fa-brands fa-linkedin" style="color:#0a66c2;"></i>
-                <span>LinkedIn</span>
-              </button>
-              <button type="button" class="platform-toggle-btn selected" data-platform="instagram" onclick="togglePlatform(this, 'instagram')">
-                <i class="fa-brands fa-instagram" style="color:#c13584;"></i>
-                <span>Instagram</span>
-              </button>
-              <button type="button" class="platform-toggle-btn selected" data-platform="facebook" onclick="togglePlatform(this, 'facebook')">
-                <i class="fa-brands fa-facebook" style="color:#1877f2;"></i>
-                <span>Facebook</span>
-              </button>
-            </div>
+          <!-- Alert Box -->
+          <div id="studentAlertBox" class="alert-box form-hidden" role="alert"></div>
 
-            <!-- Post Title / Announcement Topic -->
-            <div class="social-field">
-              <label>Announcement Headline / Title</label>
-              <input
-                type="text"
-                id="postTitle"
-                placeholder="e.g. CSBS Department National Symposium on Applied AI & Business Systems"
-                value="National Symposium on Applied AI & Enterprise Business Systems — CSBS Department"
-                oninput="handleContentInput()"
-                required
-              >
-            </div>
-
-            <!-- Department Category -->
-            <div class="social-field">
-              <label>Department Category</label>
-              <select id="postCategory" onchange="handleCategoryChange(this.value)">
-                <option value="Department Symposium" selected>💡 Department Symposium & Technical Events</option>
-                <option value="Student Innovation">🚀 Student Hackathons, Projects & Competitions</option>
-                <option value="Placement Milestone">💼 Placement & Internship Milestones (CSBS Cohorts)</option>
-                <option value="Industry MoU">🤝 Industry MoUs & Industrial Visits</option>
-                <option value="Academic Excellence">🎓 Academic Excellence & Anna University Honors</option>
-                <option value="Faculty Research">🔬 Faculty Research, Patents & Publications</option>
-                <option value="Guest Lecture">🎤 Industry Guest Lectures & Expert Mentorship</option>
-                <option value="Department Notice">📢 Department Circulars & Student Notices</option>
-              </select>
-            </div>
-
-            <!-- Media Upload Box (Photograph OR Video) -->
-            <div class="social-field">
-              <div class="media-field-header">
-                <label>Media / Photograph / Video (Optional)</label>
-                <span class="media-type-indicator" id="mediaTypeBadge">
-                  <i class="fa-regular fa-image"></i> No Media Attached
-                </span>
-              </div>
-
-              <!-- Upload Zone -->
-              <div class="media-drop-zone" id="mediaDropZone" onclick="document.getElementById('mediaFileInput').click()">
-                <input
-                  type="file"
-                  id="mediaFileInput"
-                  class="form-hidden"
-                  accept="image/*,video/*"
-                  onchange="handleMediaFileUpload(this)"
-                >
-                <div class="media-drop-content">
-                  <div class="media-drop-icon">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                  </div>
-                  <div class="media-drop-text">
-                    <p class="media-drop-main"><strong>Click to upload</strong> Department Photograph or Video</p>
-                    <p class="media-drop-sub">JPG, PNG, WebP (Photos) or MP4, WebM, MOV (Playable Videos up to 50MB)</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Uploaded Media Status Bar (Hidden by default until file is selected) -->
-              <div id="mediaUploadStatus" class="media-status-bar form-hidden">
-                <div class="media-status-left">
-                  <i class="fa-solid fa-circle-check media-status-check"></i>
-                  <div class="media-file-meta">
-                    <span id="mediaFileName" class="media-filename">file_name.jpg</span>
-                    <span id="mediaFileSize" class="media-filesize">2.4 MB • Video</span>
-                  </div>
-                </div>
-                <button type="button" class="btn-remove-media" onclick="removeUploadedMedia()" title="Remove media">
-                  <i class="fa-solid fa-xmark"></i> Remove Media
-                </button>
-              </div>
-
-              <!-- Custom URL Input (Optional) -->
-              <div class="media-custom-url-row" style="margin-top:10px;">
-                <input
-                  type="text"
-                  id="postMediaCustomUrl"
-                  placeholder="Or paste external image/video link (optional, e.g. https://...)"
-                  oninput="handleCustomUrlInput(this.value)"
+          <form id="studentLoginForm" onsubmit="handleStudentLogin(event)" novalidate>
+            <div class="form-group">
+              <label for="studentRegNo">Register Number / Student ID</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-id-card input-icon"></i>
+                <input 
+                  type="text" 
+                  id="studentRegNo" 
+                  class="form-control" 
+                  placeholder="e.g. 953623244001" 
+                  required 
+                  autocomplete="username"
+                  autocapitalize="off"
                 >
               </div>
             </div>
 
-            <!-- Content Description & Auto-Enhancer -->
-            <div class="social-field">
-              <div class="content-field-header">
-                <label>Announcement Details / Description</label>
-                <button type="button" class="btn-auto-magic" id="btnAutoMagic" onclick="autoEnhanceContent(true)" title="Auto-format and polish content for CSBS department broadcast">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Format Department Text
-                </button>
+            <div class="form-group">
+              <div class="label-row">
+                <label for="studentPassword">Password</label>
+                <a href="javascript:void(0)" class="forgot-link" onclick="openForgotModal()">Forgot Password?</a>
               </div>
-              <textarea
-                id="postContent"
-                placeholder="Write the CSBS department announcement details..."
-                oninput="handleContentInput()"
-                required
-              >The Department of Computer Science and Business Systems (CSBS) is proud to announce the National Symposium on Applied AI & Enterprise Business Systems. Featuring distinguished keynote speakers from premier IT corporations, hands-on coding hackathons, technical paper tracks, and student project exhibitions. Open to all engineering students!</textarea>
-              <div class="same-content-notice">
-                <i class="fa-solid fa-circle-info"></i>
-                <span>This identical broadcast content is automatically delivered across all selected platforms.</span>
+              <div class="input-wrap">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input 
+                  type="password" 
+                  id="studentPassword" 
+                  class="form-control" 
+                  placeholder="Enter your password" 
+                  required 
+                  autocomplete="current-password"
+                >
+                <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('studentPassword', this)" title="Show/hide password">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
               </div>
             </div>
 
-            <!-- Department-Specific Hashtags -->
-            <div class="social-field" style="margin-top:14px;">
-              <div class="hashtags-header">
-                <label>Department Hashtags</label>
-                <button type="button" class="btn-reset-tags" onclick="resetDepartmentHashtags()" title="Reset to suggested department tags">
-                  <i class="fa-solid fa-rotate-left"></i> Reset Tags
-                </button>
-              </div>
-              <input
-                type="text"
-                id="postHashtags"
-                value="#RITCSBS #CSBSDepartment #ComputerScienceAndBusinessSystems #BusinessWithTech #CSBSSymposium #EngineeringExcellence"
-                oninput="handleContentInput()"
-              >
-            </div>
+            <button type="submit" class="btn-primary-action" id="btnStudentSubmit">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Sign In to Student Portal</span>
+            </button>
+          </form>
 
-            <button type="button" class="publish-submit-btn" id="publishBtn" onclick="handlePublishPost()">
-              <i class="fa-solid fa-paper-plane"></i> Broadcast to Selected Platforms
+          <div class="panel-info-note">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Students have direct access to Placement Management Portal</span>
+          </div>
+        </div>
+
+        <!-- STEP 3: FACULTY PORTAL ROLE SELECTION -->
+        <div id="viewStaffRoleSelect" class="auth-panel-card form-hidden">
+          <div class="panel-card-header">
+            <button type="button" class="btn-back-nav" onclick="showPortalChoice()" title="Back to choices">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <div class="panel-icon-circle navy"><i class="fa-solid fa-user-tie"></i></div>
+            <h2>Faculty Portal</h2>
+            <p>Select your designated role to continue</p>
+          </div>
+
+          <div class="role-selection-grid">
+            <button type="button" class="role-select-item" onclick="proceedToStaffAuth('faculty')">
+              <div class="role-item-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+              <div class="role-item-info">
+                <strong>Faculty</strong>
+                <span>Teaching faculty, course mentors &amp; coordinators</span>
+              </div>
+              <i class="fa-solid fa-chevron-right role-arrow"></i>
+            </button>
+
+            <button type="button" class="role-select-item" onclick="proceedToStaffAuth('hod')">
+              <div class="role-item-icon"><i class="fa-solid fa-building-columns"></i></div>
+              <div class="role-item-info">
+                <strong>HOD</strong>
+                <span>Head of Department — CSBS administration</span>
+              </div>
+              <i class="fa-solid fa-chevron-right role-arrow"></i>
+            </button>
+
+            <button type="button" class="role-select-item" onclick="proceedToStaffAuth('admin')">
+              <div class="role-item-icon"><i class="fa-solid fa-user-shield"></i></div>
+              <div class="role-item-info">
+                <strong>Admin</strong>
+                <span>Placement cell coordinator &amp; portal manager</span>
+              </div>
+              <i class="fa-solid fa-chevron-right role-arrow"></i>
             </button>
           </div>
 
-          <!-- Right Column: Live Interactive Multi-Platform Preview -->
-          <div class="social-preview-panel">
-            <div class="panel-title">
-              <span><i class="fa-solid fa-eye"></i> Live Multi-Platform Preview</span>
-              <span id="previewLiveBadge" class="preview-mode-tag">
-                <i class="fa-solid fa-image"></i> Photo Broadcast
-              </span>
-            </div>
-
-            <!-- Preview Tabs -->
-            <div class="preview-tabs-bar">
-              <button type="button" class="preview-tab-btn active" id="tabPreYouTube" onclick="switchPreviewTab('youtube')">
-                <i class="fa-brands fa-youtube" style="color:#dc2626;"></i> YouTube
-              </button>
-              <button type="button" class="preview-tab-btn" id="tabPreLinkedIn" onclick="switchPreviewTab('linkedin')">
-                <i class="fa-brands fa-linkedin" style="color:#0a66c2;"></i> LinkedIn
-              </button>
-              <button type="button" class="preview-tab-btn" id="tabPreInstagram" onclick="switchPreviewTab('instagram')">
-                <i class="fa-brands fa-instagram" style="color:#c13584;"></i> Instagram
-              </button>
-              <button type="button" class="preview-tab-btn" id="tabPreFacebook" onclick="switchPreviewTab('facebook')">
-                <i class="fa-brands fa-facebook" style="color:#1877f2;"></i> Facebook
-              </button>
-            </div>
-
-            <!-- Mockup Frame 1: YouTube -->
-            <div id="previewYouTube" class="preview-card-frame yt-preview-card">
-              <div class="yt-video-thumb" id="ytMediaContainer" onclick="handlePreviewMediaClick('youtube')">
-                <img id="ytMockImg" src="" alt="Broadcast Image" class="form-hidden">
-                <video id="ytMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
-                <!-- Play symbol ONLY visible when video is uploaded -->
-                <div class="yt-play-icon form-hidden" id="ytPlayIcon" onclick="playMockVideo(event, 'ytMockVideo')">
-                  <i class="fa-solid fa-play"></i>
-                </div>
-                <!-- Clean text announcement fallback when no media is uploaded -->
-                <div id="ytNoMediaNotice" class="yt-no-media-box">
-                  <i class="fa-solid fa-bullhorn"></i>
-                  <p id="ytNoMediaTitle">Department Official Broadcast</p>
-                  <span>Text Announcement Mode (No Media Attached)</span>
-                </div>
-              </div>
-              <div class="yt-video-details">
-                <div class="yt-channel-avatar">CSBS</div>
-                <div class="yt-video-meta">
-                  <h4 id="ytMockTitle">National Symposium on Applied AI & Enterprise Business Systems</h4>
-                  <p>Department of CSBS &bull; Ramco Institute of Technology &bull; Just now</p>
-                </div>
-              </div>
-              <div class="yt-description-box" id="ytMockDescBox">
-                <div class="yt-desc-header"><i class="fa-solid fa-align-left"></i> Broadcast Description (Delivered Content):</div>
-                <div id="ytMockDesc" class="yt-desc-content"></div>
-              </div>
-            </div>
-
-            <!-- Mockup Frame 2: LinkedIn -->
-            <div id="previewLinkedIn" class="preview-card-frame li-preview-card form-hidden">
-              <div class="li-header">
-                <div class="li-avatar"><i class="fa-solid fa-graduation-cap"></i></div>
-                <div class="li-info">
-                  <h5>Department of Computer Science and Business Systems (CSBS)</h5>
-                  <p>Ramco Institute of Technology &bull; Official Department Update &bull; Just now</p>
-                </div>
-              </div>
-              <div class="li-body-text" id="liMockText"></div>
-              <div class="li-media-box form-hidden" id="liMediaContainer" onclick="handlePreviewMediaClick('linkedin')">
-                <img id="liMockImg" src="" alt="LinkedIn Media" class="form-hidden">
-                <video id="liMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
-              </div>
-              <div class="li-actions-bar">
-                <span><i class="fa-regular fa-thumbs-up"></i> Like</span>
-                <span><i class="fa-regular fa-comment-dots"></i> Comment</span>
-                <span><i class="fa-solid fa-repeat"></i> Repost</span>
-                <span><i class="fa-regular fa-paper-plane"></i> Send</span>
-              </div>
-            </div>
-
-            <!-- Mockup Frame 3: Instagram -->
-            <div id="previewInstagram" class="preview-card-frame ig-preview-card form-hidden">
-              <div class="ig-header">
-                <div class="ig-avatar">
-                  <div class="ig-avatar-inner">CSBS</div>
-                </div>
-                <div class="ig-username">rit_csbs_official</div>
-                <div class="ig-dots"><i class="fa-solid fa-ellipsis"></i></div>
-              </div>
-              <div class="ig-media-box" id="igMediaContainer" onclick="handlePreviewMediaClick('instagram')">
-                <img id="igMockImg" src="" alt="Instagram Media" class="form-hidden">
-                <video id="igMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
-                <div id="igNoMediaNotice" class="ig-no-media-box">
-                  <div class="ig-quote-icon"><i class="fa-solid fa-quote-left"></i></div>
-                  <div id="igTextCardSnippet" class="ig-text-card-snippet">CSBS Department Announcement</div>
-                  <span class="ig-text-card-badge">CSBS • RIT</span>
-                </div>
-              </div>
-              <div class="ig-actions-bar">
-                <div class="ig-actions-left">
-                  <i class="fa-regular fa-heart" style="color:#ef4444;"></i>
-                  <i class="fa-regular fa-comment"></i>
-                  <i class="fa-regular fa-paper-plane"></i>
-                </div>
-                <i class="fa-regular fa-bookmark"></i>
-              </div>
-              <div class="ig-likes-count">Liked by <strong>dr_vijayalakshmi</strong> and <strong>185 others</strong></div>
-              <div class="ig-caption">
-                <strong>rit_csbs_official</strong>
-                <span id="igMockCaption"></span>
-              </div>
-            </div>
-
-            <!-- Mockup Frame 4: Facebook -->
-            <div id="previewFacebook" class="preview-card-frame fb-preview-card form-hidden">
-              <div class="fb-header">
-                <div class="fb-avatar"><i class="fa-solid fa-laptop-code"></i></div>
-                <div class="fb-meta">
-                  <h5>Department of CSBS — Ramco Institute of Technology</h5>
-                  <p>Just now &bull; <i class="fa-solid fa-earth-americas"></i> Public Broadcast</p>
-                </div>
-              </div>
-              <div class="fb-content" id="fbMockContent"></div>
-              <div class="fb-media form-hidden" id="fbMediaContainer" onclick="handlePreviewMediaClick('facebook')">
-                <img id="fbMockImg" src="" alt="Facebook Media" class="form-hidden">
-                <video id="fbMockVideo" class="preview-media-player form-hidden" controls playsinline preload="metadata"></video>
-              </div>
-              <div class="fb-engagement-stats">
-                <span><i class="fa-solid fa-thumbs-up" style="color:#1877f2;"></i> <i class="fa-solid fa-heart" style="color:#ef4444;"></i> 210</span>
-                <span>34 comments &bull; 19 shares</span>
-              </div>
-              <div class="fb-reactions">
-                <span><i class="fa-regular fa-thumbs-up" style="color:#1877f2;"></i> Like</span>
-                <span><i class="fa-regular fa-message"></i> Comment</span>
-                <span><i class="fa-solid fa-share"></i> Share</span>
-              </div>
-            </div>
-
+          <div class="portal-card-footer">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Your selected role will be verified against Supabase database</span>
           </div>
         </div>
 
-        <!-- =======================================================
-             PAST BROADCASTS & DELIVERED CONTENT AUDIT LOG
-             Shows: Whom it was delivered by, When delivered, What content delivered, Where delivered
-             ======================================================= -->
-        <div class="social-feed-section" id="broadcastHistorySection">
-          <div class="feed-header-main">
-            <div>
-              <div class="feed-title">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>Department Broadcast History &amp; Delivered Content</span>
-              </div>
-              <p class="feed-subtitle">Complete audit record of announcements broadcast by CSBS department staff, including author, exact delivery time, platforms, and delivered content.</p>
-            </div>
-
-            <!-- Quick Stats Pills -->
-            <div class="feed-stats-bar">
-              <div class="feed-stat-item">
-                <span class="stat-num" id="statTotalPosts">0</span>
-                <span class="stat-lbl">Broadcasts</span>
-              </div>
-              <div class="feed-stat-item">
-                <span class="stat-num" id="statTotalVideos">0</span>
-                <span class="stat-lbl">Videos</span>
-              </div>
-              <div class="feed-stat-item">
-                <span class="stat-num" id="statTotalPhotos">0</span>
-                <span class="stat-lbl">Photos</span>
-              </div>
-            </div>
+        <!-- STEP 4: STAFF AUTHENTICATION FORM -->
+        <div id="viewStaffAuth" class="auth-panel-card form-hidden">
+          <div class="panel-card-header">
+            <button type="button" class="btn-back-nav" onclick="backToStaffRoleSelect()" title="Change selected role">
+              <i class="fa-solid fa-arrow-left"></i> Change Role
+            </button>
+            <div class="panel-icon-circle navy" id="staffRoleHeaderIcon"><i class="fa-solid fa-user-tie"></i></div>
+            <h2 id="staffAuthTitle">Faculty Login</h2>
+            <p id="staffAuthSub">Sign in with your official staff credentials</p>
           </div>
 
-          <!-- Filter & Search Controls -->
-          <div class="feed-controls-row">
-            <div class="feed-filter-chips">
-              <button type="button" class="feed-filter-btn active" onclick="filterFeed('all', this)">All Platforms</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('youtube', this)"><i class="fa-brands fa-youtube" style="color:#dc2626;"></i> YouTube</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('linkedin', this)"><i class="fa-brands fa-linkedin" style="color:#0a66c2;"></i> LinkedIn</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('instagram', this)"><i class="fa-brands fa-instagram" style="color:#c13584;"></i> Instagram</button>
-              <button type="button" class="feed-filter-btn" onclick="filterFeed('facebook', this)"><i class="fa-brands fa-facebook" style="color:#1877f2;"></i> Facebook</button>
+          <!-- Alert Box -->
+          <div id="staffAlertBox" class="alert-box form-hidden" role="alert"></div>
+
+          <form id="staffLoginForm" onsubmit="handleStaffLogin(event)" novalidate>
+            <div class="form-group">
+              <label for="staffIdentifier" id="lblStaffIdentifier">Faculty ID / Official Email</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-user-tie input-icon" id="staffIdentIcon"></i>
+                <input 
+                  type="text" 
+                  id="staffIdentifier" 
+                  class="form-control" 
+                  placeholder="e.g. faculty@rit.ac.in or Staff ID" 
+                  required 
+                  autocomplete="username"
+                >
+              </div>
             </div>
 
-            <div class="feed-search-wrap">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="feedSearchInput" placeholder="Search delivered content or author..." oninput="handleFeedSearch(this.value)">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="staffPassword">Password</label>
+                <a href="javascript:void(0)" class="forgot-link" onclick="openForgotModal()">Forgot Password?</a>
+              </div>
+              <div class="input-wrap">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input 
+                  type="password" 
+                  id="staffPassword" 
+                  class="form-control" 
+                  placeholder="Enter your password" 
+                  required 
+                  autocomplete="current-password"
+                >
+                <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('staffPassword', this)" title="Show/hide password">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div id="socialFeedGrid" class="feed-grid">
-            <!-- Feed cards will be rendered dynamically by Form.js -->
+            <button type="submit" class="btn-primary-action" id="btnStaffSubmit">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Authenticate &amp; Enter Portal</span>
+            </button>
+          </form>
+
+          <div class="panel-info-note">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Module access (Placement Portal / Social Media Hub) is dynamically assigned by permissions.</span>
           </div>
         </div>
 
-      </div>
+      </section>
     </div>
-
-    <!-- =======================================================
-         DELIVERY DETAILS MODAL (Inspect full delivered content)
-         ======================================================= -->
-    <div id="deliveryModal" class="delivery-modal-backdrop form-hidden" onclick="closeDeliveryModal(event)">
-      <div class="delivery-modal-content" onclick="event.stopPropagation()">
-        <div class="delivery-modal-header">
-          <div class="modal-title-wrap">
-            <i class="fa-solid fa-file-lines"></i>
-            <div>
-              <h4 id="modalPostTitle">Delivered Broadcast Details</h4>
-              <span id="modalCategoryBadge" class="modal-cat-tag">Symposium</span>
-            </div>
-          </div>
-          <button type="button" class="btn-modal-close" onclick="closeDeliveryModal()" title="Close Details">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <div class="delivery-modal-body">
-          <div class="modal-meta-grid">
-            <div class="modal-meta-item">
-              <span class="meta-lbl"><i class="fa-solid fa-user-tie"></i> Delivered By:</span>
-              <strong id="modalAuthor">Dr. K. Vijayalakshmi (HOD)</strong>
-              <small id="modalDesignation">Head of Department — CSBS</small>
-            </div>
-            <div class="modal-meta-item">
-              <span class="meta-lbl"><i class="fa-solid fa-calendar-check"></i> Delivered At:</span>
-              <strong id="modalTimestamp">Monday, Sep 14, 2026 • 10:45 AM</strong>
-              <small id="modalRelativeTime">2 days ago</small>
-            </div>
-            <div class="modal-meta-item" style="grid-column: 1 / -1;">
-              <span class="meta-lbl"><i class="fa-solid fa-share-nodes"></i> Target Platforms Reached:</span>
-              <div id="modalPlatforms" class="modal-platforms-row"></div>
-            </div>
-          </div>
-
-          <div class="modal-content-section">
-            <label class="meta-lbl"><i class="fa-solid fa-bullhorn"></i> Delivered Content Text:</label>
-            <div id="modalBodyText" class="modal-content-box"></div>
-          </div>
-
-          <div class="modal-content-section">
-            <label class="meta-lbl"><i class="fa-solid fa-hashtag"></i> Delivered Hashtags:</label>
-            <div id="modalHashtags" class="modal-tags-box"></div>
-          </div>
-
-          <div id="modalMediaSection" class="modal-media-wrap form-hidden">
-            <label class="meta-lbl"><i class="fa-solid fa-photo-film"></i> Attached Media:</label>
-            <div id="modalMediaDisplay" class="modal-media-box"></div>
-          </div>
-        </div>
-        <div class="delivery-modal-footer">
-          <button type="button" class="btn-copy-modal" onclick="copyModalContent()">
-            <i class="fa-solid fa-copy"></i> Copy Delivered Text
-          </button>
-          <button type="button" class="btn-close-modal" onclick="closeDeliveryModal()">
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-
   </main>
+
+  <!-- =======================================================
+       CLEAN FORGOT PASSWORD MODAL
+       ======================================================= -->
+  <div id="forgotModal" class="modal-backdrop form-hidden" onclick="closeForgotModal(event)">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fa-solid fa-key"></i></div>
+        <div>
+          <h3>Account Assistance</h3>
+          <p>Reset institutional password</p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="closeForgotModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>To reset your password or update credentials, please reach out to the CSBS Department Portal Administrator or Institutional IT Helpdesk:</p>
+        <div class="contact-card">
+          <div><i class="fa-solid fa-envelope"></i> <strong>Email:</strong> csbs@rit.ac.in / placement@rit.ac.in</div>
+          <div><i class="fa-solid fa-phone"></i> <strong>Intercom:</strong> Ext. 312 / CSBS Admin Desk</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-close" onclick="closeForgotModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Screen Overlay -->
+  <div id="portalLoadingOverlay" class="loading-overlay form-hidden">
+    <div class="loading-spinner-box">
+      <i class="fa-solid fa-circle-notch fa-spin"></i>
+      <div class="loading-title">Loading your portal...</div>
+      <div class="loading-desc" id="loadingOverlayDesc">Verifying role and module permissions</div>
+    </div>
+  </div>
 
   <script src="Form.js"></script>
 </body>
