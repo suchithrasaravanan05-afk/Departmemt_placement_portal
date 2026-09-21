@@ -101,7 +101,7 @@
           <div class="choice-options-group">
             <!-- Choice A: Student Login -->
             <button type="button" class="choice-card-btn" id="btnChooseStudent" onclick="showStudentAuth()">
-              <div class="choice-icon-wrap blue">
+              <div class="choice-icon-wrap purple">
                 <i class="fa-solid fa-user-graduate"></i>
               </div>
               <div class="choice-text-wrap">
@@ -113,7 +113,7 @@
 
             <!-- Choice B: Faculty Login -->
             <button type="button" class="choice-card-btn" id="btnChooseFaculty" onclick="showStaffRoleSelect()">
-              <div class="choice-icon-wrap navy">
+              <div class="choice-icon-wrap pink">
                 <i class="fa-solid fa-user-tie"></i>
               </div>
               <div class="choice-text-wrap">
@@ -136,7 +136,7 @@
             <button type="button" class="btn-back-nav" onclick="showPortalChoice()" title="Back to choices">
               <i class="fa-solid fa-arrow-left"></i> Back
             </button>
-            <div class="panel-icon-circle blue"><i class="fa-solid fa-user-graduate"></i></div>
+            <div class="panel-icon-circle purple"><i class="fa-solid fa-user-graduate"></i></div>
             <h2>Student Login</h2>
             <p>Enter your institutional register number &amp; password</p>
           </div>
@@ -164,7 +164,7 @@
             <div class="form-group">
               <div class="label-row">
                 <label for="studentPassword">Password</label>
-                <a href="javascript:void(0)" class="forgot-link" onclick="openForgotModal()">Forgot Password?</a>
+                <a href="javascript:void(0)" class="forgot-link forgot-student-link" onclick="openForgotModal()">Forgot Password?</a>
               </div>
               <div class="input-wrap">
                 <i class="fa-solid fa-lock input-icon"></i>
@@ -182,13 +182,13 @@
               </div>
             </div>
 
-            <button type="submit" class="btn-primary-action" id="btnStudentSubmit">
+            <button type="submit" class="btn-primary-action btn-student-action" id="btnStudentSubmit">
               <i class="fa-solid fa-right-to-bracket"></i>
               <span>Sign In to Student Portal</span>
             </button>
           </form>
 
-          <div class="panel-info-note">
+          <div class="panel-info-note panel-info-student">
             <i class="fa-solid fa-circle-info"></i>
             <span>Students have direct access to Placement Management Portal</span>
           </div>
@@ -200,7 +200,7 @@
             <button type="button" class="btn-back-nav" onclick="showPortalChoice()" title="Back to choices">
               <i class="fa-solid fa-arrow-left"></i> Back
             </button>
-            <div class="panel-icon-circle navy"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="panel-icon-circle pink"><i class="fa-solid fa-user-tie"></i></div>
             <h2>Faculty Portal</h2>
             <p>Select your designated role to continue</p>
           </div>
@@ -224,8 +224,8 @@
               <i class="fa-solid fa-chevron-right role-arrow"></i>
             </button>
 
-            <button type="button" class="role-select-item" onclick="proceedToStaffAuth('admin')">
-              <div class="role-item-icon"><i class="fa-solid fa-user-shield"></i></div>
+            <button type="button" class="role-select-item role-item-admin" onclick="proceedToStaffAuth('admin')">
+              <div class="role-item-icon admin-pink"><i class="fa-solid fa-user-shield"></i></div>
               <div class="role-item-info">
                 <strong>Admin</strong>
                 <span>Placement cell coordinator &amp; portal manager</span>
@@ -246,7 +246,7 @@
             <button type="button" class="btn-back-nav" onclick="backToStaffRoleSelect()" title="Change selected role">
               <i class="fa-solid fa-arrow-left"></i> Change Role
             </button>
-            <div class="panel-icon-circle navy" id="staffRoleHeaderIcon"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="panel-icon-circle pink" id="staffRoleHeaderIcon"><i class="fa-solid fa-user-tie"></i></div>
             <h2 id="staffAuthTitle">Faculty Login</h2>
             <p id="staffAuthSub">Sign in with your official staff credentials</p>
           </div>
