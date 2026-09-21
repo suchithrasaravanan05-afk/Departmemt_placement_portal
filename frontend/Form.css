@@ -60,7 +60,7 @@
 
 body.enterprise-auth-body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--bg-page);
+  background-color: #F8F5FB;
   color: var(--text-dark);
   min-height: 100vh;
   display: flex;
@@ -71,7 +71,7 @@ body.enterprise-auth-body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background image & gradient overlay matching Student Page */
+/* Background image & refined atmospheric overlay */
 body.enterprise-auth-body::before {
   content: '';
   position: fixed;
@@ -80,7 +80,9 @@ body.enterprise-auth-body::before {
   right: 0;
   bottom: 0;
   background-image: 
-    linear-gradient(135deg, rgba(250, 245, 251, 0.82) 0%, rgba(243, 229, 245, 0.70) 50%, rgba(250, 245, 251, 0.82) 100%),
+    radial-gradient(ellipse at 10% 15%, rgba(156, 39, 176, 0.14) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 85%, rgba(236, 64, 122, 0.12) 0%, transparent 45%),
+    linear-gradient(135deg, rgba(250, 246, 252, 0.88) 0%, rgba(243, 233, 247, 0.80) 50%, rgba(250, 246, 252, 0.88) 100%),
     url('admin.png');
   background-size: cover;
   background-position: center center;
@@ -90,16 +92,18 @@ body.enterprise-auth-body::before {
 }
 
 /* ==========================================================================
-   PORTAL HEADER (MATCHING STUDENT DASHBOARD GRADIENT)
+   PORTAL HEADER (PREMIUM IMPERIAL PURPLE GRADIENT WITH GLASS FINISH)
    ========================================================================== */
 .portal-main-header {
-  background: linear-gradient(135deg, #AB47BC 0%, #9C27B0 60%, #8E24AA 100%);
-  border-bottom: 2.5px solid #CE93D8;
-  padding: 14px 28px;
+  background: linear-gradient(135deg, #3B0764 0%, #581C87 40%, #7E22CE 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 12px 28px;
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 4px 20px rgba(171, 71, 188, 0.25);
+  box-shadow: 0 6px 24px rgba(59, 7, 100, 0.28);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .portal-header-inner {
@@ -117,15 +121,24 @@ body.enterprise-auth-body::before {
   gap: 16px;
 }
 
+/* College Logo - Strictly transparent merged to the page */
 .header-inst-logo {
   height: 52px;
   width: auto;
   object-fit: contain;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.22));
+  background: transparent !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35));
+  transition: transform 0.25s ease;
+}
+
+.header-inst-logo:hover {
+  transform: scale(1.04);
 }
 
 .header-brand-titles {
@@ -133,36 +146,41 @@ body.enterprise-auth-body::before {
   flex-direction: column;
 }
 
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .header-brand-titles .inst-name {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #FFFFFF;
-  line-height: 1.2;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-.header-brand-titles .inst-sub {
-  font-size: 13px;
-  font-weight: 500;
-  color: #F3E5F5;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  line-height: 1.15;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .inst-tag {
   display: inline-block;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.18);
   color: #FFFFFF;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2.5px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  backdrop-filter: blur(4px);
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(6px);
+}
+
+.header-brand-titles .inst-sub {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #E1BEE7;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
 }
 
 .header-dept-badge {
@@ -171,13 +189,19 @@ body.enterprise-auth-body::before {
 }
 
 .header-csbs-logo {
-  height: 46px;
+  height: 44px;
   width: auto;
   object-fit: contain;
-  background: #FFFFFF;
-  padding: 3px 8px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: transform 0.25s ease;
+}
+
+.header-csbs-logo:hover {
+  transform: scale(1.03);
 }
 
 /* ==========================================================================
@@ -193,7 +217,7 @@ body.enterprise-auth-body::before {
 
 .portal-auth-container {
   width: 100%;
-  max-width: 1160px;
+  max-width: 1180px;
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 36px;
@@ -201,19 +225,22 @@ body.enterprise-auth-body::before {
 }
 
 /* ==========================================================================
-   LEFT: DEPARTMENT DETAILS SECTION
+   LEFT: DEPARTMENT DETAILS SECTION (GLASSMORPHISM)
    ========================================================================== */
 .dept-info-section {
-  background: #FFFFFF;
-  border: 1.5px solid var(--card-border);
-  border-radius: 18px;
-  padding: 36px 32px;
-  box-shadow: 0 8px 28px rgba(171, 71, 188, 0.09);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(206, 147, 216, 0.45);
+  border-radius: 22px;
+  padding: 38px 34px;
+  box-shadow: 0 20px 45px -12px rgba(74, 20, 140, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .dept-info-section::before {
@@ -222,23 +249,24 @@ body.enterprise-auth-body::before {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: var(--brand-gradient);
+  height: 4.5px;
+  background: linear-gradient(90deg, #9C27B0, #D81B60);
 }
 
 .dept-info-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--purple-light);
-  color: var(--purple-dark);
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.08), rgba(216, 27, 96, 0.08));
+  color: #7B1FA2;
   font-size: 12px;
   font-weight: 700;
   padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--purple-border);
-  margin-bottom: 20px;
+  border-radius: 9999px;
+  border: 1px solid rgba(206, 147, 216, 0.35);
+  margin-bottom: 18px;
   width: fit-content;
+  letter-spacing: 0.03em;
 }
 
 .dept-info-badge i {
@@ -246,59 +274,86 @@ body.enterprise-auth-body::before {
 }
 
 .dept-main-title {
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 800;
-  color: var(--text-dark);
+  color: #1E1B4B;
   line-height: 1.3;
-  margin-bottom: 16px;
-  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  letter-spacing: -0.015em;
+}
+
+.dept-title-accent {
+  width: 48px;
+  height: 3.5px;
+  background: linear-gradient(90deg, #9C27B0, #E91E63);
+  border-radius: 4px;
+  margin-bottom: 18px;
 }
 
 .dept-overview-text {
   font-size: 14.5px;
-  color: var(--text-body);
-  line-height: 1.65;
+  color: #4A3C59;
+  line-height: 1.68;
   margin-bottom: 26px;
 }
 
 .dept-highlights-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 28px;
+  gap: 14px;
+  margin-bottom: 26px;
 }
 
 .dept-highlight-item {
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  background: #FDFBFE;
+  border: 1px solid #EFE4F3;
+  border-radius: 14px;
+  padding: 12px 16px;
+  transition: all 0.25s ease;
+}
+
+.dept-highlight-item:hover {
+  background: #FFFFFF;
+  transform: translateX(6px);
+  border-color: #CE93D8;
+  box-shadow: 0 6px 18px rgba(156, 39, 176, 0.08);
 }
 
 .highlight-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--purple-light);
-  color: var(--purple-primary);
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   flex-shrink: 0;
-  border: 1px solid var(--purple-border);
   transition: transform 0.2s ease;
 }
 
+.dept-highlight-item:hover .highlight-icon {
+  transform: scale(1.08);
+}
+
+.dept-highlight-item:nth-child(1) .highlight-icon {
+  background: linear-gradient(135deg, #7C3AED, #5B21B6);
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);
+}
+
 .dept-highlight-item:nth-child(2) .highlight-icon {
-  background: var(--pink-light);
-  color: var(--pink-primary);
-  border-color: var(--pink-border);
+  background: linear-gradient(135deg, #E11D48, #9F1239);
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.25);
 }
 
 .dept-highlight-item:nth-child(3) .highlight-icon {
-  background: linear-gradient(135deg, var(--purple-light), var(--pink-light));
-  color: var(--purple-primary);
-  border-color: var(--purple-border);
+  background: linear-gradient(135deg, #9333EA, #6B21A8);
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(147, 51, 234, 0.25);
 }
 
 .highlight-content {
@@ -309,28 +364,29 @@ body.enterprise-auth-body::before {
 .highlight-content strong {
   font-size: 14px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: #1E1B4B;
   margin-bottom: 2px;
 }
 
 .highlight-content span {
   font-size: 13px;
-  color: var(--text-muted);
+  color: #6B7280;
   line-height: 1.45;
 }
 
 .dept-footer-meta {
-  padding-top: 20px;
-  border-top: 1px solid var(--purple-subtle);
+  padding-top: 18px;
+  border-top: 1px solid #F0E6F4;
   font-size: 12.5px;
-  color: var(--text-muted);
+  color: #6B7280;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .dept-footer-meta i {
   color: var(--green-success);
+  font-size: 14px;
 }
 
 /* ==========================================================================
@@ -342,28 +398,31 @@ body.enterprise-auth-body::before {
 }
 
 .auth-panel-card {
-  background: #FFFFFF;
-  border: 1.5px solid var(--card-border);
-  border-radius: 18px;
-  padding: 36px 32px;
-  box-shadow: 0 8px 28px rgba(171, 71, 188, 0.09);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(206, 147, 216, 0.45);
+  border-radius: 22px;
+  padding: 38px 34px;
+  box-shadow: 0 20px 45px -12px rgba(74, 20, 140, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-/* Dynamic accent borders for cards */
+/* Dynamic accent tops for auth cards */
 #viewStudentAuth::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: var(--purple-gradient);
+  height: 4.5px;
+  background: linear-gradient(90deg, #AB47BC, #7B1FA2);
 }
 
 #viewStaffRoleSelect::before,
@@ -373,8 +432,8 @@ body.enterprise-auth-body::before {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: var(--pink-gradient);
+  height: 4.5px;
+  background: linear-gradient(90deg, #EC407A, #C2185B);
 }
 
 #viewPortalChoice::before {
@@ -383,8 +442,8 @@ body.enterprise-auth-body::before {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: var(--brand-gradient);
+  height: 4.5px;
+  background: linear-gradient(90deg, #9C27B0, #D81B60);
 }
 
 .panel-card-header {
@@ -398,7 +457,7 @@ body.enterprise-auth-body::before {
   left: 0;
   top: 0;
   background: #FFFFFF;
-  border: 1.5px solid var(--purple-subtle);
+  border: 1.5px solid #E1BEE7;
   color: var(--text-body);
   font-size: 12.5px;
   font-weight: 600;
@@ -418,52 +477,50 @@ body.enterprise-auth-body::before {
 }
 
 .panel-icon-circle {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: var(--brand-gradient-soft);
-  color: var(--purple-primary);
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #9C27B0, #6A1B9A);
+  color: #FFFFFF;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
   margin-bottom: 12px;
-  border: 1.5px solid var(--purple-border);
-  box-shadow: 0 4px 14px rgba(171, 71, 188, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 20px rgba(156, 39, 176, 0.3);
 }
 
 /* Purple variant for Student */
 .panel-icon-circle.purple,
 .panel-icon-circle.blue {
-  background: var(--purple-light);
-  color: var(--purple-primary);
-  border-color: var(--purple-border);
-  box-shadow: 0 4px 14px rgba(171, 71, 188, 0.15);
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+  color: #FFFFFF;
+  box-shadow: 0 8px 20px rgba(156, 39, 176, 0.3);
 }
 
 /* Pink variant for Staff / Admin */
 .panel-icon-circle.pink,
 .panel-icon-circle.navy {
-  background: var(--pink-light);
-  color: var(--pink-primary);
-  border-color: var(--pink-border);
-  box-shadow: 0 4px 14px rgba(216, 27, 96, 0.15);
+  background: linear-gradient(135deg, #EC407A, #C2185B);
+  color: #FFFFFF;
+  box-shadow: 0 8px 20px rgba(236, 64, 122, 0.3);
 }
 
 .panel-card-header h2 {
   font-size: 22px;
   font-weight: 800;
-  color: var(--text-dark);
+  color: #1E1B4B;
   margin-bottom: 4px;
 }
 
 .panel-card-header p {
   font-size: 13.5px;
-  color: var(--text-muted);
+  color: #6B7280;
 }
 
 /* ==========================================================================
-   STEP 1: CHOICE BUTTONS (PURPLE & PINK CARDS)
+   STEP 1: CHOICE BUTTONS (PURPLE & PINK HERO CARDS)
    ========================================================================== */
 .choice-options-group {
   display: flex;
@@ -474,45 +531,48 @@ body.enterprise-auth-body::before {
 
 .choice-card-btn {
   background: #FFFFFF;
-  border: 1.5px solid var(--purple-subtle);
-  border-radius: 14px;
-  padding: 20px 18px;
+  border: 1.5px solid #EDE3F2;
+  border-radius: 16px;
+  padding: 20px 20px;
   display: flex;
   align-items: center;
   gap: 16px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
 }
 
-/* Student Button - Purple Shade on Hover */
+/* Student Button - Hover state */
 #btnChooseStudent:hover {
-  border-color: var(--purple-primary);
-  background: var(--purple-light);
-  box-shadow: 0 6px 20px rgba(171, 71, 188, 0.18);
-  transform: translateY(-2px);
+  border-color: #9C27B0;
+  background: #FAF5FB;
+  box-shadow: 0 12px 28px rgba(156, 39, 176, 0.16);
+  transform: translateY(-3px);
 }
 
 #btnChooseStudent:hover .choice-arrow {
-  color: var(--purple-primary);
+  background: #7B1FA2;
+  color: #FFFFFF;
   transform: translateX(4px);
 }
 
-/* Faculty Button - Pink Shade on Hover */
+/* Faculty Button - Hover state */
 #btnChooseFaculty {
-  border-color: var(--pink-border);
+  border-color: #F8BBD0;
 }
 
 #btnChooseFaculty:hover {
-  border-color: var(--pink-primary);
-  background: var(--pink-light);
-  box-shadow: 0 6px 20px rgba(216, 27, 96, 0.18);
-  transform: translateY(-2px);
+  border-color: #EC407A;
+  background: #FDF2F7;
+  box-shadow: 0 12px 28px rgba(216, 27, 96, 0.16);
+  transform: translateY(-3px);
 }
 
 #btnChooseFaculty:hover .choice-arrow {
-  color: var(--pink-primary);
+  background: #C2185B;
+  color: #FFFFFF;
   transform: translateX(4px);
 }
 
@@ -523,33 +583,33 @@ body.enterprise-auth-body::before {
 .choice-icon-wrap {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
+  transition: transform 0.25s ease;
 }
 
 .choice-card-btn:hover .choice-icon-wrap {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 /* Student Purple Icon */
 .choice-icon-wrap.purple,
 .choice-icon-wrap.blue {
-  background: var(--purple-light);
-  color: var(--purple-primary);
-  border: 1.5px solid var(--purple-border);
+  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.25);
 }
 
 /* Admin / Faculty Pink Icon */
 .choice-icon-wrap.pink,
 .choice-icon-wrap.navy {
-  background: var(--pink-light);
-  color: var(--pink-primary);
-  border: 1.5px solid var(--pink-border);
+  background: linear-gradient(135deg, #EC407A 0%, #C2185B 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(236, 64, 122, 0.25);
 }
 
 .choice-text-wrap {
@@ -560,33 +620,41 @@ body.enterprise-auth-body::before {
 
 .choice-title {
   font-size: 16px;
-  font-weight: 700;
-  color: var(--text-dark);
+  font-weight: 800;
+  color: #1E1B4B;
   margin-bottom: 2px;
 }
 
 .choice-desc {
-  font-size: 12.5px;
-  color: var(--text-muted);
+  font-size: 13px;
+  color: #6B7280;
   line-height: 1.4;
 }
 
 .choice-arrow {
-  color: var(--text-muted);
-  font-size: 14px;
-  transition: all 0.2s ease;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #F3E8FF;
+  color: #7E22CE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  transition: all 0.25s ease;
 }
 
 .portal-card-footer {
   text-align: center;
   font-size: 12px;
-  color: var(--text-muted);
+  color: #6B7280;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding-top: 16px;
-  border-top: 1px solid var(--purple-subtle);
+  border-top: 1px solid #F0E6F4;
 }
 
 /* ==========================================================================
@@ -740,14 +808,14 @@ body.enterprise-auth-body::before {
 
 .form-control {
   width: 100%;
-  height: 46px;
-  padding: 0 42px 0 40px;
-  font-size: 14px;
+  height: 48px;
+  padding: 0 42px 0 42px;
+  font-size: 14.5px;
   font-family: inherit;
   color: var(--text-dark);
-  background: #FFFFFF;
-  border: 1.5px solid var(--purple-subtle);
-  border-radius: 10px;
+  background: #FAF8FC;
+  border: 1.5px solid #E4D8EB;
+  border-radius: 12px;
   outline: none;
   transition: all 0.2s ease;
 }
@@ -755,7 +823,7 @@ body.enterprise-auth-body::before {
 /* Student Input Focus (Purple Theme) */
 #studentLoginForm .form-control:focus {
   border-color: var(--purple-primary);
-  box-shadow: 0 0 0 3.5px var(--purple-glow);
+  box-shadow: 0 0 0 3.5px rgba(156, 39, 176, 0.16);
   background: #FFFFFF;
 }
 
@@ -765,12 +833,12 @@ body.enterprise-auth-body::before {
 
 /* Staff / Admin Input Focus (Pink Theme) */
 #staffLoginForm .form-control {
-  border-color: var(--pink-border);
+  border-color: #F8BBD0;
 }
 
 #staffLoginForm .form-control:focus {
   border-color: var(--pink-primary);
-  box-shadow: 0 0 0 3.5px var(--pink-glow);
+  box-shadow: 0 0 0 3.5px rgba(216, 27, 96, 0.16);
   background: #FFFFFF;
 }
 
@@ -780,22 +848,30 @@ body.enterprise-auth-body::before {
 
 .form-control::placeholder {
   color: #A396B0;
+  font-size: 13.5px;
 }
 
 .toggle-pw-btn {
   position: absolute;
   right: 12px;
-  background: none;
+  background: transparent;
   border: none;
   color: var(--text-muted);
+  font-size: 15px;
   cursor: pointer;
-  padding: 6px;
-  font-size: 14px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: color 0.15s ease;
 }
 
 .toggle-pw-btn:hover {
-  color: var(--text-dark);
+  color: var(--purple-primary);
+}
+
+#staffLoginForm .toggle-pw-btn:hover {
+  color: var(--pink-primary);
 }
 
 /* ==========================================================================
@@ -803,52 +879,53 @@ body.enterprise-auth-body::before {
    ========================================================================== */
 .btn-primary-action {
   width: 100%;
-  height: 48px;
+  height: 50px;
   color: #FFFFFF;
   border: none;
-  border-radius: 10px;
-  font-size: 14.5px;
-  font-weight: 700;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
   font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
-  transition: all 0.2s ease;
+  gap: 10px;
+  margin-top: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Student Action Button (Purple Gradient) */
 #btnStudentSubmit,
 .btn-student-action {
-  background: var(--purple-gradient);
-  box-shadow: 0 4px 14px rgba(171, 71, 188, 0.35);
+  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  box-shadow: 0 6px 18px rgba(156, 39, 176, 0.28);
 }
 
 #btnStudentSubmit:hover,
 .btn-student-action:hover {
-  background: var(--purple-gradient-hover);
-  box-shadow: 0 6px 20px rgba(171, 71, 188, 0.45);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #AB47BC 0%, #6A1B9A 100%);
+  box-shadow: 0 10px 24px rgba(156, 39, 176, 0.38);
+  transform: translateY(-2px);
 }
 
 /* Faculty & Admin Action Button (Pink Gradient) */
 #btnStaffSubmit,
 .btn-staff-action {
-  background: var(--pink-gradient);
-  box-shadow: 0 4px 14px rgba(216, 27, 96, 0.35);
+  background: linear-gradient(135deg, #EC407A 0%, #C2185B 100%);
+  box-shadow: 0 6px 18px rgba(216, 27, 96, 0.28);
 }
 
 #btnStaffSubmit:hover,
 .btn-staff-action:hover {
-  background: var(--pink-gradient-hover);
-  box-shadow: 0 6px 20px rgba(216, 27, 96, 0.45);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #E91E63 0%, #AD1457 100%);
+  box-shadow: 0 10px 24px rgba(216, 27, 96, 0.38);
+  transform: translateY(-2px);
 }
 
 .btn-primary-action:active {
-  transform: translateY(1px);
+  transform: translateY(0);
 }
 
 .btn-primary-action:disabled {
