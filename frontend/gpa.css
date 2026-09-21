@@ -39,7 +39,6 @@
   gap: 16px;
   border-bottom: 2.5px solid #CE93D8;
   flex-wrap: wrap;
-  justify-content: space-between;
 }
 
 .gpa-header-icon-box {
@@ -77,44 +76,6 @@
   font-weight: 500;
 }
 
-/* Mode Toggle Group */
-.gpa-mode-toggle-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.15);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.gpa-mode-btn {
-  background: transparent;
-  border: none;
-  color: #F3E5F5;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.gpa-mode-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.gpa-mode-btn.active {
-  background: #ffffff;
-  color: #7B1FA2;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
 /* =============================================
    SEMESTER TABS
    ============================================= */
@@ -147,7 +108,7 @@
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .gpa-sem-pill-btn:hover {
@@ -259,6 +220,257 @@
 }
 
 /* =============================================
+   SEMESTER-WISE BREAKDOWN TABLE & SMALL BOXES
+   ============================================= */
+.gpa-sem-breakdown-section {
+  padding: 20px 24px;
+  border-top: 1.5px solid #E1BEE7;
+  background: #FAF5FB;
+}
+
+.gpa-section-header {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gpa-section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #2D2438;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gpa-section-title i {
+  color: #9C27B0;
+}
+
+.gpa-section-subtitle {
+  font-size: 12px;
+  color: #6E5D80;
+}
+
+.gpa-breakdown-table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1.5px solid #E1BEE7;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.gpa-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.gpa-breakdown-table th {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #6E5D80;
+  letter-spacing: 0.5px;
+  padding: 12px 12px;
+  background: #FAF5FB;
+  border-bottom: 1.5px solid #E1BEE7;
+}
+
+.gpa-breakdown-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #F3E5F5;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.gpa-breakdown-table tr:hover {
+  background: #FCF9FD;
+}
+
+.gpa-breakdown-table tr.current-active-row {
+  background: #F8EDFA;
+}
+
+.btn-sem-tag {
+  background: #F3E5F5;
+  color: #7B1FA2;
+  border: 1px solid #CE93D8;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sem-tag.active,
+.btn-sem-tag:hover {
+  background: #9C27B0;
+  color: #ffffff;
+  border-color: #8E24AA;
+}
+
+.sem-type-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.sem-type-tag.regular {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.sem-type-tag.honours {
+  background: #FCE4EC;
+  color: #C2185B;
+  border: 1px solid #F8BBD0;
+}
+
+/* Direct Small Semester Input Box */
+.gpa-small-box-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100px;
+}
+
+.gpa-small-sem-box {
+  width: 100%;
+  height: 36px;
+  padding: 0 20px 0 8px;
+  font-size: 14.5px;
+  font-weight: 800;
+  font-family: inherit;
+  color: #2D2438;
+  background: #ffffff;
+  border: 1.5px solid #CE93D8;
+  border-radius: 8px;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.gpa-small-sem-box:focus {
+  border-color: #9C27B0;
+  box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.22);
+  background: #FFFFFF;
+}
+
+.gpa-small-sem-box.has-val {
+  background: #FAF5FB;
+  color: #7B1FA2;
+  border-color: #9C27B0;
+}
+
+.btn-clear-sem-box {
+  position: absolute;
+  right: 6px;
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px;
+}
+
+.btn-clear-sem-box:hover {
+  color: #DC2626;
+}
+
+.gpa-small-cr-box {
+  width: 65px;
+  height: 34px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #2D2438;
+  background: #ffffff;
+  border: 1.5px solid #E1BEE7;
+  border-radius: 6px;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.gpa-small-cr-box:focus {
+  border-color: #9C27B0;
+  box-shadow: 0 0 0 2.5px rgba(156, 39, 176, 0.18);
+}
+
+/* Cumulative CGPA Pill Badge */
+.sem-cgpa-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.sem-cgpa-pill.has-cgpa {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1.5px solid #BFDBFE;
+}
+
+.sem-cgpa-pill.empty-cgpa {
+  background: #F9FAFB;
+  color: #9CA3AF;
+  border: 1px solid #E5E7EB;
+}
+
+.cgpa-val-txt {
+  font-weight: 800;
+}
+
+.cgpa-sub-txt {
+  font-size: 10px;
+  font-weight: 700;
+  color: #3B82F6;
+  text-transform: uppercase;
+}
+
+.sem-status-badge.pending {
+  font-size: 11px;
+  color: #9CA3AF;
+  background: #F3F4F6;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.btn-row-action {
+  background: #ffffff;
+  border: 1.5px solid #E1BEE7;
+  color: #7B1FA2;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-row-action:hover,
+.btn-row-action.btn-row-active {
+  background: #9C27B0;
+  color: #ffffff;
+  border-color: #8E24AA;
+}
+
+/* =============================================
    SUBJECTS TABLE
    ============================================= */
 .gpa-table-wrap {
@@ -273,6 +485,8 @@
   margin-bottom: 12px;
   font-size: 13px;
   color: #4A3C59;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .gpa-table-count-badge {
@@ -356,7 +570,7 @@
 }
 
 .gpa-grade-select-custom {
-  width: 105px;
+  width: 115px;
   padding: 8px 24px 8px 10px;
   border: 1.5px solid #E1BEE7;
   border-radius: 8px;
@@ -443,296 +657,6 @@
   font-weight: 800;
   color: #9C27B0;
   text-align: center;
-}
-
-/* =============================================
-   QUICK SEMESTER-WISE GPA MODE
-   ============================================= */
-.gpa-quick-intro {
-  padding: 12px 16px;
-  background: #FAF5FB;
-  border: 1px solid #E1BEE7;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: #4A3C59;
-}
-
-.gpa-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 8px;
-}
-
-@media (max-width: 960px) {
-  .gpa-quick-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .gpa-quick-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.gpa-quick-sem-card {
-  background: #ffffff;
-  border: 1.5px solid #E1BEE7;
-  border-radius: 14px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: all 0.2s ease;
-}
-
-.gpa-quick-sem-card:hover,
-.gpa-quick-sem-card.active-quick-sem {
-  border-color: #9C27B0;
-  box-shadow: 0 4px 16px rgba(171, 71, 188, 0.15);
-}
-
-.quick-sem-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.quick-sem-title {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.quick-sem-num {
-  font-size: 14px;
-  font-weight: 800;
-  color: #7B1FA2;
-}
-
-.quick-sem-cr {
-  font-size: 11px;
-  color: #6E5D80;
-}
-
-.btn-goto-sem {
-  background: none;
-  border: none;
-  color: #9C27B0;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-}
-
-.btn-goto-sem:hover {
-  background: #F3E5F5;
-}
-
-.quick-sem-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.quick-sem-input-group label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #4A3C59;
-}
-
-.gpa-direct-input {
-  width: 100%;
-  height: 38px;
-  padding: 0 10px;
-  font-size: 15px;
-  font-weight: 800;
-  font-family: inherit;
-  color: #2D2438;
-  border: 1.5px solid #E1BEE7;
-  border-radius: 8px;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.gpa-direct-input:focus {
-  border-color: #9C27B0;
-  box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.18);
-}
-
-.quick-sem-prog-cgpa {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11.5px;
-  padding-top: 8px;
-  border-top: 1px solid #FAF5FB;
-  color: #6E5D80;
-}
-
-.quick-sem-prog-cgpa strong {
-  color: #2563EB;
-  font-size: 13px;
-}
-
-/* =============================================
-   SEMESTER-WISE BREAKDOWN TABLE SECTION
-   ============================================= */
-.gpa-sem-breakdown-section {
-  padding: 20px 24px;
-  border-top: 1.5px solid #E1BEE7;
-  background: #FAF5FB;
-}
-
-.gpa-section-header {
-  margin-bottom: 14px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.gpa-section-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: #2D2438;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.gpa-section-title i {
-  color: #9C27B0;
-}
-
-.gpa-section-subtitle {
-  font-size: 12px;
-  color: #6E5D80;
-}
-
-.gpa-breakdown-table-wrap {
-  overflow-x: auto;
-  border-radius: 12px;
-  border: 1.5px solid #E1BEE7;
-  background: #ffffff;
-}
-
-.gpa-breakdown-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.gpa-breakdown-table th {
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: #6E5D80;
-  letter-spacing: 0.5px;
-  padding: 11px 12px;
-  background: #FAF5FB;
-  border-bottom: 1.5px solid #E1BEE7;
-}
-
-.gpa-breakdown-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #F3E5F5;
-  font-size: 13px;
-  vertical-align: middle;
-}
-
-.gpa-breakdown-table tr:hover {
-  background: #FCF9FD;
-}
-
-.gpa-breakdown-table tr.current-active-row {
-  background: #F8EDFA;
-}
-
-.btn-sem-tag {
-  background: #F3E5F5;
-  color: #7B1FA2;
-  border: 1px solid #CE93D8;
-  font-size: 11.5px;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-sem-tag.active,
-.btn-sem-tag:hover {
-  background: #9C27B0;
-  color: #ffffff;
-  border-color: #8E24AA;
-}
-
-.sem-type-tag {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
-.sem-type-tag.regular {
-  background: #F1F5F9;
-  color: #475569;
-}
-
-.sem-type-tag.honours {
-  background: #FCE4EC;
-  color: #C2185B;
-  border: 1px solid #F8BBD0;
-}
-
-.sem-gpa-display {
-  font-size: 13.5px;
-  color: #6E5D80;
-}
-
-.sem-gpa-display.has-gpa {
-  color: #9C27B0;
-  font-weight: 800;
-}
-
-.sem-cgpa-display {
-  font-size: 13.5px;
-  color: #6E5D80;
-}
-
-.sem-cgpa-display.has-cgpa {
-  color: #2563EB;
-  font-weight: 800;
-}
-
-.sem-status-badge.pending {
-  font-size: 11px;
-  color: #9CA3AF;
-  background: #F3F4F6;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.btn-row-action {
-  background: #ffffff;
-  border: 1px solid #E1BEE7;
-  color: #7B1FA2;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-row-action:hover {
-  background: #9C27B0;
-  color: #ffffff;
-  border-color: #8E24AA;
 }
 
 /* =============================================

@@ -2,10 +2,10 @@
 // GPA.JS — Anna University Credit-Based Semester GPA & CGPA Calculator
 // Regulation 2021 — Computer Science and Business Systems (CSBS)
 // Features:
-//   1. Detailed Subject Grade Entry per semester
-//   2. Quick Semester-wise GPA / Direct SGPA Entry mode
-//   3. Semester-wise Cumulative CGPA calculated for each semester (Progressive CGPA)
-//   4. Semester-wise Breakdown Table & Analytics
+//   1. Small input boxes for direct Semester GPA (SGPA) entry per semester
+//   2. Automatic instant calculation of Cumulative CGPA for each semester
+//   3. Detailed subject-wise grade entry with auto-population of semester GPA
+//   4. Real-time progressive CGPA & Degree Classification update
 //   5. Profile sync with student placement profile
 // ============================================================
 
@@ -16,8 +16,8 @@ const HONOURS_SEMS = [5, 6, 7];
 const gpaData = {};          // { semIndex: [ { name, credits, grade } ] }
 const courseType = {};       // { semIndex: 'Regular' | 'Honours' }
 const directSemGpas = {};    // { semIndex: number | null } for direct GPA entry
+const customSemCredits = {}; // { semIndex: number | null } for custom semester credits
 let activeSem = 1;
-let calcMode = 'detailed';   // 'detailed' | 'quick_sem'
 
 // ------------------------------------------------------------
 // REGULAR SUBJECTS (Regulation 2021 - CSBS)
@@ -138,6 +138,9 @@ function getDefaultSubjectsForSem(sem) {
 }
 
 function getSemDefaultTotalCredits(sem) {
+  if (customSemCredits[sem] !== null && customSemCredits[sem] !== undefined) {
+    return customSemCredits[sem];
+  }
   const subs = getDefaultSubjectsForSem(sem);
   return subs.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0);
 }
@@ -151,9 +154,8 @@ function initGpaState() {
     if (!gpaData[i] || gpaData[i].length === 0) {
       gpaData[i] = getDefaultSubjectsForSem(i);
     }
-    if (directSemGpas[i] === undefined) {
-      directSemGpas[i] = null;
-    }
+    if (directSemGpas[i] === undefined) directSemGpas[i] = null;
+    if (customSemCredits[i] === undefined) customSemCredits[i] = null;
   }
 }
 
@@ -190,16 +192,8 @@ function renderSemesterGpaApp(targetElementId, allowProfileSync = false) {
               <i class="fa-solid fa-calculator"></i>
             </div>
             <div class="gpa-header-text">
-              <h3>Semester GPA &amp; CGPA Calculator</h3>
-              <p>Anna University Credit-Based System &bull; Semester-wise Cumulative CGPA</p>
-            </div>
-            <div class="gpa-mode-toggle-group">
-              <button type="button" class="gpa-mode-btn ${calcMode === 'detailed' ? 'active' : ''}" onclick="setCalcMode('detailed')">
-                <i class="fa-solid fa-list-check"></i> Subject Grades
-              </button>
-              <button type="button" class="gpa-mode-btn ${calcMode === 'quick_sem' ? 'active' : ''}" onclick="setCalcMode('quick_sem')">
-                <i class="fa-solid fa-bolt"></i> Quick Sem GPAs
-              </button>
+              <h3>Semester GPA &amp; Automatic CGPA Calculator</h3>
+              <p>Type directly into any semester box below &bull; Automatic progressive CGPA calculated for each semester</p>
             </div>
           </div>
 
@@ -222,27 +216,36 @@ function renderSemesterGpaApp(targetElementId, allowProfileSync = false) {
               <div class="gpa-score-out" id="progressiveCreditsOut">Progressive Cumulative CGPA</div>
             </div>
             <div class="gpa-score-card green-card">
-              <div class="gpa-score-label">OVERALL CGPA</div>
+              <div class="gpa-score-label">OVERALL DEGREE CGPA</div>
               <div class="gpa-score-value" id="overallCgpa">—</div>
-              <div class="gpa-score-out" id="overallTotalCreditsOut">Across All Semesters</div>
+              <div class="gpa-score-out" id="overallTotalCreditsOut">Across All Completed Semesters</div>
             </div>
           </div>
 
-          <!-- Main Input Area (Detailed Subjects Table OR Quick Semester Entry) -->
-          <div class="gpa-table-wrap">
+          <!-- SEMESTER-WISE CGPA CALCULATION BOXES & BREAKDOWN TABLE -->
+          <div class="gpa-sem-breakdown-section">
+            <div class="gpa-section-header">
+              <div class="gpa-section-title">
+                <i class="fa-solid fa-table-cells"></i> Semester-wise GPA Input Boxes &amp; Automatic CGPA
+              </div>
+              <span class="gpa-section-subtitle">Type your GPA directly into any semester's box to calculate progressive CGPA instantly</span>
+            </div>
+            <div id="gpaSemBreakdownTableArea"></div>
+          </div>
+
+          <!-- Detailed Subjects Table for Selected Semester -->
+          <div class="gpa-table-wrap" style="border-top:1.5px solid #E1BEE7;padding-top:18px;">
             <div id="gpaMainInputArea"></div>
           </div>
 
           <!-- Action Buttons Bar -->
           <div class="gpa-actions-bar">
-            ${calcMode === 'detailed' ? `
-              <button type="button" class="gpa-btn-action" onclick="addGpaSubject()">
-                <i class="fa-solid fa-plus"></i> Add Subject
-              </button>
-              <button type="button" class="gpa-btn-action" onclick="resetGpaSem()">
-                <i class="fa-solid fa-rotate-left"></i> Reset Sem ${activeSem}
-              </button>
-            ` : ''}
+            <button type="button" class="gpa-btn-action" onclick="addGpaSubject()">
+              <i class="fa-solid fa-plus"></i> Add Subject to Sem ${activeSem}
+            </button>
+            <button type="button" class="gpa-btn-action" onclick="resetGpaSem()">
+              <i class="fa-solid fa-rotate-left"></i> Reset Sem ${activeSem}
+            </button>
             <button type="button" class="gpa-btn-action" onclick="resetGpaAll()">
               <i class="fa-solid fa-trash-can"></i> Reset All Semesters
             </button>
@@ -252,20 +255,9 @@ function renderSemesterGpaApp(targetElementId, allowProfileSync = false) {
             </button>` : ''}
           </div>
 
-          <!-- Semester-Wise Cumulative CGPA Breakdown Table -->
-          <div class="gpa-sem-breakdown-section">
-            <div class="gpa-section-header">
-              <div class="gpa-section-title">
-                <i class="fa-solid fa-chart-line"></i> Semester-wise GPA &amp; Cumulative CGPA Breakdown
-              </div>
-              <span class="gpa-section-subtitle">Calculated sequentially for each semester</span>
-            </div>
-            <div id="gpaSemBreakdownTableArea"></div>
-          </div>
-
           <!-- Bottom Summary Info -->
           <div class="gpa-bottom-summary" id="gpaBottomSummary">
-            <span>Enter grades to see semester-wise CGPA calculations</span>
+            <span>Enter subject grades or semester GPAs to compute semester-wise and overall CGPA</span>
           </div>
 
         </div>
@@ -337,7 +329,7 @@ function renderSemesterGpaApp(targetElementId, allowProfileSync = false) {
               </div>
               <div class="gpa-band-item">
                 <span class="gpa-band-range">8.0 – 8.99</span>
-                <span class="gpa-band-badge badge-band-excellent">⭐ First Class with Distinction</span>
+                <span class="gpa-band-badge badge-band-excellent">⭐ First Class Dist.</span>
               </div>
               <div class="gpa-band-item">
                 <span class="gpa-band-range">7.0 – 7.99</span>
@@ -367,10 +359,10 @@ function renderSemesterGpaApp(targetElementId, allowProfileSync = false) {
             </div>
             <p style="margin-top:10px;"><strong>2. Cumulative CGPA up to Semester N:</strong></p>
             <div class="gpa-formula-box">
-              CGPA_N = Σ_{i=1}^N (Total Points_i) / Σ_{i=1}^N (Total Credits_i)
+              CGPA_N = Σ_{i=1}^N (SGPA_i × Credits_i) / Σ_{i=1}^N (Credits_i)
             </div>
             <p style="margin-top:8px;font-size:11.5px;color:#6E5D80;">
-              Calculates the weighted average cumulative performance up to each semester.
+              Automatically computes the credit-weighted cumulative CGPA across all entered semesters.
             </p>
           </div>
         </div>
@@ -382,17 +374,9 @@ function renderSemesterGpaApp(targetElementId, allowProfileSync = false) {
 
   renderGpaTabs();
   renderGpaCourseType();
-  renderMainInputArea();
   renderSemBreakdownTable();
+  renderDetailedSubjectsTable();
   updateGpaResults();
-}
-
-// ============================================================
-// MODE SWITCHER (Detailed vs Quick Sem GPA)
-// ============================================================
-function setCalcMode(mode) {
-  calcMode = mode;
-  renderSemesterGpaApp(document.getElementById('gpaPage') ? 'gpaPage' : 'gpaDashboardContainer', true);
 }
 
 // ============================================================
@@ -433,8 +417,8 @@ function switchGpaSem(sem) {
 
   renderGpaTabs();
   renderGpaCourseType();
-  renderMainInputArea();
   renderSemBreakdownTable();
+  renderDetailedSubjectsTable();
   updateGpaResults();
 }
 
@@ -445,7 +429,7 @@ function renderGpaCourseType() {
   const area = document.getElementById('gpaCourseTypeArea');
   if (!area) return;
 
-  if (calcMode === 'quick_sem' || !semHasHonours(activeSem)) {
+  if (!semHasHonours(activeSem)) {
     area.innerHTML = '';
     return;
   }
@@ -482,28 +466,223 @@ function setGpaCourseType(type) {
   gpaData[activeSem] = rebuilt;
 
   renderGpaCourseType();
-  renderMainInputArea();
+  renderDetailedSubjectsTable();
   renderGpaTabs();
   renderSemBreakdownTable();
   updateGpaResults();
 }
 
 // ============================================================
-// MAIN INPUT AREA (DETAILED SUBJECTS VS QUICK SEMESTER GPAs)
+// SEMESTER-WISE CGPA BREAKDOWN TABLE WITH DIRECT SMALL INPUT BOXES
 // ============================================================
-function renderMainInputArea() {
-  const area = document.getElementById('gpaMainInputArea');
+function renderSemBreakdownTable() {
+  const area = document.getElementById('gpaSemBreakdownTableArea');
   if (!area) return;
 
-  if (calcMode === 'quick_sem') {
-    renderQuickSemInputGrid(area);
+  let rowsHtml = '';
+  let cumulativeCredits = 0;
+  let cumulativePoints = 0;
+
+  for (let i = 1; i <= TOTAL_SEMS; i++) {
+    const semGpa = calcSemGpa(i);
+    const cr = getSemActiveCredits(i);
+    const isCompleted = semGpa !== null;
+
+    if (isCompleted) {
+      cumulativeCredits += cr;
+      cumulativePoints += cr * semGpa;
+    }
+
+    const progCgpa = (isCompleted && cumulativeCredits > 0) ? (cumulativePoints / cumulativeCredits) : null;
+
+    let badge = '<span class="sem-status-badge pending">Pending</span>';
+    if (isCompleted) {
+      if (progCgpa >= 9.0) badge = '<span class="gpa-band-badge badge-band-outstanding">🚀 Outstanding</span>';
+      else if (progCgpa >= 8.0) badge = '<span class="gpa-band-badge badge-band-excellent">⭐ First Class Dist.</span>';
+      else if (progCgpa >= 7.0) badge = '<span class="gpa-band-badge badge-band-verygood">🔥 First Class</span>';
+      else if (progCgpa >= 6.0) badge = '<span class="gpa-band-badge badge-band-good">👍 Second Class</span>';
+      else badge = '<span class="gpa-band-badge badge-band-needs">⚠️ Needs Improvement</span>';
+    }
+
+    const isCurrentActive = i === activeSem;
+    const gpaDisplayVal = isCompleted ? semGpa.toFixed(2) : '';
+
+    rowsHtml += `
+      <tr class="${isCurrentActive ? 'current-active-row' : ''} ${isCompleted ? 'completed-row' : ''}" id="breakdownRow_${i}">
+        <td style="text-align:center;">
+          <button type="button" class="btn-sem-tag ${isCurrentActive ? 'active' : ''}" onclick="switchGpaSem(${i})" title="Switch to Semester ${i} details">
+            Sem ${i}
+          </button>
+        </td>
+        <td>
+          <span class="sem-type-tag ${courseType[i] === 'Honours' ? 'honours' : 'regular'}">
+            ${courseType[i] || 'Regular'}
+          </span>
+        </td>
+        <td style="text-align:center;">
+          <input
+            type="number"
+            id="tableSemCrInput_${i}"
+            class="gpa-small-cr-box"
+            min="1"
+            max="45"
+            step="0.5"
+            value="${cr}"
+            oninput="handleTableSemCrInput(${i}, this.value)"
+            title="Edit Semester ${i} total credits"
+          >
+        </td>
+        <td style="text-align:center;">
+          <div class="gpa-small-box-container">
+            <input
+              type="number"
+              id="tableSemGpaInput_${i}"
+              class="gpa-small-sem-box ${isCompleted ? 'has-val' : ''}"
+              min="0"
+              max="10"
+              step="0.01"
+              placeholder="0.00"
+              value="${gpaDisplayVal}"
+              oninput="handleTableSemGpaInput(${i}, this.value)"
+              title="Type Semester ${i} GPA directly"
+            >
+            ${isCompleted ? `<button type="button" class="btn-clear-sem-box" onclick="clearTableSemGpa(${i})" title="Clear Sem ${i} GPA">&times;</button>` : ''}
+          </div>
+        </td>
+        <td style="text-align:center;">
+          <div class="sem-cgpa-pill ${progCgpa !== null ? 'has-cgpa' : 'empty-cgpa'}" id="semCgpaPill_${i}">
+            <span class="cgpa-val-txt">${progCgpa !== null ? progCgpa.toFixed(2) : '—'}</span>
+            ${progCgpa !== null ? '<span class="cgpa-sub-txt">CGPA</span>' : ''}
+          </div>
+        </td>
+        <td id="semBadgeCell_${i}">${badge}</td>
+        <td style="text-align:center;">
+          <button type="button" class="btn-row-action ${isCurrentActive ? 'btn-row-active' : ''}" onclick="switchGpaSem(${i})" title="View / Edit Subjects for Semester ${i}">
+            <i class="fa-solid fa-list-check"></i> Subjects
+          </button>
+        </td>
+      </tr>
+    `;
+  }
+
+  area.innerHTML = `
+    <div class="gpa-breakdown-table-wrap">
+      <table class="gpa-breakdown-table">
+        <thead>
+          <tr>
+            <th style="width:75px;text-align:center;">SEMESTER</th>
+            <th style="width:90px;">TRACK</th>
+            <th style="width:90px;text-align:center;">CREDITS</th>
+            <th style="width:145px;text-align:center;">SEMESTER GPA (SGPA)</th>
+            <th style="width:140px;text-align:center;">CUMULATIVE CGPA</th>
+            <th>PERFORMANCE BAND</th>
+            <th style="width:95px;text-align:center;">SUBJECTS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Small Box Direct Input Handlers (Non-intrusive update that preserves focus)
+function handleTableSemGpaInput(sem, val) {
+  const num = parseFloat(val);
+  if (isNaN(num) || num < 0 || num > 10) {
+    directSemGpas[sem] = null;
   } else {
-    renderDetailedSubjectsTable(area);
+    directSemGpas[sem] = num;
+  }
+  
+  // Update calculations and UI elements smoothly
+  recalculateAllProgressiveCgpas();
+  renderGpaTabs();
+  updateGpaResults();
+}
+
+function handleTableSemCrInput(sem, val) {
+  const cr = parseFloat(val);
+  if (!isNaN(cr) && cr > 0) {
+    customSemCredits[sem] = cr;
+  } else {
+    customSemCredits[sem] = null;
+  }
+  recalculateAllProgressiveCgpas();
+  updateGpaResults();
+}
+
+function clearTableSemGpa(sem) {
+  directSemGpas[sem] = null;
+  const subs = gpaData[sem] || [];
+  subs.forEach(s => s.grade = '');
+  
+  renderSemBreakdownTable();
+  renderDetailedSubjectsTable();
+  renderGpaTabs();
+  updateGpaResults();
+}
+
+// Smoothly recalculate all progressive CGPAs in the table without re-rendering the whole DOM
+function recalculateAllProgressiveCgpas() {
+  let cumulativeCredits = 0;
+  let cumulativePoints = 0;
+
+  for (let i = 1; i <= TOTAL_SEMS; i++) {
+    const semGpa = calcSemGpa(i);
+    const cr = getSemActiveCredits(i);
+    const isCompleted = semGpa !== null;
+
+    if (isCompleted) {
+      cumulativeCredits += cr;
+      cumulativePoints += cr * semGpa;
+    }
+
+    const progCgpa = (isCompleted && cumulativeCredits > 0) ? (cumulativePoints / cumulativeCredits) : null;
+
+    // Update the CGPA Pill in the table
+    const pillEl = document.getElementById(`semCgpaPill_${i}`);
+    if (pillEl) {
+      if (progCgpa !== null) {
+        pillEl.className = 'sem-cgpa-pill has-cgpa';
+        pillEl.innerHTML = `<span class="cgpa-val-txt">${progCgpa.toFixed(2)}</span><span class="cgpa-sub-txt">CGPA</span>`;
+      } else {
+        pillEl.className = 'sem-cgpa-pill empty-cgpa';
+        pillEl.innerHTML = `<span class="cgpa-val-txt">—</span>`;
+      }
+    }
+
+    // Update Performance Badge in the table
+    const badgeCell = document.getElementById(`semBadgeCell_${i}`);
+    if (badgeCell) {
+      let badge = '<span class="sem-status-badge pending">Pending</span>';
+      if (isCompleted) {
+        if (progCgpa >= 9.0) badge = '<span class="gpa-band-badge badge-band-outstanding">🚀 Outstanding</span>';
+        else if (progCgpa >= 8.0) badge = '<span class="gpa-band-badge badge-band-excellent">⭐ First Class Dist.</span>';
+        else if (progCgpa >= 7.0) badge = '<span class="gpa-band-badge badge-band-verygood">🔥 First Class</span>';
+        else if (progCgpa >= 6.0) badge = '<span class="gpa-band-badge badge-band-good">👍 Second Class</span>';
+        else badge = '<span class="gpa-band-badge badge-band-needs">⚠️ Needs Improvement</span>';
+      }
+      badgeCell.innerHTML = badge;
+    }
+
+    // Update row completed class
+    const rowEl = document.getElementById(`breakdownRow_${i}`);
+    if (rowEl) {
+      if (isCompleted) rowEl.classList.add('completed-row');
+      else rowEl.classList.remove('completed-row');
+    }
   }
 }
 
-// Mode 1: Detailed Subjects Table
-function renderDetailedSubjectsTable(area) {
+// ============================================================
+// DETAILED SUBJECTS TABLE (For currently active semester)
+// ============================================================
+function renderDetailedSubjectsTable() {
+  const area = document.getElementById('gpaMainInputArea');
+  if (!area) return;
+
   const subjects = gpaData[activeSem] || [];
 
   const totalCredits = subjects.reduce((sum, s) => sum + (parseFloat(s.credits) || 0), 0);
@@ -515,7 +694,8 @@ function renderDetailedSubjectsTable(area) {
   area.innerHTML = `
     <div class="gpa-table-subheader">
       <div>
-        <strong>Semester ${activeSem} Subjects</strong> &bull; Select the grade obtained in each subject
+        <strong style="color:#7B1FA2;font-size:14px;"><i class="fa-solid fa-book-open"></i> Semester ${activeSem} Subjects &amp; Grade Entry:</strong>
+        <span style="color:#6E5D80;margin-left:6px;">Select grades per subject below (automatically updates Semester ${activeSem} GPA above)</span>
       </div>
       <div class="gpa-table-count-badge">
         ${subjects.length} Subjects &bull; ${totalCredits} Credits
@@ -527,7 +707,7 @@ function renderDetailedSubjectsTable(area) {
           <th style="width:38px;text-align:center;">#</th>
           <th>SUBJECT CODE &amp; NAME</th>
           <th style="width:85px;text-align:center;">CREDITS</th>
-          <th style="width:110px;text-align:center;">GRADE</th>
+          <th style="width:115px;text-align:center;">GRADE</th>
           <th style="width:60px;text-align:center;">GP</th>
           <th style="width:110px;text-align:center;">CREDITS × GP</th>
           <th style="width:40px;text-align:center;"></th>
@@ -538,7 +718,7 @@ function renderDetailedSubjectsTable(area) {
       </tbody>
       <tfoot>
         <tr class="gpa-table-footer">
-          <td colspan="2" class="gpa-total-label">SEMESTER ${activeSem} TOTAL</td>
+          <td colspan="2" class="gpa-total-label">SEMESTER ${activeSem} SUBJECTS TOTAL</td>
           <td class="gpa-total-credits-val">${totalCredits}</td>
           <td colspan="2"></td>
           <td class="gpa-total-cpg-val">${totalCpg.toFixed(1)}</td>
@@ -579,7 +759,7 @@ function buildGpaRow(s, idx) {
     </td>
     <td style="text-align:center;">
       <select class="gpa-grade-select-custom" onchange="updateGpaSubjectField(${idx}, 'grade', this.value)">
-        <option value="">Select</option>
+        <option value="">Select Grade</option>
         ${gradeOptions}
       </select>
     </td>
@@ -595,72 +775,6 @@ function buildGpaRow(s, idx) {
       </button>
     </td>
   </tr>`;
-}
-
-// Mode 2: Quick Semester-wise GPA Entry Grid
-function renderQuickSemInputGrid(area) {
-  let rowsHtml = '';
-
-  for (let i = 1; i <= TOTAL_SEMS; i++) {
-    const defaultCredits = getSemDefaultTotalCredits(i);
-    const calculated = calcSemGpaFromSubjects(i);
-    const directVal = directSemGpas[i] !== null ? directSemGpas[i] : (calculated !== null ? calculated.toFixed(2) : '');
-    const progCgpa = calcProgressiveCgpaUpTo(i);
-
-    rowsHtml += `
-      <div class="gpa-quick-sem-card ${i === activeSem ? 'active-quick-sem' : ''}">
-        <div class="quick-sem-top">
-          <div class="quick-sem-title">
-            <span class="quick-sem-num">Sem ${i}</span>
-            <span class="quick-sem-cr">${defaultCredits} Credits</span>
-          </div>
-          <button type="button" class="btn-goto-sem" onclick="switchGpaSem(${i})" title="View subjects for Sem ${i}">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          </button>
-        </div>
-        <div class="quick-sem-input-group">
-          <label for="directSemGpa_${i}">Semester GPA (SGPA):</label>
-          <input
-            type="number"
-            id="directSemGpa_${i}"
-            class="gpa-direct-input"
-            min="0"
-            max="10"
-            step="0.01"
-            placeholder="e.g. 8.50"
-            value="${directVal}"
-            oninput="handleDirectSemGpaInput(${i}, this.value)">
-        </div>
-        <div class="quick-sem-prog-cgpa">
-          <span>CGPA up to Sem ${i}:</span>
-          <strong>${progCgpa !== null ? progCgpa.toFixed(2) : '—'}</strong>
-        </div>
-      </div>
-    `;
-  }
-
-  area.innerHTML = `
-    <div class="gpa-quick-intro">
-      <div>
-        <strong>Quick Semester GPA Mode:</strong> Directly enter the calculated GPA for each semester to instantly view progressive CGPA and overall degree CGPA.
-      </div>
-    </div>
-    <div class="gpa-quick-grid">
-      ${rowsHtml}
-    </div>
-  `;
-}
-
-function handleDirectSemGpaInput(sem, val) {
-  const num = parseFloat(val);
-  if (isNaN(num) || num < 0 || num > 10) {
-    directSemGpas[sem] = null;
-  } else {
-    directSemGpas[sem] = num;
-  }
-  renderGpaTabs();
-  renderSemBreakdownTable();
-  updateGpaResults();
 }
 
 function escapeHtmlAttr(str) {
@@ -680,11 +794,11 @@ function updateGpaSubjectField(idx, field, value) {
   if (gpaData[activeSem]?.[idx] !== undefined) {
     gpaData[activeSem][idx][field] = value;
   }
-  // Clear direct override when editing subjects directly
+  // Clear direct override for this sem when editing subjects
   directSemGpas[activeSem] = null;
-  renderMainInputArea();
-  renderGpaTabs();
+  renderDetailedSubjectsTable();
   renderSemBreakdownTable();
+  renderGpaTabs();
   updateGpaResults();
 }
 
@@ -692,7 +806,7 @@ function addGpaSubject() {
   if (!gpaData[activeSem]) gpaData[activeSem] = [];
   gpaData[activeSem].push({ name: '', credits: 3, grade: '' });
   directSemGpas[activeSem] = null;
-  renderMainInputArea();
+  renderDetailedSubjectsTable();
   renderSemBreakdownTable();
 }
 
@@ -703,9 +817,9 @@ function removeGpaSubject(idx) {
   }
   gpaData[activeSem].splice(idx, 1);
   directSemGpas[activeSem] = null;
-  renderMainInputArea();
-  renderGpaTabs();
+  renderDetailedSubjectsTable();
   renderSemBreakdownTable();
+  renderGpaTabs();
   updateGpaResults();
 }
 
@@ -714,10 +828,11 @@ function resetGpaSem() {
   courseType[activeSem] = 'Regular';
   gpaData[activeSem] = getDefaultSubjectsForSem(activeSem);
   directSemGpas[activeSem] = null;
+  customSemCredits[activeSem] = null;
   renderGpaCourseType();
-  renderMainInputArea();
-  renderGpaTabs();
+  renderDetailedSubjectsTable();
   renderSemBreakdownTable();
+  renderGpaTabs();
   updateGpaResults();
 }
 
@@ -727,16 +842,17 @@ function resetGpaAll() {
     courseType[i] = 'Regular';
     gpaData[i] = getDefaultSubjectsForSem(i);
     directSemGpas[i] = null;
+    customSemCredits[i] = null;
   }
   renderGpaCourseType();
-  renderMainInputArea();
-  renderGpaTabs();
+  renderDetailedSubjectsTable();
   renderSemBreakdownTable();
+  renderGpaTabs();
   updateGpaResults();
 }
 
 // ============================================================
-// SEMESTER-WISE CGPA CALCULATION ENGINE
+// CALCULATION LOGIC
 // ============================================================
 function calcSemGpaFromSubjects(sem) {
   const subs = gpaData[sem] || [];
@@ -752,7 +868,7 @@ function calcSemGpaFromSubjects(sem) {
 }
 
 function calcSemGpa(sem) {
-  // If direct sem GPA was entered in quick mode, use it
+  // If direct sem GPA was entered in small box, use it
   if (directSemGpas[sem] !== null && directSemGpas[sem] !== undefined) {
     return directSemGpas[sem];
   }
@@ -760,6 +876,9 @@ function calcSemGpa(sem) {
 }
 
 function getSemActiveCredits(sem) {
+  if (customSemCredits[sem] !== null && customSemCredits[sem] !== undefined) {
+    return customSemCredits[sem];
+  }
   if (directSemGpas[sem] !== null && directSemGpas[sem] !== undefined) {
     return getSemDefaultTotalCredits(sem);
   }
@@ -773,7 +892,6 @@ function getSemActiveCredits(sem) {
   return tc > 0 ? tc : getSemDefaultTotalCredits(sem);
 }
 
-// Progressive CGPA up to a given semester (e.g. up to Sem 3 = (P1+P2+P3)/(C1+C2+C3))
 function calcProgressiveCgpaUpTo(semLimit) {
   let totalCredits = 0;
   let totalPoints = 0;
@@ -790,95 +908,6 @@ function calcProgressiveCgpaUpTo(semLimit) {
   }
 
   return (hasAny && totalCredits > 0) ? (totalPoints / totalCredits) : null;
-}
-
-// ============================================================
-// SEMESTER-WISE CGPA BREAKDOWN TABLE RENDERER
-// ============================================================
-function renderSemBreakdownTable() {
-  const area = document.getElementById('gpaSemBreakdownTableArea');
-  if (!area) return;
-
-  let rowsHtml = '';
-  let cumulativeCredits = 0;
-  let cumulativePoints = 0;
-
-  for (let i = 1; i <= TOTAL_SEMS; i++) {
-    const semGpa = calcSemGpa(i);
-    const cr = getSemActiveCredits(i);
-    const isCompleted = semGpa !== null;
-
-    if (isCompleted) {
-      cumulativeCredits += cr;
-      cumulativePoints += cr * semGpa;
-    }
-
-    const progCgpa = (isCompleted && cumulativeCredits > 0) ? (cumulativePoints / cumulativeCredits) : null;
-
-    let badge = '<span class="sem-status-badge pending">Pending</span>';
-    if (isCompleted) {
-      if (progCgpa >= 9.0) badge = '<span class="gpa-band-badge badge-band-outstanding">🚀 Outstanding</span>';
-      else if (progCgpa >= 8.0) badge = '<span class="gpa-band-badge badge-band-excellent">⭐ First Class Dist.</span>';
-      else if (progCgpa >= 7.0) badge = '<span class="gpa-band-badge badge-band-verygood">🔥 First Class</span>';
-      else if (progCgpa >= 6.0) badge = '<span class="gpa-band-badge badge-band-good">👍 Second Class</span>';
-      else badge = '<span class="gpa-band-badge badge-band-needs">⚠️ Needs Improvement</span>';
-    }
-
-    const isCurrentActive = i === activeSem;
-
-    rowsHtml += `
-      <tr class="${isCurrentActive ? 'current-active-row' : ''} ${isCompleted ? 'completed-row' : ''}">
-        <td style="text-align:center;">
-          <button type="button" class="btn-sem-tag ${isCurrentActive ? 'active' : ''}" onclick="switchGpaSem(${i})" title="Switch to Semester ${i}">
-            Sem ${i}
-          </button>
-        </td>
-        <td>
-          <span class="sem-type-tag ${courseType[i] === 'Honours' ? 'honours' : 'regular'}">
-            ${courseType[i] || 'Regular'}
-          </span>
-        </td>
-        <td style="text-align:center;font-weight:700;">${cr}</td>
-        <td style="text-align:center;">
-          <strong class="sem-gpa-display ${isCompleted ? 'has-gpa' : ''}">
-            ${isCompleted ? semGpa.toFixed(2) : '—'}
-          </strong>
-        </td>
-        <td style="text-align:center;">
-          <strong class="sem-cgpa-display ${progCgpa !== null ? 'has-cgpa' : ''}">
-            ${progCgpa !== null ? progCgpa.toFixed(2) : '—'}
-          </strong>
-        </td>
-        <td>${badge}</td>
-        <td style="text-align:center;">
-          <button type="button" class="btn-row-action" onclick="switchGpaSem(${i})">
-            <i class="fa-solid fa-pen-to-square"></i> Edit
-          </button>
-        </td>
-      </tr>
-    `;
-  }
-
-  area.innerHTML = `
-    <div class="gpa-breakdown-table-wrap">
-      <table class="gpa-breakdown-table">
-        <thead>
-          <tr>
-            <th style="width:75px;text-align:center;">SEMESTER</th>
-            <th>TRACK</th>
-            <th style="width:85px;text-align:center;">CREDITS</th>
-            <th style="width:120px;text-align:center;">SEMESTER GPA (SGPA)</th>
-            <th style="width:140px;text-align:center;">CUMULATIVE CGPA</th>
-            <th>PERFORMANCE BAND</th>
-            <th style="width:75px;text-align:center;">ACTION</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
-    </div>
-  `;
 }
 
 // ============================================================
