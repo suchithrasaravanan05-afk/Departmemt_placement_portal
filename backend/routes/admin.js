@@ -6,6 +6,7 @@ const router = express.Router();
 const db = require("../db");
 const { supabaseAdmin, supabase } = require("../supabase");
 const { normalizeDepartment, getDepartmentById } = require("../utils/departmentNormalizer");
+const feedbackCertificateStorage = require("../feedbackCertificateStorage");
 
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
 
@@ -1215,23 +1216,77 @@ router.put("/batches/:batchName", async (req, res) => {
     }
 });
 
-// DELETE BATCH
-router.delete("/batches/:batchName", async (req, res) => {
+// ==========================================
+// EVENT FEEDBACK & CERTIFICATE ROUTES (ADMIN)
+// ==========================================
+
+// CREATE / SEND EVENT FEEDBACK
+router.post("/event-feedback", checkAdminWritePermission, async (req, res) => {
     try {
-        const { batchName } = req.params;
-        const updated = await settingsStorage.deleteBatch(batchName);
-        res.json({
-            success: true,
-            message: `Batch "${batchName}" removed successfully.`,
-            settings: updated
+        const { event_name, event_date, target_type, student_id, message, signatory_title } = req.body;
+        if (!event_name || !event_date) {
+            return res.status(400).json({ success: false, message: "Event name and event date are required" });
+        }
+        const feedback = await feedbackCertificateStorage.createEventFeedback({
+            event_name,
+            event_date,
+            target_type,
+            student_id,
+            message,
+            signatory_title
         });
-    } catch (err) {
-        console.error("Error deleting batch:", err);
-        res.status(400).json({ success: false, message: err.message || "Failed to delete batch" });
+        res.json({ success: true, message: "Event feedback request sent successfully!", feedback });
+    } catch (e) {
+        console.error("Create event feedback error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to create event feedback" });
+    }
+});
+
+// GET ALL EVENT FEEDBACKS
+router.get("/event-feedbacks", async (req, res) => {
+    try {
+        const events = await feedbackCertificateStorage.getAllEventFeedbacks();
+        const submissions = await feedbackCertificateStorage.getAllSubmissions();
+        const subCounts = new Map();
+        (submissions || []).forEach(s => {
+            const count = subCounts.get(s.feedback_id) || 0;
+            subCounts.set(s.feedback_id, count + 1);
+        });
+        const enriched = events.map(e => ({
+            ...e,
+            submissions_count: subCounts.get(e.id) || 0
+        }));
+        res.json({ success: true, event_feedbacks: enriched });
+    } catch (e) {
+        console.error("Get event feedbacks error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch event feedbacks" });
+    }
+});
+
+// GET SUBMISSIONS FOR SPECIFIC EVENT FEEDBACK
+router.get("/event-feedbacks/:id/submissions", async (req, res) => {
+    try {
+        const submissions = await feedbackCertificateStorage.getFeedbackSubmissionsForAdmin(req.params.id);
+        res.json({ success: true, submissions });
+    } catch (e) {
+        console.error("Get feedback submissions error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch submissions" });
+    }
+});
+
+// DELETE EVENT FEEDBACK
+router.delete("/event-feedback/:id", checkAdminWritePermission, async (req, res) => {
+    try {
+        await feedbackCertificateStorage.deleteEventFeedback(req.params.id);
+        res.json({ success: true, message: "Event feedback deleted successfully" });
+    } catch (e) {
+        console.error("Delete event feedback error:", e);
+        res.status(500).json({ success: false, message: "Failed to delete event feedback" });
     }
 });
 
 module.exports = router;
 
 
-
+
+

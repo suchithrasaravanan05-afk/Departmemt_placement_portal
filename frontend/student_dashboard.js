@@ -178,7 +178,7 @@ function showStudentAlert(message, isSuccess = false) {
 // ============================================================
 // TAB NAVIGATION
 // ============================================================
-const TABS = ['profile', 'drives', 'applications', 'gpa', 'resources'];
+const TABS = ['profile', 'drives', 'applications', 'gpa', 'resources', 'certificates'];
 
 function switchTab(tabName) {
   TABS.forEach(t => {
@@ -190,6 +190,7 @@ function switchTab(tabName) {
 
   if (tabName === 'drives')       loadPlacementDrives();
   if (tabName === 'applications') loadAppliedDrivesTable();
+  if (tabName === 'certificates') loadStudentCertificates();
   if (tabName === 'gpa' && typeof renderSemesterGpaApp === 'function') {
     renderSemesterGpaApp('gpaDashboardContainer', true);
   }
@@ -723,8 +724,10 @@ function evaluateDriveEligibility(d, profile) {
 }
 
 // ============================================================
-// DRIVE NOTIFICATIONS & LIVE AUTO-SYNC LOGIC
+// DRIVE & EVENT FEEDBACK NOTIFICATIONS & LIVE SYNC
 // ============================================================
+let cachedStudentEventFeedbacks = [];
+
 function getReadDriveIds() {
   try {
     const key = `rit_read_drives_${currentUser?.id || 'default'}`;
@@ -745,38 +748,113 @@ function saveReadDriveIds(ids) {
   }
 }
 
-function renderDriveNotifications(drives) {
+function getReadFeedbackIds() {
+  try {
+    const key = `rit_read_feedbacks_${currentUser?.id || 'default'}`;
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveReadFeedbackIds(ids) {
+  try {
+    const key = `rit_read_feedbacks_${currentUser?.id || 'default'}`;
+    localStorage.setItem(key, JSON.stringify(ids));
+  } catch (e) {
+    console.error('Failed to save read feedback IDs:', e);
+  }
+}
+
+async function fetchStudentEventFeedbacks() {
+  if (!currentUser || !currentUser.id) return [];
+  try {
+    const res = await fetch(`${API_BASE}/student/event-feedbacks/${currentUser.id}`, {
+      headers: { Authorization: `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+    if (data.success && Array.isArray(data.event_feedbacks)) {
+      cachedStudentEventFeedbacks = data.event_feedbacks;
+      return data.event_feedbacks;
+    }
+  } catch (e) {
+    console.warn('Failed to fetch student event feedbacks:', e);
+  }
+  return cachedStudentEventFeedbacks || [];
+}
+
+function renderDriveNotifications(drives, eventFeedbacks = null) {
   cachedStudentDrives = drives || [];
+  if (eventFeedbacks !== null) {
+    cachedStudentEventFeedbacks = eventFeedbacks;
+  }
+  const feedbacks = cachedStudentEventFeedbacks || [];
+
   const listEl = el('notifList');
   const badgeEl = el('notifBadge');
   if (!listEl) return;
 
-  if (!drives || drives.length === 0) {
-    listEl.innerHTML = `
-      <div style="padding:28px 16px;text-align:center;color:#94a3b8;">
-        <i class="fa-regular fa-bell-slash" style="font-size:26px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
-        <p style="font-size:13px;font-weight:600;color:#64748b;">No drive announcements yet.</p>
-        <p style="font-size:11px;margin-top:2px;">New placement drives posted by admin will appear here.</p>
-      </div>`;
-    if (badgeEl) badgeEl.classList.add('hidden');
-    return;
-  }
+  const readDriveList = getReadDriveIds();
+  const readDriveIds = new Set(Array.isArray(readDriveList) ? readDriveList : []);
+  const unreadDrivesCount = cachedStudentDrives.filter(d => !readDriveIds.has(d.id)).length;
 
-  const readList = getReadDriveIds();
-  const readIds = new Set(Array.isArray(readList) ? readList : []);
-  const unreadCount = drives.filter(d => !readIds.has(d.id)).length;
+  const readFbList = getReadFeedbackIds();
+  const readFbIds = new Set(Array.isArray(readFbList) ? readFbList : []);
+  const unreadFbCount = feedbacks.filter(fb => !readFbIds.has(fb.id)).length;
+
+  const totalUnread = unreadDrivesCount + unreadFbCount;
 
   if (badgeEl) {
-    if (unreadCount > 0) {
-      badgeEl.innerText = unreadCount > 99 ? '99+' : unreadCount;
+    if (totalUnread > 0) {
+      badgeEl.innerText = totalUnread > 99 ? '99+' : totalUnread;
       badgeEl.classList.remove('hidden');
     } else {
       badgeEl.classList.add('hidden');
     }
   }
 
-  listEl.innerHTML = drives.map(d => {
-    const isUnread = !readIds.has(d.id);
+  if ((!drives || drives.length === 0) && (!feedbacks || feedbacks.length === 0)) {
+    listEl.innerHTML = `
+      <div style="padding:28px 16px;text-align:center;color:#94a3b8;">
+        <i class="fa-regular fa-bell-slash" style="font-size:26px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
+        <p style="font-size:13px;font-weight:600;color:#64748b;">No announcements yet.</p>
+        <p style="font-size:11px;margin-top:2px;">Event feedbacks and placement drives will appear here.</p>
+      </div>`;
+    return;
+  }
+
+  // Build feedback items
+  const fbHtml = feedbacks.map(fb => {
+    const isUnread = !readFbIds.has(fb.id);
+    const dateFormatted = fb.event_date ? fmtDate(fb.event_date) : '---';
+    const submitted = !!fb.is_submitted;
+
+    return `
+    <div class="student-notif-item ${isUnread ? 'is-unread' : ''}" onclick="handleEventFeedbackNotifClick(${fb.id})" style="border-left: 3px solid #4338ca; background: ${isUnread ? '#eef2ff' : '#ffffff'};">
+      <div class="student-notif-item-icon" style="background: linear-gradient(135deg, #312e81, #4338ca); color: #fff;">
+        <i class="fa-solid fa-comments"></i>
+      </div>
+      <div class="student-notif-item-content">
+        <div class="student-notif-item-company">
+          <span style="font-weight:700;color:#1e1b4b;">🎓 Event Feedback: ${escapeHtml(fb.event_name)}</span>
+          ${submitted ? '<span class="badge badge-green" style="font-size:10px;"><i class="fa-solid fa-award"></i> Certificate Issued</span>' : '<span class="badge badge-purple" style="font-size:10px;"><i class="fa-solid fa-star"></i> Feedback Pending</span>'}
+        </div>
+        <div class="student-notif-item-role" style="color:#4338ca;font-size:12px;">
+          ${submitted ? 'Click to view / download your verified PDF certificate' : 'Click to submit feedback & claim your Certificate of Participation'}
+        </div>
+        <div class="student-notif-item-meta">
+          <span><i class="fa-regular fa-calendar-days" style="margin-right:3px;"></i>Event Date: ${dateFormatted}</span>
+          ${fb.signatory_title ? `<span>•</span><span><i class="fa-solid fa-user-tie" style="margin-right:2px;"></i>${escapeHtml(fb.signatory_title)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Build drive items
+  const driveHtml = cachedStudentDrives.map(d => {
+    const isUnread = !readDriveIds.has(d.id);
     const deadlineStr = d.deadline ? fmtDate(d.deadline) : 'Open';
     const isExpired = d.deadline && new Date(d.deadline) < new Date();
     const applied = !!d.app_status;
@@ -807,6 +885,28 @@ function renderDriveNotifications(drives) {
       </div>
     </div>`;
   }).join('');
+
+  listEl.innerHTML = fbHtml + driveHtml;
+}
+
+function handleEventFeedbackNotifClick(feedbackId) {
+  const readList = getReadFeedbackIds();
+  const readIds = new Set(Array.isArray(readList) ? readList : []);
+  readIds.add(feedbackId);
+  saveReadFeedbackIds(Array.from(readIds));
+
+  // Update badge and list
+  renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
+
+  // Close dropdown
+  el('notifDropdown')?.classList.add('hidden');
+
+  const fb = (cachedStudentEventFeedbacks || []).find(item => parseInt(item.id, 10) === parseInt(feedbackId, 10));
+  if (fb && fb.is_submitted && fb.certificate) {
+    openCertificateViewModal(fb.certificate);
+  } else {
+    openFeedbackModal(feedbackId);
+  }
 }
 
 function handleNotificationClick(driveId) {
@@ -816,7 +916,7 @@ function handleNotificationClick(driveId) {
   saveReadDriveIds(Array.from(readIds));
 
   // Update badge and notif list
-  renderDriveNotifications(cachedStudentDrives);
+  renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
 
   // Close dropdown
   el('notifDropdown')?.classList.add('hidden');
@@ -849,9 +949,11 @@ function toggleNotifDropdown(e) {
 
 function markAllNotificationsRead(e) {
   if (e) e.stopPropagation();
-  const allIds = (cachedStudentDrives || []).map(d => d.id);
-  saveReadDriveIds(allIds);
-  renderDriveNotifications(cachedStudentDrives);
+  const allDriveIds = (cachedStudentDrives || []).map(d => d.id);
+  saveReadDriveIds(allDriveIds);
+  const allFbIds = (cachedStudentEventFeedbacks || []).map(fb => fb.id);
+  saveReadFeedbackIds(allFbIds);
+  renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
   showStudentAlert('All notifications marked as read.', true);
 }
 
@@ -929,8 +1031,11 @@ async function loadPlacementDrives(silent = false) {
     cachedStudentDrives = newDrives;
     isInitialDrivesLoad = false;
 
+    // Fetch and sync event feedbacks as well
+    await fetchStudentEventFeedbacks();
+
     // Render Notifications & Drives List with Filter
-    renderDriveNotifications(cachedStudentDrives);
+    renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
     renderDrivesWithFilter();
 
     // Update Live Indicator status text
@@ -1511,3 +1616,503 @@ function fmtDate(dateStr) {
   if (isNaN(d)) return dateStr;
   return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
+// ============================================================
+// EVENT FEEDBACK & CERTIFICATE GENERATION (STUDENT)
+// ============================================================
+
+let currentFeedbackEvent = null;
+
+function setFeedbackRating(val) {
+  const ratingInput = el('feedbackRatingVal');
+  const ratingLabel = el('ratingLabel');
+  if (ratingInput) ratingInput.value = val;
+
+  const stars = document.querySelectorAll('#feedbackStarContainer i');
+  const labels = {
+    1: '1 / 5 - Poor',
+    2: '2 / 5 - Fair',
+    3: '3 / 5 - Good',
+    4: '4 / 5 - Very Good',
+    5: '5 / 5 - Excellent'
+  };
+
+  if (ratingLabel) ratingLabel.innerText = labels[val] || `${val} / 5`;
+
+  stars.forEach(s => {
+    const starVal = parseInt(s.getAttribute('data-val'), 10);
+    if (starVal <= val) {
+      s.classList.remove('fa-regular');
+      s.classList.add('fa-solid', 'active-star');
+    } else {
+      s.classList.remove('fa-solid', 'active-star');
+      s.classList.add('fa-regular');
+    }
+  });
+}
+
+function openFeedbackModal(feedbackId) {
+  const fb = (cachedStudentEventFeedbacks || []).find(item => parseInt(item.id, 10) === parseInt(feedbackId, 10));
+  if (!fb) {
+    showStudentAlert('Event feedback details not found.');
+    return;
+  }
+
+  currentFeedbackEvent = fb;
+  if (el('feedbackEventId')) el('feedbackEventId').value = fb.id;
+  if (el('modalEventName')) el('modalEventName').innerText = fb.event_name;
+  if (el('modalEventDate')) el('modalEventDate').innerText = `Event Date: ${fmtDate(fb.event_date)}`;
+
+  const msgWrap = el('modalAdminMessageWrap');
+  const msgEl = el('modalAdminMessage');
+  if (fb.message && fb.message.trim().length > 0) {
+    if (msgEl) msgEl.innerText = fb.message;
+    if (msgWrap) msgWrap.classList.remove('hidden');
+  } else {
+    if (msgWrap) msgWrap.classList.add('hidden');
+  }
+
+  // Reset form
+  el('studentFeedbackForm')?.reset();
+  setFeedbackRating(5);
+
+  el('studentFeedbackModal')?.classList.remove('hidden');
+}
+
+function closeFeedbackModal() {
+  el('studentFeedbackModal')?.classList.add('hidden');
+}
+
+function _closeFeedbackModal(e) {
+  if (e.target === el('studentFeedbackModal')) {
+    closeFeedbackModal();
+  }
+}
+
+async function handleStudentFeedbackSubmit(e) {
+  if (e) e.preventDefault();
+  const feedback_id = el('feedbackEventId')?.value;
+  const rating = el('feedbackRatingVal')?.value || 5;
+  const learnings = el('feedbackLearnings')?.value.trim();
+  const comments = el('feedbackComments')?.value.trim();
+
+  if (!feedback_id) {
+    showStudentAlert('Event Feedback ID missing.');
+    return;
+  }
+
+  if (!learnings) {
+    showStudentAlert('Please describe your key learnings from the event.');
+    return;
+  }
+
+  const btn = el('btnSubmitFeedback');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting & Generating Certificate...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/student/feedback/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({
+        feedback_id,
+        user_id: currentUser.id,
+        rating,
+        learnings,
+        comments
+      })
+    });
+
+    const data = await res.json();
+    if (data.success && data.certificate) {
+      closeFeedbackModal();
+      showStudentAlert('🎉 Feedback submitted! Your Certificate of Participation is generated.', true);
+
+      // Refresh feedback and certificates cache
+      await fetchStudentEventFeedbacks();
+      renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
+
+      // Open Certificate View Modal
+      openCertificateViewModal(data.certificate);
+
+      // If on certificates tab, reload it
+      loadStudentCertificates();
+    } else {
+      showStudentAlert(data.message || 'Failed to submit feedback.');
+    }
+  } catch (err) {
+    console.error('Error submitting feedback:', err);
+    showStudentAlert('Server error while submitting feedback.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-certificate"></i> Submit & Generate Certificate';
+    }
+  }
+}
+
+// ============================================================
+// PDF CERTIFICATE GENERATOR & PREVIEW
+// ============================================================
+
+function generateCertificatePDF(cert, isDownload = true) {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF generator library loading, please try again in a moment.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4"
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth(); // 297 mm
+  const pageHeight = doc.internal.pageSize.getHeight(); // 210 mm
+
+  // Background tint
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  // Outer Border (Navy #1e1b4b)
+  doc.setDrawColor(30, 27, 75);
+  doc.setLineWidth(1.8);
+  doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
+
+  // Inner Border (Gold #b45309)
+  doc.setDrawColor(180, 83, 9);
+  doc.setLineWidth(0.8);
+  doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
+
+  // Corner decorative marks
+  const corners = [
+    [12, 12], [pageWidth - 12, 12],
+    [12, pageHeight - 12], [pageWidth - 12, pageHeight - 12]
+  ];
+  doc.setFillColor(180, 83, 9);
+  corners.forEach(([cx, cy]) => {
+    doc.circle(cx, cy, 1.8, 'F');
+  });
+
+  // College Name Header
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(30, 27, 75); // Dark Navy
+  doc.text("RAMCO INSTITUTE OF TECHNOLOGY", pageWidth / 2, 28, { align: "center" });
+
+  // Department Subheader
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(180, 83, 9); // Gold
+  doc.text("DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS", pageWidth / 2, 35, { align: "center" });
+
+  // Accreditation text
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai", pageWidth / 2, 40, { align: "center" });
+
+  // Gold Divider line
+  doc.setDrawColor(180, 83, 9);
+  doc.setLineWidth(0.6);
+  doc.line(30, 44, pageWidth - 30, 44);
+
+  // Certificate Heading
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(180, 83, 9);
+  doc.text("CERTIFICATE OF PARTICIPATION", pageWidth / 2, 55, { align: "center" });
+
+  // Preamble
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text("This is to certify that", pageWidth / 2, 66, { align: "center" });
+
+  // Student Full Name
+  const studentName = (cert.student_name || currentUser.full_name || "Student").toUpperCase();
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(15, 23, 42);
+  doc.text(studentName, pageWidth / 2, 78, { align: "center" });
+
+  // Underline for student name
+  const nameWidth = doc.getTextWidth(studentName);
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(0.4);
+  doc.line((pageWidth - nameWidth) / 2, 80, (pageWidth + nameWidth) / 2, 80);
+
+  // Register Number & Department
+  const regNo = cert.register_number || currentUser.register_number || "---";
+  const dept = cert.department || "Computer Science and Business Systems";
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`Register No: ${regNo}   |   Department of ${dept}`, pageWidth / 2, 89, { align: "center" });
+
+  // Participation Statement
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text("has actively participated in and successfully completed the departmental event / workshop titled", pageWidth / 2, 102, { align: "center" });
+
+  // Event Name
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.setTextColor(30, 27, 75);
+  doc.text(`"${cert.event_name}"`, pageWidth / 2, 112, { align: "center" });
+
+  // Event Date
+  const eventDateStr = cert.event_date ? new Date(cert.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '---';
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`conducted on ${eventDateStr}.`, pageWidth / 2, 121, { align: "center" });
+
+  // Footer Divider Line
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.5);
+  doc.line(20, 142, pageWidth - 20, 142);
+
+  // Footer - Left: Certificate ID & Issue Date
+  const certNumber = cert.certificate_number || "RIT-CSBS-CERT-2026";
+  const issueDateStr = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB');
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text("Certificate Number:", 24, 155);
+
+  doc.setFont("courier", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(67, 56, 202);
+  doc.text(certNumber, 24, 161);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Date of Issue: ${issueDateStr}`, 24, 168);
+
+  // Footer - Center: Digitally Verified Stamp Box
+  doc.setDrawColor(5, 150, 105);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(pageWidth / 2 - 28, 153, 56, 16, 2, 2);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(5, 150, 105);
+  doc.text("DIGITALLY VERIFIED", pageWidth / 2, 161, { align: "center" });
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text("RIT CSBS Placement Portal", pageWidth / 2, 166, { align: "center" });
+
+  // Footer - Right: Signature
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(30, 27, 75);
+  doc.text("Dr. Placement Officer / HOD", pageWidth - 24, 157, { align: "right" });
+
+  doc.setDrawColor(30, 27, 75);
+  doc.setLineWidth(0.4);
+  doc.line(pageWidth - 75, 161, pageWidth - 24, 161);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text(cert.signatory_title || "Head of Department - CSBS", pageWidth - 24, 166, { align: "right" });
+
+  const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${(cert.event_name || 'Event').replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`;
+
+  if (isDownload) {
+    doc.save(safeFilename);
+  } else {
+    // Return blob URL or open in window
+    const blobUrl = doc.output('bloburl');
+    window.open(blobUrl, '_blank');
+  }
+}
+
+function openCertificateViewModal(cert) {
+  if (!cert) return;
+
+  const dateStr = cert.event_date ? fmtDate(cert.event_date) : '---';
+  const issueStr = cert.issue_date ? fmtDate(cert.issue_date) : fmtDate(new Date());
+
+  if (el('certModalHeading')) el('certModalHeading').innerText = `Certificate — ${cert.event_name}`;
+  if (el('certModalNumber')) el('certModalNumber').innerText = `Certificate No: ${cert.certificate_number || '---'}`;
+
+  if (el('certPreviewStudentName')) el('certPreviewStudentName').innerText = cert.student_name || currentUser.full_name;
+  if (el('certPreviewStudentMeta')) {
+    el('certPreviewStudentMeta').innerHTML = `Register No: <strong>${escapeHtml(cert.register_number || currentUser.register_number || '---')}</strong> | Department of <strong>${escapeHtml(cert.department || 'Computer Science and Business Systems')}</strong>`;
+  }
+  if (el('certPreviewEventName')) el('certPreviewEventName').innerText = `"${cert.event_name}"`;
+  if (el('certPreviewEventDate')) el('certPreviewEventDate').innerText = dateStr;
+  if (el('certPreviewCode')) el('certPreviewCode').innerText = cert.certificate_number || '---';
+  if (el('certPreviewIssueDate')) el('certPreviewIssueDate').innerText = issueStr;
+  if (el('certPreviewSignatory')) el('certPreviewSignatory').innerText = cert.signatory_title || 'Head of Department - CSBS';
+
+  // Wire Download buttons
+  const dlBtn = el('certModalDownloadBtn');
+  if (dlBtn) {
+    dlBtn.onclick = () => generateCertificatePDF(cert, true);
+  }
+  const dlBtnBottom = el('certModalDownloadBtnBottom');
+  if (dlBtnBottom) {
+    dlBtnBottom.onclick = () => generateCertificatePDF(cert, true);
+  }
+
+  el('certificateViewModal')?.classList.remove('hidden');
+}
+
+function closeCertificateViewModal() {
+  el('certificateViewModal')?.classList.add('hidden');
+}
+
+function _closeCertificateViewModal(e) {
+  if (e.target === el('certificateViewModal')) {
+    closeCertificateViewModal();
+  }
+}
+
+// ============================================================
+// LOAD STUDENT CERTIFICATES (MY CERTIFICATES TAB)
+// ============================================================
+async function loadStudentCertificates(showToast = false) {
+  const container = el('certificatesContainer');
+  const countBadge = el('studentCertsCountBadge');
+  const pendingBanner = el('pendingFeedbacksBanner');
+
+  if (container) {
+    container.innerHTML = `
+      <div class="spinner-box">
+        <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#94a3b8;"></i>
+        <p>Loading your certificates...</p>
+      </div>`;
+  }
+
+  if (!currentUser || !currentUser.id) return;
+
+  try {
+    const [certRes, fbRes] = await Promise.all([
+      fetch(`${API_BASE}/student/certificates/${currentUser.id}`, { headers: { Authorization: `Bearer ${currentToken}` } }),
+      fetch(`${API_BASE}/student/event-feedbacks/${currentUser.id}`, { headers: { Authorization: `Bearer ${currentToken}` } })
+    ]);
+
+    const certData = await certRes.json();
+    const fbData = await fbRes.json();
+
+    const certs = certData.certificates || [];
+    const feedbacks = fbData.event_feedbacks || [];
+    cachedStudentEventFeedbacks = feedbacks;
+
+    if (countBadge) {
+      countBadge.innerText = `${certs.length} Certificate${certs.length === 1 ? '' : 's'}`;
+    }
+
+    // Check pending feedbacks
+    const pendingFbs = feedbacks.filter(f => !f.is_submitted);
+    if (pendingBanner) {
+      if (pendingFbs.length > 0) {
+        pendingBanner.classList.remove('hidden');
+        pendingBanner.innerHTML = `
+          <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:40px;height:40px;border-radius:10px;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;">
+                <i class="fa-solid fa-comments"></i>
+              </div>
+              <div>
+                <strong style="color:#1e3a8a;font-size:14px;">${pendingFbs.length} Pending Event Feedback${pendingFbs.length === 1 ? '' : 's'}</strong>
+                <p style="margin:2px 0 0;font-size:12px;color:#3b82f6;">Complete the feedback form for "${escapeHtml(pendingFbs[0].event_name)}" to automatically generate your PDF certificate.</p>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openFeedbackModal(${pendingFbs[0].id})" style="padding:8px 16px;border-radius:8px;">
+              <i class="fa-solid fa-pencil"></i> Fill Feedback Now
+            </button>
+          </div>
+        `;
+      } else {
+        pendingBanner.classList.add('hidden');
+      }
+    }
+
+    if (!certs || certs.length === 0) {
+      if (container) {
+        container.innerHTML = `
+          <div class="empty-state" style="padding:40px 20px;text-align:center;">
+            <i class="fa-solid fa-award" style="font-size:36px;color:#cbd5e1;display:block;margin-bottom:10px;"></i>
+            <h4 style="color:#475569;margin-bottom:6px;">No Certificates Generated Yet</h4>
+            <p style="color:#94a3b8;font-size:13px;max-width:400px;margin:0 auto 16px;">When faculty or department admins send event feedback requests for workshops or drives you attend, fill in the feedback to receive your verified Certificate of Participation.</p>
+            ${pendingFbs.length > 0 ? `<button class="btn btn-primary" onclick="openFeedbackModal(${pendingFbs[0].id})"><i class="fa-solid fa-pencil"></i> Complete Pending Feedback</button>` : ''}
+          </div>
+        `;
+      }
+      if (showToast) showStudentAlert('Certificates refreshed.', true);
+      return;
+    }
+
+    if (container) {
+      container.innerHTML = `
+        <div class="certificates-grid">
+          ${certs.map(c => {
+            const dateStr = c.event_date ? fmtDate(c.event_date) : '---';
+            const issueStr = c.issue_date ? fmtDate(c.issue_date) : '---';
+            const certJson = JSON.stringify(c).replace(/"/g, '&quot;');
+            return `
+              <div class="student-cert-card">
+                <div class="student-cert-header">
+                  <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c7d2fe;margin-bottom:4px;">
+                    RAMCO INSTITUTE OF TECHNOLOGY &bull; CSBS
+                  </div>
+                  <h4 style="margin:0;font-size:16px;font-weight:800;color:#fff;line-height:1.3;">
+                    ${escapeHtml(c.event_name)}
+                  </h4>
+                </div>
+                <div class="student-cert-body">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                      <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">
+                        <i class="fa-solid fa-certificate"></i> ${escapeHtml(c.certificate_number)}
+                      </span>
+                      <span style="font-size:11px;color:#64748b;">
+                        <i class="fa-regular fa-calendar-days"></i> ${dateStr}
+                      </span>
+                    </div>
+
+                    <div style="font-size:12px;color:#475569;line-height:1.5;">
+                      <div>Awarded to: <strong style="color:#0f172a;">${escapeHtml(c.student_name)}</strong></div>
+                      <div>Reg No: <strong>${escapeHtml(c.register_number)}</strong></div>
+                      <div>Department: <strong>${escapeHtml(c.department)}</strong></div>
+                      <div style="margin-top:4px;font-size:11px;color:#64748b;">Issue Date: ${issueStr}</div>
+                    </div>
+                  </div>
+
+                  <div class="student-cert-actions">
+                    <button class="btn btn-outline-primary btn-sm" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;border-radius:8px;" onclick="openCertificateViewModal(${certJson})">
+                      <i class="fa-solid fa-eye"></i> View PDF
+                    </button>
+                    <button class="btn btn-primary btn-sm" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;border-radius:8px;" onclick="generateCertificatePDF(${certJson}, true)">
+                      <i class="fa-solid fa-download"></i> Download PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    if (showToast) showStudentAlert('Certificates refreshed.', true);
+  } catch (err) {
+    console.error('Error loading certificates:', err);
+    if (container) {
+      container.innerHTML = `<div class="empty-state"><p style="color:#ef4444;">Failed to load certificates.</p></div>`;
+    }
+  }
+}
+

@@ -1899,3 +1899,19 @@
   align-items: center;
   gap: 5px;
 }
+
+/* ============================================================
+   ADMIN EVENT FEEDBACK & CERTIFICATE STYLES
+   ============================================================ */
+.admin-event-feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+@media (max-width: 960px) {
+  .admin-event-feedback-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -138,6 +138,9 @@
     <button class="admin-tab-btn" id="tabBtnPlaced" onclick="switchAdminTab('placed')">
       <i class="fa-solid fa-award"></i> Placed Students
     </button>
+    <button class="admin-tab-btn" id="tabBtnEventFeedback" onclick="switchAdminTab('eventFeedback')">
+      <i class="fa-solid fa-comments"></i> Event Feedback
+    </button>
     <button class="admin-tab-btn" id="tabBtnSettings" onclick="switchAdminTab('settings')">
       <i class="fa-solid fa-gear"></i> Settings
     </button>
@@ -702,6 +705,181 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       TAB: EVENT FEEDBACK & CERTIFICATES MANAGEMENT
+       ======================================================== -->
+  <div id="adminTabEventFeedback" class="tab-content hidden">
+    <!-- Header Banner -->
+    <div class="settings-header-banner" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);">
+      <div class="settings-header-title-wrap">
+        <div class="settings-header-icon" style="background: rgba(255,255,255,0.15); color: #fff;">
+          <i class="fa-solid fa-comments"></i>
+        </div>
+        <div>
+          <h2 class="settings-title" style="color: #fff;">Event Feedback & Certificate Workflow</h2>
+          <p class="settings-subtitle" style="color: #e0e7ff;">Send event feedback requests to students, review their responses, and verify automated PDF certificate generation</p>
+        </div>
+      </div>
+      <button class="btn btn-sm analytics-refresh-btn" onclick="loadAdminEventFeedbacks(true)" style="background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.3);">
+        <i class="fa-solid fa-rotate-right"></i> Refresh Feedbacks
+      </button>
+    </div>
+
+    <div class="admin-event-feedback-grid">
+      <!-- Create & Send Form Card -->
+      <div class="admin-card">
+        <div class="admin-card-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:#e0e7ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-paper-plane"></i>
+            </div>
+            <div>
+              <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;">Send Event Feedback</h3>
+              <p style="margin:0;font-size:12px;color:#64748b;">Notify students to submit feedback and claim their certificates</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="adminEventFeedbackForm" onsubmit="handleSendEventFeedback(event)">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;">
+              Event / Workshop Name <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="text" id="efEventName" class="form-control" placeholder="e.g. AI & Cloud Computing Workshop 2026" required style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div class="form-group">
+              <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;">
+                Event Date <span style="color:#ef4444;">*</span>
+              </label>
+              <input type="date" id="efEventDate" class="form-control" required style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;">
+                Target Audience <span style="color:#ef4444;">*</span>
+              </label>
+              <select id="efTargetType" class="form-control" onchange="toggleEfStudentSelector()" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+                <option value="all">All Students (Broadcast Notification)</option>
+                <option value="student">Specific Student</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Specific Student Selector (shown when target === 'student') -->
+          <div id="efStudentSelectWrap" class="form-group hidden" style="margin-bottom:14px;">
+            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;">
+              Select Student <span style="color:#ef4444;">*</span>
+            </label>
+            <select id="efStudentId" class="form-control" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+              <option value="">-- Choose Student from Roster --</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:14px;">
+            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;">
+              Authorized Signatory Designation
+            </label>
+            <input type="text" id="efSignatoryTitle" class="form-control" value="Head of Department - CSBS" placeholder="e.g. Head of Department - CSBS" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;">
+              Feedback Instructions / Message for Students
+            </label>
+            <textarea id="efMessage" class="form-control" rows="3" placeholder="Enter instructions or notes. e.g. 'Thank you for attending the workshop! Please complete this feedback to receive your verified Certificate of Participation.'" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+          </div>
+
+          <button type="submit" id="btnSendFeedback" class="btn btn-primary" style="width:100%;padding:10px 16px;border-radius:8px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <i class="fa-solid fa-paper-plane"></i> Send Feedback
+          </button>
+        </form>
+      </div>
+
+      <!-- Sent Event Feedbacks List Card -->
+      <div class="admin-card">
+        <div class="admin-card-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div>
+              <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;">Active Event Feedbacks</h3>
+              <p style="margin:0;font-size:12px;color:#64748b;">Track student responses and issued certificates</p>
+            </div>
+          </div>
+          <span id="efTotalCountBadge" class="badge badge-purple" style="font-size:12px;padding:4px 10px;">0 Events</span>
+        </div>
+
+        <div class="table-responsive" style="max-height:450px;overflow-y:auto;">
+          <table class="admin-table" id="eventFeedbacksTable" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Event Details</th>
+                <th>Event Date</th>
+                <th>Audience</th>
+                <th>Submissions</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="eventFeedbacksTableBody">
+              <tr>
+                <td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Loading event feedback requests...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submissions & Certificates Modal -->
+  <div id="eventSubmissionsModal" class="modal-backdrop hidden" onclick="_closeSubmissionsModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:900px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:#e0e7ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:18px;">
+            <i class="fa-solid fa-certificate"></i>
+          </div>
+          <div>
+            <h3 id="subModalTitle" style="margin:0;font-size:17px;font-weight:700;color:#0f172a;">Event Feedback Submissions</h3>
+            <p id="subModalSubtitle" style="margin:0;font-size:12px;color:#64748b;">Student responses and generated certificates</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeSubmissionsModal()" style="background:transparent;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:20px 24px;overflow-y:auto;flex:1;">
+        <div class="table-responsive">
+          <table class="admin-table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Rating</th>
+                <th>Learnings & Feedback</th>
+                <th>Certificate Number</th>
+                <th>Submitted On</th>
+              </tr>
+            </thead>
+            <tbody id="subModalTableBody">
+              <tr>
+                <td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">
+                  Loading submissions...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;background:#f8fafc;">
+        <button type="button" class="btn btn-secondary" onclick="closeSubmissionsModal()" style="padding:8px 18px;border-radius:8px;">Close</button>
       </div>
     </div>
   </div>

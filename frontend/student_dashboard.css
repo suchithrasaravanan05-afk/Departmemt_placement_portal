@@ -897,3 +897,78 @@
   to { opacity: 0; transform: translateX(40px); }
 }
 
+/* ============================================================
+   EVENT FEEDBACK & CERTIFICATE STYLES
+   ============================================================ */
+.feedback-star-rating i {
+  color: #cbd5e1;
+  transition: all 0.15s ease;
+}
+
+.feedback-star-rating i.active-star,
+.feedback-star-rating i:hover,
+.feedback-star-rating i.hover-star {
+  color: #f59e0b;
+  transform: scale(1.15);
+}
+
+.certificates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.student-cert-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.student-cert-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 30px rgba(67, 56, 202, 0.12);
+  border-color: #c7d2fe;
+}
+
+.student-cert-header {
+  background: linear-gradient(135deg, #1e1b4b, #3730a3);
+  color: #ffffff;
+  padding: 18px 20px;
+  position: relative;
+}
+
+.student-cert-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.student-cert-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.student-notif-feedback-tag {
+  background: #fdf4ff;
+  color: #a855f7;
+  border: 1px solid #f0abfc;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+

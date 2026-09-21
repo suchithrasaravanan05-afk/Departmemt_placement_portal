@@ -4,6 +4,7 @@ const multer = require(require.resolve("multer", { paths: [process.cwd()] }));
 const db = require("../db");
 const { supabaseAdmin, supabase } = require("../supabase");
 const { normalizeDepartment, getDepartmentById } = require("../utils/departmentNormalizer");
+const feedbackCertificateStorage = require("../feedbackCertificateStorage");
 
 // ==========================================
 // Multer: memory storage (no disk writes)
@@ -407,5 +408,86 @@ router.post("/placement-interest", async (req, res) => {
     }
 });
 
+// ==========================================
+// EVENT FEEDBACK & CERTIFICATES (STUDENT)
+// ==========================================
+
+// GET STUDENT EVENT FEEDBACKS
+router.get("/event-feedbacks/:userId", async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const feedbacks = await feedbackCertificateStorage.getStudentEventFeedbacks(userId);
+        res.json({ success: true, event_feedbacks: feedbacks });
+    } catch (e) {
+        console.error("Get student event feedbacks error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch event feedbacks" });
+    }
+});
+
+// SUBMIT EVENT FEEDBACK & GENERATE CERTIFICATE
+router.post("/feedback/submit", async (req, res) => {
+    try {
+        const { feedback_id, user_id, rating, learnings, comments } = req.body;
+        if (!feedback_id || !user_id) {
+            return res.status(400).json({ success: false, message: "Feedback ID and User ID are required" });
+        }
+
+        // Fetch student user details for certificate
+        const client = supabaseAdmin || supabase;
+        let student_info = {
+            full_name: "Student",
+            register_number: "---",
+            department: "Computer Science and Business Systems"
+        };
+
+        if (client) {
+            try {
+                const { data: uData } = await client.from("users").select("*").eq("id", user_id);
+                if (uData && uData[0]) {
+                    const u = uData[0];
+                    const dept = getDepartmentById(u.department_id || 1);
+                    student_info = {
+                        full_name: u.full_name,
+                        register_number: u.register_number,
+                        department: dept.department_name
+                    };
+                }
+            } catch (e) {}
+        }
+
+        const result = await feedbackCertificateStorage.submitFeedbackAndGenerateCertificate({
+            feedback_id,
+            user_id,
+            rating,
+            learnings,
+            comments,
+            student_info
+        });
+
+        res.json({
+            success: true,
+            message: result.alreadySubmitted ? "Feedback already submitted. Certificate ready!" : "Feedback submitted successfully! Certificate generated.",
+            submission: result.submission,
+            certificate: result.certificate
+        });
+    } catch (e) {
+        console.error("Submit feedback error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to submit feedback" });
+    }
+});
+
+// GET STUDENT CERTIFICATES
+router.get("/certificates/:userId", async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const certificates = await feedbackCertificateStorage.getStudentCertificates(userId);
+        res.json({ success: true, certificates });
+    } catch (e) {
+        console.error("Get student certificates error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch certificates" });
+    }
+});
+
 module.exports = router;
+
 

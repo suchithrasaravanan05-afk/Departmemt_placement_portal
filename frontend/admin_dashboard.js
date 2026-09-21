@@ -234,9 +234,9 @@ function escapeHtml(str) {
 }
 
 function switchAdminTab(tabName, initialStatusFilter = null) {
-  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed', 'settings'];
-  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', settings: 'tabBtnSettings' };
-  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', settings: 'adminTabSettings' };
+  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed', 'eventFeedback', 'settings'];
+  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', eventFeedback: 'tabBtnEventFeedback', settings: 'tabBtnSettings' };
+  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', eventFeedback: 'adminTabEventFeedback', settings: 'adminTabSettings' };
 
   tabs.forEach(t => {
     el(panMap[t])?.classList.toggle('hidden', t !== tabName);
@@ -253,6 +253,7 @@ function switchAdminTab(tabName, initialStatusFilter = null) {
     loadApplicationsList();
   }
   if (tabName === 'placed')       loadPlacedStudents();
+  if (tabName === 'eventFeedback') loadAdminEventFeedbacks();
   if (tabName === 'settings')     renderSettingsTab();
 }
 
@@ -3366,3 +3367,288 @@ async function deleteBatchAction(batchName) {
     showAdminAlert('Server error while deleting batch.');
   }
 }
+
+// ============================================================
+// EVENT FEEDBACK & CERTIFICATES (ADMIN)
+// ============================================================
+let cachedAdminStudentsList = [];
+
+function toggleEfStudentSelector() {
+  const targetType = el('efTargetType')?.value;
+  const wrap = el('efStudentSelectWrap');
+  if (wrap) {
+    wrap.classList.toggle('hidden', targetType !== 'student');
+  }
+  if (targetType === 'student' && (!cachedAdminStudentsList || cachedAdminStudentsList.length === 0)) {
+    populateEfStudentDropdown();
+  }
+}
+
+async function populateEfStudentDropdown() {
+  const select = el('efStudentId');
+  if (!select) return;
+  try {
+    const res = await fetch(`${API_BASE}/admin/students`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    const students = Array.isArray(data) ? data : (data.students || []);
+    cachedAdminStudentsList = students;
+
+    let opts = '<option value="">-- Choose Student from Roster --</option>';
+    students.forEach(s => {
+      opts += `<option value="${s.user_id || s.id}">${escapeHtml(s.full_name || 'Student')} (${escapeHtml(s.register_number || '---')}) - Year ${s.year || '-'}</option>`;
+    });
+    select.innerHTML = opts;
+  } catch (err) {
+    console.error('Error loading students for dropdown:', err);
+  }
+}
+
+async function loadAdminEventFeedbacks(showToast = false) {
+  const tableBody = el('eventFeedbacksTableBody');
+  const countBadge = el('efTotalCountBadge');
+  if (tableBody) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Loading event feedback requests...
+        </td>
+      </tr>`;
+  }
+
+  // Pre-load student list for specific student selector
+  populateEfStudentDropdown();
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/event-feedbacks`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    const events = data.event_feedbacks || [];
+
+    if (countBadge) {
+      countBadge.innerText = `${events.length} Event${events.length === 1 ? '' : 's'}`;
+    }
+
+    if (!events || events.length === 0) {
+      if (tableBody) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align:center;padding:36px;color:#94a3b8;">
+              <i class="fa-regular fa-calendar-xmark" style="font-size:28px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
+              <strong style="color:#64748b;">No Event Feedback requests sent yet</strong>
+              <p style="font-size:12px;margin:4px 0 0;">Create and send feedback requests using the form on the left.</p>
+            </td>
+          </tr>`;
+      }
+      if (showToast) showAdminAlert('Event feedbacks refreshed.', true);
+      return;
+    }
+
+    if (tableBody) {
+      tableBody.innerHTML = events.map(ev => {
+        let audText = '<span class="badge badge-purple"><i class="fa-solid fa-bullhorn"></i> All Students</span>';
+        if (ev.target_type === 'student' && ev.student_id) {
+          const matched = (cachedAdminStudentsList || []).find(s => (s.user_id || s.id) == ev.student_id);
+          const studentName = matched ? `${matched.full_name} (${matched.register_number})` : `Student #${ev.student_id}`;
+          audText = `<span class="badge badge-blue"><i class="fa-solid fa-user"></i> ${escapeHtml(studentName)}</span>`;
+        }
+
+        const dateFormatted = ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+        const subCount = ev.submissions_count || 0;
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:700;color:#0f172a;font-size:13px;">${escapeHtml(ev.event_name)}</div>
+              ${ev.message ? `<div style="font-size:11px;color:#64748b;margin-top:2px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(ev.message)}">${escapeHtml(ev.message)}</div>` : ''}
+            </td>
+            <td><strong style="color:#334155;font-size:12px;">${dateFormatted}</strong></td>
+            <td>${audText}</td>
+            <td>
+              <span class="badge ${subCount > 0 ? 'badge-green' : 'badge-yellow'}" style="font-size:11px;">
+                <i class="fa-solid fa-check"></i> ${subCount} Submitted
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="viewEventSubmissions(${ev.id}, '${escapeHtml(ev.event_name.replace(/'/g, "\\'"))}')" title="View Student Submissions">
+                  <i class="fa-solid fa-list-check"></i> View (${subCount})
+                </button>
+                <button class="btn btn-sm btn-outline-danger" style="padding:4px 8px;font-size:11px;" onclick="deleteEventFeedbackReq(${ev.id})" title="Delete Feedback Request">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    if (showToast) showAdminAlert('Event feedbacks refreshed.', true);
+  } catch (err) {
+    console.error('Error loading admin event feedbacks:', err);
+    if (tableBody) {
+      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Failed to load event feedbacks.</td></tr>`;
+    }
+  }
+}
+
+async function handleSendEventFeedback(e) {
+  if (e) e.preventDefault();
+  const event_name = el('efEventName')?.value.trim();
+  const event_date = el('efEventDate')?.value;
+  const target_type = el('efTargetType')?.value;
+  const student_id = target_type === 'student' ? el('efStudentId')?.value : null;
+  const signatory_title = el('efSignatoryTitle')?.value.trim() || 'Head of Department - CSBS';
+  const message = el('efMessage')?.value.trim();
+
+  if (!event_name || !event_date) {
+    showAdminAlert('Please enter both Event Name and Event Date.');
+    return;
+  }
+
+  if (target_type === 'student' && !student_id) {
+    showAdminAlert('Please select a specific student from the list.');
+    return;
+  }
+
+  const btn = el('btnSendFeedback');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending Feedback Request...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/event-feedback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({
+        event_name,
+        event_date,
+        target_type,
+        student_id,
+        signatory_title,
+        message
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert(`Event Feedback for "${event_name}" sent successfully! Students will be notified.`, true);
+      el('adminEventFeedbackForm')?.reset();
+      if (el('efSignatoryTitle')) el('efSignatoryTitle').value = 'Head of Department - CSBS';
+      toggleEfStudentSelector();
+      loadAdminEventFeedbacks();
+    } else {
+      showAdminAlert(data.message || 'Failed to send event feedback request.');
+    }
+  } catch (err) {
+    console.error('Error sending event feedback:', err);
+    showAdminAlert('Server error while sending event feedback request.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Feedback';
+    }
+  }
+}
+
+async function deleteEventFeedbackReq(id) {
+  if (!confirm('Are you sure you want to delete this Event Feedback request and associated certificate logs?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/admin/event-feedback/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert('Event Feedback request deleted successfully.', true);
+      loadAdminEventFeedbacks();
+    } else {
+      showAdminAlert(data.message || 'Failed to delete event feedback.');
+    }
+  } catch (err) {
+    console.error('Error deleting event feedback:', err);
+    showAdminAlert('Server error while deleting event feedback.');
+  }
+}
+
+async function viewEventSubmissions(id, eventName) {
+  const modal = el('eventSubmissionsModal');
+  const title = el('subModalTitle');
+  const subtitle = el('subModalSubtitle');
+  const tbody = el('subModalTableBody');
+
+  if (title) title.innerText = `Feedback Submissions — ${eventName}`;
+  if (subtitle) subtitle.innerText = `Verified student responses & issued certificate numbers`;
+  if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading responses...</td></tr>`;
+  if (modal) modal.classList.remove('hidden');
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/event-feedbacks/${id}/submissions`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    const subs = data.submissions || [];
+
+    if (!subs || subs.length === 0) {
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align:center;padding:32px;color:#94a3b8;">
+              <i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:6px;color:#cbd5e1;"></i>
+              No student has submitted feedback for this event yet.
+            </td>
+          </tr>`;
+      }
+      return;
+    }
+
+    if (tbody) {
+      tbody.innerHTML = subs.map(s => {
+        const stars = '★'.repeat(s.rating || 5) + '☆'.repeat(Math.max(0, 5 - (s.rating || 5)));
+        const submitDate = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '---';
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:700;color:#0f172a;">${escapeHtml(s.student_name)}</div>
+              <div style="font-size:11px;color:#64748b;">${escapeHtml(s.register_number)} • ${escapeHtml(s.department)}</div>
+            </td>
+            <td>
+              <span style="color:#f59e0b;font-size:14px;letter-spacing:1px;" title="${s.rating}/5 Stars">${stars}</span>
+            </td>
+            <td>
+              <div style="font-size:12px;color:#1e293b;max-width:320px;">
+                ${s.learnings ? `<div><strong>Learnings:</strong> ${escapeHtml(s.learnings)}</div>` : ''}
+                ${s.comments ? `<div style="margin-top:2px;color:#64748b;"><strong>Comments:</strong> ${escapeHtml(s.comments)}</div>` : ''}
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">
+                <i class="fa-solid fa-certificate"></i> ${escapeHtml(s.certificate_number)}
+              </span>
+            </td>
+            <td style="font-size:12px;color:#64748b;">${submitDate}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    console.error('Error viewing submissions:', err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Failed to load submissions.</td></tr>`;
+  }
+}
+
+function closeSubmissionsModal() {
+  el('eventSubmissionsModal')?.classList.add('hidden');
+}
+
+function _closeSubmissionsModal(e) {
+  if (e.target === el('eventSubmissionsModal')) {
+    closeSubmissionsModal();
+  }
+}
