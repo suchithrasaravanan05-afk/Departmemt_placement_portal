@@ -1661,7 +1661,7 @@ function openFeedbackModal(feedbackId) {
   currentFeedbackEvent = fb;
   if (el('feedbackEventId')) el('feedbackEventId').value = fb.id;
   if (el('modalEventName')) el('modalEventName').innerText = fb.event_name;
-  if (el('modalEventDate')) el('modalEventDate').innerText = `Event Date: ${fmtDate(fb.event_date)}`;
+  if (el('modalEventDate')) el('modalEventDate').innerText = `Event Date: ${fmtDate(fb.event_date)} | Venue: ${fb.event_venue || 'Department Hall'}`;
 
   const msgWrap = el('modalAdminMessageWrap');
   const msgEl = el('modalAdminMessage');
@@ -1675,6 +1675,41 @@ function openFeedbackModal(feedbackId) {
   // Reset form
   el('studentFeedbackForm')?.reset();
   setFeedbackRating(5);
+
+  // Render Part 1 — Quiz Questions
+  const quizSection = el('modalQuizSection');
+  const quizContainer = el('modalQuizContainer');
+  const quizList = Array.isArray(fb.quiz) ? fb.quiz : [];
+
+  if (quizSection && quizContainer) {
+    if (quizList.length === 0) {
+      quizSection.style.display = 'none';
+      quizContainer.innerHTML = '';
+    } else {
+      quizSection.style.display = 'block';
+      quizContainer.innerHTML = quizList.map((q, idx) => {
+        return `
+          <div class="student-quiz-item" data-qid="${q.id}" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:14px;">
+            <div style="font-size:13.5px;font-weight:700;color:#1e1b4b;margin-bottom:10px;">
+              Q${idx + 1}. ${escapeHtml(q.question)} <span style="color:#ef4444;">*</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              ${['A', 'B', 'C', 'D'].map(optKey => {
+                const optText = q[`option_${optKey.toLowerCase()}`];
+                if (!optText) return '';
+                return `
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:12.5px;transition:all .15s ease;">
+                    <input type="radio" name="quiz_q_${q.id}" value="${optKey}" required style="accent-color:#4338ca;">
+                    <span><strong>${optKey})</strong> ${escapeHtml(optText)}</span>
+                  </label>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
 
   el('studentFeedbackModal')?.classList.remove('hidden');
 }
@@ -1693,6 +1728,7 @@ async function handleStudentFeedbackSubmit(e) {
   if (e) e.preventDefault();
   const feedback_id = el('feedbackEventId')?.value;
   const rating = el('feedbackRatingVal')?.value || 5;
+  const session_useful = document.querySelector('input[name="feedbackUseful"]:checked')?.value || 'Yes';
   const learnings = el('feedbackLearnings')?.value.trim();
   const comments = el('feedbackComments')?.value.trim();
 
@@ -1701,8 +1737,22 @@ async function handleStudentFeedbackSubmit(e) {
     return;
   }
 
+  // Validate quiz answers if configured
+  const quizList = (currentFeedbackEvent && Array.isArray(currentFeedbackEvent.quiz)) ? currentFeedbackEvent.quiz : [];
+  const quiz_answers = {};
+
+  for (let i = 0; i < quizList.length; i++) {
+    const q = quizList[i];
+    const checked = document.querySelector(`input[name="quiz_q_${q.id}"]:checked`);
+    if (!checked) {
+      showStudentAlert(`Please answer Quiz Question ${i + 1} before submitting.`);
+      return;
+    }
+    quiz_answers[q.id] = checked.value;
+  }
+
   if (!learnings) {
-    showStudentAlert('Please describe your key learnings from the event.');
+    showStudentAlert('Please describe what you learned from the event.');
     return;
   }
 
@@ -1724,14 +1774,21 @@ async function handleStudentFeedbackSubmit(e) {
         user_id: currentUser.id,
         rating,
         learnings,
-        comments
+        comments,
+        quiz_answers,
+        feedback_answers: {
+          rating,
+          session_useful,
+          learnings,
+          suggestions: comments
+        }
       })
     });
 
     const data = await res.json();
     if (data.success && data.certificate) {
       closeFeedbackModal();
-      showStudentAlert('🎉 Feedback submitted! Your Certificate of Participation is generated.', true);
+      showStudentAlert('🎉 Quiz & Feedback submitted! Your Certificate of Participation is ready.', true);
 
       // Refresh feedback and certificates cache
       await fetchStudentEventFeedbacks();
@@ -1751,7 +1808,7 @@ async function handleStudentFeedbackSubmit(e) {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-certificate"></i> Submit & Generate Certificate';
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Feedback &amp; Generate Certificate';
     }
   }
 }

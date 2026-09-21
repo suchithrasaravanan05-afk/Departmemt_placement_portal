@@ -427,7 +427,7 @@ router.get("/event-feedbacks/:userId", async (req, res) => {
 // SUBMIT EVENT FEEDBACK & GENERATE CERTIFICATE
 router.post("/feedback/submit", async (req, res) => {
     try {
-        const { feedback_id, user_id, rating, learnings, comments } = req.body;
+        const { feedback_id, user_id, rating, learnings, comments, quiz_answers, feedback_answers } = req.body;
         if (!feedback_id || !user_id) {
             return res.status(400).json({ success: false, message: "Feedback ID and User ID are required" });
         }
@@ -461,6 +461,8 @@ router.post("/feedback/submit", async (req, res) => {
             rating,
             learnings,
             comments,
+            quiz_answers: quiz_answers || {},
+            feedback_answers: feedback_answers || {},
             student_info
         });
 

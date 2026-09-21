@@ -102,10 +102,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Update user header details
   if (el('adminUserName')) {
-    el('adminUserName').innerText = currentAdminUser.full_name || (isFaculty ? 'Prof. Faculty Member' : 'Placement Admin');
+    el('adminUserName').innerText = currentAdminUser.full_name || (isFaculty ? 'Faculty Coordinator / JA' : 'Placement Admin');
   }
   if (el('adminUserRole')) {
-    el('adminUserRole').innerText = isFaculty ? 'Faculty Member (View Only)' : (isHOD ? 'Head of Department' : 'Administrator');
+    el('adminUserRole').innerText = isFaculty ? 'Faculty Coordinator / JA' : (isHOD ? 'Head of Department' : 'Administrator');
   }
   if (el('adminUserAvatar')) {
     el('adminUserAvatar').style.background = isFaculty ? '#1e293b' : '#172033';
@@ -120,10 +120,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     switcher.style.display = (hasPlacement && hasSocial) ? 'flex' : 'none';
   }
 
-  // Faculty Read-Only Banner and UI Restrictions
+  // Faculty Coordinator / JA Banner and UI Restrictions
   const facultyBanner = el('facultyReadonlyBanner');
   if (facultyBanner) {
     facultyBanner.classList.toggle('hidden', !isFaculty);
+    if (isFaculty) {
+      const noticeText = facultyBanner.querySelector('.faculty-notice-text');
+      if (noticeText) {
+        noticeText.innerHTML = '<strong>Faculty Coordinator / JA Portal:</strong> You can create events, configure quiz &amp; feedback forms, view student responses, and verify student certificates. Student roster modification and portal configuration are restricted to Placement Administrators.';
+      }
+    }
   }
 
   if (isFaculty) {
@@ -234,9 +240,9 @@ function escapeHtml(str) {
 }
 
 function switchAdminTab(tabName, initialStatusFilter = null) {
-  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed', 'eventFeedback', 'settings'];
-  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', eventFeedback: 'tabBtnEventFeedback', settings: 'tabBtnSettings' };
-  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', eventFeedback: 'adminTabEventFeedback', settings: 'adminTabSettings' };
+  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed', 'eventFeedback', 'certLookup', 'settings'];
+  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', eventFeedback: 'tabBtnEventFeedback', certLookup: 'tabBtnCertLookup', settings: 'tabBtnSettings' };
+  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', eventFeedback: 'adminTabEventFeedback', certLookup: 'adminTabCertLookup', settings: 'adminTabSettings' };
 
   tabs.forEach(t => {
     el(panMap[t])?.classList.toggle('hidden', t !== tabName);
@@ -254,6 +260,9 @@ function switchAdminTab(tabName, initialStatusFilter = null) {
   }
   if (tabName === 'placed')       loadPlacedStudents();
   if (tabName === 'eventFeedback') loadAdminEventFeedbacks();
+  if (tabName === 'certLookup') {
+    setTimeout(() => el('certLookupInput')?.focus(), 80);
+  }
   if (tabName === 'settings')     renderSettingsTab();
 }
 
@@ -3495,14 +3504,163 @@ async function loadAdminEventFeedbacks(showToast = false) {
   }
 }
 
+// ============================================================
+// DYNAMIC QUIZ BUILDER (FACULTY COORDINATOR / JA)
+// ============================================================
+let adminQuizQuestions = [];
+
+function autoGenerateEventCode() {
+  const name = el('efEventName')?.value.trim() || '';
+  if (!name) return;
+  const codeEl = el('efEventCode');
+  if (codeEl && (!codeEl.value || codeEl.dataset.auto === 'true')) {
+    const words = name.split(/\s+/).filter(Boolean);
+    let code = '';
+    if (words.length === 1) {
+      code = words[0].slice(0, 4).toUpperCase();
+    } else {
+      code = words.map(w => w[0]).join('').slice(0, 5).toUpperCase();
+    }
+    codeEl.value = code;
+    codeEl.dataset.auto = 'true';
+  }
+}
+
+function initDefaultQuizQuestions() {
+  if (adminQuizQuestions.length === 0) {
+    adminQuizQuestions = [
+      {
+        id: 1,
+        question: "How useful was the key topic covered in this training / workshop?",
+        option_a: "Very Useful",
+        option_b: "Useful",
+        option_c: "Average",
+        option_d: "Not Useful",
+        correct_option: "A"
+      },
+      {
+        id: 2,
+        question: "Which of the following best reflects the primary goal of placement training?",
+        option_a: "Developing problem-solving and industry skills",
+        option_b: "Memorizing theoretical concepts only",
+        option_c: "Skipping coding practices",
+        option_d: "None of the above",
+        correct_option: "A"
+      }
+    ];
+    renderQuizQuestionRows();
+  }
+}
+
+function addQuizQuestionRow(data = null) {
+  const nextId = adminQuizQuestions.length > 0 ? Math.max(...adminQuizQuestions.map(q => q.id || 0)) + 1 : 1;
+  const newQ = data || {
+    id: nextId,
+    question: "",
+    option_a: "",
+    option_b: "",
+    option_c: "",
+    option_d: "",
+    correct_option: "A"
+  };
+  adminQuizQuestions.push(newQ);
+  renderQuizQuestionRows();
+}
+
+function removeQuizQuestionRow(index) {
+  if (adminQuizQuestions.length <= 1) {
+    if (!confirm("Are you sure you want to remove this question? Event can also be published without quiz questions.")) return;
+  }
+  adminQuizQuestions.splice(index, 1);
+  renderQuizQuestionRows();
+}
+
+function updateQuizQuestionField(index, field, value) {
+  if (adminQuizQuestions[index]) {
+    adminQuizQuestions[index][field] = value;
+  }
+}
+
+function renderQuizQuestionRows() {
+  const container = el('efQuizQuestionsContainer');
+  if (!container) return;
+
+  if (adminQuizQuestions.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:18px;background:#fff;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;font-size:13px;">
+        No quiz questions added yet. Click <strong>+ Add Question</strong> above to configure assessment questions.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = adminQuizQuestions.map((q, idx) => {
+    return `
+      <div class="admin-quiz-row-card" style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:14px;position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="font-size:13px;color:#1e1b4b;">Question ${idx + 1}</strong>
+          <button type="button" class="btn btn-outline btn-sm" onclick="removeQuizQuestionRow(${idx})" style="color:#ef4444;border-color:#fca5a5;padding:2px 8px;font-size:11px;" title="Remove Question">
+            <i class="fa-solid fa-trash-can"></i> Remove
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-bottom:10px;">
+          <input type="text" class="form-control" placeholder="Enter Question text (e.g. Q: How useful was the event?)" value="${escapeHtml(q.question)}" oninput="updateQuizQuestionField(${idx}, 'question', this.value)" style="width:100%;font-size:13px;font-weight:600;" required>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div class="input-with-icon">
+            <span style="font-size:11px;font-weight:700;color:#6366f1;position:absolute;left:10px;top:50%;transform:translateY(-50%);">A)</span>
+            <input type="text" class="form-control" placeholder="Option A" value="${escapeHtml(q.option_a)}" oninput="updateQuizQuestionField(${idx}, 'option_a', this.value)" style="padding-left:30px;font-size:12px;" required>
+          </div>
+          <div class="input-with-icon">
+            <span style="font-size:11px;font-weight:700;color:#6366f1;position:absolute;left:10px;top:50%;transform:translateY(-50%);">B)</span>
+            <input type="text" class="form-control" placeholder="Option B" value="${escapeHtml(q.option_b)}" oninput="updateQuizQuestionField(${idx}, 'option_b', this.value)" style="padding-left:30px;font-size:12px;" required>
+          </div>
+          <div class="input-with-icon">
+            <span style="font-size:11px;font-weight:700;color:#6366f1;position:absolute;left:10px;top:50%;transform:translateY(-50%);">C)</span>
+            <input type="text" class="form-control" placeholder="Option C" value="${escapeHtml(q.option_c)}" oninput="updateQuizQuestionField(${idx}, 'option_c', this.value)" style="padding-left:30px;font-size:12px;" required>
+          </div>
+          <div class="input-with-icon">
+            <span style="font-size:11px;font-weight:700;color:#6366f1;position:absolute;left:10px;top:50%;transform:translateY(-50%);">D)</span>
+            <input type="text" class="form-control" placeholder="Option D" value="${escapeHtml(q.option_d)}" oninput="updateQuizQuestionField(${idx}, 'option_d', this.value)" style="padding-left:30px;font-size:12px;" required>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;background:#f1f5f9;padding:6px 10px;border-radius:6px;">
+          <span style="font-size:11px;font-weight:700;color:#0f172a;">Correct Answer:</span>
+          <select class="form-control" onchange="updateQuizQuestionField(${idx}, 'correct_option', this.value)" style="width:auto;padding:3px 10px;font-size:12px;height:30px;font-weight:700;color:#16a34a;">
+            <option value="A" ${q.correct_option === 'A' ? 'selected' : ''}>Option A</option>
+            <option value="B" ${q.correct_option === 'B' ? 'selected' : ''}>Option B</option>
+            <option value="C" ${q.correct_option === 'C' ? 'selected' : ''}>Option C</option>
+            <option value="D" ${q.correct_option === 'D' ? 'selected' : ''}>Option D</option>
+          </select>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function collectQuizQuestions() {
+  return adminQuizQuestions.filter(q => q.question && q.question.trim().length > 0);
+}
+
+// ============================================================
+// SEND / PUBLISH EVENT FEEDBACK & QUIZ
+// ============================================================
 async function handleSendEventFeedback(e) {
   if (e) e.preventDefault();
   const event_name = el('efEventName')?.value.trim();
+  const event_code = el('efEventCode')?.value.trim().toUpperCase();
   const event_date = el('efEventDate')?.value;
+  const event_venue = el('efEventVenue')?.value.trim() || 'Department Placement Lab / Online';
+  const coordinator = el('efCoordinator')?.value.trim() || 'Faculty Coordinator';
+  const academic_year = el('efAcademicYear')?.value.trim() || '2023-2027';
   const target_type = el('efTargetType')?.value;
   const student_id = target_type === 'student' ? el('efStudentId')?.value : null;
   const signatory_title = el('efSignatoryTitle')?.value.trim() || 'Head of Department - CSBS';
   const message = el('efMessage')?.value.trim();
+  const quiz = collectQuizQuestions();
 
   if (!event_name || !event_date) {
     showAdminAlert('Please enter both Event Name and Event Date.');
@@ -3510,14 +3668,14 @@ async function handleSendEventFeedback(e) {
   }
 
   if (target_type === 'student' && !student_id) {
-    showAdminAlert('Please select a specific student from the list.');
+    showAdminAlert('Please select a specific student from the roster.');
     return;
   }
 
   const btn = el('btnSendFeedback');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending Feedback Request...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publishing Feedback &amp; Quiz...';
   }
 
   try {
@@ -3529,30 +3687,45 @@ async function handleSendEventFeedback(e) {
       },
       body: JSON.stringify({
         event_name,
+        event_code,
         event_date,
+        event_venue,
+        coordinator,
+        academic_year,
         target_type,
         student_id,
         signatory_title,
-        message
+        message,
+        quiz,
+        feedback_config: {
+          include_rating: true,
+          include_usefulness: true,
+          include_learnings: true,
+          include_suggestions: true
+        }
       })
     });
     const data = await res.json();
     if (data.success) {
-      showAdminAlert(`Event Feedback for "${event_name}" sent successfully! Students will be notified.`, true);
+      showAdminAlert(`Event Feedback form for "${event_name}" (${quiz.length} Quiz questions) published successfully! Students have been notified.`, true);
       el('adminEventFeedbackForm')?.reset();
       if (el('efSignatoryTitle')) el('efSignatoryTitle').value = 'Head of Department - CSBS';
+      if (el('efEventVenue')) el('efEventVenue').value = 'Department Placement Lab / Online';
+      if (el('efCoordinator')) el('efCoordinator').value = 'Faculty Coordinator / JA';
+      if (el('efAcademicYear')) el('efAcademicYear').value = '2023-2027';
       toggleEfStudentSelector();
+      initDefaultQuizQuestions();
       loadAdminEventFeedbacks();
     } else {
-      showAdminAlert(data.message || 'Failed to send event feedback request.');
+      showAdminAlert(data.message || 'Failed to publish event feedback request.');
     }
   } catch (err) {
     console.error('Error sending event feedback:', err);
-    showAdminAlert('Server error while sending event feedback request.');
+    showAdminAlert('Server error while publishing event feedback request.');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Feedback';
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publish Feedback &amp; Quiz Form';
     }
   }
 }
@@ -3651,4 +3824,537 @@ function _closeSubmissionsModal(e) {
   if (e.target === el('eventSubmissionsModal')) {
     closeSubmissionsModal();
   }
-}
+}
+
+// ============================================================
+// FACULTY / JA CERTIFICATE LOOKUP & VERIFICATION
+// ============================================================
+
+function quickFillCertLookup(certId) {
+  const input = el('certLookupInput');
+  if (input) {
+    input.value = certId;
+    handleCertificateLookup();
+  }
+}
+
+function clearCertificateLookup() {
+  if (el('certLookupInput')) el('certLookupInput').value = '';
+  const container = el('certLookupResultsContainer');
+  if (container) {
+    container.innerHTML = `
+      <div class="admin-panel-card" style="padding:48px 24px;text-align:center;color:#64748b;">
+        <div style="width:64px;height:64px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:#94a3b8;font-size:26px;">
+          <i class="fa-solid fa-certificate"></i>
+        </div>
+        <h3 style="font-size:18px;font-weight:700;color:#334155;margin:0 0 6px 0;">Certificate Verification Portal</h3>
+        <p style="font-size:13px;color:#64748b;max-width:480px;margin:0 auto;">
+          Enter the student's Certificate ID above to retrieve complete verified details from the database including student profile, event details, completion status, and event certificate history.
+        </p>
+      </div>
+    `;
+  }
+}
+
+async function handleCertificateLookup(e) {
+  if (e) e.preventDefault();
+  const certId = el('certLookupInput')?.value.trim();
+  const container = el('certLookupResultsContainer');
+  const btn = el('btnCertSearch');
+
+  if (!certId) {
+    showAdminAlert('Please enter a Certificate ID.');
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SEARCHING...';
+  }
+
+  if (container) {
+    container.innerHTML = `
+      <div class="admin-panel-card" style="padding:40px;text-align:center;">
+        <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#4338ca;margin-bottom:10px;"></i>
+        <p style="color:#64748b;font-size:14px;font-weight:600;">Searching institutional records for Certificate ID: ${escapeHtml(certId)}...</p>
+      </div>
+    `;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-lookup/${encodeURIComponent(certId)}`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+
+    if (res.status === 404 || !data.success || !data.data || !data.data.found) {
+      renderCertificateNotFound(certId);
+      return;
+    }
+
+    renderCertificateLookupResult(data.data);
+  } catch (err) {
+    console.error('Error during certificate lookup:', err);
+    if (container) {
+      container.innerHTML = `
+        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:24px;text-align:center;color:#991b1b;">
+          <i class="fa-solid fa-circle-exclamation fa-2x" style="margin-bottom:8px;"></i>
+          <h4>Lookup Service Error</h4>
+          <p style="margin:0;font-size:13px;">Unable to verify certificate details. Please check network connection.</p>
+        </div>
+      `;
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> SEARCH';
+    }
+  }
+}
+
+function renderCertificateNotFound(certId) {
+  const container = el('certLookupResultsContainer');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="admin-panel-card" style="padding:48px 24px;text-align:center;border:1.5px dashed #fca5a5;background:#fff5f5;border-radius:14px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 style="margin:0 0 8px 0;font-size:20px;font-weight:800;color:#991b1b;">Certificate Not Found</h3>
+      <p style="margin:0 auto 16px auto;font-size:14px;color:#7f1d1d;max-width:440px;line-height:1.5;">
+        No certificate is registered with this Certificate ID: <strong style="font-family:monospace;background:#fecaca;padding:2px 8px;border-radius:4px;">${escapeHtml(certId)}</strong>.
+      </p>
+      <div style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#991b1b;background:#fee2e2;padding:8px 16px;border-radius:8px;">
+        <i class="fa-solid fa-shield-halved"></i> Please verify the ID format or check if the certificate is pending submission.
+      </div>
+    </div>
+  `;
+}
+
+function renderCertificateLookupResult(data) {
+  const container = el('certLookupResultsContainer');
+  if (!container) return;
+
+  const { student, certificate, event, completion_status, history } = data;
+  const certJson = JSON.stringify(certificate.raw || certificate).replace(/"/g, '&quot;');
+  const certDateStr = certificate.certificate_date ? fmtDate(certificate.certificate_date) : '---';
+  const genDateStr = certificate.generated_date ? fmtDate(certificate.generated_date) : fmtDate(new Date());
+
+  container.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Top Verification Status Ribbon -->
+      <div style="background:linear-gradient(135deg, #064e3b 0%, #059669 100%);color:#fff;border-radius:14px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:0 10px 25px rgba(5,150,105,0.2);">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#a7f3d0;font-weight:700;">Institutional Record Verified</div>
+            <h3 style="margin:2px 0 0 0;font-size:19px;font-weight:800;color:#fff;">
+              Certificate ID: <span style="font-family:monospace;letter-spacing:0.5px;">${escapeHtml(certificate.certificate_id)}</span>
+            </h3>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, false)" style="background:#fff;color:#064e3b;font-weight:700;padding:9px 16px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-file-pdf"></i> View Certificate PDF
+          </button>
+          <button class="btn btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, true)" style="background:rgba(255,255,255,0.2);color:#fff;font-weight:700;padding:9px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-download"></i> Download PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- 3-Column Info Cards Grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:18px;">
+
+        <!-- CARD 1: Student Details -->
+        <div class="admin-panel-card" style="padding:22px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#eff6ff;color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <div>
+              <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Student Details</h4>
+              <p style="margin:0;font-size:11px;color:#64748b;">Verified institutional profile</p>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Student Name:</span>
+              <strong style="color:#0f172a;">${escapeHtml(student.name || '---')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Register Number:</span>
+              <strong style="color:#2563eb;font-family:monospace;">${escapeHtml(student.register_number || '---')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Student ID:</span>
+              <strong style="color:#0f172a;">#${escapeHtml(student.student_id || '---')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Department:</span>
+              <strong style="color:#0f172a;">${escapeHtml(student.department || 'CSBS')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Academic Year:</span>
+              <strong style="color:#0f172a;">Year ${escapeHtml(student.year || 4)}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#64748b;">Email:</span>
+              <strong style="color:#0f172a;font-size:12px;">${escapeHtml(student.email || '---')}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: Certificate Details -->
+        <div class="admin-panel-card" style="padding:22px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div>
+              <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Certificate Details</h4>
+              <p style="margin:0;font-size:11px;color:#64748b;">Credential attributes</p>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Certificate ID:</span>
+              <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">${escapeHtml(certificate.certificate_id)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Certificate Title:</span>
+              <strong style="color:#0f172a;">${escapeHtml(certificate.certificate_title || 'Certificate of Participation')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Certificate Type:</span>
+              <strong style="color:#0f172a;">${escapeHtml(certificate.certificate_type || 'Participation')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Certificate Date:</span>
+              <strong style="color:#0f172a;">${certDateStr}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Generated Date:</span>
+              <strong style="color:#0f172a;">${genDateStr}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:#64748b;">Certificate PDF:</span>
+              <button class="btn btn-outline-primary btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, false)" style="font-size:11px;padding:3px 10px;border-radius:6px;">
+                <i class="fa-solid fa-eye"></i> View Real PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Event Details & Completion Status -->
+        <div class="admin-panel-card" style="padding:22px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+              <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Event &amp; Completion</h4>
+              <p style="margin:0;font-size:11px;color:#64748b;">Attended session details</p>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Event Name:</span>
+              <strong style="color:#0f172a;max-width:180px;text-align:right;">${escapeHtml(event.event_name)}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Event Date:</span>
+              <strong style="color:#0f172a;">${fmtDate(event.event_date)}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Event Venue:</span>
+              <strong style="color:#0f172a;">${escapeHtml(event.event_venue || 'Department Placement Lab')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">Event Coordinator:</span>
+              <strong style="color:#0f172a;">${escapeHtml(event.coordinator || 'Faculty Coordinator')}</strong>
+            </div>
+
+            <!-- Status Badges -->
+            <div style="background:#f8fafc;padding:8px 12px;border-radius:8px;border:1px solid #e2e8f0;margin-top:2px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="color:#334155;font-weight:600;">Feedback Submitted:</span>
+                <span class="badge badge-green" style="font-size:11px;"><i class="fa-solid fa-check"></i> Yes</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="color:#334155;font-weight:600;">Quiz Completed:</span>
+                <span class="badge badge-green" style="font-size:11px;"><i class="fa-solid fa-check"></i> Yes (${escapeHtml(completion_status.quiz_score || 'Passed')})</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#334155;font-weight:600;">Certificate Generated:</span>
+                <span class="badge badge-green" style="font-size:11px;"><i class="fa-solid fa-check"></i> Yes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Section 4: Student Event History Table -->
+      <div class="admin-panel-card" style="padding:22px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Student Event History</h4>
+              <p style="margin:0;font-size:11px;color:#64748b;">Completed events &amp; earned certificates for ${escapeHtml(student.name || 'this student')}</p>
+            </div>
+          </div>
+          <span class="badge badge-blue">${(history || []).length} Event${(history || []).length === 1 ? '' : 's'} Completed</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="admin-table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Event Date</th>
+                <th>Feedback</th>
+                <th>Quiz</th>
+                <th>Certificate ID</th>
+                <th>Certificate</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(history && history.length > 0) ? history.map(h => {
+                const hCertJson = JSON.stringify(h.certificate || {}).replace(/"/g, '&quot;');
+                return `
+                  <tr>
+                    <td><strong>${escapeHtml(h.event_name)}</strong></td>
+                    <td style="color:#64748b;font-size:12px;">${fmtDate(h.event_date)}</td>
+                    <td>
+                      <span class="badge badge-green" style="font-size:11px;">
+                        <i class="fa-solid fa-circle-check"></i> ${escapeHtml(h.feedback_status)}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge badge-blue" style="font-size:11px;">
+                        <i class="fa-solid fa-list-check"></i> ${escapeHtml(h.quiz_status)}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">
+                        ${escapeHtml(h.certificate_id)}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn btn-outline-primary btn-sm" onclick="viewCertificatePdfFromAdmin(${hCertJson}, false)" style="font-size:11px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">
+                        <i class="fa-solid fa-file-pdf"></i> View PDF
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('') : `
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">No additional events found for this student.</td>
+                </tr>
+              `}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+// ============================================================
+// ADMIN / FACULTY CERTIFICATE PDF VIEWER
+// ============================================================
+function viewCertificatePdfFromAdmin(cert, isDownload = false) {
+  if (!cert) return;
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF generator library loading, please try again in a moment.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4"
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth(); // 297 mm
+  const pageHeight = doc.internal.pageSize.getHeight(); // 210 mm
+
+  // Background tint
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  // Outer Border (Navy #1e1b4b)
+  doc.setDrawColor(30, 27, 75);
+  doc.setLineWidth(1.8);
+  doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
+
+  // Inner Border (Gold #b45309)
+  doc.setDrawColor(180, 83, 9);
+  doc.setLineWidth(0.8);
+  doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
+
+  // Corner decorative marks
+  const corners = [
+    [12, 12], [pageWidth - 12, 12],
+    [12, pageHeight - 12], [pageWidth - 12, pageHeight - 12]
+  ];
+  doc.setFillColor(180, 83, 9);
+  corners.forEach(([cx, cy]) => {
+    doc.circle(cx, cy, 1.8, 'F');
+  });
+
+  // College Name Header
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(30, 27, 75);
+  doc.text("RAMCO INSTITUTE OF TECHNOLOGY", pageWidth / 2, 28, { align: "center" });
+
+  // Department Subheader
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(180, 83, 9);
+  doc.text("DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS", pageWidth / 2, 35, { align: "center" });
+
+  // Accreditation text
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai", pageWidth / 2, 40, { align: "center" });
+
+  // Gold Divider line
+  doc.setDrawColor(180, 83, 9);
+  doc.setLineWidth(0.6);
+  doc.line(30, 44, pageWidth - 30, 44);
+
+  // Certificate Heading
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(180, 83, 9);
+  doc.text("CERTIFICATE OF PARTICIPATION", pageWidth / 2, 55, { align: "center" });
+
+  // Preamble
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(12);
+  doc.setTextColor(71, 85, 105);
+  doc.text("This is to certify that", pageWidth / 2, 66, { align: "center" });
+
+  // Student Full Name
+  const studentName = (cert.student_name || "STUDENT NAME").toUpperCase();
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(15, 23, 42);
+  doc.text(studentName, pageWidth / 2, 78, { align: "center" });
+
+  // Underline for student name
+  const nameWidth = doc.getTextWidth(studentName);
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(0.4);
+  doc.line((pageWidth - nameWidth) / 2, 80, (pageWidth + nameWidth) / 2, 80);
+
+  // Register Number & Department
+  const regNo = cert.register_number || "---";
+  const dept = cert.department || "Computer Science and Business Systems";
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`Register No: ${regNo}   |   Department of ${dept}`, pageWidth / 2, 89, { align: "center" });
+
+  // Participation Statement
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text("has actively participated in and successfully completed the departmental event / workshop titled", pageWidth / 2, 102, { align: "center" });
+
+  // Event Name
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.setTextColor(30, 27, 75);
+  doc.text(`"${cert.event_name || 'Department Event'}"`, pageWidth / 2, 112, { align: "center" });
+
+  // Event Date
+  const eventDateStr = cert.event_date ? new Date(cert.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '---';
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`conducted on ${eventDateStr}.`, pageWidth / 2, 121, { align: "center" });
+
+  // Footer Divider Line
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.5);
+  doc.line(20, 142, pageWidth - 20, 142);
+
+  // Footer - Left: Certificate ID & Issue Date
+  const certNumber = cert.certificate_number || cert.certificate_id || "RIT-CSBS-CERT-2026";
+  const issueDateStr = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB');
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text("Certificate Number:", 24, 155);
+
+  doc.setFont("courier", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(67, 56, 202);
+  doc.text(certNumber, 24, 161);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Date of Issue: ${issueDateStr}`, 24, 168);
+
+  // Footer - Center: Digitally Verified Stamp Box
+  doc.setDrawColor(5, 150, 105);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(pageWidth / 2 - 28, 153, 56, 16, 2, 2);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(5, 150, 105);
+  doc.text("DIGITALLY VERIFIED", pageWidth / 2, 161, { align: "center" });
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text("RIT CSBS Placement Portal", pageWidth / 2, 166, { align: "center" });
+
+  // Footer - Right: Signature
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(30, 27, 75);
+  doc.text("Dr. Placement Officer / HOD", pageWidth - 24, 157, { align: "right" });
+
+  doc.setDrawColor(30, 27, 75);
+  doc.setLineWidth(0.4);
+  doc.line(pageWidth - 75, 161, pageWidth - 24, 161);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text(cert.signatory_title || "Head of Department - CSBS", pageWidth - 24, 166, { align: "right" });
+
+  const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${(cert.event_name || 'Event').replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`;
+
+  if (isDownload) {
+    doc.save(safeFilename);
+  } else {
+    const blobUrl = doc.output('bloburl');
+    window.open(blobUrl, '_blank');
+  }
+}
+
+// Auto-initialize default quiz questions on load
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    initDefaultQuizQuestions();
+  }, 500);
+});

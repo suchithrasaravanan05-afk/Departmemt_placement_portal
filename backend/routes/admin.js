@@ -34,6 +34,25 @@ function checkAdminWritePermission(req, res, next) {
     next();
 }
 
+// Permission check for Faculty Coordinator / JA and Admin (Events, Quizzes, Certificates)
+function checkFacultyOrAdminPermission(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        try {
+            const token = authHeader.split(" ")[1];
+            const decoded = jwt.verify(token, JWT_SECRET);
+            if (decoded && decoded.placement_access === false) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Access Denied: Your account does not have permission to access the Placement Portal."
+                });
+            }
+            req.user = decoded;
+        } catch (e) {}
+    }
+    next();
+}
+
 // Read-level check for placement access
 function checkPlacementAccess(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -1217,25 +1236,47 @@ router.put("/batches/:batchName", async (req, res) => {
 });
 
 // ==========================================
-// EVENT FEEDBACK & CERTIFICATE ROUTES (ADMIN)
+// EVENT FEEDBACK & CERTIFICATE ROUTES (FACULTY / JA & ADMIN)
 // ==========================================
 
-// CREATE / SEND EVENT FEEDBACK
-router.post("/event-feedback", checkAdminWritePermission, async (req, res) => {
+// CREATE / SEND EVENT FEEDBACK (WITH QUIZ + FEEDBACK CONFIG)
+router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) => {
     try {
-        const { event_name, event_date, target_type, student_id, message, signatory_title } = req.body;
-        if (!event_name || !event_date) {
-            return res.status(400).json({ success: false, message: "Event name and event date are required" });
-        }
-        const feedback = await feedbackCertificateStorage.createEventFeedback({
+        const {
             event_name,
+            event_code,
             event_date,
+            event_venue,
+            coordinator,
+            academic_year,
             target_type,
             student_id,
             message,
-            signatory_title
+            signatory_title,
+            quiz,
+            feedback_config
+        } = req.body;
+
+        if (!event_name || !event_date) {
+            return res.status(400).json({ success: false, message: "Event name and event date are required" });
+        }
+
+        const feedback = await feedbackCertificateStorage.createEventFeedback({
+            event_name,
+            event_code,
+            event_date,
+            event_venue,
+            coordinator: coordinator || (req.user ? req.user.full_name : "Faculty Coordinator"),
+            academic_year,
+            target_type,
+            student_id,
+            message,
+            signatory_title,
+            quiz: Array.isArray(quiz) ? quiz : [],
+            feedback_config
         });
-        res.json({ success: true, message: "Event feedback request sent successfully!", feedback });
+
+        res.json({ success: true, message: "Event feedback & quiz form published successfully!", feedback });
     } catch (e) {
         console.error("Create event feedback error:", e);
         res.status(500).json({ success: false, message: e.message || "Failed to create event feedback" });
@@ -1275,13 +1316,35 @@ router.get("/event-feedbacks/:id/submissions", async (req, res) => {
 });
 
 // DELETE EVENT FEEDBACK
-router.delete("/event-feedback/:id", checkAdminWritePermission, async (req, res) => {
+router.delete("/event-feedback/:id", checkFacultyOrAdminPermission, async (req, res) => {
     try {
         await feedbackCertificateStorage.deleteEventFeedback(req.params.id);
         res.json({ success: true, message: "Event feedback deleted successfully" });
     } catch (e) {
         console.error("Delete event feedback error:", e);
         res.status(500).json({ success: false, message: "Failed to delete event feedback" });
+    }
+});
+
+// CERTIFICATE VERIFICATION & DETAILS LOOKUP (FACULTY / JA & ADMIN)
+// Search by Certificate ID -> Returns Student Details, Event Details, Completion Status & Event History
+router.get("/certificate-lookup/:certId", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const certId = req.params.certId;
+        const result = await feedbackCertificateStorage.verifyAndGetCertificateDetails(certId);
+        if (!result.found) {
+            return res.status(404).json({
+                success: false,
+                message: result.message || "Certificate Not Found. No certificate is registered with this Certificate ID."
+            });
+        }
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (e) {
+        console.error("Certificate lookup error:", e);
+        res.status(500).json({ success: false, message: "Internal server error during certificate lookup." });
     }
 });
 
