@@ -1,56 +1,55 @@
 /* ==========================================================================
    FORM.CSS — CSBS DEPARTMENT PORTAL AUTHENTICATION
    Ramco Institute of Technology — Autonomous Institution
-   Themes: 
-     - Student Portal: Rich Purple / Violet Palette (#7C3AED, #6D28D9, #8B5CF6)
-     - Admin & Faculty Portal: Vibrant Pink / Rose Palette (#DB2777, #BE185D, #EC4899)
+   Theme: Student Portal Matching Purple Palette (#AB47BC, #9C27B0, #8E24AA)
+          Admin & Faculty Pink Accent Palette (#EC407A, #C2185B, #AD1457)
    ========================================================================== */
 
 :root {
-  /* Core Foundation */
-  --navy-dark:          #111827;
-  --navy-header:        #0F172A;
-  --slate-dark:         #1F2937;
-  --slate-body:         #4B5563;
-  --slate-muted:        #6B7280;
-  --slate-border:       #E5E7EB;
-  --bg-page:            #FAF9FC;
-  --card-bg:            #FFFFFF;
+  /* Student Dashboard Matched Purple Palette */
+  --purple-primary:       #9C27B0;
+  --purple-hover:         #8E24AA;
+  --purple-dark:          #7B1FA2;
+  --purple-light:         #F3E5F5;
+  --purple-border:        #CE93D8;
+  --purple-subtle:        #E1BEE7;
+  --purple-glow:          rgba(156, 39, 176, 0.22);
+  --purple-gradient:      linear-gradient(135deg, #AB47BC 0%, #8E24AA 100%);
+  --purple-gradient-hover: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
 
-  /* Purple Palette (Student Login & Academic Brand) */
-  --purple-primary:     #7C3AED;
-  --purple-hover:       #6D28D9;
-  --purple-dark:        #5B21B6;
-  --purple-light:       #F5F3FF;
-  --purple-border:      #DDD6FE;
-  --purple-glow:        rgba(124, 58, 237, 0.18);
-  --purple-gradient:    linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
-  --purple-gradient-hover: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
-
-  /* Pink Palette (Admin / Faculty Login & Portal Management) */
-  --pink-primary:       #DB2777;
-  --pink-hover:         #BE185D;
-  --pink-dark:          #9D174D;
-  --pink-light:         #FDF2F8;
-  --pink-border:        #FBCFE8;
-  --pink-glow:          rgba(219, 39, 119, 0.18);
-  --pink-gradient:      linear-gradient(135deg, #EC4899 0%, #BE185D 100%);
-  --pink-gradient-hover: linear-gradient(135deg, #DB2777 0%, #9D174D 100%);
+  /* Faculty & Admin Matched Pink Palette */
+  --pink-primary:         #D81B60;
+  --pink-hover:           #C2185B;
+  --pink-dark:            #AD1457;
+  --pink-light:           #FCE4EC;
+  --pink-border:          #F8BBD0;
+  --pink-subtle:          #F48FB1;
+  --pink-glow:            rgba(216, 27, 96, 0.22);
+  --pink-gradient:        linear-gradient(135deg, #EC407A 0%, #C2185B 100%);
+  --pink-gradient-hover:  linear-gradient(135deg, #E91E63 0%, #AD1457 100%);
 
   /* Dual Brand Gradient */
-  --brand-gradient:     linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
-  --brand-gradient-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(219, 39, 119, 0.08) 100%);
+  --brand-gradient:       linear-gradient(135deg, #AB47BC 0%, #D81B60 100%);
+  --brand-gradient-soft:  linear-gradient(135deg, rgba(171, 71, 188, 0.12) 0%, rgba(216, 27, 96, 0.12) 100%);
+
+  /* Typography & Layout Colors */
+  --text-dark:            #2D2438;
+  --text-body:            #4A3C59;
+  --text-muted:           #6E5D80;
+  --bg-page:              #FAF5FB;
+  --card-bg:              #FFFFFF;
+  --card-border:          #E1BEE7;
 
   /* Status Colors */
-  --green-success:      #16A34A;
-  --green-bg:           #F0FDF4;
-  --green-border:       #BBF7D0;
-  --red-error:          #DC2626;
-  --red-bg:             #FEF2F2;
-  --red-border:         #FECACA;
-  --amber-warn:         #D97706;
-  --amber-bg:           #FFFBEB;
-  --amber-border:       #FDE68A;
+  --green-success:        #16A34A;
+  --green-bg:             #F0FDF4;
+  --green-border:         #BBF7D0;
+  --red-error:            #DC2626;
+  --red-bg:               #FEF2F2;
+  --red-border:           #FECACA;
+  --amber-warn:           #D97706;
+  --amber-bg:             #FFFBEB;
+  --amber-border:         #FDE68A;
 }
 
 *, *::before, *::after {
@@ -60,36 +59,51 @@
 }
 
 body.enterprise-auth-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-page);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.04) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(219, 39, 119, 0.04) 0px, transparent 50%);
-  background-attachment: fixed;
-  color: var(--slate-dark);
+  color: var(--text-dark);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  line-height: 1.5;
+  line-height: 1.6;
+  position: relative;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
+/* Background image & gradient overlay matching Student Page */
+body.enterprise-auth-body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(135deg, rgba(250, 245, 251, 0.82) 0%, rgba(243, 229, 245, 0.70) 50%, rgba(250, 245, 251, 0.82) 100%),
+    url('admin.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: -1;
+  pointer-events: none;
+}
+
 /* ==========================================================================
-   PORTAL HEADER
+   PORTAL HEADER (MATCHING STUDENT DASHBOARD GRADIENT)
    ========================================================================== */
 .portal-main-header {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--slate-border);
+  background: linear-gradient(135deg, #AB47BC 0%, #9C27B0 60%, #8E24AA 100%);
+  border-bottom: 2.5px solid #CE93D8;
   padding: 14px 28px;
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 20px rgba(171, 71, 188, 0.25);
 }
 
 .portal-header-inner {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -107,6 +121,10 @@ body.enterprise-auth-body {
   height: 48px;
   width: auto;
   object-fit: contain;
+  background: #FFFFFF;
+  padding: 3px 8px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .header-brand-titles {
@@ -118,14 +136,15 @@ body.enterprise-auth-body {
   font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.02em;
-  color: var(--navy-dark);
+  color: #FFFFFF;
   line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .header-brand-titles .inst-sub {
   font-size: 13px;
   font-weight: 500;
-  color: var(--slate-muted);
+  color: #F3E5F5;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -133,15 +152,16 @@ body.enterprise-auth-body {
 
 .inst-tag {
   display: inline-block;
-  background: linear-gradient(135deg, var(--purple-light), var(--pink-light));
-  color: var(--purple-primary);
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 4px;
-  border: 1px solid var(--purple-border);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
 }
 
 .header-dept-badge {
@@ -150,9 +170,13 @@ body.enterprise-auth-body {
 }
 
 .header-csbs-logo {
-  height: 44px;
+  height: 46px;
   width: auto;
   object-fit: contain;
+  background: #FFFFFF;
+  padding: 3px 8px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 /* ==========================================================================
@@ -168,7 +192,7 @@ body.enterprise-auth-body {
 
 .portal-auth-container {
   width: 100%;
-  max-width: 1140px;
+  max-width: 1160px;
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 36px;
@@ -179,11 +203,11 @@ body.enterprise-auth-body {
    LEFT: DEPARTMENT DETAILS SECTION
    ========================================================================== */
 .dept-info-section {
-  background: var(--card-bg);
-  border: 1px solid var(--slate-border);
-  border-radius: 16px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--card-border);
+  border-radius: 18px;
   padding: 36px 32px;
-  box-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.04);
+  box-shadow: 0 8px 28px rgba(171, 71, 188, 0.09);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -205,10 +229,10 @@ body.enterprise-auth-body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, var(--purple-light), var(--pink-light));
+  background: var(--purple-light);
   color: var(--purple-dark);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 6px 14px;
   border-radius: 20px;
   border: 1px solid var(--purple-border);
@@ -223,7 +247,7 @@ body.enterprise-auth-body {
 .dept-main-title {
   font-size: 24px;
   font-weight: 800;
-  color: var(--navy-dark);
+  color: var(--text-dark);
   line-height: 1.3;
   margin-bottom: 16px;
   letter-spacing: -0.01em;
@@ -231,7 +255,7 @@ body.enterprise-auth-body {
 
 .dept-overview-text {
   font-size: 14.5px;
-  color: var(--slate-body);
+  color: var(--text-body);
   line-height: 1.65;
   margin-bottom: 26px;
 }
@@ -250,15 +274,15 @@ body.enterprise-auth-body {
 }
 
 .highlight-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   background: var(--purple-light);
   color: var(--purple-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 16px;
   flex-shrink: 0;
   border: 1px solid var(--purple-border);
   transition: transform 0.2s ease;
@@ -284,21 +308,21 @@ body.enterprise-auth-body {
 .highlight-content strong {
   font-size: 14px;
   font-weight: 700;
-  color: var(--navy-dark);
+  color: var(--text-dark);
   margin-bottom: 2px;
 }
 
 .highlight-content span {
   font-size: 13px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
   line-height: 1.45;
 }
 
 .dept-footer-meta {
   padding-top: 20px;
-  border-top: 1px solid var(--slate-border);
+  border-top: 1px solid var(--purple-subtle);
   font-size: 12.5px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -317,11 +341,11 @@ body.enterprise-auth-body {
 }
 
 .auth-panel-card {
-  background: var(--card-bg);
-  border: 1px solid var(--slate-border);
-  border-radius: 16px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--card-border);
+  border-radius: 18px;
   padding: 36px 32px;
-  box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.05), 0 8px 10px -6px rgba(219, 39, 119, 0.03);
+  box-shadow: 0 8px 28px rgba(171, 71, 188, 0.09);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -373,12 +397,12 @@ body.enterprise-auth-body {
   left: 0;
   top: 0;
   background: #FFFFFF;
-  border: 1px solid var(--slate-border);
-  color: var(--slate-body);
+  border: 1.5px solid var(--purple-subtle);
+  color: var(--text-body);
   font-size: 12.5px;
   font-weight: 600;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -393,8 +417,8 @@ body.enterprise-auth-body {
 }
 
 .panel-icon-circle {
-  width: 54px;
-  height: 54px;
+  width: 56px;
+  height: 56px;
   border-radius: 14px;
   background: var(--brand-gradient-soft);
   color: var(--purple-primary);
@@ -403,8 +427,8 @@ body.enterprise-auth-body {
   justify-content: center;
   font-size: 22px;
   margin-bottom: 12px;
-  border: 1px solid var(--purple-border);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+  border: 1.5px solid var(--purple-border);
+  box-shadow: 0 4px 14px rgba(171, 71, 188, 0.12);
 }
 
 /* Purple variant for Student */
@@ -413,7 +437,7 @@ body.enterprise-auth-body {
   background: var(--purple-light);
   color: var(--purple-primary);
   border-color: var(--purple-border);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 4px 14px rgba(171, 71, 188, 0.15);
 }
 
 /* Pink variant for Staff / Admin */
@@ -422,19 +446,19 @@ body.enterprise-auth-body {
   background: var(--pink-light);
   color: var(--pink-primary);
   border-color: var(--pink-border);
-  box-shadow: 0 4px 12px rgba(219, 39, 119, 0.12);
+  box-shadow: 0 4px 14px rgba(216, 27, 96, 0.15);
 }
 
 .panel-card-header h2 {
   font-size: 22px;
   font-weight: 800;
-  color: var(--navy-dark);
+  color: var(--text-dark);
   margin-bottom: 4px;
 }
 
 .panel-card-header p {
   font-size: 13.5px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
 }
 
 /* ==========================================================================
@@ -449,7 +473,7 @@ body.enterprise-auth-body {
 
 .choice-card-btn {
   background: #FFFFFF;
-  border: 1.5px solid var(--slate-border);
+  border: 1.5px solid var(--purple-subtle);
   border-radius: 14px;
   padding: 20px 18px;
   display: flex;
@@ -464,8 +488,8 @@ body.enterprise-auth-body {
 /* Student Button - Purple Shade on Hover */
 #btnChooseStudent:hover {
   border-color: var(--purple-primary);
-  background: #FDFBFF;
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.12);
+  background: var(--purple-light);
+  box-shadow: 0 6px 20px rgba(171, 71, 188, 0.18);
   transform: translateY(-2px);
 }
 
@@ -475,10 +499,14 @@ body.enterprise-auth-body {
 }
 
 /* Faculty Button - Pink Shade on Hover */
+#btnChooseFaculty {
+  border-color: var(--pink-border);
+}
+
 #btnChooseFaculty:hover {
   border-color: var(--pink-primary);
-  background: #FFFBFC;
-  box-shadow: 0 6px 20px rgba(219, 39, 119, 0.12);
+  background: var(--pink-light);
+  box-shadow: 0 6px 20px rgba(216, 27, 96, 0.18);
   transform: translateY(-2px);
 }
 
@@ -532,18 +560,18 @@ body.enterprise-auth-body {
 .choice-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--navy-dark);
+  color: var(--text-dark);
   margin-bottom: 2px;
 }
 
 .choice-desc {
   font-size: 12.5px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
 .choice-arrow {
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-size: 14px;
   transition: all 0.2s ease;
 }
@@ -551,13 +579,13 @@ body.enterprise-auth-body {
 .portal-card-footer {
   text-align: center;
   font-size: 12px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding-top: 16px;
-  border-top: 1px solid var(--slate-border);
+  border-top: 1px solid var(--purple-subtle);
 }
 
 /* ==========================================================================
@@ -572,7 +600,7 @@ body.enterprise-auth-body {
 
 .role-select-item {
   background: #FFFFFF;
-  border: 1.5px solid var(--slate-border);
+  border: 1.5px solid var(--pink-border);
   border-radius: 12px;
   padding: 16px 16px;
   display: flex;
@@ -588,28 +616,28 @@ body.enterprise-auth-body {
   border-color: var(--pink-primary);
   background: var(--pink-light);
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(219, 39, 119, 0.1);
+  box-shadow: 0 4px 14px rgba(216, 27, 96, 0.12);
 }
 
 .role-item-icon {
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  background: #F9FAFB;
-  color: var(--slate-dark);
+  background: #FAF5FB;
+  color: var(--text-dark);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 17px;
   flex-shrink: 0;
-  border: 1px solid var(--slate-border);
+  border: 1px solid var(--pink-border);
   transition: all 0.2s ease;
 }
 
 .role-select-item:hover .role-item-icon {
   background: #FFFFFF;
   color: var(--pink-primary);
-  border-color: var(--pink-border);
+  border-color: var(--pink-subtle);
   transform: scale(1.05);
 }
 
@@ -630,16 +658,16 @@ body.enterprise-auth-body {
 .role-item-info strong {
   font-size: 15px;
   font-weight: 700;
-  color: var(--navy-dark);
+  color: var(--text-dark);
 }
 
 .role-item-info span {
   font-size: 12px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
 }
 
 .role-arrow {
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-size: 13px;
   transition: transform 0.2s ease;
 }
@@ -662,7 +690,7 @@ body.enterprise-auth-body {
 .form-group label {
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--navy-dark);
+  color: var(--text-dark);
 }
 
 .label-row {
@@ -703,7 +731,7 @@ body.enterprise-auth-body {
 .input-icon {
   position: absolute;
   left: 14px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-size: 14px;
   pointer-events: none;
   transition: color 0.2s ease;
@@ -715,9 +743,9 @@ body.enterprise-auth-body {
   padding: 0 42px 0 40px;
   font-size: 14px;
   font-family: inherit;
-  color: var(--navy-dark);
+  color: var(--text-dark);
   background: #FFFFFF;
-  border: 1.5px solid var(--slate-border);
+  border: 1.5px solid var(--purple-subtle);
   border-radius: 10px;
   outline: none;
   transition: all 0.2s ease;
@@ -735,6 +763,10 @@ body.enterprise-auth-body {
 }
 
 /* Staff / Admin Input Focus (Pink Theme) */
+#staffLoginForm .form-control {
+  border-color: var(--pink-border);
+}
+
 #staffLoginForm .form-control:focus {
   border-color: var(--pink-primary);
   box-shadow: 0 0 0 3.5px var(--pink-glow);
@@ -746,7 +778,7 @@ body.enterprise-auth-body {
 }
 
 .form-control::placeholder {
-  color: #9CA3AF;
+  color: #A396B0;
 }
 
 .toggle-pw-btn {
@@ -754,7 +786,7 @@ body.enterprise-auth-body {
   right: 12px;
   background: none;
   border: none;
-  color: #9CA3AF;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 6px;
   font-size: 14px;
@@ -762,7 +794,7 @@ body.enterprise-auth-body {
 }
 
 .toggle-pw-btn:hover {
-  color: var(--navy-dark);
+  color: var(--text-dark);
 }
 
 /* ==========================================================================
@@ -775,7 +807,7 @@ body.enterprise-auth-body {
   border: none;
   border-radius: 10px;
   font-size: 14.5px;
-  font-weight: 600;
+  font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   display: flex;
@@ -790,13 +822,13 @@ body.enterprise-auth-body {
 #btnStudentSubmit,
 .btn-student-action {
   background: var(--purple-gradient);
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 4px 14px rgba(171, 71, 188, 0.35);
 }
 
 #btnStudentSubmit:hover,
 .btn-student-action:hover {
   background: var(--purple-gradient-hover);
-  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 6px 20px rgba(171, 71, 188, 0.45);
   transform: translateY(-1px);
 }
 
@@ -804,13 +836,13 @@ body.enterprise-auth-body {
 #btnStaffSubmit,
 .btn-staff-action {
   background: var(--pink-gradient);
-  box-shadow: 0 4px 14px rgba(219, 39, 119, 0.25);
+  box-shadow: 0 4px 14px rgba(216, 27, 96, 0.35);
 }
 
 #btnStaffSubmit:hover,
 .btn-staff-action:hover {
   background: var(--pink-gradient-hover);
-  box-shadow: 0 6px 18px rgba(219, 39, 119, 0.35);
+  box-shadow: 0 6px 20px rgba(216, 27, 96, 0.45);
   transform: translateY(-1px);
 }
 
@@ -831,11 +863,11 @@ body.enterprise-auth-body {
 .panel-info-note {
   margin-top: 20px;
   padding: 12px 14px;
-  background: #F9FAFB;
-  border: 1px solid var(--slate-border);
+  background: #FAF5FB;
+  border: 1px solid var(--purple-subtle);
   border-radius: 10px;
   font-size: 12px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -897,7 +929,7 @@ body.enterprise-auth-body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(45, 36, 56, 0.65);
   backdrop-filter: blur(4px);
   z-index: 100;
   display: flex;
@@ -908,17 +940,17 @@ body.enterprise-auth-body {
 
 .modal-dialog {
   background: #FFFFFF;
-  border-radius: 16px;
+  border-radius: 18px;
   max-width: 460px;
   width: 100%;
-  box-shadow: 0 20px 30px -10px rgba(124, 58, 237, 0.15);
-  border: 1px solid var(--purple-border);
+  box-shadow: 0 20px 35px -10px rgba(171, 71, 188, 0.25);
+  border: 1.5px solid var(--purple-border);
   overflow: hidden;
 }
 
 .modal-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--slate-border);
+  border-bottom: 1px solid var(--purple-subtle);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -940,12 +972,12 @@ body.enterprise-auth-body {
 .modal-header h3 {
   font-size: 16px;
   font-weight: 700;
-  color: var(--navy-dark);
+  color: var(--text-dark);
 }
 
 .modal-header p {
   font-size: 12.5px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
 }
 
 .btn-close-modal {
@@ -954,19 +986,19 @@ body.enterprise-auth-body {
   border: none;
   font-size: 22px;
   line-height: 1;
-  color: #9CA3AF;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
 }
 
 .btn-close-modal:hover {
-  color: var(--navy-dark);
+  color: var(--text-dark);
 }
 
 .modal-body {
   padding: 22px 24px;
   font-size: 13.5px;
-  color: var(--slate-body);
+  color: var(--text-body);
   line-height: 1.6;
 }
 
@@ -991,20 +1023,20 @@ body.enterprise-auth-body {
 
 .modal-footer {
   padding: 14px 24px;
-  background: #F9FAFB;
-  border-top: 1px solid var(--slate-border);
+  background: #FAF5FB;
+  border-top: 1px solid var(--purple-subtle);
   display: flex;
   justify-content: flex-end;
 }
 
 .btn-modal-close {
   background: #FFFFFF;
-  border: 1px solid var(--slate-border);
+  border: 1.5px solid var(--purple-border);
   padding: 8px 18px;
   border-radius: 8px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--slate-dark);
+  color: var(--purple-dark);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1012,7 +1044,6 @@ body.enterprise-auth-body {
 .btn-modal-close:hover {
   background: var(--purple-light);
   color: var(--purple-primary);
-  border-color: var(--purple-border);
 }
 
 /* ==========================================================================
@@ -1021,7 +1052,7 @@ body.enterprise-auth-body {
 .loading-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(250, 249, 252, 0.94);
+  background: rgba(250, 245, 251, 0.94);
   backdrop-filter: blur(6px);
   z-index: 200;
   display: flex;
@@ -1032,9 +1063,9 @@ body.enterprise-auth-body {
 .loading-spinner-box {
   background: #FFFFFF;
   padding: 34px 42px;
-  border-radius: 16px;
-  border: 1px solid var(--purple-border);
-  box-shadow: 0 14px 30px -5px rgba(124, 58, 237, 0.15);
+  border-radius: 18px;
+  border: 1.5px solid var(--purple-border);
+  box-shadow: 0 14px 30px -5px rgba(171, 71, 188, 0.25);
   text-align: center;
   max-width: 340px;
 }
@@ -1048,13 +1079,13 @@ body.enterprise-auth-body {
 .loading-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--navy-dark);
+  color: var(--text-dark);
   margin-bottom: 4px;
 }
 
 .loading-desc {
   font-size: 13px;
-  color: var(--slate-muted);
+  color: var(--text-muted);
 }
 
 /* ==========================================================================
