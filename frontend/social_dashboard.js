@@ -116,17 +116,19 @@ function setupModuleSwitcher() {
 
 function togglePortalSwitcherDropdown() {
   const menu = document.getElementById('switcherDropdownMenu');
-  if (menu) {
-    menu.classList.toggle('form-hidden');
-  }
+  const btn = document.getElementById('switcherBtn');
+  if (menu) menu.classList.toggle('show');
+  if (btn) btn.classList.toggle('active');
 }
 
 // Close dropdown on outside click
 document.addEventListener('click', (e) => {
   const switcherBox = document.getElementById('portalSwitcherWrap');
   const menu = document.getElementById('switcherDropdownMenu');
+  const btn = document.getElementById('switcherBtn');
   if (switcherBox && menu && !switcherBox.contains(e.target)) {
-    menu.classList.add('form-hidden');
+    menu.classList.remove('show');
+    if (btn) btn.classList.remove('active');
   }
 });
 

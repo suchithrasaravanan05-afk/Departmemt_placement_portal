@@ -147,15 +147,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Module Switcher & Logout Functions
 function toggleAdminPortalSwitcher() {
   const menu = el('adminSwitcherMenu');
-  if (menu) menu.classList.toggle('form-hidden');
+  const btn = el('adminSwitcherBtn');
+  if (menu) menu.classList.toggle('show');
+  if (btn) btn.classList.toggle('active');
 }
 
 // Close switcher dropdown on outside click
 document.addEventListener('click', (e) => {
   const switcherBox = el('adminPortalSwitcher');
   const menu = el('adminSwitcherMenu');
+  const btn = el('adminSwitcherBtn');
   if (switcherBox && menu && !switcherBox.contains(e.target)) {
-    menu.classList.add('form-hidden');
+    menu.classList.remove('show');
+    if (btn) btn.classList.remove('active');
   }
 });
 

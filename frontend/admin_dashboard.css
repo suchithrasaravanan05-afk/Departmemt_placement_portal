@@ -257,6 +257,7 @@
 
 .switcher-dropdown-container {
   position: relative;
+  padding-bottom: 4px;
 }
 
 .switcher-dropdown-btn {
@@ -274,7 +275,9 @@
   transition: all 0.15s ease;
 }
 
-.switcher-dropdown-btn:hover {
+.switcher-dropdown-btn:hover,
+.switcher-dropdown-container:hover .switcher-dropdown-btn,
+.switcher-dropdown-btn.active {
   background: #F8FAFC;
   border-color: #CBD5E1;
 }
@@ -282,19 +285,42 @@
 .switcher-caret {
   font-size: 10px;
   color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.switcher-dropdown-container:hover .switcher-caret,
+.switcher-dropdown-btn.active .switcher-caret {
+  transform: rotate(180deg);
 }
 
 .switcher-dropdown-menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 2px);
   right: 0;
   background: #FFFFFF;
   border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14);
   width: 260px;
   padding: 6px;
   z-index: 100;
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  pointer-events: none;
+}
+
+/* Open on hover (without touch/click) or on touch/click toggle */
+.switcher-dropdown-container:hover .switcher-dropdown-menu,
+.switcher-dropdown-container:focus-within .switcher-dropdown-menu,
+.switcher-dropdown-menu.show {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .switcher-menu-item {
