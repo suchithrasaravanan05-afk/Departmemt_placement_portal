@@ -21,10 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Handle URL hash shortcuts if requested (e.g., #student, #faculty, #admin)
+  // Handle URL hash shortcuts if requested (e.g., #student, #register, #faculty, #admin)
   const hash = window.location.hash.toLowerCase();
   if (hash === '#student') {
     showStudentAuth();
+  } else if (hash === '#register' || hash === '#student-register') {
+    showStudentAuth();
+    switchStudentAuthMode('register');
   } else if (hash === '#faculty') {
     proceedToStaffAuth('faculty');
   } else if (hash === '#hod') {
@@ -60,11 +63,8 @@ function showStudentAuth() {
   hideAllViews();
   const el = document.getElementById('viewStudentAuth');
   if (el) el.classList.remove('form-hidden');
+  switchStudentAuthMode('login');
   window.location.hash = 'student';
-  setTimeout(() => {
-    const input = document.getElementById('studentRegNo');
-    if (input) input.focus();
-  }, 100);
 }
 
 function showStaffRoleSelect() {
@@ -123,8 +123,44 @@ function backToStaffRoleSelect() {
 }
 
 // ==========================================================================
-// STUDENT AUTHENTICATION
+// STUDENT AUTHENTICATION (LOGIN & REGISTRATION)
 // ==========================================================================
+
+function switchStudentAuthMode(mode) {
+  hideAlerts();
+  const tabLogin = document.getElementById('tabStudentLogin');
+  const tabReg = document.getElementById('tabStudentRegister');
+  const formLogin = document.getElementById('studentLoginForm');
+  const formReg = document.getElementById('studentRegisterForm');
+  const title = document.getElementById('studentAuthTitle');
+  const subtitle = document.getElementById('studentAuthSubtitle');
+
+  if (mode === 'register') {
+    if (tabLogin) tabLogin.classList.remove('active');
+    if (tabReg) tabReg.classList.add('active');
+    if (formLogin) formLogin.classList.add('form-hidden');
+    if (formReg) formReg.classList.remove('form-hidden');
+    if (title) title.textContent = 'New Student Registration';
+    if (subtitle) subtitle.textContent = 'Create your institutional student placement profile';
+    window.location.hash = 'register';
+    setTimeout(() => {
+      const input = document.getElementById('regFullName');
+      if (input) input.focus();
+    }, 80);
+  } else {
+    if (tabReg) tabReg.classList.remove('active');
+    if (tabLogin) tabLogin.classList.add('active');
+    if (formReg) formReg.classList.add('form-hidden');
+    if (formLogin) formLogin.classList.remove('form-hidden');
+    if (title) title.textContent = 'Student Login';
+    if (subtitle) subtitle.textContent = 'Enter your institutional register number & password';
+    window.location.hash = 'student';
+    setTimeout(() => {
+      const input = document.getElementById('studentRegNo');
+      if (input) input.focus();
+    }, 80);
+  }
+}
 
 async function handleStudentLogin(e) {
   e.preventDefault();
@@ -156,7 +192,7 @@ async function handleStudentLogin(e) {
 
     if (!res.ok || !data.success) {
       showStudentAlert(data.message || 'Invalid Register Number or password.', 'error');
-      setBtnLoading('btnStudentSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> Sign In to Student Portal');
+      setBtnLoading('btnStudentSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> <span>Sign In to Student Portal</span>');
       return;
     }
 
@@ -174,7 +210,79 @@ async function handleStudentLogin(e) {
   } catch (err) {
     console.error('Student login error:', err);
     showStudentAlert('Unable to connect to the portal server. Please verify your network.', 'error');
-    setBtnLoading('btnStudentSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> Sign In to Student Portal');
+    setBtnLoading('btnStudentSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> <span>Sign In to Student Portal</span>');
+  }
+}
+
+async function handleStudentRegister(e) {
+  e.preventDefault();
+  hideAlerts();
+
+  const fullName = document.getElementById('regFullName')?.value.trim();
+  const regNo = document.getElementById('regRegisterNo')?.value.trim();
+  const email = document.getElementById('regEmail')?.value.trim();
+  const phone = document.getElementById('regPhone')?.value.trim();
+  const department = document.getElementById('regDepartment')?.value || 'CSBS';
+  const year = document.getElementById('regYear')?.value || 4;
+  const password = document.getElementById('regPassword')?.value;
+  const confirmPassword = document.getElementById('regConfirmPassword')?.value;
+
+  if (!fullName || !regNo || !email || !password) {
+    showStudentAlert('Please fill in all required fields (Full Name, Register Number, Email, Password).', 'error');
+    return;
+  }
+
+  if (password.length < 6) {
+    showStudentAlert('Password must be at least 6 characters.', 'error');
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showStudentAlert('Passwords do not match. Please verify your confirmation password.', 'error');
+    return;
+  }
+
+  setBtnLoading('btnStudentRegister', true, 'Creating Student Account...');
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: fullName,
+        register_number: regNo,
+        email,
+        phone: phone || null,
+        department,
+        year: parseInt(year, 10),
+        password,
+        role: 'student'
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      showStudentAlert(data.message || 'Registration failed. Please check your details and try again.', 'error');
+      setBtnLoading('btnStudentRegister', false, '<i class="fa-solid fa-user-plus"></i> <span>Register &amp; Create Student Account</span>');
+      return;
+    }
+
+    // Save token and user session
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    showStudentAlert('Account created successfully! Welcome to RIT CSBS Portal.', 'success');
+    showLoadingOverlay('Creating your student profile & entering portal...');
+
+    setTimeout(() => {
+      routeAfterAuth(data.user);
+    }, 700);
+
+  } catch (err) {
+    console.error('Student registration error:', err);
+    showStudentAlert('Unable to connect to the portal server. Please verify your network.', 'error');
+    setBtnLoading('btnStudentRegister', false, '<i class="fa-solid fa-user-plus"></i> <span>Register &amp; Create Student Account</span>');
   }
 }
 

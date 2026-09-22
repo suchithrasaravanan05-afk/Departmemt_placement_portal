@@ -133,20 +133,31 @@
           </div>
         </div>
 
-        <!-- STEP 2: STUDENT LOGIN FORM -->
+        <!-- STEP 2: STUDENT LOGIN & REGISTRATION FORM -->
         <div id="viewStudentAuth" class="auth-panel-card form-hidden">
           <div class="panel-card-header">
             <button type="button" class="btn-back-nav" onclick="showPortalChoice()" title="Back to choices">
               <i class="fa-solid fa-arrow-left"></i> Back
             </button>
             <div class="panel-icon-circle"><i class="fa-solid fa-user-graduate"></i></div>
-            <h2>Student Login</h2>
-            <p>Enter your institutional register number &amp; password</p>
+            <h2 id="studentAuthTitle">Student Login</h2>
+            <p id="studentAuthSubtitle">Enter your institutional register number &amp; password</p>
+          </div>
+
+          <!-- Tab Switcher: Login vs Registration -->
+          <div class="auth-mode-switch">
+            <button type="button" id="tabStudentLogin" class="auth-mode-tab active" onclick="switchStudentAuthMode('login')">
+              <i class="fa-solid fa-right-to-bracket"></i> Student Login
+            </button>
+            <button type="button" id="tabStudentRegister" class="auth-mode-tab" onclick="switchStudentAuthMode('register')">
+              <i class="fa-solid fa-user-plus"></i> New Student Registration
+            </button>
           </div>
 
           <!-- Alert Box -->
           <div id="studentAlertBox" class="alert-box form-hidden" role="alert"></div>
 
+          <!-- 1. STUDENT LOGIN FORM -->
           <form id="studentLoginForm" onsubmit="handleStudentLogin(event)" novalidate>
             <div class="form-group">
               <label for="studentRegNo">Register Number / Student ID</label>
@@ -189,6 +200,145 @@
               <i class="fa-solid fa-right-to-bracket"></i>
               <span>Sign In to Student Portal</span>
             </button>
+
+            <p class="auth-switch-prompt">
+              New student at RIT CSBS? <a href="javascript:void(0)" onclick="switchStudentAuthMode('register')">Register here</a>
+            </p>
+          </form>
+
+          <!-- 2. NEW STUDENT REGISTRATION FORM -->
+          <form id="studentRegisterForm" class="form-hidden" onsubmit="handleStudentRegister(event)" novalidate>
+            <div class="form-group">
+              <label for="regFullName">Full Name <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input 
+                  type="text" 
+                  id="regFullName" 
+                  class="form-control" 
+                  placeholder="e.g. Sivaranjani S" 
+                  required 
+                  autocomplete="name"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regRegisterNo">Register Number <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-id-card input-icon"></i>
+                <input 
+                  type="text" 
+                  id="regRegisterNo" 
+                  class="form-control" 
+                  placeholder="e.g. 953623244045" 
+                  required 
+                  autocomplete="username"
+                  autocapitalize="off"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regEmail">College Email / Official Email <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-envelope input-icon"></i>
+                <input 
+                  type="email" 
+                  id="regEmail" 
+                  class="form-control" 
+                  placeholder="e.g. 953623244045@ritrjpm.ac.in" 
+                  required 
+                  autocomplete="email"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regPhone">Mobile / WhatsApp Number</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-phone input-icon"></i>
+                <input 
+                  type="tel" 
+                  id="regPhone" 
+                  class="form-control" 
+                  placeholder="e.g. 9876543210" 
+                  autocomplete="tel"
+                >
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group">
+                <label for="regDepartment">Department <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-building-columns input-icon"></i>
+                  <select id="regDepartment" class="form-control" required style="padding-left:42px;cursor:pointer;">
+                    <option value="CSBS" selected>CSBS</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="regYear">Year of Study <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-graduation-cap input-icon"></i>
+                  <select id="regYear" class="form-control" required style="padding-left:42px;cursor:pointer;">
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4" selected>4th Year</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group">
+                <label for="regPassword">Password <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-lock input-icon"></i>
+                  <input 
+                    type="password" 
+                    id="regPassword" 
+                    class="form-control" 
+                    placeholder="Min 6 chars" 
+                    required 
+                    autocomplete="new-password"
+                  >
+                  <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('regPassword', this)" title="Show/hide password">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="regConfirmPassword">Confirm <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-shield-halved input-icon"></i>
+                  <input 
+                    type="password" 
+                    id="regConfirmPassword" 
+                    class="form-control" 
+                    placeholder="Re-enter" 
+                    required 
+                    autocomplete="new-password"
+                  >
+                  <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('regConfirmPassword', this)" title="Show/hide password">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary-action btn-student-action" id="btnStudentRegister" style="margin-top:6px;">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Register &amp; Create Student Account</span>
+            </button>
+
+            <p class="auth-switch-prompt">
+              Already registered? <a href="javascript:void(0)" onclick="switchStudentAuthMode('login')">Sign In here</a>
+            </p>
           </form>
 
           <div class="panel-info-note panel-info-student">

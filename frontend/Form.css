@@ -1219,3 +1219,64 @@ body.enterprise-auth-body::before {
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   STUDENT AUTH TABS (SIGN IN vs NEW STUDENT REGISTRATION)
+   ========================================================================== */
+.auth-mode-switch {
+  display: flex;
+  background: var(--purple-subtle);
+  border: 1.5px solid var(--purple-border);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 22px;
+}
+
+.auth-mode-tab {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.auth-mode-tab:hover {
+  color: var(--purple-primary);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.auth-mode-tab.active {
+  background: #FFFFFF;
+  color: var(--purple-primary);
+  box-shadow: 0 3px 10px rgba(109, 40, 217, 0.14);
+}
+
+.auth-switch-prompt {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13.5px;
+  color: var(--text-subtle);
+}
+
+.auth-switch-prompt a {
+  color: var(--purple-primary);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.auth-switch-prompt a:hover {
+  text-decoration: underline;
+  color: var(--purple-hover);
+}
