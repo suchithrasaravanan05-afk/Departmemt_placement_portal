@@ -338,7 +338,6 @@ async function querySupabase(sql, params = [], callback) {
                 linkedin_link, github_link,
                 profile_photo, resume_file, user_id
             ] = params;
-
             const upsertObj = {
                 user_id,
                 dob, personal_email, college_email, domain_interest,

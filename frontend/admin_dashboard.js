@@ -4000,13 +4000,25 @@ function renderCertificateLookupResult(data) {
               <strong style="color:#0f172a;">${escapeHtml(student.department || 'CSBS')}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
-              <span style="color:#64748b;">Academic Year:</span>
-              <strong style="color:#0f172a;">Year ${escapeHtml(student.year || 4)}</strong>
+              <span style="color:#64748b;">Degree &amp; Year:</span>
+              <strong style="color:#0f172a;">${escapeHtml(student.degree || 'B.Tech')} (Year ${escapeHtml(student.year || 4)})</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;">
+            ${student.cgpa !== null && student.cgpa !== undefined ? `
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+              <span style="color:#64748b;">CGPA:</span>
+              <span class="badge badge-success" style="font-weight:700;font-size:12px;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;">${student.cgpa} / 10.0</span>
+            </div>
+            ` : ''}
+            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Email:</span>
               <strong style="color:#0f172a;font-size:12px;">${escapeHtml(student.email || '---')}</strong>
             </div>
+            ${student.phone_number ? `
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#64748b;">Phone:</span>
+              <strong style="color:#0f172a;font-size:12px;">${escapeHtml(student.phone_number)}</strong>
+            </div>
+            ` : ''}
           </div>
         </div>
 

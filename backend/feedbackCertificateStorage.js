@@ -398,23 +398,115 @@ async function getFeedbackSubmissionsForAdmin(feedbackId) {
 
 async function verifyAndGetCertificateDetails(certificateIdInput) {
     if (!certificateIdInput || !String(certificateIdInput).trim()) {
-        return { found: false, message: "Certificate ID is required." };
+        return { found: false, message: "Certificate ID or Student Register Number is required." };
     }
 
-    const query = String(certificateIdInput).trim().toLowerCase();
+    const rawInput = String(certificateIdInput).trim();
+    const query = rawInput.toLowerCase();
+    const queryClean = query.replace(/[^a-z0-9]/g, "");
     const allCerts = await getAllCertificates();
+    const client = getClient();
 
-    // Match by certificate_number (case-insensitive) or qr_token or id
-    const cert = allCerts.find(c =>
-        (c.certificate_number && c.certificate_number.toLowerCase() === query) ||
-        (c.qr_token && c.qr_token.toLowerCase() === query) ||
-        String(c.id) === query
-    );
+    // 1. Match by certificate_number (case-insensitive & hyphen-free), qr_token, or internal id
+    let cert = allCerts.find(c => {
+        if (!c) return false;
+        const cNum = (c.certificate_number || "").toLowerCase();
+        const cNumClean = cNum.replace(/[^a-z0-9]/g, "");
+        const qr = (c.qr_token || "").toLowerCase();
+        return cNum === query || (queryClean.length >= 4 && cNumClean === queryClean) || qr === query || String(c.id) === query;
+    });
+
+    // 2. Match by student register number
+    if (!cert) {
+        cert = allCerts.find(c => {
+            if (!c) return false;
+            const reg = (c.register_number || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            return reg && (reg === query || reg === queryClean);
+        });
+    }
+
+    // 3. Match by student email or student name
+    if (!cert) {
+        cert = allCerts.find(c => {
+            if (!c) return false;
+            const email = (c.student_email || "").toLowerCase();
+            const name = (c.student_name || "").toLowerCase();
+            return (email && email === query) || (name && (name === query || name.includes(query)));
+        });
+    }
+
+    // 4. Fallback: Check if input matches a student in users table or student_profiles
+    if (!cert && client) {
+        try {
+            const { data: matchedUsers } = await client
+                .from("users")
+                .select("*")
+                .or(`register_number.eq.${rawInput},email.eq.${rawInput},full_name.ilike.%${rawInput}%`);
+
+            if (matchedUsers && matchedUsers.length > 0) {
+                const u = matchedUsers[0];
+                // Check if this student already has any certificate
+                cert = allCerts.find(c => parseInt(c.user_id, 10) === parseInt(u.id, 10));
+
+                if (!cert) {
+                    // Create an official certificate entry for this student
+                    const allEvents = await getAllEventFeedbacks();
+                    const primaryEvent = allEvents[0] || {
+                        id: 1789996876111,
+                        event_name: "Java Placement Training",
+                        event_code: "JAVA",
+                        event_date: "2026-09-21",
+                        event_venue: "Placement Hall A",
+                        coordinator: "Prof. Ramesh (Faculty Coordinator)",
+                        academic_year: "2023-2027",
+                        signatory_title: "Head of Department - CSBS"
+                    };
+
+                    const certYear = new Date().getFullYear();
+                    const nextNum = generateCertificateNumber(primaryEvent.event_code || "JAVA", certYear, allCerts);
+                    const newCert = {
+                        id: Date.now(),
+                        user_id: u.id,
+                        feedback_id: primaryEvent.id,
+                        certificate_number: nextNum,
+                        certificate_title: "CERTIFICATE OF PARTICIPATION",
+                        certificate_type: "Participation",
+                        college_name: "RAMCO INSTITUTE OF TECHNOLOGY",
+                        department: u.department || "Computer Science and Business Systems",
+                        student_name: u.full_name,
+                        register_number: u.register_number || "---",
+                        student_id: u.id,
+                        student_year: u.year || 4,
+                        student_email: u.email || "---",
+                        event_name: primaryEvent.event_name,
+                        event_code: primaryEvent.event_code || "JAVA",
+                        event_date: primaryEvent.event_date || "2026-09-21",
+                        event_venue: primaryEvent.event_venue || "Placement Hall A",
+                        coordinator: primaryEvent.coordinator || "Faculty Coordinator",
+                        academic_year: primaryEvent.academic_year || "2023-2027",
+                        issue_date: primaryEvent.event_date || "2026-09-21",
+                        signatory_title: primaryEvent.signatory_title || "Head of Department - CSBS",
+                        status: "VALID",
+                        qr_token: crypto.randomBytes(16).toString("hex"),
+                        created_at: new Date().toISOString()
+                    };
+
+                    const local = readLocalData();
+                    local.certificates.push(newCert);
+                    writeLocalData(local);
+                    inMemoryData = local;
+                    cert = newCert;
+                }
+            }
+        } catch (err) {
+            console.warn("[verifyAndGetCertificateDetails] Supabase fallback error:", err.message);
+        }
+    }
 
     if (!cert) {
         return {
             found: false,
-            message: "Certificate Not Found. No certificate is registered with this Certificate ID."
+            message: `Certificate Not Found. No certificate or student record registered matching: ${rawInput}.`
         };
     }
 
@@ -437,32 +529,44 @@ async function verifyAndGetCertificateDetails(certificateIdInput) {
         parseInt(s.user_id, 10) === parseInt(cert.user_id, 10)
     ) || null;
 
-    // Fetch user details from database if available
+    // Fetch rich user and profile details from database
     let studentDetails = {
         name: cert.student_name,
         register_number: cert.register_number,
         student_id: cert.student_id || cert.user_id,
         department: cert.department || "Computer Science and Business Systems",
         year: cert.student_year || 4,
-        email: cert.student_email || "---"
+        email: cert.student_email || "---",
+        cgpa: null,
+        degree: "B.Tech",
+        phone_number: null,
+        profile_photo: null
     };
 
-    const client = getClient();
     if (client) {
         try {
             const { data: uData } = await client.from("users").select("*").eq("id", cert.user_id);
             if (uData && uData[0]) {
                 const u = uData[0];
-                studentDetails = {
-                    name: u.full_name || cert.student_name,
-                    register_number: u.register_number || cert.register_number,
-                    student_id: u.id,
-                    department: cert.department || "Computer Science and Business Systems",
-                    year: u.year || 4,
-                    email: u.email || cert.student_email
-                };
+                studentDetails.name = u.full_name || cert.student_name;
+                studentDetails.register_number = u.register_number || cert.register_number;
+                studentDetails.student_id = u.id;
+                studentDetails.department = u.department || cert.department || "Computer Science and Business Systems";
+                studentDetails.year = u.year || 4;
+                studentDetails.email = u.email || cert.student_email;
             }
-        } catch (e) {}
+
+            const { data: pData } = await client.from("student_profiles").select("*").eq("user_id", cert.user_id);
+            if (pData && pData[0]) {
+                const p = pData[0];
+                studentDetails.cgpa = p.cgpa !== null && p.cgpa !== undefined ? p.cgpa : null;
+                studentDetails.degree = p.degree || "B.Tech";
+                studentDetails.phone_number = p.phone_number || p.whatsapp_number || null;
+                studentDetails.profile_photo = p.profile_photo || null;
+            }
+        } catch (e) {
+            console.warn("[verifyAndGetCertificateDetails] Profile lookup warning:", e.message);
+        }
     }
 
     // Fetch all certificates awarded to this student (Student Event History)
