@@ -116,6 +116,26 @@ body.enterprise-auth-body::before {
 .header-brand-group {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.header-college-logo {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  padding: 0 !important;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35));
+  transition: transform 0.25s ease;
+}
+
+.header-college-logo:hover {
+  transform: scale(1.04);
 }
 
 .header-brand-titles {
@@ -153,29 +173,26 @@ body.enterprise-auth-body::before {
   backdrop-filter: blur(4px);
 }
 
-/* Right Header Logo Container */
-.header-logo-group {
+/* Right Header Department Logo Container */
+.header-dept-group {
   display: flex;
   align-items: center;
   justify-content: flex-end;
 }
 
-.header-college-logo {
-  height: 56px;
+.header-dept-logo {
+  height: 48px;
   width: auto;
   object-fit: contain;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  outline: none !important;
-  padding: 0 !important;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35));
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px 12px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   transition: transform 0.25s ease;
 }
 
-.header-college-logo:hover {
+.header-dept-logo:hover {
   transform: scale(1.04);
 }
 
@@ -1178,7 +1195,12 @@ body.enterprise-auth-body::before {
   }
 
   .header-college-logo {
-    height: 42px;
+    height: 40px;
+  }
+
+  .header-dept-logo {
+    height: 38px;
+    padding: 3px 8px;
   }
 
   .dept-main-title {
