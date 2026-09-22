@@ -9,7 +9,7 @@
   <!-- Modern Typography (Plus Jakarta Sans & Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="Form.css?v=2026.2">
@@ -22,18 +22,12 @@
        ======================================================= -->
   <header class="portal-main-header">
     <div class="portal-header-inner">
-      <div class="header-brand-group">
-        <img src="rit_logo.png?v=2026.2" alt="RIT" class="header-inst-logo" style="background: transparent !important; background-color: transparent !important; padding: 0 !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; outline: none !important; height: 52px; width: auto; object-fit: contain;">
-        <div class="header-brand-titles">
-          <div class="brand-title-row">
-            <span class="inst-name"><strong>RIT-CSBS</strong></span>
-            <span class="inst-tag">AUTONOMOUS</span>
-          </div>
-          <span class="inst-sub">Department of Computer Science and Business Systems</span>
-        </div>
+      <div class="header-brand-left">
+        <span class="inst-name">RIT-CSBS</span>
+        <span class="inst-tag">AUTONOMOUS</span>
       </div>
-      <div class="header-dept-badge">
-        <img src="csbs_logo_clean.png?v=2026.2" alt="CSBS Department" class="header-csbs-logo" onerror="this.src='csbs_logo.png'">
+      <div class="header-logo-right">
+        <img src="rit_logo.png" alt="Ramco Institute of Technology Logo" class="header-college-logo">
       </div>
     </div>
   </header>
@@ -103,9 +97,9 @@
           </div>
 
           <div class="choice-options-group">
-            <!-- Choice A: Student Login -->
-            <button type="button" class="choice-card-btn" id="btnChooseStudent" onclick="showStudentAuth()">
-              <div class="choice-icon-wrap purple">
+            <!-- Choice A: Student Login (Primary Action - Filled Purple) -->
+            <button type="button" class="choice-card-btn choice-card-student" id="btnChooseStudent" onclick="showStudentAuth()">
+              <div class="choice-icon-wrap">
                 <i class="fa-solid fa-user-graduate"></i>
               </div>
               <div class="choice-text-wrap">
@@ -115,9 +109,9 @@
               <div class="choice-arrow"><i class="fa-solid fa-arrow-right"></i></div>
             </button>
 
-            <!-- Choice B: Faculty Login -->
-            <button type="button" class="choice-card-btn" id="btnChooseFaculty" onclick="showStaffRoleSelect()">
-              <div class="choice-icon-wrap pink">
+            <!-- Choice B: Faculty Login (Secondary Action - Purple Outline) -->
+            <button type="button" class="choice-card-btn choice-card-faculty" id="btnChooseFaculty" onclick="showStaffRoleSelect()">
+              <div class="choice-icon-wrap">
                 <i class="fa-solid fa-user-tie"></i>
               </div>
               <div class="choice-text-wrap">
@@ -204,7 +198,7 @@
             <button type="button" class="btn-back-nav" onclick="showPortalChoice()" title="Back to choices">
               <i class="fa-solid fa-arrow-left"></i> Back
             </button>
-            <div class="panel-icon-circle pink"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="panel-icon-circle"><i class="fa-solid fa-user-tie"></i></div>
             <h2>Faculty Portal</h2>
             <p>Select your designated role to continue</p>
           </div>
@@ -229,7 +223,7 @@
             </button>
 
             <button type="button" class="role-select-item role-item-admin" onclick="proceedToStaffAuth('admin')">
-              <div class="role-item-icon admin-pink"><i class="fa-solid fa-user-shield"></i></div>
+              <div class="role-item-icon"><i class="fa-solid fa-user-shield"></i></div>
               <div class="role-item-info">
                 <strong>Admin</strong>
                 <span>Placement cell coordinator &amp; portal manager</span>
@@ -250,7 +244,7 @@
             <button type="button" class="btn-back-nav" onclick="backToStaffRoleSelect()" title="Change selected role">
               <i class="fa-solid fa-arrow-left"></i> Change Role
             </button>
-            <div class="panel-icon-circle pink" id="staffRoleHeaderIcon"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="panel-icon-circle" id="staffRoleHeaderIcon"><i class="fa-solid fa-user-tie"></i></div>
             <h2 id="staffAuthTitle">Faculty Login</h2>
             <p id="staffAuthSub">Sign in with your official staff credentials</p>
           </div>
@@ -321,19 +315,19 @@
         <span>Department of CSBS Official Accounts:</span>
       </div>
       <div class="dept-social-links">
-        <a href="https://www.instagram.com/csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag ig" title="Instagram: csbs_rit">
+        <a href="https://www.instagram.com/csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag" title="Instagram: csbs_rit">
           <i class="fa-brands fa-instagram"></i>
           <span>csbs_rit</span>
         </a>
-        <a href="https://www.facebook.com/csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag fb" title="Facebook: csbs_rit">
+        <a href="https://www.facebook.com/csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag" title="Facebook: csbs_rit">
           <i class="fa-brands fa-facebook"></i>
           <span>csbs_rit</span>
         </a>
-        <a href="https://www.linkedin.com/company/csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag li" title="LinkedIn: csbs_rit">
+        <a href="https://www.linkedin.com/company/csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag" title="LinkedIn: csbs_rit">
           <i class="fa-brands fa-linkedin"></i>
           <span>csbs_rit</span>
         </a>
-        <a href="https://www.youtube.com/@csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag yt" title="YouTube: csbs_rit">
+        <a href="https://www.youtube.com/@csbs_rit" target="_blank" rel="noopener noreferrer" class="dept-social-tag" title="YouTube: csbs_rit">
           <i class="fa-brands fa-youtube"></i>
           <span>csbs_rit</span>
         </a>
