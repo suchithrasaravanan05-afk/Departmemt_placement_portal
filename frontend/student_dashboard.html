@@ -874,10 +874,13 @@
         </div>
 
         <!-- Header -->
-        <div style="border-bottom:2px solid #b45309;padding-bottom:16px;margin-bottom:20px;">
-          <div style="font-size:22px;font-weight:900;letter-spacing:1.5px;color:#1e1b4b;text-transform:uppercase;">RAMCO INSTITUTE OF TECHNOLOGY</div>
-          <div style="font-size:13px;font-weight:700;color:#b45309;letter-spacing:1px;margin-top:4px;">DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS</div>
-          <div style="font-size:11px;color:#64748b;margin-top:2px;">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</div>
+        <div class="cert-header-container" style="border-bottom:2px solid #b45309;padding-bottom:16px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:18px;">
+          <img id="certHeaderLogo" src="rit_logo.png" alt="Ramco Institute of Technology Logo" style="height:62px;width:62px;object-fit:contain;flex-shrink:0;">
+          <div style="text-align:center;">
+            <div style="font-size:21px;font-weight:900;letter-spacing:1.5px;color:#1e1b4b;text-transform:uppercase;">RAMCO INSTITUTE OF TECHNOLOGY</div>
+            <div style="font-size:12.5px;font-weight:700;color:#b45309;letter-spacing:1px;margin-top:3px;">DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</div>
+          </div>
         </div>
 
         <!-- Certificate Title -->
@@ -901,22 +904,33 @@
           conducted on <strong id="certPreviewEventDate">---</strong>.
         </p>
 
-        <!-- Certificate Footer Signatures -->
-        <div style="margin-top:32px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #e2e8f0;padding-top:20px;">
+        <!-- Certificate Signatories (Printed Names & Titles Only) -->
+        <div class="cert-signatories-row" style="margin-top:28px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div style="text-align:left;flex:1;">
+            <div style="font-size:13.5px;font-weight:700;color:#1e1b4b;letter-spacing:0.3px;">Dr. D. Kesavaraja</div>
+            <div style="font-size:11px;color:#475569;margin-top:3px;font-weight:600;">Head of Department (HOD)</div>
+          </div>
+          <div style="text-align:center;flex:1;">
+            <div style="font-size:13.5px;font-weight:700;color:#1e1b4b;letter-spacing:0.3px;">Dr. S. Rajakarunakarun</div>
+            <div style="font-size:11px;color:#475569;margin-top:3px;font-weight:600;">Patron</div>
+          </div>
+          <div style="text-align:right;flex:1;">
+            <div style="font-size:13.5px;font-weight:700;color:#1e1b4b;letter-spacing:0.3px;">Dr. L. Ganesan</div>
+            <div style="font-size:11px;color:#475569;margin-top:3px;font-weight:600;">Chief Patron</div>
+          </div>
+        </div>
+
+        <!-- Certificate Footer Metadata & Verification -->
+        <div class="cert-footer-meta" style="margin-top:18px;padding-top:14px;border-top:1px dashed #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:12px;">
           <div style="text-align:left;">
-            <div style="font-size:11px;color:#64748b;">Certificate Number:</div>
+            <div style="font-size:10.5px;color:#64748b;">Certificate Number:</div>
             <div id="certPreviewCode" style="font-family:monospace;font-size:11px;font-weight:700;color:#4338ca;">RIT-CSBS-CERT-2026-XXXX</div>
-            <div style="font-size:11px;color:#64748b;margin-top:4px;">Date of Issue: <span id="certPreviewIssueDate">---</span></div>
+            <div style="font-size:10.5px;color:#64748b;margin-top:2px;">Date of Issue: <span id="certPreviewIssueDate">---</span></div>
           </div>
 
           <!-- Verified Stamp -->
-          <div style="border:2px dashed #059669;color:#059669;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
+          <div style="border:2px dashed #059669;color:#059669;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;background:#f0fdf4;display:inline-flex;align-items:center;gap:6px;">
             <i class="fa-solid fa-shield-halved"></i> Digitally Verified
-          </div>
-
-          <div style="text-align:right;">
-            <div style="font-family:'Brush Script MT', cursive, Georgia;font-size:22px;color:#1e1b4b;">Dr. Placement Officer / HOD</div>
-            <div id="certPreviewSignatory" style="font-size:12px;font-weight:700;color:#0f172a;border-top:1px solid #0f172a;padding-top:2px;">Head of Department - CSBS</div>
           </div>
         </div>
       </div>
@@ -1101,8 +1115,32 @@
   from { opacity:0; transform:scale(.88) translateY(18px); }
   to   { opacity:1; transform:scale(1)  translateY(0);    }
 }
+@media (max-width: 640px) {
+  .cert-header-container {
+    flex-direction: column !important;
+    gap: 10px !important;
+    text-align: center !important;
+  }
+  .cert-signatories-row {
+    flex-direction: column !important;
+    gap: 14px !important;
+    text-align: center !important;
+  }
+  .cert-signatories-row > div {
+    text-align: center !important;
+  }
+  .cert-footer-meta {
+    flex-direction: column !important;
+    gap: 12px !important;
+    text-align: center !important;
+  }
+  .cert-footer-meta > div {
+    text-align: center !important;
+  }
+}
 </style>
 
+<script src="rit_logo_data.js"></script>
 <script src="gpa.js?v=2.2"></script>
 <script src="student_dashboard.js?v=2.2"></script>
 </body>

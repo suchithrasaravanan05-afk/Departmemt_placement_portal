@@ -1856,132 +1856,171 @@ function generateCertificatePDF(cert, isDownload = true) {
     doc.circle(cx, cy, 1.8, 'F');
   });
 
+  // Official Ramco Institute of Technology Logo
+  const logoBase64 = (typeof window !== 'undefined' && window.RIT_LOGO_BASE64) ? window.RIT_LOGO_BASE64 : null;
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, "PNG", 26, 17, 23, 23);
+    } catch (e) {
+      console.warn("PDF logo render warning:", e);
+    }
+  } else {
+    const domLogo = document.getElementById("certHeaderLogo") || document.querySelector(".student-logo-img");
+    if (domLogo && domLogo.complete && domLogo.naturalWidth > 0) {
+      try {
+        doc.addImage(domLogo, "PNG", 26, 17, 23, 23);
+      } catch (e) {
+        console.warn("PDF DOM logo render warning:", e);
+      }
+    }
+  }
+
   // College Name Header
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
+  doc.setFontSize(21);
   doc.setTextColor(30, 27, 75); // Dark Navy
-  doc.text("RAMCO INSTITUTE OF TECHNOLOGY", pageWidth / 2, 28, { align: "center" });
+  doc.text("RAMCO INSTITUTE OF TECHNOLOGY", pageWidth / 2, 26, { align: "center" });
 
   // Department Subheader
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
+  doc.setFontSize(11.5);
   doc.setTextColor(180, 83, 9); // Gold
-  doc.text("DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS", pageWidth / 2, 35, { align: "center" });
+  doc.text("DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS", pageWidth / 2, 33, { align: "center" });
 
   // Accreditation text
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(100, 116, 139);
-  doc.text("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai", pageWidth / 2, 40, { align: "center" });
+  doc.text("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai", pageWidth / 2, 38.5, { align: "center" });
 
   // Gold Divider line
   doc.setDrawColor(180, 83, 9);
   doc.setLineWidth(0.6);
-  doc.line(30, 44, pageWidth - 30, 44);
+  doc.line(26, 43, pageWidth - 26, 43);
 
   // Certificate Heading
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(180, 83, 9);
-  doc.text("CERTIFICATE OF PARTICIPATION", pageWidth / 2, 55, { align: "center" });
+  doc.text("CERTIFICATE OF PARTICIPATION", pageWidth / 2, 54, { align: "center" });
 
   // Preamble
   doc.setFont("helvetica", "italic");
-  doc.setFontSize(12);
+  doc.setFontSize(11.5);
   doc.setTextColor(71, 85, 105);
-  doc.text("This is to certify that", pageWidth / 2, 66, { align: "center" });
+  doc.text("This is to certify that", pageWidth / 2, 64, { align: "center" });
 
   // Student Full Name
   const studentName = (cert.student_name || currentUser.full_name || "Student").toUpperCase();
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
+  doc.setFontSize(19);
   doc.setTextColor(15, 23, 42);
-  doc.text(studentName, pageWidth / 2, 78, { align: "center" });
+  doc.text(studentName, pageWidth / 2, 75, { align: "center" });
 
   // Underline for student name
   const nameWidth = doc.getTextWidth(studentName);
   doc.setDrawColor(15, 23, 42);
   doc.setLineWidth(0.4);
-  doc.line((pageWidth - nameWidth) / 2, 80, (pageWidth + nameWidth) / 2, 80);
+  doc.line((pageWidth - nameWidth) / 2, 77, (pageWidth + nameWidth) / 2, 77);
 
   // Register Number & Department
   const regNo = cert.register_number || currentUser.register_number || "---";
   const dept = cert.department || "Computer Science and Business Systems";
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
+  doc.setFontSize(10.5);
   doc.setTextColor(51, 65, 85);
-  doc.text(`Register No: ${regNo}   |   Department of ${dept}`, pageWidth / 2, 89, { align: "center" });
+  doc.text(`Register No: ${regNo}   |   Department of ${dept}`, pageWidth / 2, 86, { align: "center" });
 
   // Participation Statement
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(11.5);
+  doc.setFontSize(11);
   doc.setTextColor(71, 85, 105);
-  doc.text("has actively participated in and successfully completed the departmental event / workshop titled", pageWidth / 2, 102, { align: "center" });
+  doc.text("has actively participated in and successfully completed the departmental event / workshop titled", pageWidth / 2, 98, { align: "center" });
 
   // Event Name
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
+  doc.setFontSize(14.5);
   doc.setTextColor(30, 27, 75);
-  doc.text(`"${cert.event_name}"`, pageWidth / 2, 112, { align: "center" });
+  doc.text(`"${cert.event_name || 'Department Event'}"`, pageWidth / 2, 107.5, { align: "center" });
 
   // Event Date
   const eventDateStr = cert.event_date ? new Date(cert.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '---';
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(11.5);
+  doc.setFontSize(11);
   doc.setTextColor(71, 85, 105);
-  doc.text(`conducted on ${eventDateStr}.`, pageWidth / 2, 121, { align: "center" });
+  doc.text(`conducted on ${eventDateStr}.`, pageWidth / 2, 116, { align: "center" });
 
-  // Footer Divider Line
+  // Signatories Divider Line
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.5);
-  doc.line(20, 142, pageWidth - 20, 142);
+  doc.line(26, 128, pageWidth - 26, 128);
+
+  // Signatory 1 (Left): Dr. D. Kesavaraja — Head of Department (HOD)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(30, 27, 75);
+  doc.text("Dr. D. Kesavaraja", 28, 139);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text("Head of Department (HOD)", 28, 145);
+
+  // Signatory 2 (Center): Dr. S. Rajakarunakarun — Patron
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(30, 27, 75);
+  doc.text("Dr. S. Rajakarunakarun", pageWidth / 2, 139, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text("Patron", pageWidth / 2, 145, { align: "center" });
+
+  // Signatory 3 (Right): Dr. L. Ganesan — Chief Patron
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(30, 27, 75);
+  doc.text("Dr. L. Ganesan", pageWidth - 28, 139, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text("Chief Patron", pageWidth - 28, 145, { align: "right" });
+
+  // Metadata / Security Divider Line
+  doc.setDrawColor(241, 245, 249);
+  doc.setLineWidth(0.4);
+  doc.line(26, 155, pageWidth - 26, 155);
 
   // Footer - Left: Certificate ID & Issue Date
-  const certNumber = cert.certificate_number || "RIT-CSBS-CERT-2026";
+  const certNumber = cert.certificate_number || cert.certificate_id || "RIT-CSBS-CERT-2026";
   const issueDateStr = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB');
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139);
-  doc.text("Certificate Number:", 24, 155);
+  doc.text("Certificate Number:", 28, 166);
 
   doc.setFont("courier", "bold");
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(67, 56, 202);
-  doc.text(certNumber, 24, 161);
+  doc.text(certNumber, 28, 171.5);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139);
-  doc.text(`Date of Issue: ${issueDateStr}`, 24, 168);
+  doc.text(`Date of Issue: ${issueDateStr}`, 28, 177);
 
-  // Footer - Center: Digitally Verified Stamp Box
+  // Footer - Right: Digitally Verified Stamp Box
   doc.setDrawColor(5, 150, 105);
   doc.setLineWidth(0.5);
-  doc.roundedRect(pageWidth / 2 - 28, 153, 56, 16, 2, 2);
+  doc.roundedRect(pageWidth - 85, 163, 57, 16, 2, 2);
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(5, 150, 105);
-  doc.text("DIGITALLY VERIFIED", pageWidth / 2, 161, { align: "center" });
-  doc.setFontSize(7);
+  doc.text("DIGITALLY VERIFIED", pageWidth - 85 + 28.5, 170.5, { align: "center" });
+  doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
-  doc.text("RIT CSBS Placement Portal", pageWidth / 2, 166, { align: "center" });
-
-  // Footer - Right: Signature
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(30, 27, 75);
-  doc.text("Dr. Placement Officer / HOD", pageWidth - 24, 157, { align: "right" });
-
-  doc.setDrawColor(30, 27, 75);
-  doc.setLineWidth(0.4);
-  doc.line(pageWidth - 75, 161, pageWidth - 24, 161);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text(cert.signatory_title || "Head of Department - CSBS", pageWidth - 24, 166, { align: "right" });
+  doc.text("RIT CSBS Placement Portal", pageWidth - 85 + 28.5, 175.5, { align: "center" });
 
   const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${(cert.event_name || 'Event').replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`;
 
