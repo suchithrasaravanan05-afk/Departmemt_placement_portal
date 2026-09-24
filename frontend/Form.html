@@ -407,8 +407,8 @@
             <p id="staffAuthSub">Sign in with your official staff credentials</p>
           </div>
 
-          <!-- Tab Switcher: Faculty Login vs Registration -->
-          <div class="auth-mode-switch" id="staffAuthModeSwitch">
+          <!-- Tab Switcher: Faculty/HOD Login vs Registration (Hidden by default for Admin) -->
+          <div class="auth-mode-switch form-hidden" id="staffAuthModeSwitch" style="display:none;">
             <button type="button" id="tabStaffLogin" class="auth-mode-tab active" onclick="switchFacultyAuthMode('login')">
               <i class="fa-solid fa-right-to-bracket"></i> Faculty Login
             </button>
@@ -463,7 +463,8 @@
               <span>Authenticate &amp; Enter Portal</span>
             </button>
 
-            <p id="staffRegisterPrompt" class="auth-switch-prompt" style="margin-top:14px;">
+            <!-- Registration prompt for Faculty & HOD only (Hidden for Admin) -->
+            <p id="staffRegisterPrompt" class="auth-switch-prompt form-hidden" style="margin-top:14px;display:none;">
               <span id="staffPromptLabel">New faculty member?</span> <a href="javascript:void(0)" onclick="switchFacultyAuthMode('register')">Register here</a>
               <span style="display:block;margin-top:4px;font-size:11.5px;">
                 or <a href="faculty-registration.html" style="color:#6D28D9;font-weight:600;">open dedicated full page <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i></a>

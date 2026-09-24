@@ -120,8 +120,14 @@ function proceedToStaffAuth(role) {
     if (inputEl) inputEl.placeholder = 'e.g. admin@rit.ac.in or Admin ID';
     if (iconEl) iconEl.className = 'fa-solid fa-user-shield input-icon';
     if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
-    if (switchEl) switchEl.classList.add('form-hidden');
-    if (promptEl) promptEl.classList.add('form-hidden');
+    if (switchEl) {
+      switchEl.classList.add('form-hidden');
+      switchEl.style.display = 'none';
+    }
+    if (promptEl) {
+      promptEl.classList.add('form-hidden');
+      promptEl.style.display = 'none';
+    }
     window.location.hash = 'admin';
   } else if (role === 'hod') {
     // HOD: HAS REGISTRATION & LOGIN
@@ -133,11 +139,13 @@ function proceedToStaffAuth(role) {
     if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-building-columns"></i>';
     if (switchEl) {
       switchEl.classList.remove('form-hidden');
+      switchEl.style.display = 'flex';
       if (tabLogin) tabLogin.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> HOD Login';
       if (tabReg) tabReg.innerHTML = '<i class="fa-solid fa-user-plus"></i> New HOD Registration';
     }
     if (promptEl) {
       promptEl.classList.remove('form-hidden');
+      promptEl.style.display = 'block';
       if (promptLabel) promptLabel.textContent = 'New Head of Department?';
     }
     const desigSelect = document.getElementById('staffRegDesignation');
@@ -153,11 +161,13 @@ function proceedToStaffAuth(role) {
     if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i>';
     if (switchEl) {
       switchEl.classList.remove('form-hidden');
+      switchEl.style.display = 'flex';
       if (tabLogin) tabLogin.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Faculty Login';
       if (tabReg) tabReg.innerHTML = '<i class="fa-solid fa-user-plus"></i> New Faculty Registration';
     }
     if (promptEl) {
       promptEl.classList.remove('form-hidden');
+      promptEl.style.display = 'block';
       if (promptLabel) promptLabel.textContent = 'New faculty member?';
     }
     window.location.hash = 'faculty';
