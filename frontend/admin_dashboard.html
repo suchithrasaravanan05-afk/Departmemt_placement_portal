@@ -718,212 +718,389 @@
        ======================================================== -->
   <div id="adminTabEventFeedback" class="tab-content hidden">
     <!-- Header Banner -->
-    <div class="settings-header-banner" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);">
+    <div class="settings-header-banner" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
       <div class="settings-header-title-wrap">
         <div class="settings-header-icon" style="background: rgba(255,255,255,0.15); color: #fff;">
-          <i class="fa-solid fa-comments"></i>
+          <i class="fa-solid fa-graduation-cap"></i>
         </div>
         <div>
-          <h2 class="settings-title" style="color: #fff;">Event Feedback & Quiz Form Creator</h2>
-          <p class="settings-subtitle" style="color: #e0e7ff;">Faculty Coordinator & JA Portal: Create events, set up quiz questions & feedback forms, and publish to students</p>
+          <h2 class="settings-title" style="color: #fff;">Event Feedback, Quiz &amp; Verification Hub</h2>
+          <p class="settings-subtitle" style="color: #e0e7ff;">Publish interactive assessments, collect real-time student responses, view detailed analytics, and track certificate issuance</p>
         </div>
       </div>
-      <button class="btn btn-sm analytics-refresh-btn" onclick="loadAdminEventFeedbacks(true)" style="background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.3);">
-        <i class="fa-solid fa-rotate-right"></i> Refresh Feedbacks
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-sm" onclick="switchEfSubnav('create')" style="background:#fff;color:#312e81;font-weight:700;padding:8px 14px;border-radius:8px;border:none;">
+          <i class="fa-solid fa-plus-circle"></i> Create New Form
+        </button>
+        <button class="btn btn-sm analytics-refresh-btn" onclick="loadAdminEventFeedbacks(true)" style="background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.3);">
+          <i class="fa-solid fa-rotate-right"></i> Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-Navigation Bar -->
+    <div class="ef-subnav-bar">
+      <button class="ef-subnav-btn active" id="efSubnavActiveBtn" onclick="switchEfSubnav('active')">
+        <i class="fa-solid fa-bolt" style="color:#10b981;"></i> Active Event Feedbacks
+        <span id="efActiveCountBadge" class="badge badge-green">0</span>
+      </button>
+      <button class="ef-subnav-btn" id="efSubnavCreateBtn" onclick="switchEfSubnav('create')">
+        <i class="fa-solid fa-pen-ruler" style="color:#6366f1;"></i> Create &amp; Publish Form
+      </button>
+      <button class="ef-subnav-btn" id="efSubnavArchivedBtn" onclick="switchEfSubnav('archived')">
+        <i class="fa-solid fa-box-archive" style="color:#f59e0b;"></i> Archived Events
+        <span id="efArchivedCountBadge" class="badge badge-yellow">0</span>
+      </button>
+      <button class="ef-subnav-btn" id="efSubnavAnalyticsBtn" onclick="switchEfSubnav('analytics')">
+        <i class="fa-solid fa-chart-pie" style="color:#38bdf8;"></i> Yearly &amp; Event Analytics
       </button>
     </div>
 
-    <div class="admin-event-feedback-grid">
-      <!-- Create & Send Form Card -->
-      <div class="admin-card" style="box-shadow:0 4px 20px rgba(0,0,0,0.06);border-radius:14px;border:1px solid #e2e8f0;background:#fff;padding:24px;">
-        <div class="admin-card-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 18px; display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;border-radius:10px;background:#e0e7ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:18px;">
-              <i class="fa-solid fa-pen-ruler"></i>
-            </div>
-            <div>
-              <h3 style="margin:0;font-size:17px;font-weight:700;color:#0f172a;">Create Event Feedback & Quiz</h3>
-              <p style="margin:2px 0 0;font-size:12px;color:#64748b;">Configure event details, quiz multiple choices, and feedback questionnaire</p>
-            </div>
+    <!-- PANE 1: ACTIVE EVENT FEEDBACKS -->
+    <div id="efPaneActive" class="ef-pane">
+      <div class="ef-card">
+        <div class="ef-toolbar">
+          <div class="ef-search-box">
+            <i class="fa-solid fa-magnifying-glass" style="color:#94a3b8;"></i>
+            <input type="text" id="efSearchActiveInput" placeholder="Search active events by name, code, venue..." oninput="filterActiveEventsTable()">
           </div>
-          <span class="badge badge-blue"><i class="fa-solid fa-users"></i> Faculty / JA</span>
-        </div>
-
-        <form id="adminEventFeedbackForm" onsubmit="handleSendEventFeedback(event)">
-          <!-- Event Core Details -->
-          <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:14px;">
-            <div class="form-group">
-              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-                Event Name <span style="color:#ef4444;">*</span>
-              </label>
-              <input type="text" id="efEventName" class="form-control" placeholder="e.g. Java Placement Training" required style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" oninput="autoGenerateEventCode()">
-            </div>
-            <div class="form-group">
-              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-                Event Code <span style="font-size:11px;color:#64748b;">(For Cert ID)</span>
-              </label>
-              <input type="text" id="efEventCode" class="form-control" placeholder="e.g. JAVA" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;text-transform:uppercase;">
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
-            <div class="form-group">
-              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-                Event Date <span style="color:#ef4444;">*</span>
-              </label>
-              <input type="date" id="efEventDate" class="form-control" required style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-            </div>
-            <div class="form-group">
-              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-                Event Venue
-              </label>
-              <input type="text" id="efEventVenue" class="form-control" placeholder="e.g. Placement Lab / Online" value="Department Placement Lab / Online" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-            </div>
-            <div class="form-group">
-              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-                Coordinator Name
-              </label>
-              <input type="text" id="efCoordinator" class="form-control" placeholder="e.g. Faculty Coordinator" value="Faculty Coordinator / JA" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-            <div class="form-group">
-              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-                Target Audience <span style="color:#ef4444;">*</span>
-              </label>
-              <select id="efTargetType" class="form-control" onchange="toggleEfStudentSelector()" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-                <option value="all">All Students (Broadcast Notification)</option>
-                <option value="student">Specific Student</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-                Academic Year / Batch
-              </label>
-              <input type="text" id="efAcademicYear" class="form-control" value="2023-2027" placeholder="e.g. 2023-2027" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-            </div>
-          </div>
-
-          <!-- Specific Student Selector (shown when target === 'student') -->
-          <div id="efStudentSelectWrap" class="form-group hidden" style="margin-bottom:14px;">
-            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-              Select Student <span style="color:#ef4444;">*</span>
-            </label>
-            <select id="efStudentId" class="form-control" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-              <option value="">-- Choose Student from Roster --</option>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select id="efYearFilterSelect" class="form-control" onchange="filterActiveEventsTable()" style="padding:7px 12px;font-size:12.5px;border-radius:8px;border:1px solid #cbd5e1;">
+              <option value="all">All Academic Years</option>
+              <option value="2026-27">2026-27</option>
+              <option value="2025-26">2025-26</option>
+              <option value="2024-25">2024-25</option>
+              <option value="2023-2027">2023-2027</option>
             </select>
+            <button class="btn btn-primary btn-sm" onclick="switchEfSubnav('create')" style="font-size:12px;padding:8px 14px;border-radius:8px;">
+              <i class="fa-solid fa-plus"></i> New Form
+            </button>
           </div>
-
-          <div class="form-group" style="margin-bottom:14px;">
-            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-              Authorized Signatory Designation
-            </label>
-            <input type="text" id="efSignatoryTitle" class="form-control" value="Head of Department - CSBS" placeholder="e.g. Head of Department - CSBS" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
-          </div>
-
-          <div class="form-group" style="margin-bottom:18px;">
-            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:6px;">
-              Event Description &amp; Instructions
-            </label>
-            <textarea id="efMessage" class="form-control" rows="2" placeholder="e.g. Please complete the quiz and session feedback to automatically claim your verified certificate." style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
-          </div>
-
-          <!-- ==========================================
-               PART 1: QUIZ SECTION (DYNAMIC BUILDER)
-               ========================================== -->
-          <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:18px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:28px;height:28px;border-radius:6px;background:#4338ca;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">1</div>
-                <div>
-                  <h4 style="margin:0;font-size:14px;font-weight:700;color:#1e1b4b;">Part 1 — Quiz Questions (Multiple Choice)</h4>
-                  <p style="margin:0;font-size:11px;color:#64748b;">Add assessment questions. Students must answer these questions before submitting.</p>
-                </div>
-              </div>
-              <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuizQuestionRow()" style="font-size:12px;display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;">
-                <i class="fa-solid fa-plus"></i> Add Question
-              </button>
-            </div>
-
-            <!-- Quiz Questions Container -->
-            <div id="efQuizQuestionsContainer" style="display:flex;flex-direction:column;gap:12px;">
-              <!-- Populated dynamically via JS -->
-            </div>
-          </div>
-
-          <!-- ==========================================
-               PART 2: FEEDBACK SECTION (PREVIEW)
-               ========================================== -->
-          <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
-              <div style="width:28px;height:28px;border-radius:6px;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">2</div>
-              <div>
-                <h4 style="margin:0;font-size:14px;font-weight:700;color:#064e3b;">Part 2 — Feedback Questions</h4>
-                <p style="margin:0;font-size:11px;color:#64748b;">Standardized institutional feedback evaluated on submission</p>
-              </div>
-            </div>
-
-            <div style="font-size:12px;color:#334155;line-height:1.6;display:flex;flex-direction:column;gap:8px;">
-              <div style="padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
-                <strong>1. How was the event?</strong>
-                <div style="color:#64748b;font-size:11px;margin-top:2px;">(Excellent / Good / Average / Poor — 5 Star Rating)</div>
-              </div>
-              <div style="padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
-                <strong>2. Was the session useful?</strong>
-                <div style="color:#64748b;font-size:11px;margin-top:2px;">(Yes / No selection)</div>
-              </div>
-              <div style="padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
-                <strong>3. What did you learn?</strong>
-                <div style="color:#64748b;font-size:11px;margin-top:2px;">[ Student Key Learnings Text Box ]</div>
-              </div>
-              <div style="padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
-                <strong>4. Suggestions:</strong>
-                <div style="color:#64748b;font-size:11px;margin-top:2px;">[ Additional Feedback &amp; Suggestions Text Box ]</div>
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" id="btnSendFeedback" class="btn btn-primary" style="width:100%;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg, #2563eb, #4338ca);box-shadow:0 4px 14px rgba(37,99,235,0.3);">
-            <i class="fa-solid fa-paper-plane"></i> Publish Feedback &amp; Quiz Form
-          </button>
-        </form>
-      </div>
-
-      <!-- Sent Event Feedbacks List Card -->
-      <div class="admin-card" style="box-shadow:0 4px 20px rgba(0,0,0,0.06);border-radius:14px;border:1px solid #e2e8f0;background:#fff;padding:24px;">
-        <div class="admin-card-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:36px;height:36px;border-radius:10px;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:16px;">
-              <i class="fa-solid fa-award"></i>
-            </div>
-            <div>
-              <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;">Active Event Feedbacks</h3>
-              <p style="margin:0;font-size:12px;color:#64748b;">Track student responses and issued certificates</p>
-            </div>
-          </div>
-          <span id="efTotalCountBadge" class="badge badge-purple" style="font-size:12px;padding:4px 10px;">0 Events</span>
         </div>
 
-        <div class="table-responsive" style="max-height:600px;overflow-y:auto;">
-          <table class="admin-table" id="eventFeedbacksTable" style="width:100%;">
+        <div class="table-responsive" style="max-height:650px;overflow-y:auto;">
+          <table class="admin-table" style="width:100%;">
             <thead>
               <tr>
                 <th>Event Details</th>
                 <th>Event Date</th>
                 <th>Audience</th>
-                <th>Submissions</th>
-                <th>Actions</th>
+                <th>Academic Year</th>
+                <th>Published On</th>
+                <th>Eligible</th>
+                <th>Submitted</th>
+                <th>Pending</th>
+                <th>Completion %</th>
+                <th>Status</th>
+                <th style="text-align:center;">Actions</th>
               </tr>
             </thead>
             <tbody id="eventFeedbacksTableBody">
               <tr>
-                <td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">
-                  <i class="fa-solid fa-spinner fa-spin"></i> Loading event feedback requests...
+                <td colspan="11" style="text-align:center;padding:36px;color:#94a3b8;">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Loading active event feedbacks...
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 2: CREATE & PUBLISH FORM -->
+    <div id="efPaneCreate" class="ef-pane hidden">
+      <div class="ef-card" style="max-width:1000px;margin:0 auto;">
+        <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:#e0e7ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:20px;">
+              <i class="fa-solid fa-pen-ruler"></i>
+            </div>
+            <div>
+              <h3 style="margin:0;font-size:18px;font-weight:700;color:#0f172a;">Event Feedback &amp; Quiz Form Creator</h3>
+              <p style="margin:2px 0 0;font-size:12.5px;color:#64748b;">Configure event details, multiple-choice quiz questions, and target audience</p>
+            </div>
+          </div>
+          <span class="badge badge-purple"><i class="fa-solid fa-bullhorn"></i> Broadcast &amp; Notifications</span>
+        </div>
+
+        <form id="adminEventFeedbackForm" onsubmit="handleSendEventFeedback(event)">
+          <!-- Section A: Metadata -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px;">
+            <h4 style="margin:0 0 14px 0;font-size:14px;font-weight:700;color:#1e1b4b;display:flex;align-items:center;gap:8px;">
+              <i class="fa-solid fa-info-circle" style="color:#4338ca;"></i> Step 1: Event Details &amp; Target Audience
+            </h4>
+
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;">
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Event Name <span style="color:#ef4444;">*</span>
+                </label>
+                <input type="text" id="efEventName" class="form-control" placeholder="e.g. Java Placement Training" required style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" oninput="autoGenerateEventCode()">
+              </div>
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Event Code <span style="font-size:11px;color:#64748b;">(For Cert ID)</span>
+                </label>
+                <input type="text" id="efEventCode" class="form-control" placeholder="e.g. JAVA" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;text-transform:uppercase;">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Event Date <span style="color:#ef4444;">*</span>
+                </label>
+                <input type="date" id="efEventDate" class="form-control" required style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+              </div>
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Event Venue
+                </label>
+                <input type="text" id="efEventVenue" class="form-control" placeholder="e.g. Placement Lab / Online" value="Department Placement Lab / Online" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+              </div>
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Coordinator Name
+                </label>
+                <input type="text" id="efCoordinator" class="form-control" placeholder="e.g. Faculty Coordinator" value="Faculty Coordinator / JA" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Target Audience <span style="color:#ef4444;">*</span>
+                </label>
+                <select id="efTargetType" class="form-control" onchange="toggleEfStudentSelector()" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+                  <option value="all">All Students (Broadcast Notification)</option>
+                  <option value="year_3">Year 3 Students Only</option>
+                  <option value="year_4">Year 4 Students Only</option>
+                  <option value="student">Specific Student</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Academic Year / Batch
+                </label>
+                <input type="text" id="efAcademicYear" class="form-control" value="2026-27" placeholder="e.g. 2026-27" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+              </div>
+              <div class="form-group">
+                <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                  Min Quiz Pass % <span style="font-size:11px;color:#64748b;">(For Cert)</span>
+                </label>
+                <input type="number" id="efMinQuizScore" class="form-control" value="50" min="0" max="100" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+              </div>
+            </div>
+
+            <!-- Specific Student Selector (shown when target === 'student') -->
+            <div id="efStudentSelectWrap" class="form-group hidden" style="margin-bottom:14px;">
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                Select Student <span style="color:#ef4444;">*</span>
+              </label>
+              <select id="efStudentId" class="form-control" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+                <option value="">-- Choose Student from Roster --</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                Authorized Signatory Designation
+              </label>
+              <input type="text" id="efSignatoryTitle" class="form-control" value="Head of Department - CSBS" placeholder="e.g. Head of Department - CSBS" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+            </div>
+
+            <div class="form-group">
+              <label style="display:block;font-size:12.5px;font-weight:700;color:#334155;margin-bottom:6px;">
+                Event Description &amp; Instructions
+              </label>
+              <textarea id="efMessage" class="form-control" rows="2" placeholder="e.g. Please complete the quiz assessment and feedback form to automatically claim your verified Certificate of Participation." style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+            </div>
+          </div>
+
+          <!-- Section B: Quiz Questions Builder -->
+          <div style="background:#fcfdff;border:1.5px solid #e0e7ff;border-radius:12px;padding:18px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid #e0e7ff;padding-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:30px;height:30px;border-radius:8px;background:#4338ca;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">1</div>
+                <div>
+                  <h4 style="margin:0;font-size:15px;font-weight:700;color:#1e1b4b;">Step 2: Quiz Assessment Questions (Multiple Choice)</h4>
+                  <p style="margin:0;font-size:11.5px;color:#64748b;">Add at least 1 question. Provide 4 choices and designate the correct answer.</p>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuizQuestionRow()" style="font-size:12px;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;">
+                <i class="fa-solid fa-plus"></i> Add Question
+              </button>
+            </div>
+
+            <!-- Quiz Questions Container -->
+            <div id="efQuizQuestionsContainer" style="display:flex;flex-direction:column;gap:14px;"></div>
+          </div>
+
+          <!-- Section C: Feedback Questions (Preview) -->
+          <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:24px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
+              <div style="width:30px;height:30px;border-radius:8px;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">2</div>
+              <div>
+                <h4 style="margin:0;font-size:15px;font-weight:700;color:#064e3b;">Step 3: Standard Feedback Questionnaire (Evaluated on Submission)</h4>
+                <p style="margin:0;font-size:11.5px;color:#64748b;">These questions will be presented to every student alongside the quiz.</p>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;color:#334155;">
+              <div style="padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+                <strong>1. Overall Rating</strong>
+                <div style="color:#64748b;font-size:11.5px;margin-top:2px;">5-Star Interactive Rating (Excellent to Poor)</div>
+              </div>
+              <div style="padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+                <strong>2. Session Usefulness</strong>
+                <div style="color:#64748b;font-size:11.5px;margin-top:2px;">Yes / No selection with feedback</div>
+              </div>
+              <div style="padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+                <strong>3. Key Learnings Acquired</strong>
+                <div style="color:#64748b;font-size:11.5px;margin-top:2px;">Student technical takeaway text response</div>
+              </div>
+              <div style="padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+                <strong>4. Future Suggestions</strong>
+                <div style="color:#64748b;font-size:11.5px;margin-top:2px;">Student recommendations for upcoming workshops</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn btn-outline" onclick="switchEfSubnav('active')" style="padding:11px 20px;border-radius:10px;font-size:13.5px;font-weight:600;">
+              Cancel
+            </button>
+            <button type="submit" id="btnSendFeedback" class="btn btn-primary" style="padding:12px 28px;border-radius:10px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg, #2563eb, #4338ca);box-shadow:0 4px 14px rgba(37,99,235,0.3);">
+              <i class="fa-solid fa-paper-plane"></i> Publish Feedback &amp; Quiz Form
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- PANE 3: ARCHIVED EVENT FEEDBACKS -->
+    <div id="efPaneArchived" class="ef-pane hidden">
+      <div class="ef-card">
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:center;">
+          <i class="fa-solid fa-box-archive" style="color:#d97706;font-size:20px;"></i>
+          <div>
+            <strong style="color:#92400e;font-size:13px;">Archived &amp; Closed Events History</strong>
+            <p style="margin:2px 0 0;font-size:12px;color:#b45309;">These forms are closed and no longer accepting student submissions. All historical submissions and certificates remain permanently verifiable.</p>
+          </div>
+        </div>
+
+        <div class="table-responsive" style="max-height:600px;overflow-y:auto;">
+          <table class="admin-table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Event Name</th>
+                <th>Event Date</th>
+                <th>Academic Year</th>
+                <th>Total Eligible</th>
+                <th>Submitted</th>
+                <th>Completion %</th>
+                <th>Closed On</th>
+                <th>Status</th>
+                <th style="text-align:center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="archivedEventsTableBody">
+              <tr>
+                <td colspan="9" style="text-align:center;padding:36px;color:#94a3b8;">
+                  <i class="fa-regular fa-folder-open" style="font-size:28px;display:block;margin-bottom:6px;color:#cbd5e1;"></i>
+                  No archived event feedbacks.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 4: YEARLY & EVENT ANALYTICS -->
+    <div id="efPaneAnalytics" class="ef-pane hidden">
+      <div class="ef-card">
+        <!-- Analytics Stat Boxes -->
+        <div class="ef-analytics-grid">
+          <div class="ef-stat-box">
+            <div class="ef-stat-icon" style="background:#e0e7ff;color:#4338ca;">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Published Events</div>
+              <div id="analyticsStatEvents" style="font-size:22px;font-weight:800;color:#0f172a;">0</div>
+            </div>
+          </div>
+          <div class="ef-stat-box">
+            <div class="ef-stat-icon" style="background:#ecfdf5;color:#059669;">
+              <i class="fa-solid fa-file-signature"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Total Submissions</div>
+              <div id="analyticsStatSubs" style="font-size:22px;font-weight:800;color:#0f172a;">0</div>
+            </div>
+          </div>
+          <div class="ef-stat-box">
+            <div class="ef-stat-icon" style="background:#fef3c7;color:#d97706;">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Avg Completion Rate</div>
+              <div id="analyticsStatRate" style="font-size:22px;font-weight:800;color:#0f172a;">0%</div>
+            </div>
+          </div>
+          <div class="ef-stat-box">
+            <div class="ef-stat-icon" style="background:#fae8ff;color:#a855f7;">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Certificates Issued</div>
+              <div id="analyticsStatCerts" style="font-size:22px;font-weight:800;color:#0f172a;">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Year-Wise Trend Chart -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Year-Wise Events &amp; Submissions Trend</h4>
+              <p style="margin:2px 0 0;font-size:12px;color:#64748b;">Dynamic database counts of events, student submissions, and issued certificates by Academic Year</p>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="loadEventAnalytics(true)">
+              <i class="fa-solid fa-rotate-right"></i> Refresh Chart
+            </button>
+          </div>
+          <div style="height:320px;position:relative;">
+            <canvas id="efYearlyChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Event Breakdown Table -->
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+          <h4 style="margin:0 0 14px 0;font-size:15px;font-weight:800;color:#0f172a;">Event Performance Breakdown</h4>
+          <div class="table-responsive">
+            <table class="admin-table" style="width:100%;">
+              <thead>
+                <tr>
+                  <th>Event Name</th>
+                  <th>Academic Year</th>
+                  <th>Eligible</th>
+                  <th>Submitted</th>
+                  <th>Pending</th>
+                  <th>Completion Rate</th>
+                  <th>Avg Quiz Score</th>
+                  <th>Certificates</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="analyticsEventBreakdownTableBody">
+                <tr>
+                  <td colspan="9" style="text-align:center;padding:24px;color:#94a3b8;">Loading analytics breakdown...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -995,18 +1172,18 @@
 
   <!-- Submissions & Certificates Modal -->
   <div id="eventSubmissionsModal" class="modal-backdrop hidden" onclick="_closeSubmissionsModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
-    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:900px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
-      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:1000px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);color:#fff;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:38px;height:38px;border-radius:10px;background:#e0e7ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:18px;">
-            <i class="fa-solid fa-certificate"></i>
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;">
+            <i class="fa-solid fa-list-check"></i>
           </div>
           <div>
-            <h3 id="subModalTitle" style="margin:0;font-size:17px;font-weight:700;color:#0f172a;">Event Feedback Submissions</h3>
-            <p id="subModalSubtitle" style="margin:0;font-size:12px;color:#64748b;">Student responses and generated certificates</p>
+            <h3 id="subModalTitle" style="margin:0;font-size:17px;font-weight:700;color:#fff;">Event Feedback Submissions</h3>
+            <p id="subModalSubtitle" style="margin:2px 0 0;font-size:12px;color:#c7d2fe;">Student responses, quiz scores, and verified institutional certificates</p>
           </div>
         </div>
-        <button type="button" onclick="closeSubmissionsModal()" style="background:transparent;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button>
+        <button type="button" onclick="closeSubmissionsModal()" style="background:transparent;border:none;font-size:24px;color:#fff;cursor:pointer;line-height:1;">&times;</button>
       </div>
 
       <div class="modal-body" style="padding:20px 24px;overflow-y:auto;flex:1;">
@@ -1014,23 +1191,56 @@
           <table class="admin-table" style="width:100%;">
             <thead>
               <tr>
-                <th>Student</th>
-                <th>Rating</th>
-                <th>Learnings & Feedback</th>
-                <th>Certificate Number</th>
-                <th>Submitted On</th>
+                <th>Student Name</th>
+                <th>Register No</th>
+                <th>Academic Year</th>
+                <th>Submission Date</th>
+                <th>Quiz Score</th>
+                <th>Feedback</th>
+                <th>Certificate</th>
+                <th style="text-align:center;">Action</th>
               </tr>
             </thead>
             <tbody id="subModalTableBody">
               <tr>
-                <td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">
-                  Loading submissions...
+                <td colspan="8" style="text-align:center;padding:36px;color:#94a3b8;">
+                  <i class="fa-solid fa-spinner fa-spin"></i> Loading student submissions...
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      <div class="modal-footer" style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;background:#f8fafc;">
+        <button type="button" class="btn btn-outline" onclick="closeSubmissionsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Form Preview Modal -->
+  <div id="eventFormPreviewModal" class="modal-backdrop hidden" onclick="_closeFormPreviewModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:750px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:#e0e7ff;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:18px;">
+            <i class="fa-solid fa-eye"></i>
+          </div>
+          <div>
+            <h3 id="prevModalTitle" style="margin:0;font-size:17px;font-weight:700;color:#0f172a;">Form Preview</h3>
+            <p id="prevModalSubtitle" style="margin:2px 0 0;font-size:12px;color:#64748b;">Student-facing quiz assessment and questionnaire</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeFormPreviewModal()" style="background:transparent;border:none;font-size:24px;color:#94a3b8;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <div class="modal-body" id="prevModalBody" style="padding:22px 24px;overflow-y:auto;flex:1;">
+        <!-- Injected via JS -->
+      </div>
+      <div class="modal-footer" style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;background:#f8fafc;">
+        <button type="button" class="btn btn-outline" onclick="closeFormPreviewModal()">Close Preview</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Direct Issue Certificate Modal -->
   <div id="directIssueModal" class="modal-backdrop hidden" onclick="_closeDirectIssueModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">

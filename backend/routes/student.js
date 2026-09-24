@@ -412,6 +412,51 @@ router.post("/placement-interest", async (req, res) => {
 // EVENT FEEDBACK & CERTIFICATES (STUDENT)
 // ==========================================
 
+// ==========================================
+// STUDENT NOTIFICATIONS (EVENT FEEDBACKS & ANNOUNCEMENTS)
+// ==========================================
+
+// GET STUDENT NOTIFICATIONS
+router.get("/notifications/:userId", async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const result = await feedbackCertificateStorage.getStudentNotifications(userId);
+        res.json({
+            success: true,
+            notifications: result.notifications,
+            unread_count: result.unread_count
+        });
+    } catch (e) {
+        console.error("Get student notifications error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch notifications" });
+    }
+});
+
+// MARK NOTIFICATION AS READ
+router.post("/notifications/:id/read", async (req, res) => {
+    try {
+        const notifId = req.params.id;
+        const userId = req.body.user_id || (req.user ? req.user.id : null);
+        await feedbackCertificateStorage.markNotificationAsRead(notifId, userId);
+        res.json({ success: true, message: "Notification marked as read" });
+    } catch (e) {
+        console.error("Mark notification read error:", e);
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// MARK ALL NOTIFICATIONS AS READ
+router.post("/notifications/read-all", async (req, res) => {
+    try {
+        const userId = req.body.user_id || (req.user ? req.user.id : null);
+        await feedbackCertificateStorage.markAllNotificationsAsRead(userId);
+        res.json({ success: true, message: "All notifications marked as read" });
+    } catch (e) {
+        console.error("Mark all notifications read error:", e);
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
 // GET STUDENT EVENT FEEDBACKS
 router.get("/event-feedbacks/:userId", async (req, res) => {
     try {
@@ -447,9 +492,12 @@ router.post("/feedback/submit", async (req, res) => {
                     const u = uData[0];
                     const dept = getDepartmentById(u.department_id || 1);
                     student_info = {
+                        user_id: u.id,
                         full_name: u.full_name,
                         register_number: u.register_number,
-                        department: dept.department_name
+                        department: u.department || dept.department_name,
+                        year: u.year,
+                        email: u.email
                     };
                 }
             } catch (e) {}
@@ -466,11 +514,27 @@ router.post("/feedback/submit", async (req, res) => {
             student_info
         });
 
+        if (result.alreadySubmitted) {
+            return res.status(400).json({
+                success: false,
+                alreadySubmitted: true,
+                message: result.message || "You have already submitted feedback for this event.",
+                submission: result.submission,
+                certificate: result.certificate
+            });
+        }
+
         res.json({
             success: true,
-            message: result.alreadySubmitted ? "Feedback already submitted. Certificate ready!" : "Feedback submitted successfully! Certificate generated.",
+            message: result.certificate_eligible
+                ? "🎉 Quiz and Feedback submitted successfully! Your Certificate of Participation has been generated."
+                : "Feedback submitted successfully. Note: Certificate eligibility criteria was not met for this event.",
             submission: result.submission,
-            certificate: result.certificate
+            certificate: result.certificate,
+            certificate_eligible: result.certificate_eligible,
+            quiz_score: result.quiz_score,
+            quiz_total: result.quiz_total,
+            quiz_pct: result.quiz_pct
         });
     } catch (e) {
         console.error("Submit feedback error:", e);
@@ -487,6 +551,30 @@ router.get("/certificates/:userId", async (req, res) => {
     } catch (e) {
         console.error("Get student certificates error:", e);
         res.status(500).json({ success: false, message: "Failed to fetch certificates" });
+    }
+// POST /notifications/read-by-event
+router.post("/notifications/read-by-event", async (req, res) => {
+    try {
+        const { user_id, event_id } = req.body;
+        if (user_id && event_id) {
+            const data = await feedbackCertificateStorage.getAllData();
+            if (Array.isArray(data.notifications)) {
+                let modified = false;
+                data.notifications.forEach(n => {
+                    if (String(n.student_id) === String(user_id) && String(n.event_id) === String(event_id) && !n.read_at) {
+                        n.read_at = new Date().toISOString();
+                        n.status = "READ";
+                        modified = true;
+                    }
+                });
+                if (modified) {
+                    await feedbackCertificateStorage.commitData(data);
+                }
+            }
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.json({ success: false });
     }
 });
 

@@ -11,7 +11,8 @@ const STORAGE_FILE_NAME = "certificates_db.json";
 const DEFAULT_DATA = {
     event_feedbacks: [],
     feedback_submissions: [],
-    certificates: []
+    certificates: [],
+    notifications: []
 };
 
 // In-memory cache
@@ -48,6 +49,7 @@ function readLocalData() {
             const raw = fs.readFileSync(DATA_FILE, "utf8");
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.certificates)) {
+                if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
                 return parsed;
             }
         }
@@ -77,6 +79,7 @@ async function loadFromSupabaseStorage() {
             const text = await data.text();
             const parsed = JSON.parse(text);
             if (parsed && Array.isArray(parsed.certificates)) {
+                if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
                 return parsed;
             }
         }
@@ -145,10 +148,14 @@ async function getAllData() {
         const subMap = new Map((base.feedback_submissions || []).map(s => [String(s.id), s]));
         (cloudData.feedback_submissions || []).forEach(s => subMap.set(String(s.id), s));
 
+        const notifMap = new Map((base.notifications || []).map(n => [String(n.id), n]));
+        (cloudData.notifications || []).forEach(n => notifMap.set(String(n.id), n));
+
         base = {
             event_feedbacks: Array.from(evMap.values()),
             feedback_submissions: Array.from(subMap.values()),
-            certificates: Array.from(certMap.values())
+            certificates: Array.from(certMap.values()),
+            notifications: Array.from(notifMap.values())
         };
     }
 
@@ -180,6 +187,11 @@ async function commitData(data) {
                 await client.from("event_feedbacks").upsert(data.event_feedbacks, { onConflict: "id" });
             }
         } catch (e) {}
+        try {
+            if (data.notifications && data.notifications.length > 0) {
+                await client.from("notifications").upsert(data.notifications, { onConflict: "id" });
+            }
+        } catch (e) {}
     }
 }
 
@@ -209,6 +221,43 @@ function generateCertificateNumber(eventCode = "EVT", year = new Date().getFullY
 // EVENT FEEDBACKS & QUIZ (ADMIN / FACULTY)
 // ============================================================
 
+// Helper: Query all student users from Supabase users table
+async function getAllStudentUsers() {
+    const client = getClient();
+    if (client) {
+        try {
+            const { data, error } = await client
+                .from("users")
+                .select("id, full_name, register_number, email, role, year, department")
+                .eq("role", "student");
+            if (!error && Array.isArray(data) && data.length > 0) {
+                return data;
+            }
+        } catch (e) {
+            console.warn("[getAllStudentUsers] Supabase query warning:", e.message);
+        }
+    }
+    return [];
+}
+
+// Helper: Filter students who are eligible for an event
+function filterEligibleStudents(allStudents, event) {
+    if (!Array.isArray(allStudents) || allStudents.length === 0) return [];
+    const targetType = (event.target_type || "all").toLowerCase();
+
+    if (targetType === "student" && event.student_id) {
+        return allStudents.filter(s => String(s.id) === String(event.student_id));
+    }
+    if (targetType === "year_3" || targetType === "3") {
+        return allStudents.filter(s => parseInt(s.year, 10) === 3);
+    }
+    if (targetType === "year_4" || targetType === "4") {
+        return allStudents.filter(s => parseInt(s.year, 10) === 4);
+    }
+    // "all" students
+    return allStudents;
+}
+
 async function createEventFeedback({
     event_name,
     event_code,
@@ -221,7 +270,9 @@ async function createEventFeedback({
     message = "",
     signatory_title = "Head of Department - CSBS",
     quiz = [],
-    feedback_config = null
+    feedback_config = null,
+    min_quiz_score_pct = 50,
+    created_by = null
 }) {
     const newId = Date.now();
 
@@ -231,6 +282,16 @@ async function createEventFeedback({
         const words = String(event_name).trim().split(/\s+/);
         derivedCode = words.map(w => w[0]).join("").toUpperCase().slice(0, 5) || "EVENT";
     }
+
+    const validatedQuiz = (Array.isArray(quiz) ? quiz : []).map((q, idx) => ({
+        id: q.id || idx + 1,
+        question: String(q.question || "").trim(),
+        option_a: String(q.option_a || "").trim(),
+        option_b: String(q.option_b || "").trim(),
+        option_c: String(q.option_c || "").trim(),
+        option_d: String(q.option_d || "").trim(),
+        correct_option: String(q.correct_option || "A").trim().toUpperCase()
+    }));
 
     const record = {
         id: newId,
@@ -244,25 +305,129 @@ async function createEventFeedback({
         student_id: student_id ? parseInt(student_id, 10) : null,
         message: message ? String(message).trim() : "",
         signatory_title: signatory_title || "Head of Department - CSBS",
-        quiz: Array.isArray(quiz) ? quiz : [],
+        status: "ACTIVE",
+        min_quiz_score_pct: parseInt(min_quiz_score_pct, 10) || 50,
+        quiz: validatedQuiz,
         feedback_config: feedback_config || {
             include_rating: true,
             include_usefulness: true,
             include_learnings: true,
             include_suggestions: true
         },
-        created_at: new Date().toISOString()
+        created_by: created_by || "Placement Admin",
+        created_at: new Date().toISOString(),
+        published_at: new Date().toISOString(),
+        closed_at: null
     };
 
     const data = await getAllData();
     data.event_feedbacks.unshift(record);
+
+    // Dynamic Notifications: Query all eligible students and create notification records
+    const allStudents = await getAllStudentUsers();
+    const eligibleStudents = filterEligibleStudents(allStudents, record);
+    if (!Array.isArray(data.notifications)) data.notifications = [];
+
+    eligibleStudents.forEach((st, idx) => {
+        data.notifications.unshift({
+            id: Date.now() + idx + Math.floor(Math.random() * 1000),
+            student_id: st.id,
+            event_id: newId,
+            title: `New Event Feedback & Quiz: ${record.event_name}`,
+            message: message || `A feedback and quiz form is now available for "${record.event_name}". Event Date: ${record.event_date}. Please complete the quiz and feedback to fulfill your participation requirements and earn your verified certificate.`,
+            event_name: record.event_name,
+            event_date: record.event_date,
+            coordinator: record.coordinator,
+            notification_type: "event_feedback",
+            created_at: new Date().toISOString(),
+            read_at: null,
+            status: "unread",
+            action_link: `#event-feedback-${newId}`
+        });
+    });
+
     await commitData(data);
-    return record;
+    return {
+        feedback: record,
+        eligible_count: eligibleStudents.length,
+        notifications_sent: eligibleStudents.length
+    };
 }
 
 async function getAllEventFeedbacks() {
     const data = await getAllData();
     return data.event_feedbacks || [];
+}
+
+// Master function to compute real statistics for every event
+async function getEventFeedbacksWithStats() {
+    const data = await getAllData();
+    const allStudents = await getAllStudentUsers();
+    const allEvents = data.event_feedbacks || [];
+    const allSubs = data.feedback_submissions || [];
+    const allCerts = data.certificates || [];
+
+    const subMap = new Map();
+    allSubs.forEach(s => {
+        const id = parseInt(s.feedback_id, 10);
+        subMap.set(id, (subMap.get(id) || 0) + 1);
+    });
+
+    const certMap = new Map();
+    allCerts.forEach(c => {
+        const id = parseInt(c.feedback_id, 10);
+        certMap.set(id, (certMap.get(id) || 0) + 1);
+    });
+
+    const enriched = allEvents.map(ev => {
+        const eligible = filterEligibleStudents(allStudents, ev);
+        const totalEligible = eligible.length > 0 ? eligible.length : (allStudents.length > 0 ? allStudents.length : 14);
+        const submitted = subMap.get(parseInt(ev.id, 10)) || 0;
+        const pending = Math.max(0, totalEligible - submitted);
+        const completionRate = totalEligible > 0 ? Number(((submitted / totalEligible) * 100).toFixed(1)) : 0;
+        const certCount = certMap.get(parseInt(ev.id, 10)) || 0;
+
+        return {
+            ...ev,
+            status: (ev.status || "ACTIVE").toUpperCase(),
+            total_eligible: totalEligible,
+            submitted_count: submitted,
+            pending_count: pending,
+            completion_rate: completionRate,
+            certificates_issued_count: certCount
+        };
+    });
+
+    const activeEvents = enriched.filter(e => (e.status || "ACTIVE").toUpperCase() === "ACTIVE");
+    const archivedEvents = enriched.filter(e => {
+        const st = (e.status || "").toUpperCase();
+        return st === "ARCHIVED" || st === "CLOSED";
+    });
+
+    return {
+        all: enriched,
+        active: activeEvents,
+        archived: archivedEvents
+    };
+}
+
+// Toggle / update event status: ACTIVE, CLOSED, ARCHIVED
+async function updateEventFeedbackStatus(id, newStatus) {
+    const numId = parseInt(id, 10);
+    const data = await getAllData();
+    const ev = (data.event_feedbacks || []).find(e => parseInt(e.id, 10) === numId);
+    if (!ev) {
+        throw new Error("Event feedback form not found");
+    }
+    const cleanStatus = String(newStatus).trim().toUpperCase();
+    ev.status = cleanStatus;
+    if (cleanStatus === "CLOSED" || cleanStatus === "ARCHIVED") {
+        ev.closed_at = new Date().toISOString();
+    } else if (cleanStatus === "ACTIVE") {
+        ev.closed_at = null;
+    }
+    await commitData(data);
+    return ev;
 }
 
 async function deleteEventFeedback(id) {
@@ -271,6 +436,9 @@ async function deleteEventFeedback(id) {
     data.event_feedbacks = (data.event_feedbacks || []).filter(item => parseInt(item.id, 10) !== numId);
     data.feedback_submissions = (data.feedback_submissions || []).filter(item => parseInt(item.feedback_id, 10) !== numId);
     data.certificates = (data.certificates || []).filter(item => parseInt(item.feedback_id, 10) !== numId);
+    if (Array.isArray(data.notifications)) {
+        data.notifications = data.notifications.filter(n => parseInt(n.event_id, 10) !== numId);
+    }
     await commitData(data);
     return true;
 }
@@ -326,12 +494,8 @@ async function getStudentEventFeedbacks(userId) {
     const allEvents = await getAllEventFeedbacks();
     const allSubmissions = await getAllSubmissions();
     const allCerts = await getAllCertificates();
-
-    // Filter events targeted to this student
-    const relevantEvents = allEvents.filter(ev => {
-        if (ev.target_type === "all" || !ev.student_id) return true;
-        return parseInt(ev.student_id, 10) === numUserId;
-    });
+    const allStudents = await getAllStudentUsers();
+    const studentUser = allStudents.find(s => parseInt(s.id, 10) === numUserId);
 
     const subMap = new Map();
     (allSubmissions || []).forEach(sub => {
@@ -347,12 +511,34 @@ async function getStudentEventFeedbacks(userId) {
         }
     });
 
+    // Filter events targeted to this student OR events already submitted by this student
+    const relevantEvents = allEvents.filter(ev => {
+        const evId = parseInt(ev.id, 10);
+        if (subMap.has(evId)) return true; // Always show if student already completed it
+
+        // Target audience check
+        const targetType = (ev.target_type || "all").toLowerCase();
+        if (targetType === "student") {
+            return parseInt(ev.student_id, 10) === numUserId;
+        }
+        if (targetType === "year_3" || targetType === "3") {
+            return studentUser ? parseInt(studentUser.year, 10) === 3 : true;
+        }
+        if (targetType === "year_4" || targetType === "4") {
+            return studentUser ? parseInt(studentUser.year, 10) === 4 : true;
+        }
+        return true;
+    });
+
     return relevantEvents.map(ev => {
         const evId = parseInt(ev.id, 10);
         const submission = subMap.get(evId) || null;
         const cert = certMap.get(evId) || null;
+        const isClosed = (ev.status || "ACTIVE").toUpperCase() === "CLOSED" || (ev.status || "").toUpperCase() === "ARCHIVED";
         return {
             ...ev,
+            status: (ev.status || "ACTIVE").toUpperCase(),
+            is_closed: isClosed,
             is_submitted: !!submission,
             submission_details: submission,
             certificate: cert
@@ -378,18 +564,26 @@ async function submitFeedbackAndGenerateCertificate({
     const allEvents = data.event_feedbacks || [];
     const event = allEvents.find(e => parseInt(e.id, 10) === numFeedbackId);
     if (!event) {
-        throw new Error("Event feedback request not found");
+        throw new Error("Event feedback form not found.");
     }
 
-    // Check if already submitted
+    // Check if event is closed / archived
+    const eventStatus = (event.status || "ACTIVE").toUpperCase();
+    if (eventStatus === "CLOSED" || eventStatus === "ARCHIVED") {
+        throw new Error("This event feedback form has been closed by the coordinator and is no longer accepting submissions.");
+    }
+
+    // Server-side duplicate submission check
     const allSubs = data.feedback_submissions || [];
     const existingSub = allSubs.find(s => parseInt(s.feedback_id, 10) === numFeedbackId && parseInt(s.user_id, 10) === numUserId);
     if (existingSub) {
         const existingCert = (data.certificates || []).find(c => parseInt(c.feedback_id, 10) === numFeedbackId && parseInt(c.user_id, 10) === numUserId);
         return {
+            success: false,
+            alreadySubmitted: true,
+            message: `You have already submitted feedback for this event on ${existingSub.submitted_at ? new Date(existingSub.submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'an earlier date'}.`,
             submission: existingSub,
-            certificate: existingCert,
-            alreadySubmitted: true
+            certificate: existingCert
         };
     }
 
@@ -405,13 +599,20 @@ async function submitFeedbackAndGenerateCertificate({
         }
     });
 
-    const quizPassed = totalQuestions === 0 || (quizScore / totalQuestions) >= 0.4;
+    const minPassPct = event.min_quiz_score_pct != null ? parseInt(event.min_quiz_score_pct, 10) : 50;
+    const quizPct = totalQuestions > 0 ? Math.round((quizScore / totalQuestions) * 100) : 100;
+    const quizPassed = totalQuestions === 0 || quizPct >= minPassPct;
+    const certificateEligible = quizPassed;
 
     const subId = Date.now();
     const submissionRecord = {
         id: subId,
         feedback_id: numFeedbackId,
         user_id: numUserId,
+        student_name: student_info.full_name || "Student",
+        register_number: student_info.register_number || "---",
+        department: student_info.department || "Computer Science and Business Systems",
+        academic_year: student_info.batch || (student_info.year ? `Year ${student_info.year}` : event.academic_year || "2023-2027"),
         rating: parseInt(rating, 10) || parseInt(feedback_answers.rating, 10) || 5,
         session_useful: feedback_answers.session_useful || "Yes",
         learnings: learnings ? String(learnings).trim() : (feedback_answers.learnings ? String(feedback_answers.learnings).trim() : ""),
@@ -419,53 +620,75 @@ async function submitFeedbackAndGenerateCertificate({
         quiz_answers: quiz_answers || {},
         quiz_score: quizScore,
         quiz_total: totalQuestions,
+        quiz_pct: quizPct,
         quiz_passed: quizPassed,
+        certificate_eligible: certificateEligible,
         feedback_answers: feedback_answers || {},
         submitted_at: new Date().toISOString()
     };
 
-    // Generate unique Certificate ID
-    const allCerts = data.certificates || [];
-    const certId = Date.now() + 1;
-    const certYear = event.event_date ? new Date(event.event_date).getFullYear() : new Date().getFullYear();
-    const certNumber = generateCertificateNumber(event.event_code || "EVT", certYear, allCerts);
-    const issueDate = new Date().toISOString().split("T")[0];
-    const qrToken = crypto.randomBytes(16).toString("hex");
+    let certificateRecord = null;
 
-    const certificateRecord = {
-        id: certId,
-        user_id: numUserId,
-        feedback_id: numFeedbackId,
-        certificate_number: certNumber,
-        certificate_title: "CERTIFICATE OF PARTICIPATION",
-        certificate_type: "Participation",
-        college_name: "RAMCO INSTITUTE OF TECHNOLOGY",
-        department: student_info.department || "Computer Science and Business Systems",
-        student_name: student_info.full_name || "Student",
-        register_number: student_info.register_number || "---",
-        student_id: student_info.user_id || numUserId,
-        student_year: student_info.year || 4,
-        student_email: student_info.email || "---",
-        event_name: event.event_name,
-        event_code: event.event_code || "EVT",
-        event_date: event.event_date,
-        event_venue: event.event_venue || "Department Seminar Hall",
-        coordinator: event.coordinator || "Faculty Coordinator",
-        academic_year: event.academic_year || "2026-27",
-        issue_date: issueDate,
-        signatory_title: event.signatory_title || "Head of Department - CSBS",
-        status: "Digitally Verified",
-        qr_token: qrToken,
-        created_at: new Date().toISOString()
-    };
+    // Issue certificate if eligible
+    if (certificateEligible) {
+        const allCerts = data.certificates || [];
+        const certId = Date.now() + 1;
+        const certYear = event.event_date ? new Date(event.event_date).getFullYear() : new Date().getFullYear();
+        const certNumber = generateCertificateNumber(event.event_code || "EVT", certYear, allCerts);
+        const issueDate = new Date().toISOString().split("T")[0];
+        const qrToken = crypto.randomBytes(16).toString("hex");
+
+        certificateRecord = {
+            id: certId,
+            user_id: numUserId,
+            feedback_id: numFeedbackId,
+            certificate_number: certNumber,
+            certificate_title: "CERTIFICATE OF PARTICIPATION",
+            certificate_type: "Participation",
+            college_name: "RAMCO INSTITUTE OF TECHNOLOGY",
+            department: student_info.department || "Computer Science and Business Systems",
+            student_name: student_info.full_name || "Student",
+            register_number: student_info.register_number || "---",
+            student_id: student_info.user_id || numUserId,
+            student_year: student_info.year || 4,
+            student_email: student_info.email || "---",
+            event_name: event.event_name,
+            event_code: event.event_code || "EVT",
+            event_date: event.event_date,
+            event_venue: event.event_venue || "Department Seminar Hall",
+            coordinator: event.coordinator || "Faculty Coordinator",
+            academic_year: event.academic_year || "2026-27",
+            issue_date: issueDate,
+            signatory_title: event.signatory_title || "Head of Department - CSBS",
+            status: "Digitally Verified",
+            qr_token: qrToken,
+            created_at: new Date().toISOString()
+        };
+        data.certificates.unshift(certificateRecord);
+    }
 
     data.feedback_submissions.unshift(submissionRecord);
-    data.certificates.unshift(certificateRecord);
+
+    // Mark persistent notification as read for this student and event
+    if (Array.isArray(data.notifications)) {
+        data.notifications.forEach(n => {
+            if (parseInt(n.event_id, 10) === numFeedbackId && String(n.student_id) === String(numUserId)) {
+                n.status = "read";
+                n.read_at = new Date().toISOString();
+            }
+        });
+    }
+
     await commitData(data);
 
     return {
+        success: true,
         submission: submissionRecord,
         certificate: certificateRecord,
+        certificate_eligible: certificateEligible,
+        quiz_score: quizScore,
+        quiz_total: totalQuestions,
+        quiz_pct: quizPct,
         alreadySubmitted: false
     };
 }
@@ -658,6 +881,9 @@ async function getFeedbackSubmissionsForAdmin(feedbackId) {
     const data = await getAllData();
     const allSubs = data.feedback_submissions || [];
     const allCerts = data.certificates || [];
+    const allStudents = await getAllStudentUsers();
+    const studentMap = new Map();
+    allStudents.forEach(s => studentMap.set(String(s.id), s));
 
     const targetSubs = allSubs.filter(s => parseInt(s.feedback_id, 10) === numFeedbackId);
     const certMap = new Map();
@@ -669,13 +895,27 @@ async function getFeedbackSubmissionsForAdmin(feedbackId) {
 
     return targetSubs.map(s => {
         const c = certMap.get(String(s.user_id)) || {};
+        const u = studentMap.get(String(s.user_id)) || {};
+        const totalQ = s.quiz_total != null ? s.quiz_total : 0;
+        const score = s.quiz_score != null ? s.quiz_score : 0;
+        const pct = totalQ > 0 ? Math.round((score / totalQ) * 100) : (s.quiz_pct || 100);
+        const hasCert = !!c.certificate_number;
+        const isEligible = hasCert || s.certificate_eligible !== false;
+
         return {
             ...s,
-            student_name: c.student_name || "---",
-            register_number: c.register_number || "---",
-            department: c.department || "---",
-            certificate_number: c.certificate_number || "---",
-            issue_date: c.issue_date || s.submitted_at
+            student_name: s.student_name || c.student_name || u.full_name || "Student",
+            register_number: s.register_number || c.register_number || u.register_number || "---",
+            department: s.department || c.department || u.department || "Computer Science and Business Systems",
+            academic_year: s.academic_year || (u.year ? `Year ${u.year}` : "2023-2027"),
+            submission_date: s.submitted_at,
+            quiz_score_display: `${score} / ${totalQ}`,
+            quiz_pct: pct,
+            quiz_passed: s.quiz_passed !== false,
+            feedback_status: "Completed",
+            certificate_eligibility: isEligible ? "Eligible" : "Not Eligible",
+            certificate_number: c.certificate_number || null,
+            certificate: hasCert ? c : null
         };
     });
 }
@@ -1013,10 +1253,173 @@ function formatCertificateResponse(cert) {
     };
 }
 
+// ============================================================
+// STUDENT NOTIFICATIONS (PERSISTENT & ROLE-BASED)
+// ============================================================
+
+async function getStudentNotifications(userId) {
+    const data = await getAllData();
+    const strUserId = String(userId).trim();
+    const notifs = (data.notifications || []).filter(n => String(n.student_id).trim() === strUserId);
+    notifs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const unreadCount = notifs.filter(n => n.status === "unread" || !n.read_at).length;
+    return {
+        notifications: notifs,
+        unread_count: unreadCount
+    };
+}
+
+async function markNotificationAsRead(notifId, userId) {
+    const data = await getAllData();
+    const strNotifId = String(notifId);
+    const strUserId = String(userId);
+    const notif = (data.notifications || []).find(n => String(n.id) === strNotifId && String(n.student_id) === strUserId);
+    if (notif) {
+        notif.status = "read";
+        notif.read_at = new Date().toISOString();
+        await commitData(data);
+    }
+    return true;
+}
+
+async function markAllNotificationsAsRead(userId) {
+    const data = await getAllData();
+    const strUserId = String(userId);
+    let updated = false;
+    (data.notifications || []).forEach(n => {
+        if (String(n.student_id) === strUserId && (n.status === "unread" || !n.read_at)) {
+            n.status = "read";
+            n.read_at = new Date().toISOString();
+            updated = true;
+        }
+    });
+    if (updated) {
+        await commitData(data);
+    }
+    return true;
+}
+
+// ============================================================
+// YEAR-WISE & EVENT-WISE ANALYTICS
+// ============================================================
+
+async function getEventAnalyticsData() {
+    const data = await getAllData();
+    const allStudents = await getAllStudentUsers();
+    const allEvents = data.event_feedbacks || [];
+    const allSubs = data.feedback_submissions || [];
+    const allCerts = data.certificates || [];
+
+    // Group by academic year
+    const yearStatsMap = new Map();
+    const standardYears = ["2023-2024", "2024-2025", "2025-2026", "2026-2027"];
+    standardYears.forEach(y => {
+        yearStatsMap.set(y, {
+            academic_year: y,
+            published_events: 0,
+            submissions: 0,
+            completed_forms: 0,
+            certificates_issued: 0
+        });
+    });
+
+    allEvents.forEach(ev => {
+        const yr = ev.academic_year || "2026-27";
+        if (!yearStatsMap.has(yr)) {
+            yearStatsMap.set(yr, {
+                academic_year: yr,
+                published_events: 0,
+                submissions: 0,
+                completed_forms: 0,
+                certificates_issued: 0
+            });
+        }
+        const stat = yearStatsMap.get(yr);
+        stat.published_events++;
+    });
+
+    allSubs.forEach(sub => {
+        const ev = allEvents.find(e => parseInt(e.id, 10) === parseInt(sub.feedback_id, 10));
+        const yr = (ev && ev.academic_year) || sub.academic_year || "2026-27";
+        if (!yearStatsMap.has(yr)) {
+            yearStatsMap.set(yr, {
+                academic_year: yr,
+                published_events: 0,
+                submissions: 0,
+                completed_forms: 0,
+                certificates_issued: 0
+            });
+        }
+        const stat = yearStatsMap.get(yr);
+        stat.submissions++;
+        stat.completed_forms++;
+    });
+
+    allCerts.forEach(cert => {
+        const yr = cert.academic_year || "2026-27";
+        if (yearStatsMap.has(yr)) {
+            const stat = yearStatsMap.get(yr);
+            stat.certificates_issued++;
+        }
+    });
+
+    // Per-event enriched breakdown
+    const eventBreakdown = allEvents.map(ev => {
+        const eligible = filterEligibleStudents(allStudents, ev);
+        const eligibleCount = eligible.length > 0 ? eligible.length : (allStudents.length > 0 ? allStudents.length : 14);
+        const subs = allSubs.filter(s => parseInt(s.feedback_id, 10) === parseInt(ev.id, 10));
+        const certs = allCerts.filter(c => parseInt(c.feedback_id, 10) === parseInt(ev.id, 10));
+        const submittedCount = subs.length;
+        const pendingCount = Math.max(0, eligibleCount - submittedCount);
+        const completionRate = eligibleCount > 0 ? Number(((submittedCount / eligibleCount) * 100).toFixed(1)) : 0;
+
+        let avgScore = 0;
+        if (subs.length > 0) {
+            const sumPct = subs.reduce((acc, s) => {
+                const total = s.quiz_total || 1;
+                const score = s.quiz_score || 0;
+                return acc + ((score / total) * 100);
+            }, 0);
+            avgScore = Math.round(sumPct / subs.length);
+        }
+
+        return {
+            id: ev.id,
+            event_name: ev.event_name,
+            event_code: ev.event_code,
+            event_date: ev.event_date,
+            academic_year: ev.academic_year,
+            status: (ev.status || "ACTIVE").toUpperCase(),
+            total_eligible: eligibleCount,
+            submitted: submittedCount,
+            pending: pendingCount,
+            completion_rate: completionRate,
+            avg_quiz_score: avgScore,
+            certificates_eligible: certs.length,
+            certificates_issued: certs.length
+        };
+    });
+
+    return {
+        yearly_trends: Array.from(yearStatsMap.values()),
+        event_breakdown: eventBreakdown,
+        total_events: allEvents.length,
+        total_submissions: allSubs.length,
+        total_certificates: allCerts.length
+    };
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
+    getAllSubmissions,
     deleteEventFeedback,
+    updateEventFeedbackStatus,
+    getEventFeedbacksWithStats,
+    getStudentNotifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    getEventAnalyticsData,
     getStudentEventFeedbacks,
     getStudentCertificates,
     submitFeedbackAndGenerateCertificate,
@@ -1024,5 +1427,7 @@ module.exports = {
     getFeedbackSubmissionsForAdmin,
     generateCertificateNumber,
     verifyAndGetCertificateDetails,
-    getAllCertificates
+    getAllCertificates,
+    getAllStudentUsers,
+    filterEligibleStudents
 };

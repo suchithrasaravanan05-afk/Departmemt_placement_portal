@@ -1254,53 +1254,101 @@ router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) =
             message,
             signatory_title,
             quiz,
+            min_quiz_score_pct,
             feedback_config
         } = req.body;
 
-        if (!event_name || !event_date) {
-            return res.status(400).json({ success: false, message: "Event name and event date are required" });
+        // Validation required by Part 3 & 4
+        if (!event_name || !String(event_name).trim()) {
+            return res.status(400).json({ success: false, message: "Event Name is required." });
+        }
+        if (!event_date) {
+            return res.status(400).json({ success: false, message: "Event Date is required." });
+        }
+        if (target_type === "student" && !student_id) {
+            return res.status(400).json({ success: false, message: "Please select a specific student for this event." });
         }
 
-        const feedback = await feedbackCertificateStorage.createEventFeedback({
+        const quizArray = Array.isArray(quiz) ? quiz : [];
+        if (quizArray.length === 0) {
+            return res.status(400).json({ success: false, message: "At least one quiz question is required to publish the assessment." });
+        }
+
+        for (let i = 0; i < quizArray.length; i++) {
+            const q = quizArray[i];
+            if (!q.question || !q.question.trim()) {
+                return res.status(400).json({ success: false, message: `Quiz Question ${i + 1} text is empty.` });
+            }
+            if (!q.option_a || !q.option_a.trim() || !q.option_b || !q.option_b.trim() || !q.option_c || !q.option_c.trim() || !q.option_d || !q.option_d.trim()) {
+                return res.status(400).json({ success: false, message: `All 4 options (A, B, C, D) are required for Quiz Question ${i + 1}.` });
+            }
+            if (!q.correct_option) {
+                return res.status(400).json({ success: false, message: `Please designate a correct option (A, B, C, or D) for Quiz Question ${i + 1}.` });
+            }
+        }
+
+        const result = await feedbackCertificateStorage.createEventFeedback({
             event_name,
             event_code,
             event_date,
             event_venue,
             coordinator: coordinator || (req.user ? req.user.full_name : "Faculty Coordinator"),
-            academic_year,
+            academic_year: academic_year || "2026-27",
             target_type,
             student_id,
             message,
             signatory_title,
-            quiz: Array.isArray(quiz) ? quiz : [],
-            feedback_config
+            quiz: quizArray,
+            min_quiz_score_pct: min_quiz_score_pct || 50,
+            feedback_config,
+            created_by: req.user ? req.user.full_name : "Placement Admin"
         });
 
-        res.json({ success: true, message: "Event feedback & quiz form published successfully!", feedback });
+        res.json({
+            success: true,
+            message: `Event feedback form for "${event_name}" published successfully! ${result.notifications_sent} eligible students notified.`,
+            feedback: result.feedback,
+            eligible_count: result.eligible_count,
+            notifications_sent: result.notifications_sent
+        });
     } catch (e) {
         console.error("Create event feedback error:", e);
         res.status(500).json({ success: false, message: e.message || "Failed to create event feedback" });
     }
 });
 
-// GET ALL EVENT FEEDBACKS
+// GET ALL EVENT FEEDBACKS (WITH REAL COMPUTED STATS)
 router.get("/event-feedbacks", async (req, res) => {
     try {
-        const events = await feedbackCertificateStorage.getAllEventFeedbacks();
-        const submissions = await feedbackCertificateStorage.getAllSubmissions();
-        const subCounts = new Map();
-        (submissions || []).forEach(s => {
-            const count = subCounts.get(s.feedback_id) || 0;
-            subCounts.set(s.feedback_id, count + 1);
+        const stats = await feedbackCertificateStorage.getEventFeedbacksWithStats();
+        res.json({
+            success: true,
+            event_feedbacks: stats.all,
+            active_events: stats.active,
+            archived_events: stats.archived
         });
-        const enriched = events.map(e => ({
-            ...e,
-            submissions_count: subCounts.get(e.id) || 0
-        }));
-        res.json({ success: true, event_feedbacks: enriched });
     } catch (e) {
         console.error("Get event feedbacks error:", e);
-        res.status(500).json({ success: false, message: "Failed to fetch event feedbacks" });
+        res.status(500).json({ success: false, message: e.message || "Failed to fetch event feedbacks" });
+    }
+});
+
+// UPDATE EVENT FEEDBACK STATUS (ACTIVE / CLOSED / ARCHIVED)
+router.post("/event-feedback/:id/status", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!status) {
+            return res.status(400).json({ success: false, message: "Status is required (ACTIVE, CLOSED, or ARCHIVED)." });
+        }
+        const updated = await feedbackCertificateStorage.updateEventFeedbackStatus(req.params.id, status);
+        res.json({
+            success: true,
+            message: `Event status updated to ${status.toUpperCase()} successfully.`,
+            feedback: updated
+        });
+    } catch (e) {
+        console.error("Update event feedback status error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to update event status" });
     }
 });
 
@@ -1312,6 +1360,17 @@ router.get("/event-feedbacks/:id/submissions", async (req, res) => {
     } catch (e) {
         console.error("Get feedback submissions error:", e);
         res.status(500).json({ success: false, message: "Failed to fetch submissions" });
+    }
+});
+
+// GET YEAR-WISE & EVENT-WISE ANALYTICS
+router.get("/event-analytics", async (req, res) => {
+    try {
+        const analytics = await feedbackCertificateStorage.getEventAnalyticsData();
+        res.json({ success: true, analytics });
+    } catch (e) {
+        console.error("Get event analytics error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch event analytics" });
     }
 });
 

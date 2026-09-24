@@ -896,18 +896,25 @@ function handleEventFeedbackNotifClick(feedbackId) {
   readIds.add(feedbackId);
   saveReadFeedbackIds(Array.from(readIds));
 
+  // Mark persistent notification as read in backend
+  if (currentUser && currentUser.id) {
+    fetch(`${API_BASE}/student/notifications/read-by-event`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentToken}`
+      },
+      body: JSON.stringify({ user_id: currentUser.id, event_id: feedbackId })
+    }).catch(() => {});
+  }
+
   // Update badge and list
   renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
 
   // Close dropdown
   el('notifDropdown')?.classList.add('hidden');
 
-  const fb = (cachedStudentEventFeedbacks || []).find(item => parseInt(item.id, 10) === parseInt(feedbackId, 10));
-  if (fb && fb.is_submitted && fb.certificate) {
-    openCertificateViewModal(fb.certificate);
-  } else {
-    openFeedbackModal(feedbackId);
-  }
+  openFeedbackModal(feedbackId);
 }
 
 function handleNotificationClick(driveId) {
@@ -1673,42 +1680,112 @@ function openFeedbackModal(feedbackId) {
     if (msgWrap) msgWrap.classList.add('hidden');
   }
 
-  // Reset form
-  el('studentFeedbackForm')?.reset();
-  setFeedbackRating(5);
+  const formEl = el('studentFeedbackForm');
+  const alreadyWrap = el('modalAlreadySubmittedWrap');
 
-  // Render Part 1 — Quiz Questions
-  const quizSection = el('modalQuizSection');
-  const quizContainer = el('modalQuizContainer');
-  const quizList = Array.isArray(fb.quiz) ? fb.quiz : [];
+  // Check if student already submitted or if event is closed
+  if (fb.is_submitted) {
+    if (formEl) formEl.classList.add('hidden');
+    if (alreadyWrap) {
+      alreadyWrap.classList.remove('hidden');
+      const icon = el('alreadySubIcon');
+      if (icon) {
+        icon.style.background = '#dcfce7';
+        icon.style.color = '#15803d';
+        icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+      }
+      if (el('alreadySubTitle')) el('alreadySubTitle').innerText = 'Submission Completed';
+      if (el('alreadySubMessage')) el('alreadySubMessage').innerText = 'Your assessment quiz and feedback have already been submitted successfully.';
 
-  if (quizSection && quizContainer) {
-    if (quizList.length === 0) {
-      quizSection.style.display = 'none';
-      quizContainer.innerHTML = '';
-    } else {
-      quizSection.style.display = 'block';
-      quizContainer.innerHTML = quizList.map((q, idx) => {
-        return `
-          <div class="student-quiz-item" data-qid="${q.id}" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:14px;">
-            <div style="font-size:13.5px;font-weight:700;color:#1e1b4b;margin-bottom:10px;">
-              Q${idx + 1}. ${escapeHtml(q.question)} <span style="color:#ef4444;">*</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              ${['A', 'B', 'C', 'D'].map(optKey => {
-                const optText = q[`option_${optKey.toLowerCase()}`];
-                if (!optText) return '';
-                return `
-                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:12.5px;transition:all .15s ease;">
-                    <input type="radio" name="quiz_q_${q.id}" value="${optKey}" required style="accent-color:#4338ca;">
-                    <span><strong>${optKey})</strong> ${escapeHtml(optText)}</span>
-                  </label>
-                `;
-              }).join('')}
-            </div>
-          </div>
+      const sub = fb.submission || {};
+      const subDate = sub.submitted_at ? fmtDate(sub.submitted_at) : (fb.certificate ? fmtDate(fb.certificate.issued_date) : 'Completed');
+      const scoreStr = sub.quiz_score !== undefined ? `${sub.quiz_score} / ${sub.quiz_total} (${sub.quiz_percentage}%)` : (fb.certificate ? 'Passed' : 'Completed');
+      const certNo = fb.certificate ? fb.certificate.certificate_number : (sub.certificate_number || null);
+
+      if (el('alreadySubMeta')) {
+        el('alreadySubMeta').innerHTML = `
+          <div><strong>Submission Date:</strong> ${subDate}</div>
+          <div><strong>Quiz Score:</strong> <span style="font-weight:700;color:#0f172a;">${scoreStr}</span></div>
+          <div><strong>Feedback Status:</strong> <span class="badge badge-green" style="font-size:11px;">Completed</span></div>
+          <div><strong>Certificate:</strong> ${certNo ? `<code style="color:#4338ca;font-weight:700;">${certNo}</code>` : '<span class="badge badge-yellow">Pending / Under Review</span>'}</div>
         `;
-      }).join('');
+      }
+
+      if (el('alreadySubActions')) {
+        if (fb.certificate) {
+          el('alreadySubActions').innerHTML = `
+            <button class="btn btn-primary" onclick="closeFeedbackModal(); openCertificateViewModal(currentFeedbackEvent.certificate);" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;">
+              <i class="fa-solid fa-award"></i> View &amp; Download Verified Certificate
+            </button>
+          `;
+        } else {
+          el('alreadySubActions').innerHTML = `
+            <button class="btn btn-outline" onclick="closeFeedbackModal();" style="padding:8px 18px;border-radius:8px;">
+              Close Window
+            </button>
+          `;
+        }
+      }
+    }
+  } else if (fb.is_closed) {
+    if (formEl) formEl.classList.add('hidden');
+    if (alreadyWrap) {
+      alreadyWrap.classList.remove('hidden');
+      const icon = el('alreadySubIcon');
+      if (icon) {
+        icon.style.background = '#fef3c7';
+        icon.style.color = '#d97706';
+        icon.innerHTML = '<i class="fa-solid fa-lock"></i>';
+      }
+      if (el('alreadySubTitle')) el('alreadySubTitle').innerText = 'Event Feedback Closed';
+      if (el('alreadySubMessage')) el('alreadySubMessage').innerText = 'This event feedback and assessment has been closed by the department. Submissions are no longer accepted.';
+      if (el('alreadySubMeta')) el('alreadySubMeta').innerHTML = `<div><strong>Event Status:</strong> Closed / Archived</div><div><strong>Deadline:</strong> Passed</div>`;
+      if (el('alreadySubActions')) {
+        el('alreadySubActions').innerHTML = `<button class="btn btn-outline" onclick="closeFeedbackModal();">Close</button>`;
+      }
+    }
+  } else {
+    // Normal active submission form
+    if (alreadyWrap) alreadyWrap.classList.add('hidden');
+    if (formEl) formEl.classList.remove('hidden');
+
+    // Reset form
+    formEl?.reset();
+    setFeedbackRating(5);
+
+    // Render Part 1 — Quiz Questions
+    const quizSection = el('modalQuizSection');
+    const quizContainer = el('modalQuizContainer');
+    const quizList = Array.isArray(fb.quiz) ? fb.quiz : [];
+
+    if (quizSection && quizContainer) {
+      if (quizList.length === 0) {
+        quizSection.style.display = 'none';
+        quizContainer.innerHTML = '';
+      } else {
+        quizSection.style.display = 'block';
+        quizContainer.innerHTML = quizList.map((q, idx) => {
+          return `
+            <div class="student-quiz-item" data-qid="${q.id}" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:14px;">
+              <div style="font-size:13.5px;font-weight:700;color:#1e1b4b;margin-bottom:10px;">
+                Q${idx + 1}. ${escapeHtml(q.question)} <span style="color:#ef4444;">*</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                ${['A', 'B', 'C', 'D'].map(optKey => {
+                  const optText = q[`option_${optKey.toLowerCase()}`];
+                  if (!optText) return '';
+                  return `
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:12.5px;transition:all .15s ease;">
+                      <input type="radio" name="quiz_q_${q.id}" value="${optKey}" required style="accent-color:#4338ca;">
+                      <span><strong>${optKey})</strong> ${escapeHtml(optText)}</span>
+                    </label>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
     }
   }
 
@@ -1787,19 +1864,40 @@ async function handleStudentFeedbackSubmit(e) {
     });
 
     const data = await res.json();
-    if (data.success && data.certificate) {
-      closeFeedbackModal();
-      showStudentAlert('🎉 Quiz & Feedback submitted! Your Certificate of Participation is ready.', true);
 
-      // Refresh feedback and certificates cache
+    if (data.alreadySubmitted) {
+      showStudentAlert('You have already submitted feedback for this event.');
       await fetchStudentEventFeedbacks();
-      renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
+      openFeedbackModal(feedback_id);
+      return;
+    }
 
-      // Open Certificate View Modal
-      openCertificateViewModal(data.certificate);
+    if (data.success) {
+      closeFeedbackModal();
 
-      // If on certificates tab, reload it
-      loadStudentCertificates();
+      if (data.certificate_eligible && data.certificate) {
+        showStudentAlert(
+          `🎉 Submission Completed Successfully!\nQuiz Score: ${data.quiz_score} / ${data.quiz_total} (${data.quiz_percentage}%)\nCertificate Issued: ${data.certificate.certificate_number}`,
+          true
+        );
+
+        // Refresh feedbacks & certificates cache
+        await Promise.all([
+          fetchStudentEventFeedbacks(),
+          loadStudentCertificates()
+        ]);
+        renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
+
+        // Open Verified Certificate View Modal
+        openCertificateViewModal(data.certificate);
+      } else {
+        showStudentAlert(
+          `Submission Recorded!\nQuiz Score: ${data.quiz_score} / ${data.quiz_total} (${data.quiz_percentage}%).\nCertificate requirement not met (minimum ${currentFeedbackEvent?.min_quiz_score_pct || 50}% required).`,
+          false
+        );
+        await fetchStudentEventFeedbacks();
+        renderDriveNotifications(cachedStudentDrives, cachedStudentEventFeedbacks);
+      }
     } else {
       showStudentAlert(data.message || 'Failed to submit feedback.');
     }

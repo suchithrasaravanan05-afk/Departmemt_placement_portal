@@ -3414,19 +3414,71 @@ async function populateEfStudentDropdown() {
   }
 }
 
+// ============================================================
+// EVENT FEEDBACK & QUIZ MANAGEMENT (ACTIVE / ARCHIVED / ANALYTICS)
+// ============================================================
+let cachedAdminEventsAll = [];
+let cachedAdminActiveEvents = [];
+let cachedAdminArchivedEvents = [];
+let cachedAnalyticsData = null;
+let efYearlyChartInstance = null;
+let currentEfSubnav = 'active';
+
+function switchEfSubnav(subTab) {
+  currentEfSubnav = subTab;
+
+  const tabs = ['active', 'create', 'archived', 'analytics'];
+  tabs.forEach(t => {
+    const pane = el(`efPane${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (pane) {
+      if (t === subTab) pane.classList.remove('hidden');
+      else pane.classList.add('hidden');
+    }
+  });
+
+  const btnMap = {
+    active: 'efSubnavActiveBtn',
+    create: 'efSubnavCreateBtn',
+    archived: 'efSubnavArchivedBtn',
+    analytics: 'efSubnavAnalyticsBtn'
+  };
+
+  Object.keys(btnMap).forEach(key => {
+    const btn = el(btnMap[key]);
+    if (btn) {
+      if (key === subTab) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+
+  if (subTab === 'analytics') {
+    loadEventAnalytics();
+  } else if (subTab === 'create') {
+    initDefaultQuizQuestions();
+    autoGenerateEventCode();
+  } else if (subTab === 'active') {
+    renderActiveEventsTable();
+  } else if (subTab === 'archived') {
+    renderArchivedEventsTable();
+  }
+}
+
 async function loadAdminEventFeedbacks(showToast = false) {
-  const tableBody = el('eventFeedbacksTableBody');
-  const countBadge = el('efTotalCountBadge');
-  if (tableBody) {
-    tableBody.innerHTML = `
+  const activeTbody = el('eventFeedbacksTableBody');
+  const archivedTbody = el('archivedEventsTableBody');
+  const activeBadge = el('efActiveCountBadge');
+  const archivedBadge = el('efArchivedCountBadge');
+  const totalBadge = el('efTotalCountBadge');
+
+  if (activeTbody) {
+    activeTbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">
-          <i class="fa-solid fa-spinner fa-spin"></i> Loading event feedback requests...
+        <td colspan="11" style="text-align:center;padding:36px;color:#94a3b8;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Loading active event feedbacks...
         </td>
       </tr>`;
   }
 
-  // Pre-load student list for specific student selector
   populateEfStudentDropdown();
 
   try {
@@ -3434,74 +3486,227 @@ async function loadAdminEventFeedbacks(showToast = false) {
       headers: { Authorization: `Bearer ${currentAdminToken}` }
     });
     const data = await res.json();
-    const events = data.event_feedbacks || [];
 
-    if (countBadge) {
-      countBadge.innerText = `${events.length} Event${events.length === 1 ? '' : 's'}`;
-    }
+    cachedAdminEventsAll = data.event_feedbacks || [];
+    cachedAdminActiveEvents = data.active_events || [];
+    cachedAdminArchivedEvents = data.archived_events || [];
 
-    if (!events || events.length === 0) {
-      if (tableBody) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="5" style="text-align:center;padding:36px;color:#94a3b8;">
-              <i class="fa-regular fa-calendar-xmark" style="font-size:28px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
-              <strong style="color:#64748b;">No Event Feedback requests sent yet</strong>
-              <p style="font-size:12px;margin:4px 0 0;">Create and send feedback requests using the form on the left.</p>
-            </td>
-          </tr>`;
-      }
-      if (showToast) showAdminAlert('Event feedbacks refreshed.', true);
-      return;
-    }
+    if (activeBadge) activeBadge.innerText = `${cachedAdminActiveEvents.length}`;
+    if (archivedBadge) archivedBadge.innerText = `${cachedAdminArchivedEvents.length}`;
+    if (totalBadge) totalBadge.innerText = `${cachedAdminEventsAll.length} Total Events`;
 
-    if (tableBody) {
-      tableBody.innerHTML = events.map(ev => {
-        let audText = '<span class="badge badge-purple"><i class="fa-solid fa-bullhorn"></i> All Students</span>';
-        if (ev.target_type === 'student' && ev.student_id) {
-          const matched = (cachedAdminStudentsList || []).find(s => (s.user_id || s.id) == ev.student_id);
-          const studentName = matched ? `${matched.full_name} (${matched.register_number})` : `Student #${ev.student_id}`;
-          audText = `<span class="badge badge-blue"><i class="fa-solid fa-user"></i> ${escapeHtml(studentName)}</span>`;
-        }
+    renderActiveEventsTable();
+    renderArchivedEventsTable();
 
-        const dateFormatted = ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
-        const subCount = ev.submissions_count || 0;
-
-        return `
-          <tr>
-            <td>
-              <div style="font-weight:700;color:#0f172a;font-size:13px;">${escapeHtml(ev.event_name)}</div>
-              ${ev.message ? `<div style="font-size:11px;color:#64748b;margin-top:2px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(ev.message)}">${escapeHtml(ev.message)}</div>` : ''}
-            </td>
-            <td><strong style="color:#334155;font-size:12px;">${dateFormatted}</strong></td>
-            <td>${audText}</td>
-            <td>
-              <span class="badge ${subCount > 0 ? 'badge-green' : 'badge-yellow'}" style="font-size:11px;">
-                <i class="fa-solid fa-check"></i> ${subCount} Submitted
-              </span>
-            </td>
-            <td>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="viewEventSubmissions(${ev.id}, '${escapeHtml(ev.event_name.replace(/'/g, "\\'"))}')" title="View Student Submissions">
-                  <i class="fa-solid fa-list-check"></i> View (${subCount})
-                </button>
-                <button class="btn btn-sm btn-outline-danger" style="padding:4px 8px;font-size:11px;" onclick="deleteEventFeedbackReq(${ev.id})" title="Delete Feedback Request">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    if (showToast) showAdminAlert('Event feedbacks refreshed.', true);
+    if (showToast) showAdminAlert('Event feedbacks and submission metrics refreshed.', true);
   } catch (err) {
     console.error('Error loading admin event feedbacks:', err);
-    if (tableBody) {
-      tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Failed to load event feedbacks.</td></tr>`;
+    if (activeTbody) {
+      activeTbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:24px;color:#ef4444;">Failed to load active event feedbacks.</td></tr>`;
     }
   }
+}
+
+function getAudienceBadge(ev) {
+  if (ev.target_type === 'student' && ev.student_id) {
+    const matched = (cachedAdminStudentsList || []).find(s => (s.user_id || s.id) == ev.student_id);
+    const studentName = matched ? `${matched.full_name} (${matched.register_number})` : `Student #${ev.student_id}`;
+    return `<span class="badge badge-blue"><i class="fa-solid fa-user"></i> ${escapeHtml(studentName)}</span>`;
+  }
+  if (ev.target_type === 'year_3') {
+    return `<span class="badge badge-yellow"><i class="fa-solid fa-users"></i> Year 3 Only</span>`;
+  }
+  if (ev.target_type === 'year_4') {
+    return `<span class="badge badge-orange"><i class="fa-solid fa-users"></i> Year 4 Only</span>`;
+  }
+  return `<span class="badge badge-purple"><i class="fa-solid fa-bullhorn"></i> All Students</span>`;
+}
+
+function renderActiveEventsTable(eventsToRender = null) {
+  const tbody = el('eventFeedbacksTableBody');
+  if (!tbody) return;
+
+  const events = eventsToRender !== null ? eventsToRender : cachedAdminActiveEvents;
+
+  if (!events || events.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="11" style="text-align:center;padding:48px 24px;color:#94a3b8;">
+          <i class="fa-regular fa-calendar-check" style="font-size:32px;display:block;margin-bottom:10px;color:#cbd5e1;"></i>
+          <strong style="color:#64748b;font-size:14px;">No Active Event Feedback Forms Found</strong>
+          <p style="font-size:12px;margin:4px 0 14px;">Create and publish a new feedback &amp; quiz form to collect student assessments.</p>
+          <button class="btn btn-primary btn-sm" onclick="switchEfSubnav('create')" style="font-size:12px;padding:6px 14px;">
+            <i class="fa-solid fa-plus"></i> Create &amp; Publish Form
+          </button>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = events.map(ev => {
+    const dateFormatted = ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+    const pubDateFormatted = ev.created_at ? new Date(ev.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+    const eligible = ev.total_eligible || 0;
+    const submitted = ev.submitted_count || 0;
+    const pending = ev.pending_count !== undefined ? ev.pending_count : Math.max(0, eligible - submitted);
+    const compPct = typeof ev.completion_rate === 'number' ? ev.completion_rate : (eligible > 0 ? Math.round((submitted / eligible) * 100) : 0);
+
+    const safeName = escapeHtml(ev.event_name).replace(/'/g, "\\'");
+
+    return `
+      <tr>
+        <td>
+          <div style="font-weight:700;color:#0f172a;font-size:13.5px;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-graduation-cap" style="color:#4338ca;"></i>
+            <span>${escapeHtml(ev.event_name)}</span>
+            ${ev.event_code ? `<span class="badge badge-purple" style="font-size:10px;padding:2px 6px;">${escapeHtml(ev.event_code)}</span>` : ''}
+          </div>
+          <div style="font-size:11.5px;color:#64748b;margin-top:2px;">
+            <i class="fa-solid fa-location-dot" style="margin-right:2px;color:#94a3b8;"></i> ${escapeHtml(ev.event_venue || 'Online / Department Lab')}
+            ${ev.coordinator ? ` • <i class="fa-solid fa-user-tie" style="margin-right:2px;color:#94a3b8;"></i> ${escapeHtml(ev.coordinator)}` : ''}
+          </div>
+        </td>
+        <td><strong style="color:#1e293b;font-size:12.5px;">${dateFormatted}</strong></td>
+        <td>${getAudienceBadge(ev)}</td>
+        <td><span style="font-size:12px;font-weight:600;color:#475569;">${escapeHtml(ev.academic_year || '---')}</span></td>
+        <td><span style="font-size:11.5px;color:#64748b;">${pubDateFormatted}</span></td>
+        <td><strong style="color:#1e3a8a;font-size:12.5px;">${eligible}</strong></td>
+        <td>
+          <span class="badge ${submitted > 0 ? 'badge-green' : 'badge-yellow'}" style="font-size:11.5px;font-weight:700;">
+            <i class="fa-solid fa-check"></i> ${submitted}
+          </span>
+        </td>
+        <td><span style="color:${pending > 0 ? '#ea580c' : '#15803d'};font-weight:700;font-size:12px;">${pending}</span></td>
+        <td style="min-width:120px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;background:#e2e8f0;height:7px;border-radius:999px;overflow:hidden;">
+              <div style="width:${Math.min(100, compPct)}%;background:${compPct >= 75 ? '#10b981' : compPct >= 40 ? '#3b82f6' : '#f59e0b'};height:100%;border-radius:999px;"></div>
+            </div>
+            <span style="font-size:11.5px;font-weight:700;color:#334155;">${compPct}%</span>
+          </div>
+        </td>
+        <td>
+          <span class="badge badge-green" style="font-size:11px;padding:3px 8px;">
+            <i class="fa-solid fa-circle-check"></i> ACTIVE
+          </span>
+        </td>
+        <td style="text-align:center;">
+          <div style="display:inline-flex;gap:4px;align-items:center;">
+            <button class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="viewFormPreview(${ev.id})" title="View Form &amp; Quiz Questions">
+              <i class="fa-solid fa-eye"></i> Form
+            </button>
+            <button class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="viewEventSubmissions(${ev.id}, '${safeName}')" title="View Student Submissions (${submitted})">
+              <i class="fa-solid fa-list-check"></i> Submissions (${submitted})
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" style="padding:4px 8px;font-size:11px;" onclick="openEventSpecificAnalytics(${ev.id})" title="View Event Analytics">
+              <i class="fa-solid fa-chart-simple"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-warning" style="padding:4px 8px;font-size:11px;color:#d97706;border-color:#fde68a;" onclick="toggleEventStatus(${ev.id}, 'CLOSED')" title="Close Event (Move to Archived)">
+              <i class="fa-solid fa-lock"></i> Close
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderArchivedEventsTable(eventsToRender = null) {
+  const tbody = el('archivedEventsTableBody');
+  if (!tbody) return;
+
+  const events = eventsToRender !== null ? eventsToRender : cachedAdminArchivedEvents;
+
+  if (!events || events.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">
+          <i class="fa-solid fa-box-archive" style="font-size:28px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
+          No archived or closed event feedback forms found.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = events.map(ev => {
+    const dateFormatted = ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+    const eligible = ev.total_eligible || 0;
+    const submitted = ev.submitted_count || 0;
+    const compPct = typeof ev.completion_rate === 'number' ? ev.completion_rate : (eligible > 0 ? Math.round((submitted / eligible) * 100) : 0);
+    const safeName = escapeHtml(ev.event_name).replace(/'/g, "\\'");
+
+    return `
+      <tr>
+        <td>
+          <div style="font-weight:700;color:#0f172a;font-size:13.5px;">${escapeHtml(ev.event_name)}</div>
+          <div style="font-size:11px;color:#64748b;">${escapeHtml(ev.event_code || '')} • ${escapeHtml(ev.coordinator || 'Coordinator')}</div>
+        </td>
+        <td><strong style="color:#475569;font-size:12px;">${dateFormatted}</strong></td>
+        <td>${getAudienceBadge(ev)}</td>
+        <td><span style="font-size:12px;font-weight:600;color:#475569;">${escapeHtml(ev.academic_year || '---')}</span></td>
+        <td><strong style="color:#1e3a8a;">${eligible}</strong></td>
+        <td><span class="badge badge-green">${submitted}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;background:#e2e8f0;height:6px;border-radius:999px;width:70px;">
+              <div style="width:${Math.min(100, compPct)}%;background:#64748b;height:100%;border-radius:999px;"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:#64748b;">${compPct}%</span>
+          </div>
+        </td>
+        <td>
+          <span class="badge badge-yellow" style="font-size:11px;">
+            <i class="fa-solid fa-lock"></i> ${escapeHtml(ev.status || 'CLOSED')}
+          </span>
+        </td>
+        <td style="text-align:center;">
+          <div style="display:inline-flex;gap:4px;align-items:center;">
+            <button class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="viewFormPreview(${ev.id})" title="View Form Details">
+              <i class="fa-solid fa-eye"></i> View
+            </button>
+            <button class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="viewEventSubmissions(${ev.id}, '${safeName}')" title="View Submissions">
+              <i class="fa-solid fa-list-check"></i> Submissions (${submitted})
+            </button>
+            <button class="btn btn-sm btn-outline-success" style="padding:4px 8px;font-size:11px;color:#15803d;border-color:#bbf7d0;" onclick="toggleEventStatus(${ev.id}, 'ACTIVE')" title="Reopen Event to Active">
+              <i class="fa-solid fa-lock-open"></i> Reopen
+            </button>
+            <button class="btn btn-sm btn-outline-danger" style="padding:4px 8px;font-size:11px;" onclick="deleteEventFeedbackReq(${ev.id})" title="Delete Archive">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterActiveEventsTable() {
+  const query = (el('efSearchActiveInput')?.value || '').toLowerCase().trim();
+  const year = el('efYearFilterSelect')?.value || 'all';
+
+  let filtered = cachedAdminActiveEvents.filter(ev => {
+    const matchQuery = !query ||
+      (ev.event_name && ev.event_name.toLowerCase().includes(query)) ||
+      (ev.event_code && ev.event_code.toLowerCase().includes(query)) ||
+      (ev.event_venue && ev.event_venue.toLowerCase().includes(query)) ||
+      (ev.coordinator && ev.coordinator.toLowerCase().includes(query));
+
+    const matchYear = year === 'all' || (ev.academic_year && ev.academic_year.toLowerCase() === year.toLowerCase());
+
+    return matchQuery && matchYear;
+  });
+
+  renderActiveEventsTable(filtered);
+}
+
+function filterArchivedEventsTable() {
+  const query = (el('efSearchArchivedInput')?.value || '').toLowerCase().trim();
+  let filtered = cachedAdminArchivedEvents.filter(ev => {
+    return !query ||
+      (ev.event_name && ev.event_name.toLowerCase().includes(query)) ||
+      (ev.event_code && ev.event_code.toLowerCase().includes(query));
+  });
+  renderArchivedEventsTable(filtered);
 }
 
 // ============================================================
@@ -3648,34 +3853,74 @@ function collectQuizQuestions() {
 // ============================================================
 // SEND / PUBLISH EVENT FEEDBACK & QUIZ
 // ============================================================
+// ============================================================
+// SEND / PUBLISH EVENT FEEDBACK & QUIZ (WITH STRICT VALIDATION)
+// ============================================================
 async function handleSendEventFeedback(e) {
   if (e) e.preventDefault();
   const event_name = el('efEventName')?.value.trim();
   const event_code = el('efEventCode')?.value.trim().toUpperCase();
   const event_date = el('efEventDate')?.value;
   const event_venue = el('efEventVenue')?.value.trim() || 'Department Placement Lab / Online';
-  const coordinator = el('efCoordinator')?.value.trim() || 'Faculty Coordinator';
-  const academic_year = el('efAcademicYear')?.value.trim() || '2023-2027';
-  const target_type = el('efTargetType')?.value;
+  const coordinator = el('efCoordinator')?.value.trim() || 'Faculty Coordinator / JA';
+  const academic_year = el('efAcademicYear')?.value.trim() || '2026-27';
+  const target_type = el('efTargetType')?.value || 'all';
   const student_id = target_type === 'student' ? el('efStudentId')?.value : null;
+  const min_quiz_score_pct = parseInt(el('efMinQuizScore')?.value || '50', 10);
   const signatory_title = el('efSignatoryTitle')?.value.trim() || 'Head of Department - CSBS';
   const message = el('efMessage')?.value.trim();
-  const quiz = collectQuizQuestions();
 
-  if (!event_name || !event_date) {
-    showAdminAlert('Please enter both Event Name and Event Date.');
+  // 1. Validation
+  if (!event_name) {
+    showAdminAlert('Validation Error: Please enter the Event Name.');
+    el('efEventName')?.focus();
+    return;
+  }
+
+  if (!event_date) {
+    showAdminAlert('Validation Error: Please select the Event Date.');
+    el('efEventDate')?.focus();
+    return;
+  }
+
+  if (!academic_year) {
+    showAdminAlert('Validation Error: Please specify the Academic Year / Batch (e.g. 2026-27).');
+    el('efAcademicYear')?.focus();
     return;
   }
 
   if (target_type === 'student' && !student_id) {
-    showAdminAlert('Please select a specific student from the roster.');
+    showAdminAlert('Validation Error: Please select a specific student from the roster.');
+    el('efStudentId')?.focus();
     return;
+  }
+
+  const quiz = collectQuizQuestions();
+  if (quiz.length === 0) {
+    showAdminAlert('Validation Error: At least one quiz assessment question is required.');
+    return;
+  }
+
+  for (let i = 0; i < quiz.length; i++) {
+    const q = quiz[i];
+    if (!q.question) {
+      showAdminAlert(`Validation Error: Question ${i + 1} text cannot be empty.`);
+      return;
+    }
+    if (!q.option_a || !q.option_b || !q.option_c || !q.option_d) {
+      showAdminAlert(`Validation Error: Question ${i + 1} must have all 4 options (A, B, C, and D) provided.`);
+      return;
+    }
+    if (!['A', 'B', 'C', 'D'].includes(q.correct_option)) {
+      showAdminAlert(`Validation Error: Please designate a valid correct answer (A, B, C, or D) for Question ${i + 1}.`);
+      return;
+    }
   }
 
   const btn = el('btnSendFeedback');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publishing Feedback &amp; Quiz...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publishing to Database &amp; Notifying Students...';
   }
 
   try {
@@ -3694,6 +3939,7 @@ async function handleSendEventFeedback(e) {
         academic_year,
         target_type,
         student_id,
+        min_quiz_score_pct,
         signatory_title,
         message,
         quiz,
@@ -3707,15 +3953,25 @@ async function handleSendEventFeedback(e) {
     });
     const data = await res.json();
     if (data.success) {
-      showAdminAlert(`Event Feedback form for "${event_name}" (${quiz.length} Quiz questions) published successfully! Students have been notified.`, true);
+      showAdminAlert(
+        `🎉 Feedback & Quiz Published Successfully!\nEvent: "${data.feedback.event_name}"\nEligible Students: ${data.eligible_count}\nNotifications Dispatched: ${data.notifications_sent}\nStatus: ACTIVE`,
+        true
+      );
+
+      // Reset form
       el('adminEventFeedbackForm')?.reset();
       if (el('efSignatoryTitle')) el('efSignatoryTitle').value = 'Head of Department - CSBS';
       if (el('efEventVenue')) el('efEventVenue').value = 'Department Placement Lab / Online';
       if (el('efCoordinator')) el('efCoordinator').value = 'Faculty Coordinator / JA';
-      if (el('efAcademicYear')) el('efAcademicYear').value = '2023-2027';
+      if (el('efAcademicYear')) el('efAcademicYear').value = '2026-27';
+      if (el('efMinQuizScore')) el('efMinQuizScore').value = '50';
       toggleEfStudentSelector();
+      adminQuizQuestions = [];
       initDefaultQuizQuestions();
-      loadAdminEventFeedbacks();
+
+      // Refresh data and switch to active events pane
+      await loadAdminEventFeedbacks();
+      switchEfSubnav('active');
     } else {
       showAdminAlert(data.message || 'Failed to publish event feedback request.');
     }
@@ -3730,8 +3986,38 @@ async function handleSendEventFeedback(e) {
   }
 }
 
+async function toggleEventStatus(id, newStatus) {
+  const isClose = newStatus === 'CLOSED';
+  const promptMsg = isClose
+    ? 'Are you sure you want to close this event? Students will no longer be able to submit feedback, and the event will move to Archived.'
+    : 'Are you sure you want to reopen this event? It will move back to Active Event Feedbacks for students.';
+
+  if (!confirm(promptMsg)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/event-feedback/${id}/status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert(`Event status updated to ${newStatus}.`, true);
+      await loadAdminEventFeedbacks();
+    } else {
+      showAdminAlert(data.message || 'Failed to update event status.');
+    }
+  } catch (err) {
+    console.error('Error updating event status:', err);
+    showAdminAlert('Server error while updating event status.');
+  }
+}
+
 async function deleteEventFeedbackReq(id) {
-  if (!confirm('Are you sure you want to delete this Event Feedback request and associated certificate logs?')) return;
+  if (!confirm('Are you sure you want to permanently delete this Event Feedback record and related logs?')) return;
   try {
     const res = await fetch(`${API_BASE}/admin/event-feedback/${id}`, {
       method: 'DELETE',
@@ -3739,8 +4025,8 @@ async function deleteEventFeedbackReq(id) {
     });
     const data = await res.json();
     if (data.success) {
-      showAdminAlert('Event Feedback request deleted successfully.', true);
-      loadAdminEventFeedbacks();
+      showAdminAlert('Event Feedback record deleted successfully.', true);
+      await loadAdminEventFeedbacks();
     } else {
       showAdminAlert(data.message || 'Failed to delete event feedback.');
     }
@@ -3750,15 +4036,129 @@ async function deleteEventFeedbackReq(id) {
   }
 }
 
+// ============================================================
+// FORM PREVIEW MODAL
+// ============================================================
+function viewFormPreview(eventId) {
+  const ev = cachedAdminEventsAll.find(e => parseInt(e.id, 10) === parseInt(eventId, 10));
+  if (!ev) {
+    showAdminAlert('Event record not found.');
+    return;
+  }
+
+  const modal = el('eventFormPreviewModal');
+  const title = el('prevModalTitle');
+  const subtitle = el('prevModalSubtitle');
+  const body = el('prevModalBody');
+
+  if (title) title.innerText = `${ev.event_name} — Form Preview`;
+  if (subtitle) subtitle.innerText = `Academic Year: ${ev.academic_year || '---'} | Status: ${ev.status || 'ACTIVE'}`;
+
+  const quizList = Array.isArray(ev.quiz) ? ev.quiz : [];
+  const dateFormatted = ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
+
+  if (body) {
+    body.innerHTML = `
+      <!-- Header Summary Card -->
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12.5px;">
+          <div><strong>Event Date:</strong> ${dateFormatted}</div>
+          <div><strong>Event Venue:</strong> ${escapeHtml(ev.event_venue || 'Online / Department Lab')}</div>
+          <div><strong>Coordinator:</strong> ${escapeHtml(ev.coordinator || 'Faculty Coordinator')}</div>
+          <div><strong>Authorized Signatory:</strong> ${escapeHtml(ev.signatory_title || 'Head of Department')}</div>
+          <div><strong>Target Audience:</strong> ${getAudienceBadge(ev)}</div>
+          <div><strong>Passing Threshold:</strong> ${ev.min_quiz_score_pct || 50}% Quiz Score for Certificate</div>
+        </div>
+        ${ev.message ? `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:12px;color:#475569;"><strong>Instructions:</strong> ${escapeHtml(ev.message)}</div>` : ''}
+      </div>
+
+      <!-- Part 1: Quiz Assessment -->
+      <div style="border:1.5px solid #e0e7ff;border-radius:12px;padding:16px;margin-bottom:20px;background:#fcfdff;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;border-bottom:1px solid #e0e7ff;padding-bottom:10px;">
+          <div style="width:26px;height:26px;border-radius:6px;background:#4338ca;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">1</div>
+          <h4 style="margin:0;font-size:15px;font-weight:700;color:#1e1b4b;">Part 1 — Quiz Assessment Questions (${quizList.length})</h4>
+        </div>
+        ${quizList.length === 0 ? '<p style="color:#94a3b8;font-size:13px;">No quiz questions configured for this event.</p>' : `
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            ${quizList.map((q, idx) => `
+              <div style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:14px;">
+                <div style="font-weight:700;color:#0f172a;font-size:13px;margin-bottom:10px;">
+                  Q${idx + 1}. ${escapeHtml(q.question)}
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  ${['A', 'B', 'C', 'D'].map(optKey => {
+                    const optText = q[`option_${optKey.toLowerCase()}`] || '';
+                    const isCorrect = (q.correct_option || '').toUpperCase() === optKey;
+                    return `
+                      <div style="padding:8px 12px;border-radius:6px;font-size:12px;border:1px solid ${isCorrect ? '#86efac' : '#e2e8f0'};background:${isCorrect ? '#f0fdf4' : '#f8fafc'};color:${isCorrect ? '#166534' : '#334155'};display:flex;justify-content:space-between;align-items:center;">
+                        <span><strong>${optKey})</strong> ${escapeHtml(optText)}</span>
+                        ${isCorrect ? '<span class="badge badge-green" style="font-size:10px;padding:2px 6px;"><i class="fa-solid fa-check"></i> Correct</span>' : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+
+      <!-- Part 2: Feedback Questions -->
+      <div style="border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;background:#fff;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
+          <div style="width:26px;height:26px;border-radius:6px;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">2</div>
+          <h4 style="margin:0;font-size:15px;font-weight:700;color:#064e3b;">Part 2 — Standard Feedback Questionnaire</h4>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;color:#334155;">
+          <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+            <strong>1. Overall Event Rating:</strong> 1 to 5 Star Rating Scale
+          </div>
+          <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+            <strong>2. Was the session useful?</strong> Yes / No Evaluation
+          </div>
+          <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+            <strong>3. What did you learn?</strong> Key Technical Takeaways (Required Text Field)
+          </div>
+          <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+            <strong>4. Suggestions:</strong> Future Improvements &amp; Training Topics (Text Field)
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeFormPreviewModal() {
+  el('eventFormPreviewModal')?.classList.add('hidden');
+}
+
+function _closeFormPreviewModal(e) {
+  if (e.target === el('eventFormPreviewModal')) {
+    closeFormPreviewModal();
+  }
+}
+
+// ============================================================
+// VIEW SUBMISSIONS MODAL (8 COMPLETE COLUMNS AS SPECIFIED)
+// ============================================================
 async function viewEventSubmissions(id, eventName) {
   const modal = el('eventSubmissionsModal');
   const title = el('subModalTitle');
   const subtitle = el('subModalSubtitle');
   const tbody = el('subModalTableBody');
 
-  if (title) title.innerText = `Feedback Submissions — ${eventName}`;
-  if (subtitle) subtitle.innerText = `Verified student responses & issued certificate numbers`;
-  if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> Loading responses...</td></tr>`;
+  if (title) title.innerText = `Submissions & Certificate Records — ${eventName}`;
+  if (subtitle) subtitle.innerText = `Student assessment submissions, evaluated quiz scores, and verified certificates`;
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:36px;color:#94a3b8;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Loading student submissions...
+        </td>
+      </tr>`;
+  }
   if (modal) modal.classList.remove('hidden');
 
   try {
@@ -3772,9 +4172,10 @@ async function viewEventSubmissions(id, eventName) {
       if (tbody) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="5" style="text-align:center;padding:32px;color:#94a3b8;">
-              <i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:6px;color:#cbd5e1;"></i>
-              No student has submitted feedback for this event yet.
+            <td colspan="8" style="text-align:center;padding:48px 20px;color:#94a3b8;">
+              <i class="fa-solid fa-inbox" style="font-size:32px;display:block;margin-bottom:8px;color:#cbd5e1;"></i>
+              <strong style="color:#64748b;">No Student Submissions Yet</strong>
+              <p style="font-size:12px;margin:4px 0 0;">Eligible students will appear here once they complete the quiz and feedback.</p>
             </td>
           </tr>`;
       }
@@ -3785,34 +4186,62 @@ async function viewEventSubmissions(id, eventName) {
       tbody.innerHTML = subs.map(s => {
         const stars = '★'.repeat(s.rating || 5) + '☆'.repeat(Math.max(0, 5 - (s.rating || 5)));
         const submitDate = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '---';
+        const isEligible = !!s.certificate_eligible;
+        const certNumber = s.certificate_number || '---';
+
         return `
           <tr>
             <td>
-              <div style="font-weight:700;color:#0f172a;">${escapeHtml(s.student_name)}</div>
-              <div style="font-size:11px;color:#64748b;">${escapeHtml(s.register_number)} • ${escapeHtml(s.department)}</div>
+              <div style="font-weight:700;color:#0f172a;font-size:13px;display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-user-graduate" style="color:#4338ca;"></i>
+                <span>${escapeHtml(s.student_name)}</span>
+              </div>
+              <div style="font-size:11px;color:#64748b;">${escapeHtml(s.department || 'CSBS')}</div>
             </td>
+            <td><code style="font-weight:700;color:#1e3a8a;font-size:12px;">${escapeHtml(s.register_number)}</code></td>
+            <td><span style="font-size:12px;color:#475569;">${escapeHtml(s.academic_year || '---')}</span></td>
+            <td><span style="font-size:11.5px;color:#64748b;">${submitDate}</span></td>
             <td>
-              <span style="color:#f59e0b;font-size:14px;letter-spacing:1px;" title="${s.rating}/5 Stars">${stars}</span>
-            </td>
-            <td>
-              <div style="font-size:12px;color:#1e293b;max-width:320px;">
-                ${s.learnings ? `<div><strong>Learnings:</strong> ${escapeHtml(s.learnings)}</div>` : ''}
-                ${s.comments ? `<div style="margin-top:2px;color:#64748b;"><strong>Comments:</strong> ${escapeHtml(s.comments)}</div>` : ''}
+              <div style="display:flex;align-items:center;gap:6px;">
+                <strong style="font-size:12.5px;color:#0f172a;">${escapeHtml(s.quiz_score_display || `${s.quiz_score}/${s.quiz_total}`)}</strong>
+                <span class="badge ${s.quiz_passed ? 'badge-green' : 'badge-yellow'}" style="font-size:10px;padding:2px 5px;">
+                  ${s.quiz_percentage || 0}%
+                </span>
               </div>
             </td>
             <td>
-              <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">
-                <i class="fa-solid fa-certificate"></i> ${escapeHtml(s.certificate_number)}
-              </span>
+              <div style="font-size:12px;color:#1e293b;">
+                <span style="color:#f59e0b;font-size:13px;letter-spacing:1px;" title="${s.rating}/5 Stars">${stars}</span>
+                <span class="badge badge-blue" style="font-size:10px;margin-left:4px;">Completed</span>
+                ${s.learnings ? `<div style="font-size:11px;color:#64748b;margin-top:2px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(s.learnings)}">${escapeHtml(s.learnings)}</div>` : ''}
+              </div>
             </td>
-            <td style="font-size:12px;color:#64748b;">${submitDate}</td>
+            <td>
+              ${isEligible ? `
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <span class="badge badge-green" style="font-size:10px;padding:2px 6px;width:fit-content;">
+                    <i class="fa-solid fa-award"></i> Eligible
+                  </span>
+                  <code style="font-size:11px;color:#4338ca;font-weight:700;">${escapeHtml(certNumber)}</code>
+                </div>
+              ` : `
+                <span class="badge badge-yellow" style="font-size:10px;">Not Eligible</span>
+              `}
+            </td>
+            <td style="text-align:center;">
+              ${isEligible && certNumber !== '---' ? `
+                <button class="btn btn-sm btn-outline-primary" style="padding:4px 10px;font-size:11px;" onclick="lookupSubmissionCert('${escapeHtml(certNumber)}')" title="Lookup verified institutional certificate details">
+                  <i class="fa-solid fa-certificate"></i> View Cert
+                </button>
+              ` : `<span style="font-size:11px;color:#94a3b8;">—</span>`}
+            </td>
           </tr>
         `;
       }).join('');
     }
   } catch (err) {
     console.error('Error viewing submissions:', err);
-    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Failed to load submissions.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Failed to load submissions.</td></tr>`;
   }
 }
 
@@ -3824,6 +4253,160 @@ function _closeSubmissionsModal(e) {
   if (e.target === el('eventSubmissionsModal')) {
     closeSubmissionsModal();
   }
+}
+
+function lookupSubmissionCert(certNo) {
+  closeSubmissionsModal();
+  switchAdminTab('certLookup');
+  quickFillCertLookup(certNo);
+}
+
+// ============================================================
+// YEARLY & EVENT ANALYTICS (DATABASE-DRIVEN & DYNAMIC)
+// ============================================================
+async function loadEventAnalytics() {
+  try {
+    const res = await fetch(`${API_BASE}/admin/event-analytics`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    cachedAnalyticsData = data;
+
+    const summary = data.summary || {};
+    if (el('efStatActiveEvents')) el('efStatActiveEvents').innerText = summary.total_active_events || 0;
+    if (el('efStatArchivedEvents')) el('efStatArchivedEvents').innerText = summary.total_archived_events || 0;
+    if (el('efStatSubmissions')) el('efStatSubmissions').innerText = summary.total_submissions || 0;
+    if (el('efStatCertsIssued')) el('efStatCertsIssued').innerText = summary.total_certificates_issued || 0;
+
+    renderYearlyAnalyticsChart(data.yearly_trends || {});
+    renderAnalyticsEventBreakdown(data.events || []);
+  } catch (err) {
+    console.error('Error loading event analytics:', err);
+  }
+}
+
+function renderYearlyAnalyticsChart(yearlyTrends) {
+  const canvas = el('efYearlyChart');
+  if (!canvas) return;
+
+  const years = Object.keys(yearlyTrends);
+  const eventsData = years.map(y => yearlyTrends[y].events || 0);
+  const subsData = years.map(y => yearlyTrends[y].submissions || 0);
+  const certsData = years.map(y => yearlyTrends[y].certificates || 0);
+
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js is not loaded.');
+    return;
+  }
+
+  if (efYearlyChartInstance) {
+    efYearlyChartInstance.destroy();
+    efYearlyChartInstance = null;
+  }
+
+  const ctx = canvas.getContext('2d');
+  efYearlyChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [
+        {
+          label: 'Published Events',
+          data: eventsData,
+          backgroundColor: 'rgba(67, 56, 202, 0.85)',
+          borderColor: '#4338ca',
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: 'Student Submissions',
+          data: subsData,
+          backgroundColor: 'rgba(5, 150, 105, 0.85)',
+          borderColor: '#059669',
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: 'Certificates Issued',
+          data: certsData,
+          backgroundColor: 'rgba(147, 51, 234, 0.85)',
+          borderColor: '#9333ea',
+          borderWidth: 1,
+          borderRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { font: { family: "'Plus Jakarta Sans', sans-serif", weight: '600' } }
+        },
+        tooltip: {
+          padding: 10,
+          boxPadding: 4,
+          usePointStyle: true
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 },
+          grid: { color: 'rgba(226, 232, 240, 0.6)' }
+        },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderAnalyticsEventBreakdown(events) {
+  const tbody = el('analyticsEventBreakdownTableBody');
+  if (!tbody) return;
+
+  if (!events || events.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:#94a3b8;">No events available for performance breakdown.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = events.map(ev => {
+    const compPct = typeof ev.completion_rate === 'number' ? ev.completion_rate : 0;
+    const avgScore = ev.avg_quiz_score !== undefined ? `${ev.avg_quiz_score}%` : '---';
+    const isAct = ev.status === 'ACTIVE';
+
+    return `
+      <tr>
+        <td><strong style="color:#0f172a;font-size:13px;">${escapeHtml(ev.event_name)}</strong></td>
+        <td><span style="font-size:12px;color:#475569;">${escapeHtml(ev.academic_year || '---')}</span></td>
+        <td><strong style="color:#1e3a8a;">${ev.total_eligible || 0}</strong></td>
+        <td><span class="badge badge-green">${ev.submitted_count || 0}</span></td>
+        <td><span style="color:#ea580c;font-weight:700;">${ev.pending_count !== undefined ? ev.pending_count : 0}</span></td>
+        <td style="min-width:120px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;background:#e2e8f0;height:6px;border-radius:999px;">
+              <div style="width:${Math.min(100, compPct)}%;background:#10b981;height:100%;border-radius:999px;"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;">${compPct}%</span>
+          </div>
+        </td>
+        <td><span class="badge badge-blue" style="font-size:11px;">${avgScore}</span></td>
+        <td><strong style="color:#7c3aed;">${ev.certificates_issued_count || 0}</strong></td>
+        <td>
+          <span class="badge ${isAct ? 'badge-green' : 'badge-yellow'}" style="font-size:10.5px;">
+            ${escapeHtml(ev.status || 'ACTIVE')}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openEventSpecificAnalytics(eventId) {
+  switchEfSubnav('analytics');
 }
 
 // ============================================================
