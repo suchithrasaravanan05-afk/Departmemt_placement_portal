@@ -1409,6 +1409,52 @@ async function getEventAnalyticsData() {
     };
 }
 
+// ============================================================
+// STUDENT NOTIFICATIONS (PERSISTENT IN DB / STORAGE)
+// ============================================================
+
+async function getStudentNotifications(userId) {
+    const numUserId = parseInt(userId, 10);
+    const data = await getAllData();
+    const notifs = data.notifications || [];
+    return notifs.filter(n => parseInt(n.student_id, 10) === numUserId);
+}
+
+async function markNotificationAsRead(notifId, userId) {
+    const data = await getAllData();
+    const notifs = data.notifications || [];
+    let updated = false;
+    notifs.forEach(n => {
+        if (String(n.id) === String(notifId) && String(n.student_id) === String(userId)) {
+            n.read_at = new Date().toISOString();
+            n.status = "READ";
+            updated = true;
+        }
+    });
+    if (updated) {
+        await commitData(data);
+    }
+    return { success: true };
+}
+
+async function markAllNotificationsAsRead(userId) {
+    const numUserId = parseInt(userId, 10);
+    const data = await getAllData();
+    const notifs = data.notifications || [];
+    let updated = false;
+    notifs.forEach(n => {
+        if (parseInt(n.student_id, 10) === numUserId && !n.read_at) {
+            n.read_at = new Date().toISOString();
+            n.status = "READ";
+            updated = true;
+        }
+    });
+    if (updated) {
+        await commitData(data);
+    }
+    return { success: true };
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
