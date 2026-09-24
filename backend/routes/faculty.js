@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 const { supabase, supabaseAdmin } = require("../supabase");
+const permissionsStorage = require("../permissionsStorage");
 
 // Local JSON persistence fallback file
 const FACULTY_DATA_FILE = path.join(__dirname, "../faculty_registration.json");
@@ -174,6 +175,9 @@ router.post("/register", async (req, res) => {
         // 7. Prepare faculty record
         const nowIso = new Date().toISOString();
         const facultyId = Date.now();
+        const isHod = (designation || "").toLowerCase().includes("head of department");
+        const assignedRole = isHod ? "hod" : "faculty";
+
         const newRecord = {
             id: facultyId,
             name: name.trim(),
@@ -186,8 +190,8 @@ router.post("/register", async (req, res) => {
             qualification: qualification.trim(),
             specialization: specialization.trim(),
             password: hashedPassword,
-            role: "FACULTY",
-            status: "Pending",
+            role: isHod ? "HOD" : "FACULTY",
+            status: "Approved",
             created_at: nowIso
         };
 
@@ -195,14 +199,47 @@ router.post("/register", async (req, res) => {
         localData.faculty_registrations.unshift(newRecord);
         saveLocalFacultyRegistrations(localData);
 
-        // 9. Persist to Supabase if connected
+        // 9. Persist to Supabase users table & faculty_registration table
         if (client) {
+            try {
+                const staffRegNum = `FAC-${String(facultyId).slice(-4)}`;
+                const userObj = {
+                    full_name: name.trim(),
+                    register_number: staffRegNum,
+                    email: normalizedEmail,
+                    password: hashedPassword,
+                    role: assignedRole,
+                    department: department.trim(),
+                    phone: cleanMobile,
+                    created_at: nowIso
+                };
+
+                const { error: userInsertErr } = await client.from("users").insert([userObj]);
+                if (userInsertErr) {
+                    console.warn("[Faculty Register] Warning syncing to users table:", userInsertErr.message);
+                } else {
+                    console.log(`✅ Faculty synced directly into users table as: ${assignedRole}`);
+                }
+            } catch (uErr) {
+                console.warn("[Faculty Register] Exception syncing to users table:", uErr.message);
+            }
+
             try {
                 await client.from("faculty_registration").insert([newRecord]);
                 console.log("✅ Faculty record synced to Supabase faculty_registration table");
             } catch (e) {
-                console.warn("[Faculty Register] Supabase insert warning (table might need creation):", e.message);
+                // Table might not exist in Supabase schema cache yet
             }
+        }
+
+        // 10. Assign default module permissions
+        try {
+            await permissionsStorage.setUserPermissions(normalizedEmail, {
+                placement_access: true,
+                social_media_access: true
+            });
+        } catch (pErr) {
+            console.warn("[Faculty Register] Warning setting permissions:", pErr.message);
         }
 
         // 10. Return success response (without exposing hashed password)

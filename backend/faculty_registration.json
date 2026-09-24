@@ -1,3 +1,20 @@
 {
-  "faculty_registrations": []
+  "faculty_registrations": [
+    {
+      "id": 1790262100000,
+      "name": "Dr. S. Sundari",
+      "email": "sundari@ritrjpm.ac.in",
+      "mobile": "9842100000",
+      "gender": "Female",
+      "department": "Computer Science and Business Systems",
+      "designation": "Assistant Professor",
+      "experience": 5,
+      "qualification": "M.E., Ph.D.",
+      "specialization": "Computer Science and Business Systems",
+      "password": "$2a$10$Fnw3xLzlGHnOn1HaKKricuB.zwiTtvgtE.t00Kw2XozhykYDiWr7y",
+      "role": "FACULTY",
+      "status": "Approved",
+      "created_at": "2026-09-24T15:33:49.849Z"
+    }
+  ]
 }
