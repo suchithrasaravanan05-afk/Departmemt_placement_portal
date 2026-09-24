@@ -98,41 +98,69 @@ function proceedToStaffAuth(role) {
   const inputEl = document.getElementById('staffIdentifier');
   const iconEl = document.getElementById('staffIdentIcon');
   const headerIconEl = document.getElementById('staffRoleHeaderIcon');
+  const switchEl = document.getElementById('staffAuthModeSwitch');
+  const tabLogin = document.getElementById('tabStaffLogin');
+  const tabReg = document.getElementById('tabStaffRegister');
+  const promptEl = document.getElementById('staffRegisterPrompt');
+  const promptLabel = document.getElementById('staffPromptLabel');
+  const formLogin = document.getElementById('staffLoginForm');
+  const formReg = document.getElementById('facultyRegisterForm');
+
+  // Always reset to login form view first
+  if (formLogin) formLogin.classList.remove('form-hidden');
+  if (formReg) formReg.classList.add('form-hidden');
+  if (tabLogin) tabLogin.classList.add('active');
+  if (tabReg) tabReg.classList.remove('active');
 
   if (role === 'admin') {
+    // ADMIN: COMMON CREDENTIALS ONLY — NO REGISTRATION FORM OR REGISTRATION TABS
     if (titleEl) titleEl.textContent = 'Placement Admin Login';
     if (subEl) subEl.textContent = 'Sign in with placement administrator credentials';
     if (lblEl) lblEl.textContent = 'Admin ID / Official Email';
     if (inputEl) inputEl.placeholder = 'e.g. admin@rit.ac.in or Admin ID';
     if (iconEl) iconEl.className = 'fa-solid fa-user-shield input-icon';
     if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    if (switchEl) switchEl.classList.add('form-hidden');
+    if (promptEl) promptEl.classList.add('form-hidden');
     window.location.hash = 'admin';
   } else if (role === 'hod') {
+    // HOD: HAS REGISTRATION & LOGIN
     if (titleEl) titleEl.textContent = 'HOD Login';
     if (subEl) subEl.textContent = 'Sign in with Head of Department credentials';
     if (lblEl) lblEl.textContent = 'HOD ID / Official Email';
     if (inputEl) inputEl.placeholder = 'e.g. hod@rit.ac.in or HOD ID';
     if (iconEl) iconEl.className = 'fa-solid fa-building-columns input-icon';
     if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-building-columns"></i>';
+    if (switchEl) {
+      switchEl.classList.remove('form-hidden');
+      if (tabLogin) tabLogin.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> HOD Login';
+      if (tabReg) tabReg.innerHTML = '<i class="fa-solid fa-user-plus"></i> New HOD Registration';
+    }
+    if (promptEl) {
+      promptEl.classList.remove('form-hidden');
+      if (promptLabel) promptLabel.textContent = 'New Head of Department?';
+    }
+    const desigSelect = document.getElementById('staffRegDesignation');
+    if (desigSelect) desigSelect.value = 'Head of Department';
     window.location.hash = 'hod';
   } else {
+    // FACULTY: HAS REGISTRATION & LOGIN
     if (titleEl) titleEl.textContent = 'Faculty Login';
     if (subEl) subEl.textContent = 'Sign in with your faculty ID or official email';
     if (lblEl) lblEl.textContent = 'Faculty ID / Official Email';
     if (inputEl) inputEl.placeholder = 'e.g. faculty@rit.ac.in or Staff ID';
     if (iconEl) iconEl.className = 'fa-solid fa-chalkboard-user input-icon';
     if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i>';
+    if (switchEl) {
+      switchEl.classList.remove('form-hidden');
+      if (tabLogin) tabLogin.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Faculty Login';
+      if (tabReg) tabReg.innerHTML = '<i class="fa-solid fa-user-plus"></i> New Faculty Registration';
+    }
+    if (promptEl) {
+      promptEl.classList.remove('form-hidden');
+      if (promptLabel) promptLabel.textContent = 'New faculty member?';
+    }
     window.location.hash = 'faculty';
-  }
-
-  // Show/Hide registration tab switch for faculty vs admin/hod
-  const switchEl = document.getElementById('staffAuthModeSwitch');
-  if (role === 'admin' || role === 'hod') {
-    if (switchEl) switchEl.classList.add('form-hidden');
-    switchFacultyAuthMode('login');
-  } else {
-    if (switchEl) switchEl.classList.remove('form-hidden');
-    switchFacultyAuthMode('login');
   }
 
   setTimeout(() => {
@@ -145,11 +173,14 @@ function backToStaffRoleSelect() {
 }
 
 // ==========================================================================
-// FACULTY AUTHENTICATION (LOGIN & REGISTRATION TOGGLE)
+// FACULTY & HOD AUTHENTICATION (LOGIN & REGISTRATION TOGGLE)
 // ==========================================================================
 
 function switchFacultyAuthMode(mode) {
   hideAlerts();
+  // Admin never has registration
+  if (selectedStaffRole === 'admin') return;
+
   const tabLogin = document.getElementById('tabStaffLogin');
   const tabReg = document.getElementById('tabStaffRegister');
   const formLogin = document.getElementById('staffLoginForm');
@@ -157,14 +188,25 @@ function switchFacultyAuthMode(mode) {
   const title = document.getElementById('staffAuthTitle');
   const subtitle = document.getElementById('staffAuthSub');
 
+  const isHod = selectedStaffRole === 'hod';
+
   if (mode === 'register') {
     if (tabLogin) tabLogin.classList.remove('active');
     if (tabReg) tabReg.classList.add('active');
     if (formLogin) formLogin.classList.add('form-hidden');
     if (formReg) formReg.classList.remove('form-hidden');
-    if (title) title.textContent = 'Faculty Registration';
-    if (subtitle) subtitle.textContent = 'Register your faculty account to access the College Placement Portal';
-    window.location.hash = 'faculty-register';
+    if (title) title.textContent = isHod ? 'HOD Registration' : 'Faculty Registration';
+    if (subtitle) subtitle.textContent = isHod
+      ? 'Register your Head of Department account to access the College Placement Portal'
+      : 'Register your faculty account to access the College Placement Portal';
+
+    // Auto pre-select designation for HOD
+    const desigSelect = document.getElementById('staffRegDesignation');
+    if (desigSelect && isHod) {
+      desigSelect.value = 'Head of Department';
+    }
+
+    window.location.hash = isHod ? 'hod-register' : 'faculty-register';
     setTimeout(() => {
       const input = document.getElementById('staffRegFullName');
       if (input) input.focus();
@@ -174,9 +216,11 @@ function switchFacultyAuthMode(mode) {
     if (tabLogin) tabLogin.classList.add('active');
     if (formReg) formReg.classList.add('form-hidden');
     if (formLogin) formLogin.classList.remove('form-hidden');
-    if (title) title.textContent = 'Faculty Login';
-    if (subtitle) subtitle.textContent = 'Sign in with your official staff credentials';
-    window.location.hash = 'faculty';
+    if (title) title.textContent = isHod ? 'HOD Login' : 'Faculty Login';
+    if (subtitle) subtitle.textContent = isHod
+      ? 'Sign in with Head of Department credentials'
+      : 'Sign in with your faculty ID or official email';
+    window.location.hash = isHod ? 'hod' : 'faculty';
     setTimeout(() => {
       const input = document.getElementById('staffIdentifier');
       if (input) input.focus();
