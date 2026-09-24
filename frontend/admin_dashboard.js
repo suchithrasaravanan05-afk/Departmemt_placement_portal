@@ -403,8 +403,8 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
         {
           label: 'Placed Students',
           data: placed,
-          backgroundColor: '#AB47BC', // Primary purple.shade400
-          borderColor: '#8E24AA',
+          backgroundColor: '#7E22CE',
+          borderColor: '#581C87',
           borderWidth: 1.5,
           borderRadius: 8,
           borderSkipped: false,
@@ -414,8 +414,8 @@ function renderPlacedNonPlacedChart(rows, filterVal = 'all') {
         {
           label: 'Non-Placed Students',
           data: nonPlaced,
-          backgroundColor: '#E1BEE7', // Supporting light purple tint (shade100/200)
-          borderColor: '#CE93D8',     // Secondary purple.shade200
+          backgroundColor: '#E9D5FF',
+          borderColor: '#C084FC',
           borderWidth: 1.5,
           borderRadius: 8,
           borderSkipped: false,
@@ -500,11 +500,11 @@ async function loadChartPlacementInterest() {
         datasets: [{
           data: [interested, notInterested, pending],
           backgroundColor: [
-            'rgba(16, 185, 129, 0.9)',
-            'rgba(244, 63, 94, 0.9)',
-            'rgba(203, 213, 225, 0.85)'
+            'rgba(126, 34, 206, 0.95)',
+            'rgba(192, 132, 252, 0.85)',
+            'rgba(233, 213, 255, 0.85)'
           ],
-          borderColor: ['#10b981', '#f43f5e', '#cbd5e1'],
+          borderColor: ['#7E22CE', '#C084FC', '#E9D5FF'],
           borderWidth: 2,
           hoverOffset: 8,
           borderRadius: 6
@@ -562,8 +562,8 @@ async function loadChartCompanyStats() {
           {
             label: 'Eligible Pool',
             data: eligible,
-            backgroundColor: 'rgba(6, 182, 212, 0.85)',
-            borderColor: '#0891b2',
+            backgroundColor: 'rgba(216, 180, 254, 0.85)',
+            borderColor: '#C084FC',
             borderWidth: 1.5,
             borderRadius: 6,
             borderSkipped: false,
@@ -573,8 +573,8 @@ async function loadChartCompanyStats() {
           {
             label: 'Registered Applicants',
             data: registered,
-            backgroundColor: 'rgba(139, 92, 246, 0.85)',
-            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(147, 51, 234, 0.85)',
+            borderColor: '#9333EA',
             borderWidth: 1.5,
             borderRadius: 6,
             borderSkipped: false,
@@ -584,8 +584,8 @@ async function loadChartCompanyStats() {
           {
             label: 'Selected Offers',
             data: placed,
-            backgroundColor: 'rgba(16, 185, 129, 0.9)',
-            borderColor: '#10b981',
+            backgroundColor: 'rgba(88, 28, 135, 0.95)',
+            borderColor: '#581C87',
             borderWidth: 1.5,
             borderRadius: 6,
             borderSkipped: false,
@@ -666,8 +666,8 @@ async function loadChartTechNonTechYear() {
           {
             label: 'Technical Roles',
             data: tech,
-            backgroundColor: '#AB47BC',
-            borderColor: '#8E24AA',
+            backgroundColor: '#7E22CE',
+            borderColor: '#581C87',
             borderWidth: 1.5,
             borderRadius: 6,
             borderSkipped: false,
@@ -677,8 +677,8 @@ async function loadChartTechNonTechYear() {
           {
             label: 'Non-Technical Roles',
             data: nonTech,
-            backgroundColor: '#E1BEE7',
-            borderColor: '#CE93D8',
+            backgroundColor: '#E9D5FF',
+            borderColor: '#C084FC',
             borderWidth: 1.5,
             borderRadius: 6,
             borderSkipped: false,
@@ -4335,24 +4335,24 @@ function renderYearlyAnalyticsChart(yearlyTrends) {
         {
           label: 'Published Events',
           data: eventsData,
-          backgroundColor: 'rgba(67, 56, 202, 0.85)',
-          borderColor: '#4338ca',
+          backgroundColor: 'rgba(88, 28, 135, 0.9)',
+          borderColor: '#581C87',
           borderWidth: 1,
           borderRadius: 6
         },
         {
           label: 'Student Submissions',
           data: subsData,
-          backgroundColor: 'rgba(5, 150, 105, 0.85)',
-          borderColor: '#059669',
+          backgroundColor: 'rgba(126, 34, 206, 0.85)',
+          borderColor: '#7E22CE',
           borderWidth: 1,
           borderRadius: 6
         },
         {
           label: 'Certificates Issued',
           data: certsData,
-          backgroundColor: 'rgba(147, 51, 234, 0.85)',
-          borderColor: '#9333ea',
+          backgroundColor: 'rgba(192, 132, 252, 0.85)',
+          borderColor: '#A855F7',
           borderWidth: 1,
           borderRadius: 6
         }

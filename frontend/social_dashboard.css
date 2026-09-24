@@ -6,27 +6,27 @@
    ========================================================================== */
 
 :root {
-  --purple-primary:   #AB47BC;
-  --purple-dark:      #9C27B0;
-  --purple-deep:      #8E24AA;
-  --purple-darkest:   #7B1FA2;
-  --purple-light:     #FAF5FB;
-  --purple-soft:      #F3E5F5;
-  --purple-border:    #E1BEE7;
-  --purple-accent:    #CE93D8;
+  --purple-primary:   #581C87;
+  --purple-dark:      #4C1D95;
+  --purple-deep:      #3B0764;
+  --purple-darkest:   #2E0854;
+  --purple-light:     #FAF5FF;
+  --purple-soft:      #F3E8FF;
+  --purple-border:    #E9D5FF;
+  --purple-accent:    #C084FC;
 
-  --navy-dark:        #2D2438;
-  --slate-dark:       #4A3C59;
-  --slate-body:       #5C4D6E;
-  --slate-muted:      #8C7B9E;
-  --slate-border:     #E1BEE7;
-  --bg-page:          #FAF5FB;
+  --navy-dark:        #1E1B4B;
+  --slate-dark:       #3730A3;
+  --slate-body:       #4B5563;
+  --slate-muted:      #6B7280;
+  --slate-border:     #E9D5FF;
+  --bg-page:          #FAF5FF;
   --card-bg:          #FFFFFF;
 
-  --blue-primary:     #9C27B0;
-  --blue-hover:       #7B1FA2;
-  --blue-light:       #F3E5F5;
-  --blue-border:      #CE93D8;
+  --blue-primary:     #581C87;
+  --blue-hover:       #4C1D95;
+  --blue-light:       #FAF5FF;
+  --blue-border:      #E9D5FF;
 
   --green-success:    #16A34A;
   --green-bg:         #F0FDF4;
@@ -67,7 +67,7 @@ body.social-hub-body::before {
   right: 0;
   bottom: 0;
   background-image: 
-    linear-gradient(135deg, rgba(250, 245, 251, 0.78) 0%, rgba(243, 229, 245, 0.65) 50%, rgba(250, 245, 251, 0.78) 100%),
+    linear-gradient(135deg, rgba(250, 245, 255, 0.88) 0%, rgba(243, 232, 255, 0.78) 50%, rgba(250, 245, 255, 0.88) 100%),
     url('admin.png');
   background-size: cover;
   background-position: center center;
@@ -80,12 +80,12 @@ body.social-hub-body::before {
    TOP HEADER (PURPLE GRADIENT)
    ========================================================================== */
 .social-header-wrapper {
-  background: linear-gradient(135deg, #AB47BC 0%, #9C27B0 60%, #8E24AA 100%);
-  border-bottom: 2.5px solid #CE93D8;
+  background: linear-gradient(135deg, #3B0764 0%, #4C1D95 55%, #581C87 100%);
+  border-bottom: 2.5px solid #7E22CE;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(171, 71, 188, 0.25);
+  box-shadow: 0 4px 20px rgba(59, 7, 100, 0.35);
 }
 
 .social-header-inner {
@@ -105,14 +105,24 @@ body.social-hub-body::before {
 }
 
 .social-inst-logo {
-  height: 46px;
+  height: 44px;
   width: auto;
   object-fit: contain;
   background: #FFFFFF;
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
   border-radius: 10px;
-  padding: 3px 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  padding: 2px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.social-dept-logo-img {
+  height: 44px;
+  width: auto;
+  max-width: 170px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .social-brand-text {
@@ -131,7 +141,7 @@ body.social-hub-body::before {
 
 .social-dept-title {
   font-size: 13px;
-  color: #F3E5F5;
+  color: #E9D5FF;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -378,20 +388,20 @@ body.social-hub-body::before {
 
 .metric-card {
   background: #FFFFFF;
-  border: 1.5px solid #E1BEE7;
+  border: 1.5px solid var(--purple-border);
   border-radius: 14px;
   padding: 16px 20px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 4px 18px rgba(171, 71, 188, 0.08);
+  box-shadow: 0 4px 18px rgba(59, 7, 100, 0.06);
   transition: all 0.2s ease;
 }
 
 .metric-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(171, 71, 188, 0.14);
-  border-color: #CE93D8;
+  box-shadow: 0 8px 24px rgba(59, 7, 100, 0.12);
+  border-color: var(--purple-accent);
 }
 
 .metric-icon {
@@ -403,12 +413,19 @@ body.social-hub-body::before {
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
+  background: var(--purple-soft);
+  color: var(--purple-primary);
+  border: 1.5px solid var(--purple-border);
 }
 
-.metric-icon.blue   { background: #FAF5FB; color: #9C27B0; border: 1px solid #E1BEE7; }
-.metric-icon.green  { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
-.metric-icon.amber  { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
-.metric-icon.purple { background: #F3E5F5; color: #7B1FA2; border: 1px solid #CE93D8; }
+.metric-icon.blue,
+.metric-icon.green,
+.metric-icon.amber,
+.metric-icon.purple {
+  background: var(--purple-soft);
+  color: var(--purple-primary);
+  border: 1.5px solid var(--purple-border);
+}
 
 .metric-data {
   display: flex;
@@ -418,13 +435,13 @@ body.social-hub-body::before {
 .metric-num {
   font-size: 22px;
   font-weight: 800;
-  color: #2D2438;
+  color: #1E1B4B;
   line-height: 1.2;
 }
 
 .metric-title {
   font-size: 12.5px;
-  color: #6E5D80;
+  color: #6B7280;
   font-weight: 600;
 }
 
@@ -435,9 +452,9 @@ body.social-hub-body::before {
   gap: 8px;
   padding: 6px;
   background: #FFFFFF;
-  border: 1.5px solid #E1BEE7;
+  border: 1.5px solid var(--purple-border);
   border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(171, 71, 188, 0.07);
+  box-shadow: 0 4px 16px rgba(59, 7, 100, 0.05);
   overflow-x: auto;
 }
 
@@ -447,7 +464,7 @@ body.social-hub-body::before {
   padding: 9px 18px;
   font-size: 13.5px;
   font-weight: 700;
-  color: #4A3C59;
+  color: #4B5563;
   border-radius: 10px;
   cursor: pointer;
   display: inline-flex;
@@ -459,14 +476,14 @@ body.social-hub-body::before {
 }
 
 .hub-tab-btn:hover {
-  background: #FAF5FB;
-  color: #7B1FA2;
+  background: var(--purple-light);
+  color: var(--purple-primary);
 }
 
 .hub-tab-btn.active {
-  background: linear-gradient(135deg, #AB47BC 0%, #8E24AA 100%);
+  background: linear-gradient(135deg, #581C87 0%, #7E22CE 100%);
   color: #FFFFFF;
-  box-shadow: 0 3px 10px rgba(171, 71, 188, 0.35);
+  box-shadow: 0 3px 10px rgba(88, 28, 135, 0.35);
 }
 
 /* Hub Tab Panel */
