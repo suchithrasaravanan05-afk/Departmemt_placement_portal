@@ -10,6 +10,7 @@ const authRoutes = require("./routes/auth");
 const studentRoutes = require("./routes/student");
 const adminRoutes = require("./routes/admin");
 const socialRoutes = require("./routes/social");
+const facultyRoutes = require("./routes/faculty");
 
 const app = express();
 const PORT = process.env.PORT || 5500;
@@ -76,6 +77,7 @@ app.use(["/api/auth", "/auth"], authRoutes);
 app.use(["/api/student", "/student"], studentRoutes);
 app.use(["/api/admin", "/admin"], adminRoutes);
 app.use(["/api/social", "/social"], socialRoutes);
+app.use(["/api/faculty", "/faculty"], facultyRoutes);
 
 // Root Route
 app.get(["/api/health", "/health"], (req, res) => {
@@ -89,7 +91,7 @@ app.get(["/api/health", "/health"], (req, res) => {
 // Global JSON Error Handler — ensures API routes NEVER return HTML on error
 app.use((err, req, res, next) => {
     console.error("❌ Unhandled server error:", err.message || err);
-    if (req.path.startsWith("/api/") || req.path.startsWith("/auth/") || req.path.startsWith("/student/") || req.path.startsWith("/admin/") || req.path.startsWith("/uploads/")) {
+    if (req.path.startsWith("/api/") || req.path.startsWith("/auth/") || req.path.startsWith("/student/") || req.path.startsWith("/admin/") || req.path.startsWith("/social/") || req.path.startsWith("/faculty/") || req.path.startsWith("/uploads/")) {
         return res.status(500).json({
             success: false,
             message: err.message || "Internal Server Error"
@@ -107,9 +109,13 @@ app.get("/social-media", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/social_dashboard.html"));
 });
 
-// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social)
+app.get(["/faculty-registration", "/faculty-register"], (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/faculty-registration.html"));
+});
+
+// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social, faculty)
 app.get("*", (req, res) => {
-    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social")) {
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social") || req.path.startsWith("/faculty")) {
         return res.status(404).json({ success: false, message: "Endpoint not found" });
     }
     res.sendFile(path.join(__dirname, "../frontend/Form.html"));

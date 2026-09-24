@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Registration — Ramco Institute of Technology | Placement Portal</title>
+  <meta name="description" content="Register your faculty account to access the Ramco Institute of Technology College Placement Portal.">
+  
+  <!-- Modern Typography (Poppins, Plus Jakarta Sans & Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheets -->
+  <link rel="stylesheet" href="faculty-registration.css?v=2026.1">
+</head>
+<body class="faculty-reg-body">
+
+  <!-- =======================================================
+       INSTITUTION HEADER / BRANDING
+       ======================================================= -->
+  <header class="portal-main-header">
+    <div class="portal-header-inner">
+      <div class="header-brand-group">
+        <img src="rit_logo.png" alt="Ramco Institute of Technology" class="header-college-logo" onerror="this.src='clg_logo.jpg'">
+        <div class="header-brand-titles">
+          <div class="brand-title-row">
+            <span class="inst-name">RAMCO INSTITUTE OF TECHNOLOGY</span>
+            <span class="inst-tag">AUTONOMOUS</span>
+          </div>
+          <div class="brand-subtitle-row">
+            Department of Computer Science and Business Systems &bull; Placement Portal
+          </div>
+        </div>
+      </div>
+      <div class="header-right-actions">
+        <a href="Form.html#faculty" class="btn-header-login">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          <span>Faculty Login</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- =======================================================
+       MAIN REGISTRATION SECTION
+       ======================================================= -->
+  <main class="faculty-reg-main">
+    <div class="faculty-reg-container">
+
+      <!-- Breadcrumbs & Portal Navigation -->
+      <nav class="faculty-reg-nav" aria-label="Breadcrumb">
+        <a href="Form.html" class="btn-back-portal">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Portal Home</span>
+        </a>
+        <div class="portal-tag-badge">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Faculty Onboarding</span>
+        </div>
+      </nav>
+
+      <!-- Registration Card -->
+      <div class="faculty-reg-card">
+        
+        <!-- Card Header Banner -->
+        <div class="reg-card-hero">
+          <div class="reg-hero-content">
+            <div class="reg-hero-icon">
+              <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <div class="reg-hero-titles">
+              <h1>Faculty Registration</h1>
+              <p>Register your faculty account to access the College Placement Portal</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Body with Form -->
+        <div class="reg-card-body">
+
+          <!-- Global Alert Banner -->
+          <div id="regAlertBox" class="reg-alert hidden" role="alert"></div>
+
+          <form id="facultyRegistrationForm" onsubmit="handleFacultyRegistration(event)" novalidate>
+
+            <!-- -------------------------------------------------
+                 SECTION 1: PERSONAL DETAILS
+                 ------------------------------------------------- -->
+            <section class="form-section-block" aria-labelledby="headingPersonalDetails">
+              <div class="section-heading-wrap">
+                <span class="section-num-badge">1</span>
+                <h2 class="section-title" id="headingPersonalDetails">Personal Details</h2>
+              </div>
+
+              <div class="form-grid-2col">
+                <!-- Full Name -->
+                <div class="form-group form-grid-full">
+                  <label for="facultyFullName" class="form-label">
+                    Full Name <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-user field-icon"></i>
+                    <input 
+                      type="text" 
+                      id="facultyFullName" 
+                      class="form-input" 
+                      placeholder="Enter your full name" 
+                      required 
+                      autocomplete="name"
+                    >
+                  </div>
+                </div>
+
+                <!-- Email ID -->
+                <div class="form-group">
+                  <label for="facultyEmail" class="form-label">
+                    Email ID <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-envelope field-icon"></i>
+                    <input 
+                      type="email" 
+                      id="facultyEmail" 
+                      class="form-input" 
+                      placeholder="Enter your official email ID" 
+                      required 
+                      autocomplete="email"
+                    >
+                  </div>
+                  <span class="field-hint-msg">Prefer official college/institution email</span>
+                </div>
+
+                <!-- Mobile Number -->
+                <div class="form-group">
+                  <label for="facultyMobile" class="form-label">
+                    Mobile Number <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-phone field-icon"></i>
+                    <input 
+                      type="tel" 
+                      id="facultyMobile" 
+                      class="form-input" 
+                      placeholder="Enter your mobile number" 
+                      maxlength="10" 
+                      required 
+                      autocomplete="tel"
+                    >
+                  </div>
+                  <span class="field-hint-msg">10-digit Indian mobile number</span>
+                </div>
+
+                <!-- Gender -->
+                <div class="form-group form-grid-full">
+                  <label for="facultyGender" class="form-label">
+                    Gender <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-venus-mars field-icon"></i>
+                    <select id="facultyGender" class="form-select" required>
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- -------------------------------------------------
+                 SECTION 2: DEPARTMENT & PROFESSIONAL DETAILS
+                 ------------------------------------------------- -->
+            <section class="form-section-block" aria-labelledby="headingDeptDetails">
+              <div class="section-heading-wrap">
+                <span class="section-num-badge">2</span>
+                <h2 class="section-title" id="headingDeptDetails">Department &amp; Professional Details</h2>
+              </div>
+
+              <div class="form-grid-2col">
+                <!-- Department -->
+                <div class="form-group">
+                  <label for="facultyDepartment" class="form-label">
+                    Department <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-building-columns field-icon"></i>
+                    <select id="facultyDepartment" class="form-select" required>
+                      <option value="">Select Department</option>
+                      <option value="Computer Science and Business Systems (CSBS)">Computer Science and Business Systems (CSBS)</option>
+                      <option value="Computer Science and Engineering (CSE)">Computer Science and Engineering (CSE)</option>
+                      <option value="Information Technology (IT)">Information Technology (IT)</option>
+                      <option value="Electronics and Communication Engineering (ECE)">Electronics and Communication Engineering (ECE)</option>
+                      <option value="Electrical and Electronics Engineering (EEE)">Electrical and Electronics Engineering (EEE)</option>
+                      <option value="Mechanical Engineering (MECH)">Mechanical Engineering (MECH)</option>
+                      <option value="Civil Engineering (CIVIL)">Civil Engineering (CIVIL)</option>
+                      <option value="Artificial Intelligence and Data Science (AIDS)">Artificial Intelligence and Data Science (AIDS)</option>
+                      <option value="Biotechnology">Biotechnology</option>
+                      <option value="Biomedical Engineering">Biomedical Engineering</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Designation -->
+                <div class="form-group">
+                  <label for="facultyDesignation" class="form-label">
+                    Designation <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-id-badge field-icon"></i>
+                    <select id="facultyDesignation" class="form-select" required>
+                      <option value="">Select Designation</option>
+                      <option value="Assistant Professor">Assistant Professor</option>
+                      <option value="Associate Professor">Associate Professor</option>
+                      <option value="Professor">Professor</option>
+                      <option value="Head of Department">Head of Department</option>
+                      <option value="Faculty Coordinator">Faculty Coordinator</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Years of Experience -->
+                <div class="form-group">
+                  <label for="facultyExperience" class="form-label">
+                    Years of Experience <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-briefcase field-icon"></i>
+                    <input 
+                      type="number" 
+                      id="facultyExperience" 
+                      class="form-input" 
+                      placeholder="Enter years of experience" 
+                      min="0" 
+                      max="50" 
+                      step="0.5" 
+                      required
+                    >
+                  </div>
+                  <span class="field-hint-msg">Total academic / industry experience (0 to 50)</span>
+                </div>
+
+                <!-- Qualification -->
+                <div class="form-group">
+                  <label for="facultyQualification" class="form-label">
+                    Qualification <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-graduation-cap field-icon"></i>
+                    <input 
+                      type="text" 
+                      id="facultyQualification" 
+                      class="form-input" 
+                      placeholder="e.g., M.E., M.Tech, MBA, Ph.D." 
+                      required
+                    >
+                  </div>
+                </div>
+
+                <!-- Specialization -->
+                <div class="form-group form-grid-full">
+                  <label for="facultySpecialization" class="form-label">
+                    Specialization <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-microchip field-icon"></i>
+                    <input 
+                      type="text" 
+                      id="facultySpecialization" 
+                      class="form-input" 
+                      placeholder="e.g., Artificial Intelligence, Data Analytics" 
+                      required
+                    >
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- -------------------------------------------------
+                 SECTION 3: LOGIN DETAILS
+                 ------------------------------------------------- -->
+            <section class="form-section-block" aria-labelledby="headingLoginDetails">
+              <div class="section-heading-wrap">
+                <span class="section-num-badge">3</span>
+                <h2 class="section-title" id="headingLoginDetails">Login Details</h2>
+              </div>
+
+              <div class="form-grid-2col">
+                <!-- Login Email ID -->
+                <div class="form-group form-grid-full">
+                  <label for="facultyLoginEmail" class="form-label">
+                    Login Email ID <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-at field-icon"></i>
+                    <input 
+                      type="email" 
+                      id="facultyLoginEmail" 
+                      class="form-input" 
+                      placeholder="Enter email for login" 
+                      required 
+                      autocomplete="username"
+                    >
+                  </div>
+                  <span class="field-hint-msg">Automatically synchronized with your registered Email ID</span>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                  <label for="facultyPassword" class="form-label">
+                    Password <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-lock field-icon"></i>
+                    <input 
+                      type="password" 
+                      id="facultyPassword" 
+                      class="form-input" 
+                      placeholder="Create a strong password" 
+                      required 
+                      autocomplete="new-password"
+                    >
+                    <button 
+                      type="button" 
+                      class="btn-toggle-pw" 
+                      onclick="togglePasswordVisibility('facultyPassword', this)" 
+                      title="Show password"
+                    >
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group">
+                  <label for="facultyConfirmPassword" class="form-label">
+                    Confirm Password <span class="req-star">*</span>
+                  </label>
+                  <div class="input-container">
+                    <i class="fa-solid fa-shield-halved field-icon"></i>
+                    <input 
+                      type="password" 
+                      id="facultyConfirmPassword" 
+                      class="form-input" 
+                      placeholder="Re-enter your password" 
+                      required 
+                      autocomplete="new-password"
+                    >
+                    <button 
+                      type="button" 
+                      class="btn-toggle-pw" 
+                      onclick="togglePasswordVisibility('facultyConfirmPassword', this)" 
+                      title="Show password"
+                    >
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Password Requirements Checklist Display -->
+                <div class="form-grid-full">
+                  <div class="password-criteria-panel">
+                    <div class="criteria-title">
+                      <i class="fa-solid fa-circle-info"></i>
+                      <span>Password Requirements:</span>
+                    </div>
+                    <ul class="criteria-list">
+                      <li class="criteria-item unmet" id="critLength">
+                        <i class="fa-regular fa-circle"></i>
+                        <span>Minimum 8 characters</span>
+                      </li>
+                      <li class="criteria-item unmet" id="critUpper">
+                        <i class="fa-regular fa-circle"></i>
+                        <span>At least one uppercase letter (A-Z)</span>
+                      </li>
+                      <li class="criteria-item unmet" id="critLower">
+                        <i class="fa-regular fa-circle"></i>
+                        <span>At least one lowercase letter (a-z)</span>
+                      </li>
+                      <li class="criteria-item unmet" id="critNumber">
+                        <i class="fa-regular fa-circle"></i>
+                        <span>At least one number (0-9)</span>
+                      </li>
+                      <li class="criteria-item unmet" id="critSpecial">
+                        <i class="fa-regular fa-circle"></i>
+                        <span>At least one special character (!@#$%^&amp;*)</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- -------------------------------------------------
+                 REGISTRATION & CLEAR BUTTONS
+                 ------------------------------------------------- -->
+            <div class="form-actions-row">
+              <button type="submit" class="btn-register-primary" id="btnRegisterFaculty">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Register Faculty</span>
+              </button>
+              
+              <button type="button" class="btn-clear-secondary" onclick="clearFacultyForm()">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Clear Form</span>
+              </button>
+            </div>
+
+            <!-- Existing Faculty Login Link -->
+            <div class="existing-login-prompt">
+              Already have an account? 
+              <a href="Form.html#faculty">
+                <span>Login here</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- =======================================================
+       REGISTRATION SUCCESS MODAL OVERLAY
+       ======================================================= -->
+  <div id="regSuccessModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
+    <div class="modal-card">
+      <div class="modal-success-icon">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h3 class="modal-title" id="successModalTitle">Registration Submitted</h3>
+      <p class="modal-message">
+        Faculty registration successful! You can now login to the Faculty Portal.
+      </p>
+
+      <div class="modal-details-box">
+        <div class="modal-details-row">
+          <strong>Faculty Name:</strong>
+          <span id="modalFacultyName">---</span>
+        </div>
+        <div class="modal-details-row">
+          <strong>Official Email:</strong>
+          <span id="modalFacultyEmail">---</span>
+        </div>
+        <div class="modal-details-row">
+          <strong>Department:</strong>
+          <span id="modalFacultyDept">---</span>
+        </div>
+        <div class="modal-details-row">
+          <strong>Designation:</strong>
+          <span id="modalFacultyDesig">---</span>
+        </div>
+        <div class="modal-details-row">
+          <strong>Account Status:</strong>
+          <span style="color:#D97706;font-weight:700;"><i class="fa-solid fa-clock"></i> Pending (Under Verification)</span>
+        </div>
+      </div>
+
+      <button type="button" class="btn-modal-action" onclick="redirectToFacultyLogin()">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>Proceed to Faculty Login</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       FOOTER
+       ======================================================= -->
+  <footer class="portal-dept-footer">
+    <div class="dept-footer-inner">
+      <div class="dept-footer-brand">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span>Department of Computer Science and Business Systems &bull; Ramco Institute of Technology</span>
+      </div>
+      <div>
+        <span>Authorized Faculty &amp; Institutional Access Only &bull; 2026</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="faculty-registration.js?v=2026.1"></script>
+</body>
+</html>
