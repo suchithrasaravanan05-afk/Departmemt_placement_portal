@@ -23,8 +23,9 @@
       <img src="rit_logo.png" alt="Ramco Institute of Technology Logo" class="admin-logo-img">
       <div class="admin-logo-text">
         <h1><strong>RAMCO INSTITUTE OF TECHNOLOGY</strong></h1>
-        <p><strong>Department Portal CSBS</strong> &bull; Placement Administration</p>
+        <p><strong>Department of Computer Science and Business Systems</strong> &bull; Placement Administration</p>
       </div>
+      <img src="csbs_logo.png" alt="CSBS Department Logo" class="admin-dept-logo-img" onerror="this.src='csbs_logo_clean.png'">
     </div>
     
     <div class="admin-user-profile-wrap">
@@ -73,7 +74,7 @@
   </div>
 </header>
 <div class="admin-dept-banner">
-  <i class="fa-solid fa-graduation-cap"></i> <strong>Department Portal CSBS</strong> — Placement Cell Dashboard
+  <i class="fa-solid fa-graduation-cap"></i> <strong>Department of Computer Science and Business Systems</strong> — Placement Administration Portal
 </div>
 
 <!-- ===== MAIN ===== -->
@@ -93,21 +94,21 @@
   <!-- Stats Overview -->
   <div class="admin-stats-grid">
     <div class="admin-stat-card clickable" onclick="switchAdminTab('students')" style="cursor:pointer;" title="Click to view registered students roster">
-      <div class="admin-stat-icon blue"><i class="fa-solid fa-users"></i></div>
+      <div class="admin-stat-icon purple"><i class="fa-solid fa-users"></i></div>
       <div>
         <div class="admin-stat-val" id="statTotalStudents">—</div>
         <div class="admin-stat-lbl">Registered Students</div>
       </div>
     </div>
-    <div class="admin-stat-card clickable" onclick="switchAdminTab('placed')" style="cursor:pointer;border-color:#a7f3d0;" title="Click to view placed students">
-      <div class="admin-stat-icon green"><i class="fa-solid fa-user-check"></i></div>
+    <div class="admin-stat-card clickable" onclick="switchAdminTab('placed')" style="cursor:pointer;" title="Click to view placed students">
+      <div class="admin-stat-icon purple"><i class="fa-solid fa-user-check"></i></div>
       <div>
         <div class="admin-stat-val" id="statPlacedStudents">—</div>
-        <div class="admin-stat-lbl">Placed Students <i class="fa-solid fa-arrow-right" style="font-size:10px;margin-left:2px;color:#10b981;"></i></div>
+        <div class="admin-stat-lbl">Placed Students <i class="fa-solid fa-arrow-right" style="font-size:10px;margin-left:4px;color:var(--purple-600);"></i></div>
       </div>
     </div>
     <div class="admin-stat-card clickable" onclick="switchAdminTab('drives')" style="cursor:pointer;" title="Click to manage placement drives">
-      <div class="admin-stat-icon orange"><i class="fa-solid fa-building"></i></div>
+      <div class="admin-stat-icon purple"><i class="fa-solid fa-building"></i></div>
       <div>
         <div class="admin-stat-val" id="statActiveDrives">—</div>
         <div class="admin-stat-lbl">Placement Drives</div>
