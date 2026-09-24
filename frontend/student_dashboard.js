@@ -2215,23 +2215,78 @@ async function loadStudentCertificates(showToast = false) {
       if (pendingFbs.length > 0) {
         pendingBanner.classList.remove('hidden');
         pendingBanner.innerHTML = `
-          <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="width:40px;height:40px;border-radius:10px;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;">
-                <i class="fa-solid fa-comments"></i>
-              </div>
-              <div>
-                <strong style="color:#1e3a8a;font-size:14px;">${pendingFbs.length} Pending Event Feedback${pendingFbs.length === 1 ? '' : 's'}</strong>
-                <p style="margin:2px 0 0;font-size:12px;color:#3b82f6;">Complete the feedback form for "${escapeHtml(pendingFbs[0].event_name)}" to automatically generate your PDF certificate.</p>
+          <div class="pending-feedbacks-panel">
+            <div class="pending-feedbacks-header">
+              <div class="pending-feedbacks-title-wrap">
+                <div class="pending-feedbacks-icon">
+                  <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+                <div>
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <h3 style="margin:0;font-size:16px;font-weight:700;color:#fff;">Pending Event Feedbacks &amp; Quizzes</h3>
+                    <span class="pending-feedbacks-badge">
+                      <i class="fa-solid fa-clock"></i> ${pendingFbs.length} Pending
+                    </span>
+                  </div>
+                  <p style="margin:3px 0 0;font-size:12.5px;color:#dbeafe;">Complete each event feedback &amp; quiz below individually to claim your verified certificate.</p>
+                </div>
               </div>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="openFeedbackModal(${pendingFbs[0].id})" style="padding:8px 16px;border-radius:8px;">
-              <i class="fa-solid fa-pencil"></i> Fill Feedback Now
-            </button>
+
+            <div class="pending-feedbacks-list">
+              ${pendingFbs.map((fb, idx) => {
+                const quizArr = Array.isArray(fb.quiz) ? fb.quiz : (Array.isArray(fb.quiz_questions) ? fb.quiz_questions : []);
+                const quizCount = quizArr.length;
+                const dateStr = fb.event_date ? fmtDate(fb.event_date) : '---';
+                const venueStr = fb.event_venue || 'Department Hall';
+
+                return `
+                  <div class="pending-feedback-item-card">
+                    <div style="display:flex;align-items:flex-start;gap:14px;flex:1;min-width:280px;">
+                      <div class="pending-item-index">
+                        ${idx + 1}
+                      </div>
+                      <div style="flex:1;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;">
+                          <h4 style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${escapeHtml(fb.event_name)}</h4>
+                          <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fa-solid fa-clock"></i> Feedback Pending
+                          </span>
+                          ${quizCount > 0 ? `
+                            <span class="badge" style="background:#ede9fe;color:#5b21b6;border:1px solid #ddd6fe;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-clipboard-question"></i> ${quizCount} Quiz Question${quizCount === 1 ? '' : 's'}
+                            </span>
+                          ` : ''}
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:#64748b;margin-top:4px;">
+                          <span><i class="fa-regular fa-calendar-days" style="color:#2563eb;margin-right:4px;"></i>${dateStr}</span>
+                          <span><i class="fa-solid fa-location-dot" style="color:#ef4444;margin-right:4px;"></i>${escapeHtml(venueStr)}</span>
+                          ${fb.signatory_name ? `<span><i class="fa-solid fa-user-tie" style="color:#7c3aed;margin-right:4px;"></i>${escapeHtml(fb.signatory_name)}</span>` : ''}
+                        </div>
+
+                        ${fb.message && fb.message.trim() ? `
+                          <div style="margin-top:6px;font-size:11.5px;color:#475569;background:#f1f5f9;padding:4px 10px;border-radius:6px;display:inline-block;max-width:600px;">
+                            <i class="fa-solid fa-circle-info" style="color:#64748b;margin-right:4px;"></i>${escapeHtml(fb.message)}
+                          </div>
+                        ` : ''}
+                      </div>
+                    </div>
+
+                    <div style="flex-shrink:0;">
+                      <button class="btn btn-primary" onclick="openFeedbackModal(${fb.id})" style="padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+                        <i class="fa-solid fa-pencil"></i> Fill Feedback Now
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
         `;
       } else {
         pendingBanner.classList.add('hidden');
+        pendingBanner.innerHTML = '';
       }
     }
 
@@ -2249,7 +2304,12 @@ async function loadStudentCertificates(showToast = false) {
             <i class="fa-solid fa-award" style="font-size:36px;color:#cbd5e1;display:block;margin-bottom:10px;"></i>
             <h4 style="color:#475569;margin-bottom:6px;">No Certificates Generated Yet</h4>
             <p style="color:#94a3b8;font-size:13px;max-width:400px;margin:0 auto 16px;">When faculty or department admins send event feedback requests for workshops or drives you attend, fill in the feedback to receive your verified Certificate of Participation.</p>
-            ${pendingFbs.length > 0 ? `<button class="btn btn-primary" onclick="openFeedbackModal(${pendingFbs[0].id})"><i class="fa-solid fa-pencil"></i> Complete Pending Feedback</button>` : ''}
+            ${pendingFbs.length > 0 ? `
+              <p style="font-size:13px;color:#475569;margin-bottom:12px;">You have <strong>${pendingFbs.length}</strong> pending event${pendingFbs.length === 1 ? '' : 's'} waiting for your feedback above.</p>
+              <button class="btn btn-primary" onclick="el('pendingFeedbacksBanner')?.scrollIntoView({ behavior: 'smooth', block: 'start' });">
+                <i class="fa-solid fa-arrow-up"></i> Review ${pendingFbs.length} Pending Event Feedback${pendingFbs.length === 1 ? '' : 's'}
+              </button>
+            ` : ''}
           </div>
         `;
       }
