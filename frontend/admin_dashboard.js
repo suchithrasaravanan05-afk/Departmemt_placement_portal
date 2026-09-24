@@ -3863,7 +3863,7 @@ async function handleCertificateLookup(e) {
   const btn = el('btnCertSearch');
 
   if (!certId) {
-    showAdminAlert('Please enter a Certificate ID.');
+    showAdminAlert('Please enter a Certificate ID, Register Number, or Student Name.');
     return;
   }
 
@@ -3876,7 +3876,7 @@ async function handleCertificateLookup(e) {
     container.innerHTML = `
       <div class="admin-panel-card" style="padding:40px;text-align:center;">
         <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#4338ca;margin-bottom:10px;"></i>
-        <p style="color:#64748b;font-size:14px;font-weight:600;">Searching institutional records for Certificate ID: ${escapeHtml(certId)}...</p>
+        <p style="color:#64748b;font-size:14px;font-weight:600;">Searching institutional records for: ${escapeHtml(certId)}...</p>
       </div>
     `;
   }
@@ -3888,7 +3888,7 @@ async function handleCertificateLookup(e) {
     const data = await res.json();
 
     if (res.status === 404 || !data.success || !data.data || !data.data.found) {
-      renderCertificateNotFound(certId);
+      renderCertificateNotFound(certId, data?.message);
       return;
     }
 
@@ -3912,7 +3912,7 @@ async function handleCertificateLookup(e) {
   }
 }
 
-function renderCertificateNotFound(certId) {
+function renderCertificateNotFound(certId, customMsg) {
   const container = el('certLookupResultsContainer');
   if (!container) return;
   container.innerHTML = `
@@ -3920,12 +3920,17 @@ function renderCertificateNotFound(certId) {
       <div style="width:64px;height:64px;border-radius:50%;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <h3 style="margin:0 0 8px 0;font-size:20px;font-weight:800;color:#991b1b;">Certificate Not Found</h3>
-      <p style="margin:0 auto 16px auto;font-size:14px;color:#7f1d1d;max-width:440px;line-height:1.5;">
-        No certificate is registered with this Certificate ID: <strong style="font-family:monospace;background:#fecaca;padding:2px 8px;border-radius:4px;">${escapeHtml(certId)}</strong>.
+      <h3 style="margin:0 0 8px 0;font-size:20px;font-weight:800;color:#991b1b;">Record Not Found</h3>
+      <p style="margin:0 auto 16px auto;font-size:14px;color:#7f1d1d;max-width:500px;line-height:1.5;">
+        ${escapeHtml(customMsg || `No certificate, register number, or student record found matching: "${certId}".`)}
       </p>
-      <div style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#991b1b;background:#fee2e2;padding:8px 16px;border-radius:8px;">
-        <i class="fa-solid fa-shield-halved"></i> Please verify the ID format or check if the certificate is pending submission.
+      <div style="display:inline-flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;">
+        <div style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#991b1b;background:#fee2e2;padding:8px 16px;border-radius:8px;">
+          <i class="fa-solid fa-shield-halved"></i> Verify the Certificate ID, Register Number or Name format.
+        </div>
+        <button type="button" class="btn btn-sm btn-primary" onclick="openDirectIssueModal('${escapeHtml(certId)}')" style="font-size:12px;padding:8px 16px;border-radius:8px;">
+          <i class="fa-solid fa-plus-circle"></i> Issue Certificate for this Student
+        </button>
       </div>
     </div>
   `;
@@ -3935,10 +3940,298 @@ function renderCertificateLookupResult(data) {
   const container = el('certLookupResultsContainer');
   if (!container) return;
 
-  const { student, certificate, event, completion_status, history } = data;
+  const { search_type, student, certificate, event, completion_status, history, certificates, students } = data;
+
+  // ----------------------------------------------------------
+  // VIEW 1: SEARCH TYPE === 'student' (REGISTER NUMBER OR SINGLE STUDENT NAME SEARCH)
+  // ----------------------------------------------------------
+  if (search_type === 'student') {
+    const certList = certificates || [];
+    const totalCount = certList.length;
+
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Top Student Records Ribbon -->
+        <div style="background:linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);color:#fff;border-radius:14px;padding:22px 26px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;box-shadow:0 10px 25px rgba(49,46,129,0.25);">
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;">
+              <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <div>
+              <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#c7d2fe;font-weight:700;">
+                STUDENT CERTIFICATE RECORDS
+              </div>
+              <h3 style="margin:3px 0 0 0;font-size:20px;font-weight:800;color:#fff;">
+                ${escapeHtml(student.name || 'Student')}
+                <span style="font-size:14px;font-weight:500;color:#e0e7ff;margin-left:8px;font-family:monospace;">
+                  (${escapeHtml(student.register_number || '---')})
+                </span>
+              </h3>
+              <div style="font-size:12px;color:#cbd5e1;margin-top:2px;">
+                Department of ${escapeHtml(student.department || 'Computer Science and Business Systems')}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="badge" style="background:rgba(255,255,255,0.2);color:#fff;font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);">
+              <i class="fa-solid fa-award"></i> Total Certificates: ${totalCount}
+            </span>
+            <button class="btn btn-sm" onclick="openDirectIssueModal('${escapeHtml(student.register_number || student.name || '')}')" style="background:#fff;color:#1e1b4b;font-weight:700;padding:9px 16px;border-radius:8px;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;">
+              <i class="fa-solid fa-plus-circle" style="color:#2563eb;"></i> Issue Certificate
+            </button>
+          </div>
+        </div>
+
+        <!-- Student Information Card -->
+        <div class="admin-panel-card" style="padding:22px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#eff6ff;color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-id-card"></i>
+            </div>
+            <div>
+              <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Student Information</h4>
+              <p style="margin:0;font-size:11px;color:#64748b;">Verified institutional identity &amp; academic profile</p>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;font-size:13px;">
+            <div>
+              <span style="color:#64748b;display:block;font-size:11px;">STUDENT NAME</span>
+              <strong style="color:#0f172a;font-size:14px;">${escapeHtml(student.name || '---')}</strong>
+            </div>
+            <div>
+              <span style="color:#64748b;display:block;font-size:11px;">REGISTER NUMBER</span>
+              <strong style="color:#2563eb;font-family:monospace;font-size:14px;">${escapeHtml(student.register_number || '---')}</strong>
+            </div>
+            <div>
+              <span style="color:#64748b;display:block;font-size:11px;">DEPARTMENT</span>
+              <strong style="color:#0f172a;">${escapeHtml(student.department || 'CSBS')}</strong>
+            </div>
+            <div>
+              <span style="color:#64748b;display:block;font-size:11px;">DEGREE &amp; YEAR</span>
+              <strong style="color:#0f172a;">${escapeHtml(student.degree || 'B.Tech')} (Year ${escapeHtml(student.year || 4)})</strong>
+            </div>
+            ${student.cgpa !== null && student.cgpa !== undefined ? `
+            <div>
+              <span style="color:#64748b;display:block;font-size:11px;">CGPA</span>
+              <span class="badge badge-success" style="font-weight:700;font-size:12px;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;">${student.cgpa} / 10.0</span>
+            </div>
+            ` : ''}
+            <div>
+              <span style="color:#64748b;display:block;font-size:11px;">EMAIL</span>
+              <strong style="color:#0f172a;font-size:12px;">${escapeHtml(student.email || '---')}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- ALL CERTIFICATES BELONGING TO THAT STUDENT -->
+        <div class="admin-panel-card" style="padding:22px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:8px;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:16px;">
+                <i class="fa-solid fa-award"></i>
+              </div>
+              <div>
+                <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Issued Certificates</h4>
+                <p style="margin:0;font-size:11px;color:#64748b;">All institutional certificates issued to ${escapeHtml(student.name)}</p>
+              </div>
+            </div>
+            <span class="badge badge-purple" style="font-size:12px;">${totalCount} Certificate${totalCount === 1 ? '' : 's'}</span>
+          </div>
+
+          ${certList.length === 0 ? `
+            <div style="padding:36px 20px;text-align:center;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;">
+              <i class="fa-solid fa-award" style="font-size:32px;color:#94a3b8;margin-bottom:10px;display:block;"></i>
+              <h4 style="color:#334155;margin:0 0 6px 0;">No Certificates Issued Yet</h4>
+              <p style="color:#64748b;font-size:13px;max-width:440px;margin:0 auto 16px auto;">
+                This student is registered in the institutional database, but no workshop or placement event certificates have been issued yet.
+              </p>
+              <button class="btn btn-primary btn-sm" onclick="openDirectIssueModal('${escapeHtml(student.register_number || '')}')">
+                <i class="fa-solid fa-plus-circle"></i> Issue Certificate Now
+              </button>
+            </div>
+          ` : `
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;">
+              ${certList.map(c => {
+                const cJson = JSON.stringify(c.raw || c).replace(/"/g, '&quot;');
+                const eventDateFormatted = c.event_date ? fmtDate(c.event_date) : '---';
+                const issueDateFormatted = c.issue_date ? fmtDate(c.issue_date) : '---';
+
+                return `
+                  <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:transform .15s ease;">
+                    <div style="background:linear-gradient(135deg, #1e1b4b, #312e81);color:#fff;padding:12px 16px;">
+                      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:#c7d2fe;">RAMCO INSTITUTE OF TECHNOLOGY</div>
+                      <h4 style="margin:3px 0 0 0;font-size:15px;font-weight:700;color:#fff;">${escapeHtml(c.event_name || 'Event')}</h4>
+                    </div>
+
+                    <div style="padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:8px;font-size:12.5px;">
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#64748b;">Certificate No:</span>
+                        <strong style="color:#4338ca;font-family:monospace;background:#e0e7ff;padding:2px 8px;border-radius:4px;font-size:11.5px;">
+                          ${escapeHtml(c.certificate_number)}
+                        </strong>
+                      </div>
+
+                      <div style="display:flex;justify-content:space-between;">
+                        <span style="color:#64748b;">Event Date:</span>
+                        <strong style="color:#334155;">${eventDateFormatted}</strong>
+                      </div>
+
+                      <div style="display:flex;justify-content:space-between;">
+                        <span style="color:#64748b;">Issue Date:</span>
+                        <strong style="color:#334155;">${issueDateFormatted}</strong>
+                      </div>
+
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#64748b;">Status:</span>
+                        <span class="badge badge-green" style="font-size:11px;font-weight:700;">
+                          <i class="fa-solid fa-shield-check"></i> ${escapeHtml(c.status || 'Digitally Verified')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style="padding:10px 16px 14px 16px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px;">
+                      <button class="btn btn-outline-primary btn-sm" onclick="viewCertificatePdfFromAdmin(${cJson}, false)" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:6px;padding:7px 10px;font-size:12px;">
+                        <i class="fa-solid fa-eye"></i> View PDF
+                      </button>
+                      <button class="btn btn-primary btn-sm" onclick="viewCertificatePdfFromAdmin(${cJson}, true)" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:6px;padding:7px 10px;font-size:12px;">
+                        <i class="fa-solid fa-download"></i> Download PDF
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+
+        <!-- Student Event History Table -->
+        <div class="admin-panel-card" style="padding:22px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:8px;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:16px;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </div>
+              <div>
+                <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Student Event History</h4>
+                <p style="margin:0;font-size:11px;color:#64748b;">Completed events &amp; earned certificates for ${escapeHtml(student.name || 'this student')}</p>
+              </div>
+            </div>
+            <span class="badge badge-blue">${(history || []).length} Event${(history || []).length === 1 ? '' : 's'} Completed</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table" style="width:100%;">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Event Date</th>
+                  <th>Feedback</th>
+                  <th>Quiz</th>
+                  <th>Certificate ID</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(history && history.length > 0) ? history.map(h => {
+                  const hCertJson = JSON.stringify(h.certificate || {}).replace(/"/g, '&quot;');
+                  return `
+                    <tr>
+                      <td><strong>${escapeHtml(h.event_name)}</strong></td>
+                      <td style="color:#64748b;font-size:12px;">${fmtDate(h.event_date)}</td>
+                      <td>
+                        <span class="badge badge-green" style="font-size:11px;">
+                          <i class="fa-solid fa-circle-check"></i> ${escapeHtml(h.feedback_status)}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge badge-blue" style="font-size:11px;">
+                          <i class="fa-solid fa-list-check"></i> ${escapeHtml(h.quiz_status)}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">
+                          ${escapeHtml(h.certificate_id)}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn btn-outline-primary btn-sm" onclick="viewCertificatePdfFromAdmin(${hCertJson}, false)" style="font-size:11px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">
+                          <i class="fa-solid fa-file-pdf"></i> View PDF
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') : `
+                  <tr>
+                    <td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">No additional events found for this student.</td>
+                  </tr>
+                `}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    `;
+    return;
+  }
+
+  // ----------------------------------------------------------
+  // VIEW 2: SEARCH TYPE === 'student_list' (MULTIPLE STUDENTS MATCHED NAME)
+  // ----------------------------------------------------------
+  if (search_type === 'student_list') {
+    const list = students || [];
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h3 style="margin:0;font-size:17px;font-weight:800;color:#1e3a8a;">Matching Students Found (${list.length})</h3>
+            <p style="margin:2px 0 0 0;font-size:13px;color:#3b82f6;">Select any student below to view their complete certificate records.</p>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:16px;">
+          ${list.map(st => `
+            <div class="admin-panel-card" style="padding:20px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;display:flex;flex-direction:column;justify-content:space-between;gap:14px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                  <div>
+                    <h4 style="margin:0;font-size:16px;font-weight:800;color:#0f172a;">${escapeHtml(st.name)}</h4>
+                    <p style="margin:2px 0 0 0;font-size:12px;color:#64748b;">${escapeHtml(st.department)}</p>
+                  </div>
+                  <span class="badge badge-purple" style="font-size:11px;">${st.total_certificates} Certificate${st.total_certificates === 1 ? '' : 's'}</span>
+                </div>
+                <div style="font-size:12.5px;color:#475569;margin-top:6px;">
+                  <div>Register No: <strong style="color:#2563eb;font-family:monospace;">${escapeHtml(st.register_number)}</strong></div>
+                  <div>Email: ${escapeHtml(st.email)}</div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;border-top:1px solid #f1f5f9;padding-top:12px;">
+                <button class="btn btn-primary btn-sm" onclick="quickFillCertLookup('${escapeHtml(st.register_number)}')" style="flex:1;padding:8px;font-size:12px;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:6px;">
+                  <i class="fa-solid fa-eye"></i> View Certificates (${st.total_certificates})
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="openDirectIssueModal('${escapeHtml(st.register_number)}')" style="padding:8px 12px;font-size:12px;border-radius:6px;">
+                  <i class="fa-solid fa-plus"></i> Issue
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // ----------------------------------------------------------
+  // VIEW 3: SEARCH TYPE === 'certificate' (EXACT CERTIFICATE NUMBER MATCH)
+  // ----------------------------------------------------------
   const certJson = JSON.stringify(certificate.raw || certificate).replace(/"/g, '&quot;');
-  const certDateStr = certificate.certificate_date ? fmtDate(certificate.certificate_date) : '---';
+  const certDateStr = certificate.event_date ? fmtDate(certificate.event_date) : '---';
   const genDateStr = certificate.generated_date ? fmtDate(certificate.generated_date) : fmtDate(new Date());
+  const issueDateStr = certificate.issue_date ? fmtDate(certificate.issue_date) : '---';
 
   container.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:20px;">
@@ -3950,18 +4243,18 @@ function renderCertificateLookupResult(data) {
             <i class="fa-solid fa-circle-check"></i>
           </div>
           <div>
-            <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#a7f3d0;font-weight:700;">Institutional Record Verified</div>
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#a7f3d0;font-weight:700;">CERTIFICATE VERIFIED &bull; INSTITUTIONAL RECORD</div>
             <h3 style="margin:2px 0 0 0;font-size:19px;font-weight:800;color:#fff;">
-              Certificate ID: <span style="font-family:monospace;letter-spacing:0.5px;">${escapeHtml(certificate.certificate_id)}</span>
+              Certificate Number: <span style="font-family:monospace;letter-spacing:0.5px;">${escapeHtml(certificate.certificate_number || certificate.certificate_id)}</span>
             </h3>
           </div>
         </div>
 
         <div style="display:flex;align-items:center;gap:10px;">
-          <button class="btn btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, false)" style="background:#fff;color:#064e3b;font-weight:700;padding:9px 16px;border-radius:8px;display:flex;align-items:center;gap:6px;">
-            <i class="fa-solid fa-file-pdf"></i> View Certificate PDF
+          <button class="btn btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, false)" style="background:#fff;color:#064e3b;font-weight:700;padding:9px 16px;border-radius:8px;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;">
+            <i class="fa-solid fa-file-pdf"></i> View Certificate
           </button>
-          <button class="btn btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, true)" style="background:rgba(255,255,255,0.2);color:#fff;font-weight:700;padding:9px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;gap:6px;">
+          <button class="btn btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, true)" style="background:rgba(255,255,255,0.2);color:#fff;font-weight:700;padding:9px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;gap:6px;cursor:pointer;">
             <i class="fa-solid fa-download"></i> Download PDF
           </button>
         </div>
@@ -3985,19 +4278,15 @@ function renderCertificateLookupResult(data) {
           <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Student Name:</span>
-              <strong style="color:#0f172a;">${escapeHtml(student.name || '---')}</strong>
+              <strong style="color:#0f172a;">${escapeHtml(student.name || certificate.student_name || '---')}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Register Number:</span>
-              <strong style="color:#2563eb;font-family:monospace;">${escapeHtml(student.register_number || '---')}</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
-              <span style="color:#64748b;">Student ID:</span>
-              <strong style="color:#0f172a;">#${escapeHtml(student.student_id || '---')}</strong>
+              <strong style="color:#2563eb;font-family:monospace;">${escapeHtml(student.register_number || certificate.register_number || '---')}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Department:</span>
-              <strong style="color:#0f172a;">${escapeHtml(student.department || 'CSBS')}</strong>
+              <strong style="color:#0f172a;">${escapeHtml(student.department || certificate.department || 'CSBS')}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Degree &amp; Year:</span>
@@ -4009,16 +4298,10 @@ function renderCertificateLookupResult(data) {
               <span class="badge badge-success" style="font-weight:700;font-size:12px;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;">${student.cgpa} / 10.0</span>
             </div>
             ` : ''}
-            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;">
               <span style="color:#64748b;">Email:</span>
               <strong style="color:#0f172a;font-size:12px;">${escapeHtml(student.email || '---')}</strong>
             </div>
-            ${student.phone_number ? `
-            <div style="display:flex;justify-content:space-between;">
-              <span style="color:#64748b;">Phone:</span>
-              <strong style="color:#0f172a;font-size:12px;">${escapeHtml(student.phone_number)}</strong>
-            </div>
-            ` : ''}
           </div>
         </div>
 
@@ -4030,36 +4313,32 @@ function renderCertificateLookupResult(data) {
             </div>
             <div>
               <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Certificate Details</h4>
-              <p style="margin:0;font-size:11px;color:#64748b;">Credential attributes</p>
+              <p style="margin:0;font-size:11px;color:#64748b;">Credential attributes &amp; status</p>
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
-              <span style="color:#64748b;">Certificate ID:</span>
-              <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">${escapeHtml(certificate.certificate_id)}</span>
+              <span style="color:#64748b;">Certificate Number:</span>
+              <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">${escapeHtml(certificate.certificate_number || certificate.certificate_id)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Certificate Title:</span>
               <strong style="color:#0f172a;">${escapeHtml(certificate.certificate_title || 'Certificate of Participation')}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
-              <span style="color:#64748b;">Certificate Type:</span>
-              <strong style="color:#0f172a;">${escapeHtml(certificate.certificate_type || 'Participation')}</strong>
+              <span style="color:#64748b;">Issue Date:</span>
+              <strong style="color:#0f172a;">${issueDateStr}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
-              <span style="color:#64748b;">Certificate Date:</span>
-              <strong style="color:#0f172a;">${certDateStr}</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
-              <span style="color:#64748b;">Generated Date:</span>
-              <strong style="color:#0f172a;">${genDateStr}</strong>
+              <span style="color:#64748b;">Status:</span>
+              <span class="badge badge-green" style="font-size:11px;font-weight:700;">
+                <i class="fa-solid fa-shield-check"></i> ${escapeHtml(certificate.status || 'Digitally Verified')}
+              </span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="color:#64748b;">Certificate PDF:</span>
-              <button class="btn btn-outline-primary btn-sm" onclick="viewCertificatePdfFromAdmin(${certJson}, false)" style="font-size:11px;padding:3px 10px;border-radius:6px;">
-                <i class="fa-solid fa-eye"></i> View Real PDF
-              </button>
+              <span style="color:#64748b;">Signatory:</span>
+              <strong style="color:#0f172a;font-size:12px;">${escapeHtml(certificate.signatory_title || 'Head of Department - CSBS')}</strong>
             </div>
           </div>
         </div>
@@ -4079,35 +4358,19 @@ function renderCertificateLookupResult(data) {
           <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Event Name:</span>
-              <strong style="color:#0f172a;max-width:180px;text-align:right;">${escapeHtml(event.event_name)}</strong>
+              <strong style="color:#0f172a;max-width:180px;text-align:right;">${escapeHtml(event.event_name || certificate.event_name)}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Event Date:</span>
-              <strong style="color:#0f172a;">${fmtDate(event.event_date)}</strong>
+              <strong style="color:#0f172a;">${certDateStr}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
               <span style="color:#64748b;">Event Venue:</span>
               <strong style="color:#0f172a;">${escapeHtml(event.event_venue || 'Department Placement Lab')}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #f1f5f9;padding-bottom:6px;">
-              <span style="color:#64748b;">Event Coordinator:</span>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#64748b;">Coordinator:</span>
               <strong style="color:#0f172a;">${escapeHtml(event.coordinator || 'Faculty Coordinator')}</strong>
-            </div>
-
-            <!-- Status Badges -->
-            <div style="background:#f8fafc;padding:8px 12px;border-radius:8px;border:1px solid #e2e8f0;margin-top:2px;">
-              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                <span style="color:#334155;font-weight:600;">Feedback Submitted:</span>
-                <span class="badge badge-green" style="font-size:11px;"><i class="fa-solid fa-check"></i> Yes</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                <span style="color:#334155;font-weight:600;">Quiz Completed:</span>
-                <span class="badge badge-green" style="font-size:11px;"><i class="fa-solid fa-check"></i> Yes (${escapeHtml(completion_status.quiz_score || 'Passed')})</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;">
-                <span style="color:#334155;font-weight:600;">Certificate Generated:</span>
-                <span class="badge badge-green" style="font-size:11px;"><i class="fa-solid fa-check"></i> Yes</span>
-              </div>
             </div>
           </div>
         </div>
@@ -4123,7 +4386,7 @@ function renderCertificateLookupResult(data) {
             </div>
             <div>
               <h4 style="margin:0;font-size:15px;font-weight:800;color:#0f172a;">Student Event History</h4>
-              <p style="margin:0;font-size:11px;color:#64748b;">Completed events &amp; earned certificates for ${escapeHtml(student.name || 'this student')}</p>
+              <p style="margin:0;font-size:11px;color:#64748b;">All completed events &amp; earned certificates for ${escapeHtml(student.name || 'this student')}</p>
             </div>
           </div>
           <span class="badge badge-blue">${(history || []).length} Event${(history || []).length === 1 ? '' : 's'} Completed</span>
@@ -4135,10 +4398,9 @@ function renderCertificateLookupResult(data) {
               <tr>
                 <th>Event</th>
                 <th>Event Date</th>
-                <th>Feedback</th>
-                <th>Quiz</th>
-                <th>Certificate ID</th>
-                <th>Certificate</th>
+                <th>Certificate Number</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -4149,18 +4411,13 @@ function renderCertificateLookupResult(data) {
                     <td><strong>${escapeHtml(h.event_name)}</strong></td>
                     <td style="color:#64748b;font-size:12px;">${fmtDate(h.event_date)}</td>
                     <td>
-                      <span class="badge badge-green" style="font-size:11px;">
-                        <i class="fa-solid fa-circle-check"></i> ${escapeHtml(h.feedback_status)}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge badge-blue" style="font-size:11px;">
-                        <i class="fa-solid fa-list-check"></i> ${escapeHtml(h.quiz_status)}
-                      </span>
-                    </td>
-                    <td>
                       <span class="badge badge-purple" style="font-family:monospace;font-size:11px;">
                         ${escapeHtml(h.certificate_id)}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge badge-green" style="font-size:11px;">
+                        <i class="fa-solid fa-circle-check"></i> ${escapeHtml(h.feedback_status)}
                       </span>
                     </td>
                     <td>
@@ -4172,7 +4429,7 @@ function renderCertificateLookupResult(data) {
                 `;
               }).join('') : `
                 <tr>
-                  <td colspan="6" style="text-align:center;padding:24px;color:#94a3b8;">No additional events found for this student.</td>
+                  <td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;">No additional events found for this student.</td>
                 </tr>
               `}
             </tbody>
@@ -4183,6 +4440,106 @@ function renderCertificateLookupResult(data) {
     </div>
   `;
 }
+
+// ============================================================
+// DIRECT CERTIFICATE ISSUANCE MODAL HANDLERS
+// ============================================================
+function openDirectIssueModal(prefillIdentifier = '', prefillEventName = '') {
+  const modal = el('directIssueModal');
+  if (!modal) return;
+
+  const idInput = el('issueStudentIdentifier');
+  const evInput = el('issueEventName');
+  const evDateInput = el('issueEventDate');
+  const issueDateInput = el('issueDate');
+
+  const today = new Date().toISOString().split('T')[0];
+
+  if (idInput && prefillIdentifier) idInput.value = prefillIdentifier;
+  if (evInput && prefillEventName) evInput.value = prefillEventName;
+  if (evDateInput && !evDateInput.value) evDateInput.value = today;
+  if (issueDateInput && !issueDateInput.value) issueDateInput.value = today;
+
+  modal.classList.remove('hidden');
+}
+
+function closeDirectIssueModal() {
+  el('directIssueModal')?.classList.add('hidden');
+}
+
+function _closeDirectIssueModal(e) {
+  if (e.target === el('directIssueModal')) {
+    closeDirectIssueModal();
+  }
+}
+
+async function handleDirectIssueCertificate(e) {
+  if (e) e.preventDefault();
+  const btn = el('btnSubmitIssueCert');
+  const studentIdentifier = el('issueStudentIdentifier')?.value.trim();
+  const eventName = el('issueEventName')?.value.trim();
+  const eventCode = el('issueEventCode')?.value.trim();
+  const eventDate = el('issueEventDate')?.value;
+  const issueDate = el('issueDate')?.value || new Date().toISOString().split('T')[0];
+  const eventVenue = el('issueEventVenue')?.value.trim() || 'Department Placement Lab';
+  const coordinator = el('issueCoordinator')?.value.trim() || 'Faculty Placement Coordinator';
+  const status = el('issueStatus')?.value || 'Digitally Verified';
+
+  if (!studentIdentifier || !eventName || !eventDate) {
+    showAdminAlert('Please fill in student register number, event name, and event date.');
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Issuing...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/issue-certificate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({
+        student_identifier: studentIdentifier,
+        event_name: eventName,
+        event_code: eventCode,
+        event_date: eventDate,
+        issue_date: issueDate,
+        event_venue: eventVenue,
+        coordinator: coordinator,
+        status: status
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      showAdminAlert(data.message || 'Failed to issue certificate.');
+      return;
+    }
+
+    showAdminAlert(`🎉 ${data.message}`);
+    closeDirectIssueModal();
+
+    // Automatically search for the newly issued certificate or student register number
+    const lookupInput = el('certLookupInput');
+    if (lookupInput) {
+      lookupInput.value = data.certificate ? data.certificate.certificate_number : studentIdentifier;
+      handleCertificateLookup();
+    }
+  } catch (err) {
+    console.error('Error issuing certificate:', err);
+    showAdminAlert('Error issuing certificate. Please check console.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Issue &amp; Persist Certificate';
+    }
+  }
+}
+
 
 // ============================================================
 // ADMIN / FACULTY CERTIFICATE PDF VIEWER

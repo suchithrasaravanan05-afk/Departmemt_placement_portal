@@ -299,6 +299,7 @@ async function loadStudentProfile() {
       viewContentEl?.classList.remove('hidden');
       el('profileEditMode')?.classList.add('hidden');
       el('profileViewMode')?.classList.remove('hidden');
+      loadStudentCertificates(false);
 
       if (cachedStudentDrives && cachedStudentDrives.length > 0) {
         renderDriveNotifications(cachedStudentDrives);
@@ -2136,6 +2137,13 @@ async function loadStudentCertificates(showToast = false) {
       }
     }
 
+    // Also render certificates into Profile View Card if container exists
+    const profileCertContainer = el('profileCertificatesContainer');
+    const profileCountBadge = el('profileCertsCountBadge');
+    if (profileCountBadge) {
+      profileCountBadge.innerText = `${certs.length} Certificate${certs.length === 1 ? '' : 's'}`;
+    }
+
     if (!certs || certs.length === 0) {
       if (container) {
         container.innerHTML = `
@@ -2147,8 +2155,50 @@ async function loadStudentCertificates(showToast = false) {
           </div>
         `;
       }
+      if (profileCertContainer) {
+        profileCertContainer.innerHTML = `
+          <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:16px;text-align:center;color:#64748b;font-size:13px;">
+            <i class="fa-solid fa-award" style="color:#94a3b8;margin-bottom:6px;display:block;font-size:20px;"></i>
+            No certificates earned yet. Attend departmental events &amp; workshops to earn verifiable credentials.
+          </div>
+        `;
+      }
       if (showToast) showStudentAlert('Certificates refreshed.', true);
       return;
+    }
+
+    // Render in Profile View Card
+    if (profileCertContainer) {
+      profileCertContainer.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${certs.map(c => {
+            const certJson = JSON.stringify(c).replace(/"/g, '&quot;');
+            return `
+              <div style="border:1px solid #e2e8f0;background:#f8fafc;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <strong style="color:#0f172a;font-size:13.5px;">${escapeHtml(c.event_name)}</strong>
+                    <span class="badge badge-purple" style="font-family:monospace;font-size:10.5px;">${escapeHtml(c.certificate_number)}</span>
+                  </div>
+                  <div style="font-size:11.5px;color:#64748b;margin-top:2px;">
+                    <span><i class="fa-regular fa-calendar-days"></i> ${fmtDate(c.event_date)}</span>
+                    <span style="margin:0 6px;">&bull;</span>
+                    <span style="color:#15803d;font-weight:600;"><i class="fa-solid fa-check"></i> ${escapeHtml(c.status || 'Digitally Verified')}</span>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-outline btn-sm" onclick="openCertificateViewModal(${certJson})" style="font-size:11px;padding:4px 10px;border-radius:6px;">
+                    <i class="fa-solid fa-eye"></i> View
+                  </button>
+                  <button class="btn btn-primary btn-sm" onclick="generateCertificatePDF(${certJson}, true)" style="font-size:11px;padding:4px 10px;border-radius:6px;">
+                    <i class="fa-solid fa-download"></i> PDF
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
     if (container) {
@@ -2211,4 +2261,5 @@ async function loadStudentCertificates(showToast = false) {
     }
   }
 }
+
 

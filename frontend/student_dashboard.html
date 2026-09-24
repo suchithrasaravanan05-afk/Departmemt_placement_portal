@@ -263,11 +263,20 @@
               </div>
             </div>
 
-            <!-- Resume -->
+            <!-- Resume & Documents -->
             <div class="student-section-title">
               <i class="fa-solid fa-file-pdf"></i> Documents
             </div>
             <div class="profile-links" id="viewDocLinks"></div>
+
+            <!-- Verified Certificates in Profile -->
+            <div class="student-section-title" style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
+              <span><i class="fa-solid fa-award"></i> Institutional Certificates</span>
+              <button class="btn btn-outline btn-sm" onclick="switchTab('certificates')" style="font-size:11px;padding:3px 10px;border-radius:6px;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Full Tab
+              </button>
+            </div>
+            <div id="profileCertificatesContainer" style="margin-top:12px;"></div>
           </div>
         </div>
       </div>

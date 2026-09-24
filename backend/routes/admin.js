@@ -1327,7 +1327,7 @@ router.delete("/event-feedback/:id", checkFacultyOrAdminPermission, async (req, 
 });
 
 // CERTIFICATE VERIFICATION & DETAILS LOOKUP (FACULTY / JA & ADMIN)
-// Search by Certificate ID -> Returns Student Details, Event Details, Completion Status & Event History
+// Search by Certificate ID, Register Number, or Student Name -> Returns complete details & history
 router.get("/certificate-lookup/:certId", checkFacultyOrAdminPermission, async (req, res) => {
     try {
         const certId = req.params.certId;
@@ -1335,7 +1335,7 @@ router.get("/certificate-lookup/:certId", checkFacultyOrAdminPermission, async (
         if (!result.found) {
             return res.status(404).json({
                 success: false,
-                message: result.message || "Certificate Not Found. No certificate is registered with this Certificate ID."
+                message: result.message || "Certificate Not Found. No certificate or student record registered with this query."
             });
         }
         res.json({
@@ -1348,7 +1348,70 @@ router.get("/certificate-lookup/:certId", checkFacultyOrAdminPermission, async (
     }
 });
 
+// DIRECT CERTIFICATE ISSUANCE (FACULTY / ADMIN)
+// Issue official certificate to any student for any event/workshop
+router.post("/issue-certificate", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const {
+            student_identifier,
+            event_id,
+            event_name,
+            event_code,
+            event_date,
+            event_venue,
+            coordinator,
+            signatory_title,
+            academic_year,
+            issue_date,
+            status
+        } = req.body;
+
+        if (!student_identifier) {
+            return res.status(400).json({ success: false, message: "Student register number or student identifier is required." });
+        }
+        if (!event_name && !event_id) {
+            return res.status(400).json({ success: false, message: "Event name or Event ID is required." });
+        }
+
+        const result = await feedbackCertificateStorage.issueCertificateToStudent({
+            student_identifier,
+            event_id,
+            event_name,
+            event_code,
+            event_date,
+            event_venue,
+            coordinator: coordinator || (req.user ? req.user.full_name : "Faculty Coordinator"),
+            signatory_title,
+            academic_year,
+            issue_date,
+            status
+        });
+
+        res.json({
+            success: true,
+            isNew: result.isNew,
+            message: result.message,
+            certificate: result.certificate
+        });
+    } catch (e) {
+        console.error("Issue certificate error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to issue certificate." });
+    }
+});
+
+// GET ALL ISSUED CERTIFICATES (MASTER AUDIT)
+router.get("/all-certificates", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const certs = await feedbackCertificateStorage.getAllCertificates();
+        res.json({ success: true, count: certs.length, certificates: certs });
+    } catch (e) {
+        console.error("Get all certificates error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch certificates." });
+    }
+});
+
 module.exports = router;
+
 
 
 
