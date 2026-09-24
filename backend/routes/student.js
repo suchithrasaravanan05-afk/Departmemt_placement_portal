@@ -552,6 +552,8 @@ router.get("/certificates/:userId", async (req, res) => {
         console.error("Get student certificates error:", e);
         res.status(500).json({ success: false, message: "Failed to fetch certificates" });
     }
+});
+
 // POST /notifications/read-by-event
 router.post("/notifications/read-by-event", async (req, res) => {
     try {
