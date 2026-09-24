@@ -135,13 +135,15 @@ async function runTests() {
   // 9. Analytics check
   console.log('\n[TEST 9] Checking Analytics aggregation...');
   const analytics = await feedbackCertificateStorage.getEventAnalyticsData();
-  console.log('[TEST 9] Analytics Summary:', analytics.summary);
-  console.log('[TEST 9] Yearly Trends for 2026-2027:', analytics.yearly_trends['2026-2027'] || analytics.yearly_trends['2026-27']);
+  console.log(`[TEST 9] Analytics: Total Events: ${analytics.total_events}, Total Submissions: ${analytics.total_submissions}, Total Certs: ${analytics.total_certificates}`);
+  console.log('[TEST 9] Yearly Trends sample:', analytics.yearly_trends[0] || analytics.yearly_trends);
 
   // 10. Verify certificate verification is intact and searchable
   console.log('\n[TEST 10] Testing Certificate Verification Lookup integrity (PART 16 & 17)...');
   const certDetail = await feedbackCertificateStorage.verifyAndGetCertificateDetails(subResult.certificate.certificate_number);
-  console.log(`[TEST 10] Certificate Lookup: Found: ${certDetail.found ? 'YES' : 'NO'}, Student: ${certDetail.student_name}, Event: ${certDetail.event_name}`);
+  const certStudent = certDetail.certificate?.student_name || certDetail.student?.name;
+  const certEvent = certDetail.certificate?.event_name || certDetail.event?.event_name;
+  console.log(`[TEST 10] Certificate Lookup: Found: ${certDetail.found ? 'YES' : 'NO'}, Student: ${certStudent}, Event: ${certEvent}`);
   if (!certDetail.found) {
     throw new Error('Issued certificate could not be verified in the single source of truth!');
   }
