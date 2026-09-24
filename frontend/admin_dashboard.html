@@ -1015,6 +1015,109 @@
           </table>
         </div>
       </div>
+
+      <!-- GRAPH BELOW ARCHIVED EVENTS: YEAR-WISE COMPLETED & NOT COMPLETED STUDENTS COUNT -->
+      <div class="ef-card" style="margin-top:24px;border-top:4px solid #10b981;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:18px;">
+                <i class="fa-solid fa-chart-column"></i>
+              </div>
+              <div>
+                <h3 style="margin:0;font-size:16px;font-weight:800;color:#0f172a;">Archived Events — Year-Wise Student Completion Analytics</h3>
+                <p style="margin:2px 0 0;font-size:12px;color:#64748b;">Clear comparison of Completed vs Not Completed student counts across archived events by Academic Year</p>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <select id="efArchivedChartYearFilter" class="form-control" onchange="renderArchivedYearlyChart()" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font-weight:600;color:#334155;">
+              <option value="all">All Academic Years</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="renderArchivedYearlyChart()" style="font-size:12px;padding:6px 12px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+              <i class="fa-solid fa-rotate-right"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:20px;">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:8px;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-box-archive"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Archived Events</div>
+              <div id="archivedStatTotalEvents" style="font-size:20px;font-weight:800;color:#0f172a;">0</div>
+            </div>
+          </div>
+
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:8px;background:#10b981;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;">Completed Students</div>
+              <div id="archivedStatCompleted" style="font-size:20px;font-weight:800;color:#166534;">0</div>
+            </div>
+          </div>
+
+          <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:8px;background:#f43f5e;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#be123c;text-transform:uppercase;">Not Completed Students</div>
+              <div id="archivedStatNotCompleted" style="font-size:20px;font-weight:800;color:#9f1239;">0</div>
+            </div>
+          </div>
+
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:8px;background:#2563eb;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:16px;">
+              <i class="fa-solid fa-percent"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;">Archived Completion Rate</div>
+              <div id="archivedStatRate" style="font-size:20px;font-weight:800;color:#1e40af;">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div style="height:340px;position:relative;margin-bottom:22px;background:#ffffff;padding:10px;border-radius:10px;border:1px solid #f1f5f9;">
+          <canvas id="efArchivedYearlyChart"></canvas>
+        </div>
+
+        <!-- Year-Wise Breakdown Table -->
+        <div style="border-top:1px solid #e2e8f0;padding-top:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h4 style="margin:0;font-size:13.5px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px;">
+              <i class="fa-solid fa-table-list" style="color:#6366f1;"></i> Year-Wise Detailed Student Breakdown
+            </h4>
+            <span style="font-size:11.5px;color:#64748b;">Computed from archived event eligible rosters and completed submissions</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table" style="width:100%;">
+              <thead>
+                <tr>
+                  <th>Academic Year</th>
+                  <th>Archived Events</th>
+                  <th>Total Eligible Students</th>
+                  <th>Completed Students</th>
+                  <th>Not Completed Students</th>
+                  <th>Completion Progress</th>
+                </tr>
+              </thead>
+              <tbody id="archivedYearlyBreakdownTableBody">
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">No archived data available for breakdown.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- PANE 4: YEARLY & EVENT ANALYTICS -->

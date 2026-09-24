@@ -12,7 +12,8 @@ const DEFAULT_DATA = {
     event_feedbacks: [],
     feedback_submissions: [],
     certificates: [],
-    notifications: []
+    notifications: [],
+    deleted_event_ids: []
 };
 
 // In-memory cache
@@ -50,6 +51,7 @@ function readLocalData() {
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.certificates)) {
                 if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
+                if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
                 return parsed;
             }
         }
@@ -80,6 +82,7 @@ async function loadFromSupabaseStorage() {
             const parsed = JSON.parse(text);
             if (parsed && Array.isArray(parsed.certificates)) {
                 if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
+                if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
                 return parsed;
             }
         }
@@ -106,7 +109,7 @@ async function persistToSupabaseStorage(data) {
 }
 
 // Merge Supabase PostgreSQL tables if they exist
-async function syncFromSupabaseTables(merged) {
+async function syncFromSupabaseTables(merged, deletedIdsSet = new Set()) {
     const client = getClient();
     if (!client) return merged;
 
@@ -114,7 +117,11 @@ async function syncFromSupabaseTables(merged) {
         const { data: dbCerts, error: certErr } = await client.from("certificates").select("*");
         if (!certErr && Array.isArray(dbCerts) && dbCerts.length > 0) {
             const certMap = new Map((merged.certificates || []).map(c => [String(c.certificate_number || c.id), c]));
-            dbCerts.forEach(c => certMap.set(String(c.certificate_number || c.id), c));
+            dbCerts.forEach(c => {
+                if (!deletedIdsSet.has(String(c.feedback_id))) {
+                    certMap.set(String(c.certificate_number || c.id), c);
+                }
+            });
             merged.certificates = Array.from(certMap.values());
         }
     } catch (e) {}
@@ -123,7 +130,11 @@ async function syncFromSupabaseTables(merged) {
         const { data: dbEvents, error: evErr } = await client.from("event_feedbacks").select("*");
         if (!evErr && Array.isArray(dbEvents) && dbEvents.length > 0) {
             const evMap = new Map((merged.event_feedbacks || []).map(ev => [String(ev.id), ev]));
-            dbEvents.forEach(ev => evMap.set(String(ev.id), ev));
+            dbEvents.forEach(ev => {
+                if (!deletedIdsSet.has(String(ev.id))) {
+                    evMap.set(String(ev.id), ev);
+                }
+            });
             merged.event_feedbacks = Array.from(evMap.values());
         }
     } catch (e) {}
@@ -137,8 +148,15 @@ async function getAllData() {
 
     // Check Supabase Cloud Storage
     const cloudData = await loadFromSupabaseStorage();
+
+    // Collect all deleted IDs across sources to permanently prevent resurrected events
+    const deletedIdsSet = new Set([
+        ...(base.deleted_event_ids || []),
+        ...(cloudData?.deleted_event_ids || [])
+    ].map(String));
+
     if (cloudData && Array.isArray(cloudData.certificates)) {
-        // Merge records (cloud + local)
+        // Merge records (cloud + local) while respecting deletions
         const certMap = new Map((base.certificates || []).map(c => [String(c.certificate_number || c.id), c]));
         (cloudData.certificates || []).forEach(c => certMap.set(String(c.certificate_number || c.id), c));
 
@@ -152,15 +170,30 @@ async function getAllData() {
         (cloudData.notifications || []).forEach(n => notifMap.set(String(n.id), n));
 
         base = {
-            event_feedbacks: Array.from(evMap.values()),
-            feedback_submissions: Array.from(subMap.values()),
-            certificates: Array.from(certMap.values()),
-            notifications: Array.from(notifMap.values())
+            event_feedbacks: Array.from(evMap.values()).filter(e => !deletedIdsSet.has(String(e.id))),
+            feedback_submissions: Array.from(subMap.values()).filter(s => !deletedIdsSet.has(String(s.feedback_id))),
+            certificates: Array.from(certMap.values()).filter(c => !deletedIdsSet.has(String(c.feedback_id))),
+            notifications: Array.from(notifMap.values()).filter(n => !deletedIdsSet.has(String(n.event_id))),
+            deleted_event_ids: Array.from(deletedIdsSet)
         };
+    } else {
+        base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));
+        base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
+        base.certificates = (base.certificates || []).filter(c => !deletedIdsSet.has(String(c.feedback_id)));
+        base.notifications = (base.notifications || []).filter(n => !deletedIdsSet.has(String(n.event_id)));
+        base.deleted_event_ids = Array.from(deletedIdsSet);
     }
 
     // Merge Supabase PostgreSQL tables if accessible
-    base = await syncFromSupabaseTables(base);
+    base = await syncFromSupabaseTables(base, deletedIdsSet);
+
+    // Final scrub to guarantee no deleted items slipped in
+    if (deletedIdsSet.size > 0) {
+        base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));
+        base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
+        base.certificates = (base.certificates || []).filter(c => !deletedIdsSet.has(String(c.feedback_id)));
+        base.notifications = (base.notifications || []).filter(n => !deletedIdsSet.has(String(n.event_id)));
+    }
 
     inMemoryData = base;
     return inMemoryData;
@@ -321,6 +354,9 @@ async function createEventFeedback({
     };
 
     const data = await getAllData();
+    if (Array.isArray(data.deleted_event_ids)) {
+        data.deleted_event_ids = data.deleted_event_ids.filter(d => String(d) !== String(newId));
+    }
     data.event_feedbacks.unshift(record);
 
     // Dynamic Notifications: Query all eligible students and create notification records
@@ -431,14 +467,57 @@ async function updateEventFeedbackStatus(id, newStatus) {
 }
 
 async function deleteEventFeedback(id) {
+    const strId = String(id).trim();
     const numId = parseInt(id, 10);
-    const data = await getAllData();
-    data.event_feedbacks = (data.event_feedbacks || []).filter(item => parseInt(item.id, 10) !== numId);
-    data.feedback_submissions = (data.feedback_submissions || []).filter(item => parseInt(item.feedback_id, 10) !== numId);
-    data.certificates = (data.certificates || []).filter(item => parseInt(item.feedback_id, 10) !== numId);
-    if (Array.isArray(data.notifications)) {
-        data.notifications = data.notifications.filter(n => parseInt(n.event_id, 10) !== numId);
+    const client = getClient();
+
+    // 1. Permanently delete from Supabase PostgreSQL tables if they exist
+    if (client) {
+        try {
+            await client.from("feedback_submissions").delete().or(`feedback_id.eq.${numId},feedback_id.eq.${strId}`);
+        } catch (e) {}
+        try {
+            await client.from("certificates").delete().or(`feedback_id.eq.${numId},feedback_id.eq.${strId}`);
+        } catch (e) {}
+        try {
+            await client.from("notifications").delete().or(`event_id.eq.${numId},event_id.eq.${strId}`);
+        } catch (e) {}
+        try {
+            await client.from("event_feedbacks").delete().or(`id.eq.${numId},id.eq.${strId}`);
+        } catch (e) {}
     }
+
+    // 2. Load latest master state
+    const data = await getAllData();
+
+    // 3. Register in permanent deleted list to avoid any resurrecting from cache or cloud
+    if (!Array.isArray(data.deleted_event_ids)) {
+        data.deleted_event_ids = [];
+    }
+    if (!data.deleted_event_ids.includes(strId)) {
+        data.deleted_event_ids.push(strId);
+    }
+    if (!isNaN(numId) && !data.deleted_event_ids.includes(numId)) {
+        data.deleted_event_ids.push(numId);
+    }
+
+    // 4. Filter memory/local state
+    data.event_feedbacks = (data.event_feedbacks || []).filter(item => 
+        String(item.id) !== strId && (!isNaN(numId) ? parseInt(item.id, 10) !== numId : true)
+    );
+    data.feedback_submissions = (data.feedback_submissions || []).filter(item => 
+        String(item.feedback_id) !== strId && (!isNaN(numId) ? parseInt(item.feedback_id, 10) !== numId : true)
+    );
+    data.certificates = (data.certificates || []).filter(item => 
+        String(item.feedback_id) !== strId && (!isNaN(numId) ? parseInt(item.feedback_id, 10) !== numId : true)
+    );
+    if (Array.isArray(data.notifications)) {
+        data.notifications = data.notifications.filter(n => 
+            String(n.event_id) !== strId && (!isNaN(numId) ? parseInt(n.event_id, 10) !== numId : true)
+        );
+    }
+
+    inMemoryData = data;
     await commitData(data);
     return true;
 }

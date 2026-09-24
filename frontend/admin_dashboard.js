@@ -3422,6 +3422,7 @@ let cachedAdminActiveEvents = [];
 let cachedAdminArchivedEvents = [];
 let cachedAnalyticsData = null;
 let efYearlyChartInstance = null;
+let efArchivedYearlyChartInstance = null;
 let currentEfSubnav = 'active';
 
 function switchEfSubnav(subTab) {
@@ -3460,6 +3461,7 @@ function switchEfSubnav(subTab) {
     renderActiveEventsTable();
   } else if (subTab === 'archived') {
     renderArchivedEventsTable();
+    renderArchivedYearlyChart();
   }
 }
 
@@ -3497,6 +3499,7 @@ async function loadAdminEventFeedbacks(showToast = false) {
 
     renderActiveEventsTable();
     renderArchivedEventsTable();
+    renderArchivedYearlyChart();
 
     if (showToast) showAdminAlert('Event feedbacks and submission metrics refreshed.', true);
   } catch (err) {
@@ -4026,6 +4029,25 @@ async function deleteEventFeedbackReq(id) {
     const data = await res.json();
     if (data.success) {
       showAdminAlert('Event Feedback record deleted successfully.', true);
+
+      // Optimistically remove from local arrays immediately for instant visual feedback
+      const strId = String(id).trim();
+      const numId = parseInt(id, 10);
+      cachedAdminEventsAll = cachedAdminEventsAll.filter(e => String(e.id) !== strId && (!isNaN(numId) ? parseInt(e.id, 10) !== numId : true));
+      cachedAdminArchivedEvents = cachedAdminArchivedEvents.filter(e => String(e.id) !== strId && (!isNaN(numId) ? parseInt(e.id, 10) !== numId : true));
+      cachedAdminActiveEvents = cachedAdminActiveEvents.filter(e => String(e.id) !== strId && (!isNaN(numId) ? parseInt(e.id, 10) !== numId : true));
+
+      const activeBadge = el('efActiveCountBadge');
+      const archivedBadge = el('efArchivedCountBadge');
+      const totalBadge = el('efTotalCountBadge');
+      if (activeBadge) activeBadge.innerText = `${cachedAdminActiveEvents.length}`;
+      if (archivedBadge) archivedBadge.innerText = `${cachedAdminArchivedEvents.length}`;
+      if (totalBadge) totalBadge.innerText = `${cachedAdminEventsAll.length} Total Events`;
+
+      renderArchivedEventsTable();
+      renderActiveEventsTable();
+      renderArchivedYearlyChart();
+
       await loadAdminEventFeedbacks();
     } else {
       showAdminAlert(data.message || 'Failed to delete event feedback.');
@@ -4358,6 +4380,259 @@ function renderYearlyAnalyticsChart(yearlyTrends) {
         },
         x: {
           grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ============================================================
+// ARCHIVED EVENTS: YEAR-WISE COMPLETED VS NOT COMPLETED GRAPH
+// ============================================================
+function renderArchivedYearlyChart() {
+  const canvas = el('efArchivedYearlyChart');
+  if (!canvas) return;
+
+  const events = cachedAdminArchivedEvents || [];
+  const yearFilterEl = el('efArchivedChartYearFilter');
+
+  // Populate dynamic Academic Year options into filter dropdown if needed
+  if (yearFilterEl) {
+    const rawYears = Array.from(new Set(events.map(e => e.academic_year || 'Unassigned').filter(Boolean))).sort();
+    const currentVal = yearFilterEl.value || 'all';
+    const optHtml = ['<option value="all">All Academic Years</option>'];
+    rawYears.forEach(y => {
+      optHtml.push(`<option value="${escapeHtml(y)}" ${currentVal === y ? 'selected' : ''}>${escapeHtml(y)}</option>`);
+    });
+    // Only update innerHTML if options changed to preserve user selection
+    const generatedHtml = optHtml.join('');
+    if (yearFilterEl.dataset.cachedHtml !== generatedHtml) {
+      yearFilterEl.innerHTML = generatedHtml;
+      yearFilterEl.dataset.cachedHtml = generatedHtml;
+      yearFilterEl.value = currentVal;
+    }
+  }
+
+  const selectedYear = yearFilterEl?.value || 'all';
+
+  // Filter archived events based on selection
+  const filteredEvents = selectedYear === 'all'
+    ? events
+    : events.filter(e => (e.academic_year || 'Unassigned') === selectedYear);
+
+  // Group events and student counts by academic year
+  const yearGroupMap = {};
+  filteredEvents.forEach(ev => {
+    const yr = ev.academic_year || 'Unassigned';
+    if (!yearGroupMap[yr]) {
+      yearGroupMap[yr] = {
+        year: yr,
+        eventsCount: 0,
+        totalEligible: 0,
+        completedCount: 0,
+        notCompletedCount: 0
+      };
+    }
+    const eligible = parseInt(ev.total_eligible, 10) || 0;
+    const completed = parseInt(ev.submitted_count, 10) || 0;
+    const notCompleted = Math.max(0, eligible - completed);
+
+    yearGroupMap[yr].eventsCount += 1;
+    yearGroupMap[yr].totalEligible += eligible;
+    yearGroupMap[yr].completedCount += completed;
+    yearGroupMap[yr].notCompletedCount += notCompleted;
+  });
+
+  const yearKeys = Object.keys(yearGroupMap).sort();
+
+  // Aggregate summary counters
+  let totalArchivedCount = filteredEvents.length;
+  let totalCompletedStudents = 0;
+  let totalNotCompletedStudents = 0;
+  let totalEligibleAll = 0;
+
+  yearKeys.forEach(yr => {
+    totalCompletedStudents += yearGroupMap[yr].completedCount;
+    totalNotCompletedStudents += yearGroupMap[yr].notCompletedCount;
+    totalEligibleAll += yearGroupMap[yr].totalEligible;
+  });
+
+  const overallRate = totalEligibleAll > 0
+    ? Math.round((totalCompletedStudents / totalEligibleAll) * 100)
+    : 0;
+
+  // Update summary badge DOM
+  if (el('archivedStatTotalEvents')) el('archivedStatTotalEvents').innerText = totalArchivedCount;
+  if (el('archivedStatCompleted')) el('archivedStatCompleted').innerText = totalCompletedStudents;
+  if (el('archivedStatNotCompleted')) el('archivedStatNotCompleted').innerText = totalNotCompletedStudents;
+  if (el('archivedStatRate')) el('archivedStatRate').innerText = `${overallRate}%`;
+
+  // Render Year-Wise Breakdown Table Body
+  const tbody = el('archivedYearlyBreakdownTableBody');
+  if (tbody) {
+    if (yearKeys.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:26px;color:#94a3b8;">
+            <i class="fa-regular fa-folder-open" style="font-size:22px;display:block;margin-bottom:6px;color:#cbd5e1;"></i>
+            No archived event records found for this academic year selection.
+          </td>
+        </tr>`;
+    } else {
+      tbody.innerHTML = yearKeys.map(yr => {
+        const item = yearGroupMap[yr];
+        const pct = item.totalEligible > 0 ? Math.round((item.completedCount / item.totalEligible) * 100) : 0;
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:700;color:#1e1b4b;font-size:13px;display:flex;align-items:center;gap:6px;">
+                <i class="fa-regular fa-calendar-check" style="color:#6366f1;"></i>
+                <span>${escapeHtml(item.year)}</span>
+              </div>
+            </td>
+            <td><span class="badge badge-purple" style="font-size:11.5px;font-weight:700;">${item.eventsCount} Event${item.eventsCount > 1 ? 's' : ''}</span></td>
+            <td><strong style="color:#0f172a;font-size:13px;">${item.totalEligible}</strong></td>
+            <td>
+              <span class="badge badge-green" style="font-size:12px;font-weight:700;padding:4px 10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
+                <i class="fa-solid fa-check" style="margin-right:4px;"></i>${item.completedCount} Completed
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-red" style="font-size:12px;font-weight:700;padding:4px 10px;background:#ffe4e6;color:#be123c;border:1px solid #fecdd3;">
+                <i class="fa-solid fa-clock" style="margin-right:4px;"></i>${item.notCompletedCount} Not Completed
+              </span>
+            </td>
+            <td style="min-width:150px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;background:#e2e8f0;height:8px;border-radius:999px;overflow:hidden;">
+                  <div style="width:${Math.min(100, pct)}%;background:linear-gradient(90deg, #10b981, #059669);height:100%;border-radius:999px;"></div>
+                </div>
+                <span style="font-size:12px;font-weight:800;color:#15803d;">${pct}%</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+
+  // Render Chart.js Chart
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js is not loaded.');
+    return;
+  }
+
+  if (efArchivedYearlyChartInstance) {
+    efArchivedYearlyChartInstance.destroy();
+    efArchivedYearlyChartInstance = null;
+  }
+
+  const chartLabels = yearKeys.length > 0 ? yearKeys : ['No Archived Events'];
+  const completedData = yearKeys.length > 0 ? yearKeys.map(yr => yearGroupMap[yr].completedCount) : [0];
+  const notCompletedData = yearKeys.length > 0 ? yearKeys.map(yr => yearGroupMap[yr].notCompletedCount) : [0];
+
+  const ctx = canvas.getContext('2d');
+  efArchivedYearlyChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: chartLabels,
+      datasets: [
+        {
+          label: 'Completed Students (Submitted)',
+          data: completedData,
+          backgroundColor: 'rgba(16, 185, 129, 0.88)',
+          borderColor: '#10b981',
+          borderWidth: 1.5,
+          borderRadius: 8,
+          hoverBackgroundColor: '#059669',
+          maxBarThickness: 55
+        },
+        {
+          label: 'Not Completed Students (Pending)',
+          data: notCompletedData,
+          backgroundColor: 'rgba(244, 63, 94, 0.88)',
+          borderColor: '#f43f5e',
+          borderWidth: 1.5,
+          borderRadius: 8,
+          hoverBackgroundColor: '#e11d48',
+          maxBarThickness: 55
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: { family: "'Plus Jakarta Sans', sans-serif", weight: '700', size: 12.5 },
+            color: '#1e293b',
+            usePointStyle: true,
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 16
+          }
+        },
+        tooltip: {
+          backgroundColor: '#0f172a',
+          titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '800', size: 13 },
+          bodyFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '600', size: 12 },
+          padding: 12,
+          boxPadding: 6,
+          usePointStyle: true,
+          callbacks: {
+            afterBody: function(tooltipItems) {
+              const idx = tooltipItems[0].dataIndex;
+              const comp = completedData[idx] || 0;
+              const notComp = notCompletedData[idx] || 0;
+              const tot = comp + notComp;
+              const r = tot > 0 ? Math.round((comp / tot) * 100) : 0;
+              return [
+                '-----------------------------',
+                `Total Eligible Students: ${tot}`,
+                `Completion Rate: ${r}%`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0,
+            font: { family: "'Plus Jakarta Sans', sans-serif", weight: '600', size: 11 },
+            color: '#64748b'
+          },
+          grid: {
+            color: 'rgba(226, 232, 240, 0.7)'
+          },
+          title: {
+            display: true,
+            text: 'Number of Students',
+            font: { family: "'Plus Jakarta Sans', sans-serif", weight: '700', size: 12 },
+            color: '#475569'
+          }
+        },
+        x: {
+          ticks: {
+            font: { family: "'Plus Jakarta Sans', sans-serif", weight: '700', size: 12 },
+            color: '#1e293b'
+          },
+          grid: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: 'Academic Year',
+            font: { family: "'Plus Jakarta Sans', sans-serif", weight: '700', size: 12 },
+            color: '#475569'
+          }
         }
       }
     }
