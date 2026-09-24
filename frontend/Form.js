@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Handle URL hash shortcuts if requested (e.g., #student, #register, #faculty, #admin)
+  // Handle URL hash shortcuts if requested (e.g., #student, #register, #faculty, #faculty-register, #admin)
   const hash = window.location.hash.toLowerCase();
   if (hash === '#student') {
     showStudentAuth();
@@ -30,12 +30,24 @@ document.addEventListener('DOMContentLoaded', () => {
     switchStudentAuthMode('register');
   } else if (hash === '#faculty') {
     proceedToStaffAuth('faculty');
+  } else if (hash === '#faculty-register' || hash === '#faculty-registration') {
+    proceedToStaffAuth('faculty');
+    switchFacultyAuthMode('register');
   } else if (hash === '#hod') {
     proceedToStaffAuth('hod');
   } else if (hash === '#admin') {
     proceedToStaffAuth('admin');
   } else {
     showPortalChoice();
+  }
+
+  // Auto-sync email to login email in embedded faculty registration form
+  const staffEmail = document.getElementById('staffRegEmail');
+  const staffLoginEmail = document.getElementById('staffRegLoginEmail');
+  if (staffEmail && staffLoginEmail) {
+    staffEmail.addEventListener('input', () => {
+      staffLoginEmail.value = staffEmail.value.trim();
+    });
   }
 });
 
@@ -113,6 +125,16 @@ function proceedToStaffAuth(role) {
     window.location.hash = 'faculty';
   }
 
+  // Show/Hide registration tab switch for faculty vs admin/hod
+  const switchEl = document.getElementById('staffAuthModeSwitch');
+  if (role === 'admin' || role === 'hod') {
+    if (switchEl) switchEl.classList.add('form-hidden');
+    switchFacultyAuthMode('login');
+  } else {
+    if (switchEl) switchEl.classList.remove('form-hidden');
+    switchFacultyAuthMode('login');
+  }
+
   setTimeout(() => {
     if (inputEl) inputEl.focus();
   }, 100);
@@ -120,6 +142,128 @@ function proceedToStaffAuth(role) {
 
 function backToStaffRoleSelect() {
   showStaffRoleSelect();
+}
+
+// ==========================================================================
+// FACULTY AUTHENTICATION (LOGIN & REGISTRATION TOGGLE)
+// ==========================================================================
+
+function switchFacultyAuthMode(mode) {
+  hideAlerts();
+  const tabLogin = document.getElementById('tabStaffLogin');
+  const tabReg = document.getElementById('tabStaffRegister');
+  const formLogin = document.getElementById('staffLoginForm');
+  const formReg = document.getElementById('facultyRegisterForm');
+  const title = document.getElementById('staffAuthTitle');
+  const subtitle = document.getElementById('staffAuthSub');
+
+  if (mode === 'register') {
+    if (tabLogin) tabLogin.classList.remove('active');
+    if (tabReg) tabReg.classList.add('active');
+    if (formLogin) formLogin.classList.add('form-hidden');
+    if (formReg) formReg.classList.remove('form-hidden');
+    if (title) title.textContent = 'Faculty Registration';
+    if (subtitle) subtitle.textContent = 'Register your faculty account to access the College Placement Portal';
+    window.location.hash = 'faculty-register';
+    setTimeout(() => {
+      const input = document.getElementById('staffRegFullName');
+      if (input) input.focus();
+    }, 80);
+  } else {
+    if (tabReg) tabReg.classList.remove('active');
+    if (tabLogin) tabLogin.classList.add('active');
+    if (formReg) formReg.classList.add('form-hidden');
+    if (formLogin) formLogin.classList.remove('form-hidden');
+    if (title) title.textContent = 'Faculty Login';
+    if (subtitle) subtitle.textContent = 'Sign in with your official staff credentials';
+    window.location.hash = 'faculty';
+    setTimeout(() => {
+      const input = document.getElementById('staffIdentifier');
+      if (input) input.focus();
+    }, 80);
+  }
+}
+
+async function handleFacultyRegisterFromPortal(e) {
+  e.preventDefault();
+  hideAlerts();
+
+  const name = document.getElementById('staffRegFullName')?.value.trim();
+  const email = document.getElementById('staffRegEmail')?.value.trim();
+  const mobile = document.getElementById('staffRegMobile')?.value.trim();
+  const gender = document.getElementById('staffRegGender')?.value.trim();
+  const department = document.getElementById('staffRegDepartment')?.value.trim();
+  const designation = document.getElementById('staffRegDesignation')?.value.trim();
+  const experience = document.getElementById('staffRegExperience')?.value.trim();
+  const qualification = document.getElementById('staffRegQualification')?.value.trim();
+  const specialization = document.getElementById('staffRegSpecialization')?.value.trim();
+  const password = document.getElementById('staffRegPassword')?.value;
+  const confirmPassword = document.getElementById('staffRegConfirmPassword')?.value;
+
+  if (!name) return showStaffAlert('Please enter your full name', 'error');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showStaffAlert('Please enter a valid email ID', 'error');
+  if (!mobile || mobile.length !== 10 || !/^[6-9]\d{9}$/.test(mobile)) return showStaffAlert('Please enter a valid 10-digit mobile number', 'error');
+  if (!gender) return showStaffAlert('Please select your gender', 'error');
+  if (!department) return showStaffAlert('Please select your department', 'error');
+  if (!designation) return showStaffAlert('Please select your designation', 'error');
+  if (experience === '' || isNaN(experience) || Number(experience) < 0 || Number(experience) > 50) return showStaffAlert('Please enter your years of experience (0 - 50)', 'error');
+  if (!qualification) return showStaffAlert('Please enter your qualification', 'error');
+  if (!specialization) return showStaffAlert('Please enter your specialization', 'error');
+  if (!password || password.length < 8) return showStaffAlert('Password must contain at least 8 characters', 'error');
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    return showStaffAlert('Password must include uppercase, lowercase, number, and special character', 'error');
+  }
+  if (password !== confirmPassword) return showStaffAlert('Passwords do not match', 'error');
+
+  const payload = {
+    name,
+    email,
+    mobile,
+    gender,
+    department,
+    designation,
+    experience: parseFloat(experience),
+    qualification,
+    specialization,
+    password
+  };
+
+  setBtnLoading('btnStaffRegisterSubmit', true, 'Registering...');
+
+  try {
+    const res = await fetch(`${API_BASE}/faculty/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showStaffAlert('Faculty registration successful! You can now login to the Faculty Portal.', 'success');
+      switchFacultyAuthMode('login');
+      const idInput = document.getElementById('staffIdentifier');
+      if (idInput) idInput.value = email;
+      const pwInput = document.getElementById('staffPassword');
+      if (pwInput) {
+        pwInput.value = '';
+        pwInput.focus();
+      }
+      clearFacultyInPlaceForm();
+    } else {
+      showStaffAlert(data.message || 'Registration failed. Please check your details.', 'error');
+    }
+  } catch (err) {
+    console.error('Faculty registration error:', err);
+    showStaffAlert('Network error connecting to the registration service.', 'error');
+  } finally {
+    setBtnLoading('btnStaffRegisterSubmit', false, '<i class="fa-solid fa-user-plus"></i> <span>Register Faculty</span>');
+  }
+}
+
+function clearFacultyInPlaceForm() {
+  const form = document.getElementById('facultyRegisterForm');
+  if (form) form.reset();
 }
 
 // ==========================================================================

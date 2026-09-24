@@ -407,9 +407,20 @@
             <p id="staffAuthSub">Sign in with your official staff credentials</p>
           </div>
 
+          <!-- Tab Switcher: Faculty Login vs Registration -->
+          <div class="auth-mode-switch" id="staffAuthModeSwitch">
+            <button type="button" id="tabStaffLogin" class="auth-mode-tab active" onclick="switchFacultyAuthMode('login')">
+              <i class="fa-solid fa-right-to-bracket"></i> Faculty Login
+            </button>
+            <button type="button" id="tabStaffRegister" class="auth-mode-tab" onclick="switchFacultyAuthMode('register')">
+              <i class="fa-solid fa-user-plus"></i> New Faculty Registration
+            </button>
+          </div>
+
           <!-- Alert Box -->
           <div id="staffAlertBox" class="alert-box form-hidden" role="alert"></div>
 
+          <!-- 1. STAFF LOGIN FORM -->
           <form id="staffLoginForm" onsubmit="handleStaffLogin(event)" novalidate>
             <div class="form-group">
               <label for="staffIdentifier" id="lblStaffIdentifier">Faculty ID / Official Email</label>
@@ -453,7 +464,191 @@
             </button>
 
             <p class="auth-switch-prompt" style="margin-top:14px;">
-              New faculty member? <a href="faculty-registration.html">Register here</a>
+              New faculty member? <a href="javascript:void(0)" onclick="switchFacultyAuthMode('register')">Register here</a>
+              <span style="display:block;margin-top:4px;font-size:11.5px;">
+                or <a href="faculty-registration.html" style="color:#6D28D9;font-weight:600;">open dedicated full page <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i></a>
+              </span>
+            </p>
+          </form>
+
+          <!-- 2. NEW FACULTY REGISTRATION FORM (INSERTED DIRECTLY) -->
+          <form id="facultyRegisterForm" class="form-hidden" onsubmit="handleFacultyRegisterFromPortal(event)" novalidate>
+            <div style="font-size:12px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+              <i class="fa-solid fa-user"></i> Personal Details
+            </div>
+
+            <!-- Full Name -->
+            <div class="form-group">
+              <label for="staffRegFullName">Full Name <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input type="text" id="staffRegFullName" class="form-control" placeholder="Enter your full name" required autocomplete="name">
+              </div>
+            </div>
+
+            <!-- Email & Mobile -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="form-group">
+                <label for="staffRegEmail">Email ID <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-envelope input-icon"></i>
+                  <input type="email" id="staffRegEmail" class="form-control" placeholder="Official email ID" required autocomplete="email">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="staffRegMobile">Mobile Number <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-phone input-icon"></i>
+                  <input type="tel" id="staffRegMobile" class="form-control" placeholder="10-digit mobile" maxlength="10" required autocomplete="tel">
+                </div>
+              </div>
+            </div>
+
+            <!-- Gender -->
+            <div class="form-group">
+              <label for="staffRegGender">Gender <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-venus-mars input-icon"></i>
+                <select id="staffRegGender" class="form-control" required style="padding-left:42px;cursor:pointer;">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;display:flex;align-items:center;gap:6px;">
+              <i class="fa-solid fa-briefcase"></i> Department &amp; Professional Details
+            </div>
+
+            <!-- Department -->
+            <div class="form-group">
+              <label for="staffRegDepartment">Department <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-building-columns input-icon"></i>
+                <select id="staffRegDepartment" class="form-control" required style="padding-left:42px;cursor:pointer;">
+                  <option value="">Select Department</option>
+                  <option value="Computer Science and Business Systems (CSBS)">Computer Science and Business Systems (CSBS)</option>
+                  <option value="Computer Science and Engineering (CSE)">Computer Science and Engineering (CSE)</option>
+                  <option value="Information Technology (IT)">Information Technology (IT)</option>
+                  <option value="Electronics and Communication Engineering (ECE)">Electronics and Communication Engineering (ECE)</option>
+                  <option value="Electrical and Electronics Engineering (EEE)">Electrical and Electronics Engineering (EEE)</option>
+                  <option value="Mechanical Engineering (MECH)">Mechanical Engineering (MECH)</option>
+                  <option value="Civil Engineering (CIVIL)">Civil Engineering (CIVIL)</option>
+                  <option value="Artificial Intelligence and Data Science (AIDS)">Artificial Intelligence and Data Science (AIDS)</option>
+                  <option value="Biotechnology">Biotechnology</option>
+                  <option value="Biomedical Engineering">Biomedical Engineering</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Designation & Years of Experience -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="form-group">
+                <label for="staffRegDesignation">Designation <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-id-badge input-icon"></i>
+                  <select id="staffRegDesignation" class="form-control" required style="padding-left:42px;cursor:pointer;">
+                    <option value="">Select Designation</option>
+                    <option value="Assistant Professor">Assistant Professor</option>
+                    <option value="Associate Professor">Associate Professor</option>
+                    <option value="Professor">Professor</option>
+                    <option value="Head of Department">Head of Department</option>
+                    <option value="Faculty Coordinator">Faculty Coordinator</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="staffRegExperience">Experience (Years) <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-clock-rotate-left input-icon"></i>
+                  <input type="number" id="staffRegExperience" class="form-control" placeholder="0 - 50" min="0" max="50" step="0.5" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Qualification & Specialization -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="form-group">
+                <label for="staffRegQualification">Qualification <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-graduation-cap input-icon"></i>
+                  <input type="text" id="staffRegQualification" class="form-control" placeholder="e.g., M.E., Ph.D." required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="staffRegSpecialization">Specialization <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-microchip input-icon"></i>
+                  <input type="text" id="staffRegSpecialization" class="form-control" placeholder="e.g., AI, Analytics" required>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;display:flex;align-items:center;gap:6px;">
+              <i class="fa-solid fa-lock"></i> Login Details
+            </div>
+
+            <!-- Login Email ID -->
+            <div class="form-group">
+              <label for="staffRegLoginEmail">Login Email ID <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-at input-icon"></i>
+                <input type="email" id="staffRegLoginEmail" class="form-control" placeholder="Enter email for login" required autocomplete="username">
+              </div>
+            </div>
+
+            <!-- Password & Confirm Password -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="form-group">
+                <label for="staffRegPassword">Password <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-lock input-icon"></i>
+                  <input type="password" id="staffRegPassword" class="form-control" placeholder="Min 8 characters" required autocomplete="new-password">
+                  <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('staffRegPassword', this)" title="Show/hide password">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="staffRegConfirmPassword">Confirm <span style="color:#ef4444;">*</span></label>
+                <div class="input-wrap">
+                  <i class="fa-solid fa-shield-halved input-icon"></i>
+                  <input type="password" id="staffRegConfirmPassword" class="form-control" placeholder="Re-enter" required autocomplete="new-password">
+                  <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('staffRegConfirmPassword', this)" title="Show/hide password">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <p style="font-size:11px;color:#64748B;margin:4px 0 14px;">
+              <i class="fa-solid fa-circle-info" style="color:#6D28D9;"></i> Min 8 chars with uppercase, lowercase, number &amp; special character.
+            </p>
+
+            <div style="display:flex;gap:10px;">
+              <button type="submit" class="btn-primary-action" id="btnStaffRegisterSubmit" style="flex:2;">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Register Faculty</span>
+              </button>
+              <button type="button" class="btn-outline" onclick="clearFacultyInPlaceForm()" style="flex:1;border:1.5px solid #CBD5E1;border-radius:10px;font-size:13px;font-weight:600;background:#fff;cursor:pointer;">
+                Clear
+              </button>
+            </div>
+
+            <p class="auth-switch-prompt" style="margin-top:14px;">
+              Already have an account? <a href="javascript:void(0)" onclick="switchFacultyAuthMode('login')">Login here</a>
+              <span style="display:block;margin-top:4px;font-size:11.5px;">
+                or <a href="faculty-registration.html" style="color:#6D28D9;font-weight:600;">open dedicated full page <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i></a>
+              </span>
             </p>
           </form>
 
