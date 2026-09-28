@@ -34,7 +34,21 @@ function checkAdminWritePermission(req, res, next) {
     next();
 }
 
-// Permission check for Faculty Coordinator / JA and Admin (Events, Quizzes, Certificates)
+// Determine effective role considering user.role and user.designation
+function getEffectiveRole(user) {
+    if (!user) return "unknown";
+    const role = (user.role || "").toLowerCase().trim();
+    const designation = (user.designation || "").toLowerCase().trim();
+
+    if (role === "admin" || role === "administrator") return "admin";
+    if (role === "hod" || designation.includes("head of department") || designation.includes("hod")) return "hod";
+    if (role === "faculty_coordinator" || designation.includes("coordinator")) return "faculty_coordinator";
+    if (role === "ja_faculty" || role === "ja" || designation.includes("ja") || designation.includes("junior assistant")) return "ja_faculty";
+    if (role === "faculty") return "faculty";
+    return role;
+}
+
+// Permission check for viewing (Events, Quizzes, Certificates, Submissions)
 function checkFacultyOrAdminPermission(req, res, next) {
     const authHeader = req.headers.authorization;
     if (authHeader) {
@@ -50,6 +64,50 @@ function checkFacultyOrAdminPermission(req, res, next) {
             req.user = decoded;
         } catch (e) {}
     }
+    next();
+}
+
+// Strict Write Permission: ONLY Faculty & Faculty Coordinators (and HOD) can create/edit/delete
+// Admins have VIEW-ONLY access! JA Faculty has verification-only access!
+function requireFacultyOrCoordinatorWrite(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        try {
+            const token = authHeader.split(" ")[1];
+            const decoded = jwt.verify(token, JWT_SECRET);
+            if (decoded && decoded.placement_access === false) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Access Denied: Your account does not have permission to access the Placement Portal."
+                });
+            }
+            req.user = decoded;
+        } catch (e) {}
+    }
+
+    const effectiveRole = getEffectiveRole(req.user);
+
+    if (effectiveRole === "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Permission Denied: Administrators have view-only access to event feedback and certificate records. Form creation, editing, status updates, and certificate issuance are restricted to authorized Faculty members and Faculty Coordinators."
+        });
+    }
+
+    if (effectiveRole === "ja_faculty") {
+        return res.status(403).json({
+            success: false,
+            message: "Permission Denied: JA Faculty role has verification-only access. Modification of event feedback forms and certificate records is restricted to Faculty Coordinators."
+        });
+    }
+
+    if (effectiveRole !== "faculty" && effectiveRole !== "faculty_coordinator" && effectiveRole !== "hod") {
+        return res.status(403).json({
+            success: false,
+            message: "Permission Denied: Only authorized Faculty members and Faculty Coordinators can perform this action."
+        });
+    }
+
     next();
 }
 
@@ -1240,7 +1298,8 @@ router.put("/batches/:batchName", async (req, res) => {
 // ==========================================
 
 // CREATE / SEND EVENT FEEDBACK (WITH QUIZ + FEEDBACK CONFIG)
-router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) => {
+// Restricted: Only Faculty & Faculty Coordinators (Admins have View-Only access)
+router.post("/event-feedback", requireFacultyOrCoordinatorWrite, async (req, res) => {
     try {
         const {
             event_name,
@@ -1249,6 +1308,7 @@ router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) =
             event_venue,
             coordinator,
             academic_year,
+            category,
             target_type,
             student_id,
             message,
@@ -1258,7 +1318,7 @@ router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) =
             feedback_config
         } = req.body;
 
-        // Validation required by Part 3 & 4
+        // Validation required
         if (!event_name || !String(event_name).trim()) {
             return res.status(400).json({ success: false, message: "Event Name is required." });
         }
@@ -1294,6 +1354,7 @@ router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) =
             event_venue,
             coordinator: coordinator || (req.user ? req.user.full_name : "Faculty Coordinator"),
             academic_year: academic_year || "2026-27",
+            category: category || feedbackCertificateStorage.inferEventCategory(event_name, message),
             target_type,
             student_id,
             message,
@@ -1301,7 +1362,7 @@ router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) =
             quiz: quizArray,
             min_quiz_score_pct: min_quiz_score_pct || 50,
             feedback_config,
-            created_by: req.user ? req.user.full_name : "Placement Admin"
+            created_by: req.user ? (req.user.full_name || req.user.email) : "Faculty Coordinator"
         });
 
         res.json({
@@ -1317,8 +1378,23 @@ router.post("/event-feedback", checkFacultyOrAdminPermission, async (req, res) =
     }
 });
 
+// EDIT EVENT FEEDBACK FORM (FACULTY / FACULTY COORDINATOR ONLY)
+router.put("/event-feedback/:id", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const updated = await feedbackCertificateStorage.updateEventFeedbackDetails(req.params.id, req.body);
+        res.json({
+            success: true,
+            message: `Event feedback form "${updated.event_name}" updated successfully.`,
+            feedback: updated
+        });
+    } catch (e) {
+        console.error("Update event feedback error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to update event feedback" });
+    }
+});
+
 // GET ALL EVENT FEEDBACKS (WITH REAL COMPUTED STATS)
-router.get("/event-feedbacks", async (req, res) => {
+router.get("/event-feedbacks", checkFacultyOrAdminPermission, async (req, res) => {
     try {
         const stats = await feedbackCertificateStorage.getEventFeedbacksWithStats();
         res.json({
@@ -1334,7 +1410,8 @@ router.get("/event-feedbacks", async (req, res) => {
 });
 
 // UPDATE EVENT FEEDBACK STATUS (ACTIVE / CLOSED / ARCHIVED)
-router.post("/event-feedback/:id/status", checkFacultyOrAdminPermission, async (req, res) => {
+// Restricted: Only Faculty & Faculty Coordinators (Admins have View-Only access)
+router.post("/event-feedback/:id/status", requireFacultyOrCoordinatorWrite, async (req, res) => {
     try {
         const { status } = req.body;
         if (!status) {
@@ -1353,7 +1430,7 @@ router.post("/event-feedback/:id/status", checkFacultyOrAdminPermission, async (
 });
 
 // GET SUBMISSIONS FOR SPECIFIC EVENT FEEDBACK
-router.get("/event-feedbacks/:id/submissions", async (req, res) => {
+router.get("/event-feedbacks/:id/submissions", checkFacultyOrAdminPermission, async (req, res) => {
     try {
         const submissions = await feedbackCertificateStorage.getFeedbackSubmissionsForAdmin(req.params.id);
         res.json({ success: true, submissions });
@@ -1364,7 +1441,7 @@ router.get("/event-feedbacks/:id/submissions", async (req, res) => {
 });
 
 // GET YEAR-WISE & EVENT-WISE ANALYTICS
-router.get("/event-analytics", async (req, res) => {
+router.get("/event-analytics", checkFacultyOrAdminPermission, async (req, res) => {
     try {
         const analytics = await feedbackCertificateStorage.getEventAnalyticsData();
         res.json({ success: true, analytics });
@@ -1374,14 +1451,37 @@ router.get("/event-analytics", async (req, res) => {
     }
 });
 
-// DELETE EVENT FEEDBACK
-router.delete("/event-feedback/:id", checkFacultyOrAdminPermission, async (req, res) => {
+// DELETE EVENT FEEDBACK (RESTRICTED: ONLY FACULTY / FACULTY COORDINATORS)
+router.delete("/event-feedback/:id", requireFacultyOrCoordinatorWrite, async (req, res) => {
     try {
         await feedbackCertificateStorage.deleteEventFeedback(req.params.id);
         res.json({ success: true, message: "Event feedback deleted successfully" });
     } catch (e) {
         console.error("Delete event feedback error:", e);
         res.status(500).json({ success: false, message: "Failed to delete event feedback" });
+    }
+});
+
+// BROWSE STUDENT CERTIFICATE RECORDS & STATUS (ADMIN / FACULTY / JA)
+// Filterable by Category and Academic Year, with feedback submission & certificate generation status
+router.get("/student-certificate-records", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const { category, academic_year, search, status, coordinator } = req.query;
+        const result = await feedbackCertificateStorage.getStudentCertificateRecords({
+            category,
+            academic_year,
+            search,
+            status,
+            coordinator
+        });
+        res.json({
+            success: true,
+            user_role: getEffectiveRole(req.user),
+            ...result
+        });
+    } catch (e) {
+        console.error("Get student certificate records error:", e);
+        res.status(500).json({ success: false, message: "Failed to fetch student certificate records" });
     }
 });
 
@@ -1407,9 +1507,8 @@ router.get("/certificate-lookup/:certId", checkFacultyOrAdminPermission, async (
     }
 });
 
-// DIRECT CERTIFICATE ISSUANCE (FACULTY / ADMIN)
-// Issue official certificate to any student for any event/workshop
-router.post("/issue-certificate", checkFacultyOrAdminPermission, async (req, res) => {
+// DIRECT CERTIFICATE ISSUANCE (RESTRICTED: FACULTY / FACULTY COORDINATOR ONLY)
+router.post("/issue-certificate", requireFacultyOrCoordinatorWrite, async (req, res) => {
     try {
         const {
             student_identifier,
@@ -1421,6 +1520,7 @@ router.post("/issue-certificate", checkFacultyOrAdminPermission, async (req, res
             coordinator,
             signatory_title,
             academic_year,
+            category,
             issue_date,
             status
         } = req.body;
@@ -1442,6 +1542,7 @@ router.post("/issue-certificate", checkFacultyOrAdminPermission, async (req, res
             coordinator: coordinator || (req.user ? req.user.full_name : "Faculty Coordinator"),
             signatory_title,
             academic_year,
+            category: category || feedbackCertificateStorage.inferEventCategory(event_name, ""),
             issue_date,
             status
         });
@@ -1455,6 +1556,22 @@ router.post("/issue-certificate", checkFacultyOrAdminPermission, async (req, res
     } catch (e) {
         console.error("Issue certificate error:", e);
         res.status(500).json({ success: false, message: e.message || "Failed to issue certificate." });
+    }
+});
+
+// EDIT CERTIFICATE DETAILS (RESTRICTED: FACULTY / FACULTY COORDINATOR ONLY)
+router.put("/certificate/:id", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const certId = req.params.id;
+        const updated = await feedbackCertificateStorage.updateCertificateDetails(certId, req.body);
+        res.json({
+            success: true,
+            message: `Certificate record for "${updated.student_name}" updated successfully.`,
+            certificate: updated
+        });
+    } catch (e) {
+        console.error("Update certificate error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to update certificate details." });
     }
 });
 

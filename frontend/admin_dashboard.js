@@ -145,6 +145,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load Portal Settings first so batch dropdowns and default year are applied across all pages
   await loadPortalSettings();
 
+  applyRoleBasedPermissions();
+
   loadDashboardStats();
   fetchStudentRoster();
   loadAnalyticsCharts();
@@ -184,7 +186,7 @@ function handleLogout() {
 }
 
 // ============================================================
-// HELPERS
+// HELPERS & ROLE PERMISSION ENFORCEMENT
 // ============================================================
 function el(id) { return document.getElementById(id); }
 
@@ -193,10 +195,75 @@ function safeParseUser() {
   catch { return null; }
 }
 
-function handleLogout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = 'Form.html';
+function getStaffEffectiveRole() {
+  const user = currentAdminUser || safeParseUser();
+  if (!user) return 'admin';
+  const role = (user.role || '').toLowerCase().trim();
+  const designation = (user.designation || '').toLowerCase().trim();
+  if (role === 'admin' || role === 'administrator') return 'admin';
+  if (role === 'hod' || designation.includes('head of department') || designation.includes('hod')) return 'hod';
+  if (role === 'faculty_coordinator' || designation.includes('coordinator')) return 'faculty_coordinator';
+  if (role === 'ja_faculty' || role === 'ja' || designation.includes('ja') || designation.includes('junior assistant')) return 'ja_faculty';
+  if (role === 'faculty') return 'faculty';
+  return role || 'admin';
+}
+
+function applyRoleBasedPermissions() {
+  const effRole = getStaffEffectiveRole();
+  const isAdmin = (effRole === 'admin');
+  const isJa = (effRole === 'ja_faculty');
+  const isFacultyCoordinator = (effRole === 'faculty_coordinator' || effRole === 'faculty' || effRole === 'hod');
+
+  // 1. Event Feedback Controls (Hide for admin & ja)
+  const efCreateWrap = el('btnEfCreateNewFormWrap');
+  if (efCreateWrap) {
+    efCreateWrap.style.display = (isAdmin || isJa) ? 'none' : 'block';
+  }
+  const efSubnavCreateBtn = el('efSubnavCreateBtn');
+  if (efSubnavCreateBtn) {
+    efSubnavCreateBtn.style.display = (isAdmin || isJa) ? 'none' : 'inline-flex';
+  }
+
+  // 2. Certificate Direct Issue Modal button (Hide for admin & ja)
+  const certIssueBtn = el('btnOpenDirectIssueModal');
+  if (certIssueBtn) {
+    certIssueBtn.style.display = isFacultyCoordinator ? 'inline-flex' : 'none';
+  }
+
+  // 3. Role Access Notice in Certificate Tab
+  const roleBadge = el('certRoleBadge');
+  const roleDesc = el('certRoleDesc');
+  if (roleBadge) {
+    if (isAdmin) {
+      roleBadge.className = 'badge badge-purple';
+      roleBadge.innerText = 'Role: Placement Admin (View-Only)';
+      roleBadge.style.background = '#f3e8ff';
+      roleBadge.style.color = '#7e22ce';
+      roleBadge.style.border = '1px solid #d8b4fe';
+    } else if (isJa) {
+      roleBadge.className = 'badge badge-yellow';
+      roleBadge.innerText = 'Role: JA Faculty (Verification Access)';
+      roleBadge.style.background = '#fef3c7';
+      roleBadge.style.color = '#92400e';
+      roleBadge.style.border = '1px solid #fde68a';
+    } else {
+      roleBadge.className = 'badge badge-green';
+      roleBadge.innerText = 'Role: Faculty Coordinator (Manage Access)';
+      roleBadge.style.background = '#dcfce7';
+      roleBadge.style.color = '#15803d';
+      roleBadge.style.border = '1px solid #bbf7d0';
+    }
+  }
+
+  if (roleDesc) {
+    if (isAdmin) {
+      roleDesc.innerText = 'Administrators have read-only access to event feedback forms, student feedback submissions, and certificate records. Form creation, editing, status updates, and deletions are disabled for admins.';
+    } else if (isJa) {
+      roleDesc.innerText = 'JA Faculty role has access to check whether each student\'s certificate has been generated and inspect credential details. Form modifications are restricted.';
+    } else {
+      roleDesc.innerText = 'Faculty members and Faculty Coordinators have permission to create and edit event feedback forms, verify student submissions, issue credentials, and manage certificate details.';
+    }
+  }
 }
 
 function fmtDate(dateStr) {
@@ -261,6 +328,7 @@ function switchAdminTab(tabName, initialStatusFilter = null) {
   if (tabName === 'placed')       loadPlacedStudents();
   if (tabName === 'eventFeedback') loadAdminEventFeedbacks();
   if (tabName === 'certLookup') {
+    loadStudentCertificateRecords();
     setTimeout(() => el('certLookupInput')?.focus(), 80);
   }
   if (tabName === 'settings')     renderSettingsTab();
@@ -3455,6 +3523,12 @@ function switchEfSubnav(subTab) {
   if (subTab === 'analytics') {
     loadEventAnalytics();
   } else if (subTab === 'create') {
+    const effRole = getStaffEffectiveRole();
+    if (effRole === 'admin' || effRole === 'ja_faculty') {
+      showAdminAlert('Permission Denied: Administrators have view-only access to event feedback forms. Form creation is restricted to Faculty members and Coordinators.');
+      switchEfSubnav('active');
+      return;
+    }
     initDefaultQuizQuestions();
     autoGenerateEventCode();
   } else if (subTab === 'active') {
@@ -3530,6 +3604,8 @@ function renderActiveEventsTable(eventsToRender = null) {
   if (!tbody) return;
 
   const events = eventsToRender !== null ? eventsToRender : cachedAdminActiveEvents;
+  const effRole = getStaffEffectiveRole();
+  const canManageEvents = (effRole === 'faculty_coordinator' || effRole === 'faculty' || effRole === 'hod');
 
   if (!events || events.length === 0) {
     tbody.innerHTML = `
@@ -3537,10 +3613,12 @@ function renderActiveEventsTable(eventsToRender = null) {
         <td colspan="11" style="text-align:center;padding:48px 24px;color:#94a3b8;">
           <i class="fa-regular fa-calendar-check" style="font-size:32px;display:block;margin-bottom:10px;color:#cbd5e1;"></i>
           <strong style="color:#64748b;font-size:14px;">No Active Event Feedback Forms Found</strong>
-          <p style="font-size:12px;margin:4px 0 14px;">Create and publish a new feedback &amp; quiz form to collect student assessments.</p>
-          <button class="btn btn-primary btn-sm" onclick="switchEfSubnav('create')" style="font-size:12px;padding:6px 14px;">
-            <i class="fa-solid fa-plus"></i> Create &amp; Publish Form
-          </button>
+          <p style="font-size:12px;margin:4px 0 14px;">${canManageEvents ? 'Create and publish a new feedback &amp; quiz form to collect student assessments.' : 'No active event feedback forms currently open.'}</p>
+          ${canManageEvents ? `
+            <button class="btn btn-primary btn-sm" onclick="switchEfSubnav('create')" style="font-size:12px;padding:6px 14px;">
+              <i class="fa-solid fa-plus"></i> Create &amp; Publish Form
+            </button>
+          ` : ''}
         </td>
       </tr>`;
     return;
@@ -3604,9 +3682,14 @@ function renderActiveEventsTable(eventsToRender = null) {
             <button class="btn btn-sm btn-outline-secondary" style="padding:4px 8px;font-size:11px;" onclick="openEventSpecificAnalytics(${ev.id})" title="View Event Analytics">
               <i class="fa-solid fa-chart-simple"></i>
             </button>
-            <button class="btn btn-sm btn-outline-warning" style="padding:4px 8px;font-size:11px;color:#d97706;border-color:#fde68a;" onclick="toggleEventStatus(${ev.id}, 'CLOSED')" title="Close Event (Move to Archived)">
-              <i class="fa-solid fa-lock"></i> Close
-            </button>
+            ${canManageEvents ? `
+              <button class="btn btn-sm btn-outline-secondary" style="padding:4px 8px;font-size:11px;" onclick="openEditEventFeedbackModal(${ev.id})" title="Edit Event Details">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-outline-warning" style="padding:4px 8px;font-size:11px;color:#d97706;border-color:#fde68a;" onclick="toggleEventStatus(${ev.id}, 'CLOSED')" title="Close Event (Move to Archived)">
+                <i class="fa-solid fa-lock"></i> Close
+              </button>
+            ` : ''}
           </div>
         </td>
       </tr>
@@ -3619,6 +3702,8 @@ function renderArchivedEventsTable(eventsToRender = null) {
   if (!tbody) return;
 
   const events = eventsToRender !== null ? eventsToRender : cachedAdminArchivedEvents;
+  const effRole = getStaffEffectiveRole();
+  const canManageEvents = (effRole === 'faculty_coordinator' || effRole === 'faculty' || effRole === 'hod');
 
   if (!events || events.length === 0) {
     tbody.innerHTML = `
@@ -3670,12 +3755,17 @@ function renderArchivedEventsTable(eventsToRender = null) {
             <button class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="viewEventSubmissions(${ev.id}, '${safeName}')" title="View Submissions">
               <i class="fa-solid fa-list-check"></i> Submissions (${submitted})
             </button>
-            <button class="btn btn-sm btn-outline-success" style="padding:4px 8px;font-size:11px;color:#15803d;border-color:#bbf7d0;" onclick="toggleEventStatus(${ev.id}, 'ACTIVE')" title="Reopen Event to Active">
-              <i class="fa-solid fa-lock-open"></i> Reopen
-            </button>
-            <button class="btn btn-sm btn-outline-danger" style="padding:4px 8px;font-size:11px;" onclick="deleteEventFeedbackReq(${ev.id})" title="Delete Archive">
-              <i class="fa-solid fa-trash"></i>
-            </button>
+            ${canManageEvents ? `
+              <button class="btn btn-sm btn-outline-secondary" style="padding:4px 8px;font-size:11px;" onclick="openEditEventFeedbackModal(${ev.id})" title="Edit Event Details">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-outline-success" style="padding:4px 8px;font-size:11px;color:#15803d;border-color:#bbf7d0;" onclick="toggleEventStatus(${ev.id}, 'ACTIVE')" title="Reopen Event to Active">
+                <i class="fa-solid fa-lock-open"></i> Reopen
+              </button>
+              <button class="btn btn-sm btn-outline-danger" style="padding:4px 8px;font-size:11px;" onclick="deleteEventFeedbackReq(${ev.id})" title="Delete Archive">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            ` : ''}
           </div>
         </td>
       </tr>
@@ -4685,6 +4775,673 @@ function openEventSpecificAnalytics(eventId) {
 }
 
 // ============================================================
+// STUDENT CERTIFICATE TRACKING & ROLE-BASED ACCESS
+// ============================================================
+
+let cachedStudentCertGroups = [];
+let cachedStudentCertSummary = null;
+let certFilterDebounceTimer = null;
+
+function toggleDirectLookupBox() {
+  const box = el('certLookupBoxBody');
+  const icon = el('certLookupToggleIcon');
+  if (!box) return;
+  const isHidden = box.classList.toggle('hidden');
+  if (icon) {
+    icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+  if (!isHidden && el('certLookupInput')) {
+    setTimeout(() => el('certLookupInput').focus(), 80);
+  }
+}
+
+async function loadStudentCertificateRecords(forceRefresh = false) {
+  const container = el('studentCertRecordsContainer');
+  if (!container) return;
+
+  const category = el('certFilterCategory')?.value || 'all';
+  const academic_year = el('certFilterYear')?.value || 'all';
+  const status = el('certFilterStatus')?.value || 'all';
+  const search = el('certSearchInput')?.value.trim() || '';
+
+  if (container.children.length === 0 || forceRefresh) {
+    container.innerHTML = `
+      <div class="admin-panel-card" style="padding:48px 24px;text-align:center;color:#64748b;">
+        <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#4f46e5;margin-bottom:12px;"></i>
+        <p style="font-size:14px;font-weight:600;margin:0;">Loading student certificate records &amp; feedback submission data...</p>
+      </div>
+    `;
+  }
+
+  try {
+    const params = new URLSearchParams();
+    if (category && category !== 'all') params.set('category', category);
+    if (academic_year && academic_year !== 'all') params.set('academic_year', academic_year);
+    if (status && status !== 'all') params.set('status', status);
+    if (search) params.set('search', search);
+
+    const res = await fetch(`${API_BASE}/admin/student-certificate-records?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      container.innerHTML = `
+        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:24px;text-align:center;color:#991b1b;">
+          <i class="fa-solid fa-triangle-exclamation fa-2x" style="margin-bottom:8px;"></i>
+          <h4>Unable to Load Student Certificate Records</h4>
+          <p style="margin:0;font-size:13px;">${escapeHtml(data.message || 'Server error occurred while fetching records.')}</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (data.grouped_by_year && typeof data.grouped_by_year === 'object') {
+      cachedStudentCertGroups = Object.values(data.grouped_by_year);
+    } else if (Array.isArray(data.groups)) {
+      cachedStudentCertGroups = data.groups;
+    } else {
+      cachedStudentCertGroups = [];
+    }
+    cachedStudentCertSummary = data.summary || {};
+
+    // Update KPI Ribbon counters
+    if (el('certKpiTotal')) el('certKpiTotal').innerText = data.summary?.total_records || 0;
+    if (el('certKpiGenerated')) el('certKpiGenerated').innerText = data.summary?.certificates_generated || 0;
+    if (el('certKpiPending')) el('certKpiPending').innerText = data.summary?.certificates_pending || 0;
+    if (el('certKpiFeedbackSubmitted')) el('certKpiFeedbackSubmitted').innerText = data.summary?.feedback_submitted || 0;
+    if (el('certKpiNoFeedback')) el('certKpiNoFeedback').innerText = data.summary?.no_feedback_recorded || 0;
+
+    // Dynamically update academic year dropdown options if new years exist
+    const yearSelect = el('certFilterYear');
+    const availableYears = data.summary?.academic_years || data.years || [];
+    if (yearSelect && Array.isArray(availableYears) && availableYears.length > 0) {
+      const currentYearVal = yearSelect.value;
+      const existingOptions = Array.from(yearSelect.options).map(o => o.value);
+      availableYears.forEach(yr => {
+        if (!existingOptions.includes(yr)) {
+          const opt = document.createElement('option');
+          opt.value = yr;
+          opt.textContent = yr;
+          yearSelect.appendChild(opt);
+        }
+      });
+      yearSelect.value = currentYearVal;
+    }
+
+    // Render Year-wise grouped records
+    renderStudentCertificateRecords(cachedStudentCertGroups);
+
+  } catch (err) {
+    console.error('Error loading student certificate records:', err);
+    container.innerHTML = `
+      <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:24px;text-align:center;color:#991b1b;">
+        <i class="fa-solid fa-circle-exclamation fa-2x" style="margin-bottom:8px;"></i>
+        <h4>Network or Service Error</h4>
+        <p style="margin:0;font-size:13px;">Unable to fetch student certificate records. Please verify server connection.</p>
+      </div>
+    `;
+  }
+}
+
+function filterStudentCertificateRecords() {
+  if (certFilterDebounceTimer) clearTimeout(certFilterDebounceTimer);
+  certFilterDebounceTimer = setTimeout(() => {
+    loadStudentCertificateRecords();
+  }, 250);
+}
+
+function resetCertFilters() {
+  if (el('certFilterCategory')) el('certFilterCategory').value = 'all';
+  if (el('certFilterYear')) el('certFilterYear').value = 'all';
+  if (el('certFilterStatus')) el('certFilterStatus').value = 'all';
+  if (el('certSearchInput')) el('certSearchInput').value = '';
+  loadStudentCertificateRecords(true);
+}
+
+function renderStudentCertificateRecords(groups) {
+  const container = el('studentCertRecordsContainer');
+  if (!container) return;
+
+  const effRole = getStaffEffectiveRole();
+  const canManage = (effRole === 'faculty_coordinator' || effRole === 'faculty' || effRole === 'hod');
+
+  if (!groups || groups.length === 0) {
+    container.innerHTML = `
+      <div class="admin-panel-card" style="padding:48px 24px;text-align:center;color:#64748b;border:1px solid #e2e8f0;border-radius:14px;">
+        <div style="width:60px;height:60px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#94a3b8;font-size:24px;">
+          <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <h4 style="color:#334155;margin:0 0 6px;font-size:16px;font-weight:700;">No Student Certificate Records Found</h4>
+        <p style="font-size:13px;margin:0 auto 14px;max-width:440px;">No student records match the selected category, academic year, or search criteria.</p>
+        <button type="button" class="btn btn-sm btn-outline" onclick="resetCertFilters()" style="padding:6px 14px;font-size:12px;">
+          <i class="fa-solid fa-rotate-left"></i> Reset Filters
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = groups.map((grp, grpIdx) => {
+    const records = grp.records || [];
+    const generatedCount = grp.certificates_generated !== undefined ? grp.certificates_generated : (grp.generated_count || 0);
+    const pendingCount = grp.certificates_pending !== undefined ? grp.certificates_pending : (grp.pending_count || 0);
+    return `
+      <div class="admin-panel-card" style="margin-bottom:24px;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+        
+        <!-- Year Header Ribbon -->
+        <div style="padding:16px 22px;background:linear-gradient(135deg, #f8fafc, #f1f5f9);border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:10px;background:#4338ca;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 10px rgba(67,56,202,0.25);">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;">Academic Year Batch</div>
+              <h3 style="margin:1px 0 0;font-size:16.5px;font-weight:800;color:#0f172a;">${escapeHtml(grp.academic_year)}</h3>
+            </div>
+          </div>
+          
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;padding:5px 12px;border-radius:8px;border:1px solid #cbd5e1;">
+              <i class="fa-solid fa-users" style="color:#6366f1;margin-right:4px;"></i> ${records.length} Student Record${records.length === 1 ? '' : 's'}
+            </span>
+            <span class="badge badge-green" style="font-size:11.5px;font-weight:700;padding:5px 12px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
+              <i class="fa-solid fa-award"></i> ${generatedCount} Generated
+            </span>
+            <span class="badge badge-yellow" style="font-size:11.5px;font-weight:700;padding:5px 12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">
+              <i class="fa-solid fa-clock"></i> ${pendingCount} Pending
+            </span>
+          </div>
+        </div>
+
+        <!-- Student Records Table -->
+        <div class="table-responsive">
+          <table class="admin-table" style="width:100%;margin:0;">
+            <thead>
+              <tr style="background:#fafafa;">
+                <th style="padding:12px 18px;font-size:12px;">Student Details</th>
+                <th style="padding:12px 18px;font-size:12px;">Event &amp; Category</th>
+                <th style="padding:12px 18px;font-size:12px;">Feedback Submission Status</th>
+                <th style="padding:12px 18px;font-size:12px;">Certificate Number</th>
+                <th style="padding:12px 18px;font-size:12px;">Certificate Generation Status</th>
+                <th style="padding:12px 18px;font-size:12px;text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${records.length === 0 ? `
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:32px;color:#94a3b8;">
+                    No student records found in this academic year matching the filters.
+                  </td>
+                </tr>
+              ` : records.map((rec, recIdx) => {
+                const st = rec.student || {};
+                const ev = rec.event || {};
+                const fb = rec.feedback || {};
+                const cert = rec.certificate || {};
+
+                return `
+                  <tr style="transition:background .15s ease;">
+                    <!-- Student Details -->
+                    <td style="padding:14px 18px;">
+                      <div style="font-weight:700;color:#0f172a;font-size:13.5px;display:flex;align-items:center;gap:6px;">
+                        <i class="fa-solid fa-user-graduate" style="color:#6366f1;font-size:13px;"></i>
+                        <span>${escapeHtml(st.name || 'Student')}</span>
+                      </div>
+                      <div style="font-size:12px;color:#475569;margin-top:2px;">
+                        <span style="font-weight:700;font-family:monospace;color:#1e293b;letter-spacing:0.3px;">${escapeHtml(st.register_number || '—')}</span>
+                        ${st.department ? ` • <span style="color:#64748b;">${escapeHtml(st.department)}</span>` : ''}
+                      </div>
+                    </td>
+
+                    <!-- Event & Category -->
+                    <td style="padding:14px 18px;">
+                      <div style="font-weight:700;color:#1e293b;font-size:13px;display:flex;align-items:center;gap:6px;">
+                        <i class="fa-regular fa-calendar-check" style="color:#4338ca;"></i>
+                        <span>${escapeHtml(ev.event_name || 'Event')}</span>
+                        ${ev.event_code ? `<span class="badge badge-purple" style="font-size:10px;padding:1px 5px;">${escapeHtml(ev.event_code)}</span>` : ''}
+                      </div>
+                      <div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                        <span class="badge badge-purple" style="font-size:10.5px;font-weight:600;padding:2px 7px;">${escapeHtml(ev.category || 'General')}</span>
+                        ${ev.event_date ? `<span style="font-size:11.5px;color:#64748b;">${fmtDate(ev.event_date)}</span>` : ''}
+                      </div>
+                    </td>
+
+                    <!-- Feedback Submission Status -->
+                    <td style="padding:14px 18px;">
+                      ${fb.has_submission ? `
+                        <div>
+                          <span class="badge badge-green" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fa-solid fa-check"></i> Submitted
+                          </span>
+                          <div style="font-size:11px;color:#64748b;margin-top:4px;">
+                            Score: <strong style="color:${fb.quiz_passed ? '#15803d' : '#b45309'};">${fb.quiz_score !== null && fb.quiz_score !== undefined ? fb.quiz_score + '%' : 'N/A'}</strong>
+                            ${fb.submitted_at ? ` • ${fmtDate(fb.submitted_at)}` : ''}
+                          </div>
+                        </div>
+                      ` : `
+                        <div>
+                          <span class="badge badge-red" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fa-solid fa-circle-xmark"></i> No feedback submission was recorded
+                          </span>
+                          <div style="font-size:11px;color:#94a3b8;margin-top:3px;">No feedback submission on file</div>
+                        </div>
+                      `}
+                    </td>
+
+                    <!-- Certificate Number -->
+                    <td style="padding:14px 18px;">
+                      ${cert.is_generated && cert.certificate_number ? `
+                        <div>
+                          <span style="font-family:monospace;font-weight:800;color:#312e81;background:#e0e7ff;padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;letter-spacing:0.5px;">
+                            <i class="fa-solid fa-barcode" style="font-size:10px;margin-right:4px;"></i>${escapeHtml(cert.certificate_number)}
+                          </span>
+                          ${cert.issue_date ? `<div style="font-size:10.5px;color:#64748b;margin-top:3px;">Issued: ${fmtDate(cert.issue_date)}</div>` : ''}
+                        </div>
+                      ` : `
+                        <span style="color:#94a3b8;font-size:12px;font-style:italic;">Not Generated</span>
+                      `}
+                    </td>
+
+                    <!-- Certificate Generation Status -->
+                    <td style="padding:14px 18px;">
+                      ${cert.is_generated ? `
+                        <div>
+                          <span class="badge badge-green" style="font-size:12px;font-weight:700;padding:4px 10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fa-solid fa-award"></i> Generated
+                          </span>
+                          <div style="font-size:11px;color:#059669;margin-top:3px;font-weight:600;">
+                            <i class="fa-solid fa-circle-check" style="font-size:10px;"></i> ${escapeHtml(cert.status || 'Verified')}
+                          </div>
+                        </div>
+                      ` : `
+                        <div>
+                          <span class="badge badge-yellow" style="font-size:12px;font-weight:700;padding:4px 10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fa-solid fa-clock"></i> Not Generated
+                          </span>
+                          <div style="font-size:11px;color:#d97706;margin-top:3px;">Certificate pending</div>
+                        </div>
+                      `}
+                    </td>
+
+                    <!-- Action Controls -->
+                    <td style="padding:14px 18px;text-align:center;">
+                      <div style="display:inline-flex;gap:6px;align-items:center;">
+                        <button class="btn btn-sm btn-outline-primary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openCertRecordDetailsModal(${grpIdx}, ${recIdx})" title="View Complete Verification Details">
+                          <i class="fa-solid fa-eye"></i> View Details
+                        </button>
+
+                        ${canManage ? (cert.is_generated ? `
+                          <button class="btn btn-sm btn-outline-secondary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openEditCertificateModalFromRecord(${grpIdx}, ${recIdx})" title="Edit Certificate Details">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                          </button>
+                        ` : `
+                          <button class="btn btn-sm btn-outline-success" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;color:#15803d;border-color:#bbf7d0;" onclick="openDirectIssueModal('${escapeHtml(st.register_number || '')}', '${escapeHtml(ev.event_name || '')}')" title="Issue Certificate for Student">
+                            <i class="fa-solid fa-plus-circle"></i> Issue
+                          </button>
+                        `) : ''}
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openCertRecordDetailsModal(grpIdx, recIdx) {
+  const grp = cachedStudentCertGroups[grpIdx];
+  if (!grp || !grp.records || !grp.records[recIdx]) return;
+  const rec = grp.records[recIdx];
+  const st = rec.student || {};
+  const ev = rec.event || {};
+  const fb = rec.feedback || {};
+  const cert = rec.certificate || {};
+
+  const modal = el('certDetailsViewModal');
+  const title = el('cdmTitle');
+  const subtitle = el('cdmSubtitle');
+  const body = el('cdmBody');
+
+  if (title) title.innerText = `${st.name || 'Student'} — Record & Credential Details`;
+  if (subtitle) subtitle.innerText = `Register No: ${st.register_number || '—'} | Academic Year: ${st.academic_year || grp.academic_year}`;
+
+  if (body) {
+    body.innerHTML = `
+      <!-- Student Profile Header Card -->
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:12px;background:#4338ca;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+          <div>
+            <h4 style="margin:0;font-size:16px;font-weight:800;color:#0f172a;">${escapeHtml(st.name || 'Student')}</h4>
+            <div style="font-size:12.5px;color:#475569;margin-top:2px;">
+              <strong>Reg No:</strong> <span style="font-family:monospace;font-weight:700;color:#1e293b;">${escapeHtml(st.register_number || '—')}</span> • 
+              <strong>Dept:</strong> ${escapeHtml(st.department || 'CSBS')} • 
+              <strong>Year:</strong> ${escapeHtml(st.academic_year || grp.academic_year)}
+            </div>
+            ${st.email ? `<div style="font-size:11.5px;color:#64748b;margin-top:2px;"><i class="fa-solid fa-envelope"></i> ${escapeHtml(st.email)}</div>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Certificate Status</div>
+          ${cert.is_generated ? `
+            <span class="badge badge-green" style="font-size:12px;font-weight:700;padding:4px 10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
+              <i class="fa-solid fa-award"></i> Generated
+            </span>
+          ` : `
+            <span class="badge badge-yellow" style="font-size:12px;font-weight:700;padding:4px 10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">
+              <i class="fa-solid fa-clock"></i> Not Generated
+            </span>
+          `}
+        </div>
+      </div>
+
+      <!-- Event Details Card -->
+      <div style="border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:16px;background:#fff;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;border-bottom:1px solid #f1f5f9;padding-bottom:8px;">
+          <i class="fa-solid fa-chalkboard-user" style="color:#6366f1;"></i>
+          <h5 style="margin:0;font-size:14px;font-weight:700;color:#1e293b;">Event Details</h5>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;">
+          <div><strong>Event Name:</strong> ${escapeHtml(ev.event_name || 'Event')}</div>
+          <div><strong>Category:</strong> <span class="badge badge-purple" style="font-size:11px;padding:2px 7px;">${escapeHtml(ev.category || 'General')}</span></div>
+          <div><strong>Event Date:</strong> ${fmtDate(ev.event_date)}</div>
+          <div><strong>Venue:</strong> ${escapeHtml(ev.event_venue || 'Department Placement Lab')}</div>
+          <div><strong>Faculty Coordinator:</strong> ${escapeHtml(ev.coordinator || 'Faculty Coordinator')}</div>
+          <div><strong>Academic Year:</strong> ${escapeHtml(ev.academic_year || '---')}</div>
+        </div>
+      </div>
+
+      <!-- Feedback Submission Card -->
+      <div style="border:1.5px solid ${fb.has_submission ? '#bbf7d0' : '#fecaca'};border-radius:12px;padding:16px 20px;margin-bottom:16px;background:${fb.has_submission ? '#f0fdf4' : '#fff5f5'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid ${fb.has_submission ? '#dcfce7' : '#fee2e2'};padding-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <i class="fa-solid ${fb.has_submission ? 'fa-square-check' : 'fa-circle-xmark'}" style="color:${fb.has_submission ? '#15803d' : '#dc2626'};font-size:16px;"></i>
+            <h5 style="margin:0;font-size:14px;font-weight:700;color:${fb.has_submission ? '#14532d' : '#7f1d1d'};">Event Feedback Submission Status</h5>
+          </div>
+          <span class="badge ${fb.has_submission ? 'badge-green' : 'badge-red'}" style="font-size:11.5px;font-weight:700;padding:4px 9px;">
+            ${fb.has_submission ? '<i class="fa-solid fa-check"></i> Submitted' : '<i class="fa-solid fa-xmark"></i> No feedback submission was recorded'}
+          </span>
+        </div>
+
+        ${fb.has_submission ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;color:#1e293b;">
+            <div><strong>Submission Date:</strong> ${fmtDate(fb.submitted_at)}</div>
+            <div><strong>Quiz Assessment Score:</strong> <span style="font-weight:800;color:${fb.quiz_passed ? '#15803d' : '#b45309'};">${fb.quiz_score !== null && fb.quiz_score !== undefined ? fb.quiz_score + '%' : 'N/A'}</span> (${fb.quiz_passed ? 'Passed' : 'Pending'})</div>
+            <div><strong>Overall Event Rating:</strong> ${'★'.repeat(fb.overall_rating || 5)}${'☆'.repeat(5 - (fb.overall_rating || 5))} (${fb.overall_rating || 5}/5)</div>
+            <div><strong>Session Usefulness:</strong> ${escapeHtml(fb.usefulness || 'Yes')}</div>
+          </div>
+        ` : `
+          <p style="margin:0;font-size:13px;color:#991b1b;">
+            <strong>No submission recorded:</strong> The student has not submitted the event feedback form or completed the quiz assessment for this event.
+          </p>
+        `}
+      </div>
+
+      <!-- Certificate Generation Card -->
+      <div style="border:1.5px solid ${cert.is_generated ? '#bbf7d0' : '#fde68a'};border-radius:12px;padding:16px 20px;background:${cert.is_generated ? '#fcfdfd' : '#fffbeb'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid ${cert.is_generated ? '#e2e8f0' : '#fef3c7'};padding-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <i class="fa-solid fa-award" style="color:${cert.is_generated ? '#15803d' : '#d97706'};font-size:16px;"></i>
+            <h5 style="margin:0;font-size:14px;font-weight:700;color:${cert.is_generated ? '#0f172a' : '#78350f'};">Certificate Generation Details</h5>
+          </div>
+          <span class="badge ${cert.is_generated ? 'badge-green' : 'badge-yellow'}" style="font-size:11.5px;font-weight:700;padding:4px 9px;">
+            ${cert.is_generated ? '<i class="fa-solid fa-circle-check"></i> Generated' : '<i class="fa-solid fa-clock"></i> Not Generated'}
+          </span>
+        </div>
+
+        ${cert.is_generated ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;color:#1e293b;margin-bottom:14px;">
+            <div><strong>Certificate Number:</strong> <span style="font-family:monospace;font-weight:800;color:#312e81;background:#e0e7ff;padding:2px 8px;border-radius:6px;">${escapeHtml(cert.certificate_number)}</span></div>
+            <div><strong>Issue Date:</strong> ${fmtDate(cert.issue_date)}</div>
+            <div><strong>Verification Status:</strong> <span class="badge badge-green" style="font-size:11px;">${escapeHtml(cert.status || 'Digitally Verified')}</span></div>
+            <div><strong>Category:</strong> ${escapeHtml(cert.category || ev.category || 'General')}</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="viewCertificatePdfFromAdmin({
+              certificate_number: '${escapeHtml(cert.certificate_number)}',
+              student_name: '${escapeHtml(st.name || '')}',
+              register_number: '${escapeHtml(st.register_number || '')}',
+              event_name: '${escapeHtml(ev.event_name || '')}',
+              event_date: '${escapeHtml(ev.event_date || '')}',
+              issue_date: '${escapeHtml(cert.issue_date || '')}',
+              event_venue: '${escapeHtml(ev.event_venue || '')}',
+              coordinator: '${escapeHtml(ev.coordinator || '')}',
+              signatory_title: '${escapeHtml(ev.signatory_title || 'Head of Department')}'
+            }, false)" style="font-size:12px;padding:6px 14px;border-radius:8px;">
+              <i class="fa-solid fa-file-pdf"></i> View Certificate PDF
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="viewCertificatePdfFromAdmin({
+              certificate_number: '${escapeHtml(cert.certificate_number)}',
+              student_name: '${escapeHtml(st.name || '')}',
+              register_number: '${escapeHtml(st.register_number || '')}',
+              event_name: '${escapeHtml(ev.event_name || '')}',
+              event_date: '${escapeHtml(ev.event_date || '')}',
+              issue_date: '${escapeHtml(cert.issue_date || '')}',
+              event_venue: '${escapeHtml(ev.event_venue || '')}',
+              coordinator: '${escapeHtml(ev.coordinator || '')}',
+              signatory_title: '${escapeHtml(ev.signatory_title || 'Head of Department')}'
+            }, true)" style="font-size:12px;padding:6px 14px;border-radius:8px;">
+              <i class="fa-solid fa-download"></i> Download PDF
+            </button>
+          </div>
+        ` : `
+          <p style="margin:0;font-size:13px;color:#92400e;">
+            No certificate has been generated or issued for this student and event yet.
+          </p>
+        `}
+      </div>
+    `;
+  }
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeCertDetailsModal() {
+  el('certDetailsViewModal')?.classList.add('hidden');
+}
+
+function _closeCertDetailsModal(e) {
+  if (e.target === el('certDetailsViewModal')) closeCertDetailsModal();
+}
+
+function openEditCertificateModalFromRecord(grpIdx, recIdx) {
+  const effRole = getStaffEffectiveRole();
+  if (effRole === 'admin' || effRole === 'ja_faculty') {
+    showAdminAlert('Permission Denied: Administrators have view-only access to certificate records. Certificate editing is restricted to Faculty members and Coordinators.');
+    return;
+  }
+
+  const grp = cachedStudentCertGroups[grpIdx];
+  if (!grp || !grp.records || !grp.records[recIdx]) return;
+  const rec = grp.records[recIdx];
+  const st = rec.student || {};
+  const ev = rec.event || {};
+  const cert = rec.certificate || {};
+
+  if (!cert.certificate_id && !cert.certificate_number) {
+    showAdminAlert('No certificate record found to edit for this student.');
+    return;
+  }
+
+  const modal = el('editCertificateModal');
+  if (el('editCertId')) el('editCertId').value = cert.certificate_id || cert.certificate_number;
+  if (el('editCertStudentName')) el('editCertStudentName').innerText = st.name || 'Student';
+  if (el('editCertRegNo')) el('editCertRegNo').innerText = `Reg No: ${st.register_number || '—'}`;
+  if (el('editCertNumberBadge')) el('editCertNumberBadge').innerText = cert.certificate_number || '---';
+  if (el('editCertEventName')) el('editCertEventName').value = cert.event_name || ev.event_name || '';
+  if (el('editCertCategory')) el('editCertCategory').value = cert.category || ev.category || 'Placement Training';
+  if (el('editCertAcademicYear')) el('editCertAcademicYear').value = cert.academic_year || ev.academic_year || grp.academic_year || '2026-27';
+  if (el('editCertEventDate')) el('editCertEventDate').value = cert.event_date ? cert.event_date.split('T')[0] : (ev.event_date ? ev.event_date.split('T')[0] : '');
+  if (el('editCertIssueDate')) el('editCertIssueDate').value = cert.issue_date ? cert.issue_date.split('T')[0] : new Date().toISOString().split('T')[0];
+  if (el('editCertVenue')) el('editCertVenue').value = cert.event_venue || ev.event_venue || 'Department Placement Lab';
+  if (el('editCertCoordinator')) el('editCertCoordinator').value = cert.coordinator || ev.coordinator || 'Faculty Coordinator';
+  if (el('editCertStatus')) el('editCertStatus').value = cert.status || 'Digitally Verified';
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeEditCertModal() {
+  el('editCertificateModal')?.classList.add('hidden');
+}
+
+function _closeEditCertModal(e) {
+  if (e.target === el('editCertificateModal')) closeEditCertModal();
+}
+
+async function handleSaveCertificateEdit(e) {
+  if (e) e.preventDefault();
+  const certId = el('editCertId')?.value;
+  if (!certId) {
+    showAdminAlert('Error: Certificate ID is missing.');
+    return;
+  }
+
+  const btn = el('btnSaveCertEdit');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate/${encodeURIComponent(certId)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({
+        event_name: el('editCertEventName')?.value.trim(),
+        category: el('editCertCategory')?.value,
+        academic_year: el('editCertAcademicYear')?.value.trim(),
+        event_date: el('editCertEventDate')?.value,
+        issue_date: el('editCertIssueDate')?.value,
+        event_venue: el('editCertVenue')?.value.trim(),
+        coordinator: el('editCertCoordinator')?.value.trim(),
+        status: el('editCertStatus')?.value
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      showAdminAlert(data.message || 'Failed to update certificate details.');
+      return;
+    }
+
+    showAdminAlert(`🎉 ${data.message}`, true);
+    closeEditCertModal();
+    await loadStudentCertificateRecords(true);
+
+  } catch (err) {
+    console.error('Error saving certificate edits:', err);
+    showAdminAlert('Network or server error while updating certificate.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Certificate Changes';
+    }
+  }
+}
+
+function openEditEventFeedbackModal(eventId) {
+  const effRole = getStaffEffectiveRole();
+  if (effRole === 'admin' || effRole === 'ja_faculty') {
+    showAdminAlert('Permission Denied: Administrators have view-only access to event feedback forms. Editing is restricted to Faculty members and Coordinators.');
+    return;
+  }
+
+  const ev = cachedAdminEventsAll.find(e => String(e.id) === String(eventId));
+  if (!ev) {
+    showAdminAlert('Event record not found.');
+    return;
+  }
+
+  const modal = el('editEventFeedbackModal');
+  if (el('editEfId')) el('editEfId').value = ev.id;
+  if (el('editEfName')) el('editEfName').value = ev.event_name || '';
+  if (el('editEfCode')) el('editEfCode').value = ev.event_code || '';
+  if (el('editEfAcademicYear')) el('editEfAcademicYear').value = ev.academic_year || '2026-27';
+  if (el('editEfDate')) el('editEfDate').value = ev.event_date ? ev.event_date.split('T')[0] : '';
+  if (el('editEfMinScore')) el('editEfMinScore').value = ev.min_quiz_score_pct || 50;
+  if (el('editEfVenue')) el('editEfVenue').value = ev.event_venue || '';
+  if (el('editEfCoordinator')) el('editEfCoordinator').value = ev.coordinator || '';
+  if (el('editEfMessage')) el('editEfMessage').value = ev.message || '';
+  if (el('editEfStatus')) el('editEfStatus').value = ev.status || 'ACTIVE';
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeEditEfModal() {
+  el('editEventFeedbackModal')?.classList.add('hidden');
+}
+
+function _closeEditEfModal(e) {
+  if (e.target === el('editEventFeedbackModal')) closeEditEfModal();
+}
+
+async function handleSaveEventFeedbackEdit(e) {
+  if (e) e.preventDefault();
+  const id = el('editEfId')?.value;
+  if (!id) {
+    showAdminAlert('Error: Event ID is missing.');
+    return;
+  }
+
+  const btn = el('btnSaveEfEdit');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/event-feedback/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({
+        event_name: el('editEfName')?.value.trim(),
+        event_code: el('editEfCode')?.value.trim().toUpperCase(),
+        academic_year: el('editEfAcademicYear')?.value.trim(),
+        event_date: el('editEfDate')?.value,
+        min_quiz_score_pct: parseInt(el('editEfMinScore')?.value || '50', 10),
+        event_venue: el('editEfVenue')?.value.trim(),
+        coordinator: el('editEfCoordinator')?.value.trim(),
+        message: el('editEfMessage')?.value.trim(),
+        status: el('editEfStatus')?.value
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      showAdminAlert(data.message || 'Failed to update event feedback details.');
+      return;
+    }
+
+    showAdminAlert(`🎉 ${data.message}`, true);
+    closeEditEfModal();
+    await loadAdminEventFeedbacks(true);
+    await loadStudentCertificateRecords(true);
+
+  } catch (err) {
+    console.error('Error saving event feedback edits:', err);
+    showAdminAlert('Network or server error while updating event feedback.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Event Changes';
+    }
+  }
+}
+
+// ============================================================
 // FACULTY / JA CERTIFICATE LOOKUP & VERIFICATION
 // ============================================================
 
@@ -5303,6 +6060,12 @@ function renderCertificateLookupResult(data) {
 // DIRECT CERTIFICATE ISSUANCE MODAL HANDLERS
 // ============================================================
 function openDirectIssueModal(prefillIdentifier = '', prefillEventName = '') {
+  const effRole = getStaffEffectiveRole();
+  if (effRole === 'admin' || effRole === 'ja_faculty') {
+    showAdminAlert('Permission Denied: Administrators have view-only access to certificate records. Certificate issuance and editing are restricted to Faculty members and Coordinators.');
+    return;
+  }
+
   const modal = el('directIssueModal');
   if (!modal) return;
 
@@ -5378,8 +6141,11 @@ async function handleDirectIssueCertificate(e) {
       return;
     }
 
-    showAdminAlert(`🎉 ${data.message}`);
+    showAdminAlert(`🎉 ${data.message}`, true);
     closeDirectIssueModal();
+
+    // Refresh year-wise student certificate table
+    await loadStudentCertificateRecords(true);
 
     // Automatically search for the newly issued certificate or student register number
     const lookupInput = el('certLookupInput');

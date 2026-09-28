@@ -1534,12 +1534,332 @@ async function markAllNotificationsAsRead(userId) {
     return { success: true };
 }
 
+// ============================================================
+// ROLE-BASED STUDENT CERTIFICATE RECORDS & TRACKING
+// ============================================================
+
+function inferEventCategory(eventName, message) {
+    const text = `${eventName || ""} ${message || ""}`.toLowerCase();
+    if (text.match(/placement|interview|aptitude|coding|drives|tcs|training/)) return "Placement Training";
+    if (text.match(/workshop|hands-on|cloud|aws|devops|ai|ml|data science|iot|cyber/)) return "Technical Workshop";
+    if (text.match(/symposium|quiz|hackathon|contest|competition|challenge/)) return "Symposium & Quiz";
+    if (text.match(/webinar|guest lecture|seminar|keynote|talk/)) return "Webinar / Guest Lecture";
+    if (text.match(/cert|nptel|coursera|oracle|cisco|industrial/)) return "Industrial Certification";
+    return "Placement Training";
+}
+
+async function getStudentCertificateRecords({ category, academic_year, search, status, coordinator } = {}) {
+    const data = await getAllData();
+    const allStudents = await getAllStudentUsers();
+    const allEvents = data.event_feedbacks || [];
+    const allCerts = data.certificates || [];
+    const allSubs = data.feedback_submissions || [];
+
+    const yearLabelMap = {
+        1: "1st Year (2026-2030)",
+        2: "2nd Year (2025-2029)",
+        3: "3rd Year (2024-2028)",
+        4: "4th Year (2023-2027)",
+        5: "Passed Out (2022-2026)"
+    };
+
+    const records = [];
+    const recordKeySet = new Set();
+
+    // 1. Cross-reference events and students
+    allEvents.forEach(ev => {
+        const evCat = ev.category || inferEventCategory(ev.event_name, ev.message);
+        const evYear = ev.academic_year || "2026-27";
+
+        const eligible = filterEligibleStudents(allStudents, ev);
+        const targetStudents = (eligible && eligible.length > 0) ? eligible : allStudents;
+
+        targetStudents.forEach(stu => {
+            const key = `ev_${ev.id}_stu_${stu.id}`;
+            recordKeySet.add(key);
+
+            // Check feedback submission
+            const sub = allSubs.find(s => 
+                (parseInt(s.feedback_id, 10) === parseInt(ev.id, 10)) &&
+                (String(s.user_id) === String(stu.id) || (stu.register_number && String(s.register_number).trim() === String(stu.register_number).trim()))
+            );
+
+            // Check certificate
+            const cert = allCerts.find(c => 
+                (parseInt(c.feedback_id, 10) === parseInt(ev.id, 10) || (c.event_name && c.event_name.toLowerCase() === ev.event_name.toLowerCase())) &&
+                (String(c.user_id) === String(stu.id) || (stu.register_number && String(c.register_number).trim() === String(stu.register_number).trim()))
+            );
+
+            const stuYearLabel = yearLabelMap[stu.year] || evYear;
+
+            records.push({
+                id: key,
+                student: {
+                    id: stu.id,
+                    name: stu.full_name || stu.name || "Student",
+                    register_number: stu.register_number || "—",
+                    department: stu.department || "Computer Science and Business Systems",
+                    year: stu.year || 4,
+                    year_label: stuYearLabel,
+                    email: stu.email || ""
+                },
+                event: {
+                    id: ev.id,
+                    event_name: ev.event_name,
+                    event_code: ev.event_code || "EVT",
+                    event_date: ev.event_date || "—",
+                    category: evCat,
+                    academic_year: evYear,
+                    coordinator: ev.coordinator || "Faculty Coordinator"
+                },
+                feedback: {
+                    submitted: !!sub,
+                    submission_status: sub ? "Submitted" : "No feedback submission was recorded",
+                    submitted_at: sub ? sub.submitted_at : null,
+                    quiz_score: sub ? `${sub.quiz_score || 0}/${sub.quiz_total || 0}` : null,
+                    quiz_pct: sub ? sub.quiz_pct : null,
+                    rating: sub ? sub.rating : null
+                },
+                certificate: {
+                    generated: !!cert,
+                    generation_status: cert ? "Generated" : "Not Generated",
+                    certificate_number: cert ? (cert.certificate_number || `RIT-${cert.id}`) : null,
+                    certificate_id: cert ? cert.id : null,
+                    issue_date: cert ? (cert.issue_date || cert.created_at) : null,
+                    status: cert ? (cert.status || "Digitally Verified") : "Pending",
+                    certificate_details: cert ? formatCertificateResponse(cert) : null
+                }
+            });
+        });
+    });
+
+    // 2. Standalone direct certificates
+    allCerts.forEach(cert => {
+        const certStuId = cert.user_id || cert.student_id;
+        const certReg = cert.register_number;
+        const certEvId = cert.feedback_id || 0;
+        const key = `ev_${certEvId}_stu_${certStuId}`;
+
+        if (!recordKeySet.has(key)) {
+            recordKeySet.add(key);
+            const stuObj = allStudents.find(s => String(s.id) === String(certStuId) || (certReg && s.register_number === certReg)) || {};
+            const evYear = cert.academic_year || "2026-27";
+            const stuYearLabel = yearLabelMap[stuObj.year] || evYear;
+
+            records.push({
+                id: `cert_standalone_${cert.id}`,
+                student: {
+                    id: certStuId || 0,
+                    name: cert.student_name || stuObj.full_name || "Student",
+                    register_number: cert.register_number || stuObj.register_number || "—",
+                    department: cert.department || stuObj.department || "Computer Science and Business Systems",
+                    year: cert.student_year || stuObj.year || 4,
+                    year_label: stuYearLabel,
+                    email: cert.student_email || stuObj.email || ""
+                },
+                event: {
+                    id: cert.feedback_id || `direct_${cert.id}`,
+                    event_name: cert.event_name || "Direct Certification",
+                    event_code: cert.event_code || "DIR",
+                    event_date: cert.event_date || cert.issue_date || "—",
+                    category: cert.category || inferEventCategory(cert.event_name, ""),
+                    academic_year: evYear,
+                    coordinator: cert.coordinator || "Faculty Coordinator"
+                },
+                feedback: {
+                    submitted: true,
+                    submission_status: "Direct Issuance / Certified",
+                    submitted_at: cert.issue_date || cert.created_at,
+                    quiz_score: "Exempted / Direct",
+                    quiz_pct: 100,
+                    rating: 5
+                },
+                certificate: {
+                    generated: true,
+                    generation_status: "Generated",
+                    certificate_number: cert.certificate_number || `RIT-${cert.id}`,
+                    certificate_id: cert.id,
+                    issue_date: cert.issue_date || cert.created_at,
+                    status: cert.status || "Digitally Verified",
+                    certificate_details: formatCertificateResponse(cert)
+                }
+            });
+        }
+    });
+
+    // 3. Filters
+    let filtered = records;
+
+    if (category && category !== "all") {
+        const catNorm = category.toLowerCase().trim();
+        filtered = filtered.filter(r => r.event.category.toLowerCase().trim() === catNorm);
+    }
+
+    if (academic_year && academic_year !== "all") {
+        const yrNorm = academic_year.toLowerCase().trim();
+        filtered = filtered.filter(r => 
+            r.event.academic_year.toLowerCase().includes(yrNorm) || 
+            r.student.year_label.toLowerCase().includes(yrNorm) ||
+            String(r.student.year) === yrNorm
+        );
+    }
+
+    if (status && status !== "all") {
+        if (status === "generated") {
+            filtered = filtered.filter(r => r.certificate.generated === true);
+        } else if (status === "not_generated") {
+            filtered = filtered.filter(r => r.certificate.generated === false);
+        } else if (status === "submitted") {
+            filtered = filtered.filter(r => r.feedback.submitted === true);
+        } else if (status === "no_feedback") {
+            filtered = filtered.filter(r => r.feedback.submitted === false);
+        }
+    }
+
+    if (coordinator && coordinator !== "all") {
+        const coordNorm = coordinator.toLowerCase().trim();
+        filtered = filtered.filter(r => r.event.coordinator && r.event.coordinator.toLowerCase().includes(coordNorm));
+    }
+
+    if (search && search.trim()) {
+        const q = search.toLowerCase().trim();
+        filtered = filtered.filter(r => 
+            (r.student.name && r.student.name.toLowerCase().includes(q)) ||
+            (r.student.register_number && r.student.register_number.toLowerCase().includes(q)) ||
+            (r.event.event_name && r.event.event_name.toLowerCase().includes(q)) ||
+            (r.certificate.certificate_number && r.certificate.certificate_number.toLowerCase().includes(q)) ||
+            (r.event.category && r.event.category.toLowerCase().includes(q))
+        );
+    }
+
+    // 4. Summary metrics
+    const totalRecords = filtered.length;
+    const certsGenerated = filtered.filter(r => r.certificate.generated).length;
+    const certsPending = totalRecords - certsGenerated;
+    const feedbackSubmitted = filtered.filter(r => r.feedback.submitted).length;
+    const noFeedbackRecorded = totalRecords - feedbackSubmitted;
+
+    const distinctCategories = Array.from(new Set(records.map(r => r.event.category))).filter(Boolean);
+    const distinctYears = Array.from(new Set(records.map(r => r.student.year_label))).filter(Boolean);
+
+    // 5. Group by Academic Year
+    const groupedByYear = {};
+    filtered.forEach(r => {
+        const yr = r.student.year_label || r.event.academic_year || "General";
+        if (!groupedByYear[yr]) {
+            groupedByYear[yr] = {
+                academic_year: yr,
+                total_records: 0,
+                certificates_generated: 0,
+                certificates_pending: 0,
+                feedback_submitted: 0,
+                no_feedback_recorded: 0,
+                students: new Set(),
+                records: []
+            };
+        }
+        groupedByYear[yr].total_records++;
+        if (r.certificate.generated) groupedByYear[yr].certificates_generated++;
+        else groupedByYear[yr].certificates_pending++;
+        if (r.feedback.submitted) groupedByYear[yr].feedback_submitted++;
+        else groupedByYear[yr].no_feedback_recorded++;
+        groupedByYear[yr].students.add(r.student.register_number || r.student.id);
+        groupedByYear[yr].records.push(r);
+    });
+
+    Object.keys(groupedByYear).forEach(k => {
+        groupedByYear[k].students_count = groupedByYear[k].students.size;
+        delete groupedByYear[k].students;
+    });
+
+    return {
+        summary: {
+            total_records: totalRecords,
+            certificates_generated: certsGenerated,
+            certificates_pending: certsPending,
+            feedback_submitted: feedbackSubmitted,
+            no_feedback_recorded: noFeedbackRecorded,
+            categories: distinctCategories,
+            academic_years: distinctYears
+        },
+        records: filtered,
+        grouped_by_year: groupedByYear
+    };
+}
+
+async function updateCertificateDetails(certId, updateData) {
+    const data = await getAllData();
+    const certs = data.certificates || [];
+    const cert = certs.find(c => String(c.id) === String(certId) || String(c.certificate_number) === String(certId));
+    if (!cert) {
+        throw new Error("Certificate record not found.");
+    }
+
+    if (updateData.student_name) cert.student_name = updateData.student_name.trim();
+    if (updateData.register_number) cert.register_number = updateData.register_number.trim();
+    if (updateData.event_name) cert.event_name = updateData.event_name.trim();
+    if (updateData.certificate_title) cert.certificate_title = updateData.certificate_title.trim();
+    if (updateData.certificate_type) cert.certificate_type = updateData.certificate_type.trim();
+    if (updateData.signatory_title) cert.signatory_title = updateData.signatory_title.trim();
+    if (updateData.coordinator) cert.coordinator = updateData.coordinator.trim();
+    if (updateData.issue_date) cert.issue_date = updateData.issue_date;
+    if (updateData.status) cert.status = updateData.status;
+    if (updateData.academic_year) cert.academic_year = updateData.academic_year;
+
+    cert.updated_at = new Date().toISOString();
+    await commitData(data);
+
+    const client = getClient();
+    if (client) {
+        try {
+            await client.from("certificates").update({
+                student_name: cert.student_name,
+                register_number: cert.register_number,
+                event_name: cert.event_name,
+                certificate_title: cert.certificate_title,
+                issue_date: cert.issue_date,
+                status: cert.status,
+                updated_at: cert.updated_at
+            }).or(`id.eq.${cert.id},certificate_number.eq.${cert.certificate_number}`);
+        } catch (e) {}
+    }
+
+    return cert;
+}
+
+async function updateEventFeedbackDetails(eventId, updateData) {
+    const data = await getAllData();
+    const events = data.event_feedbacks || [];
+    const ev = events.find(e => String(e.id) === String(eventId));
+    if (!ev) {
+        throw new Error("Event feedback not found.");
+    }
+
+    if (updateData.event_name) ev.event_name = updateData.event_name.trim();
+    if (updateData.event_code) ev.event_code = updateData.event_code.trim().toUpperCase();
+    if (updateData.event_date) ev.event_date = updateData.event_date;
+    if (updateData.event_venue) ev.event_venue = updateData.event_venue.trim();
+    if (updateData.coordinator) ev.coordinator = updateData.coordinator.trim();
+    if (updateData.academic_year) ev.academic_year = updateData.academic_year;
+    if (updateData.category) ev.category = updateData.category;
+    if (updateData.signatory_title) ev.signatory_title = updateData.signatory_title.trim();
+    if (updateData.message) ev.message = updateData.message.trim();
+    if (updateData.quiz && Array.isArray(updateData.quiz)) ev.quiz = updateData.quiz;
+    if (updateData.min_quiz_score_pct !== undefined) ev.min_quiz_score_pct = updateData.min_quiz_score_pct;
+
+    ev.updated_at = new Date().toISOString();
+    await commitData(data);
+
+    return ev;
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
     getAllSubmissions,
     deleteEventFeedback,
     updateEventFeedbackStatus,
+    updateEventFeedbackDetails,
     getEventFeedbacksWithStats,
     getStudentNotifications,
     markNotificationAsRead,
@@ -1554,5 +1874,8 @@ module.exports = {
     verifyAndGetCertificateDetails,
     getAllCertificates,
     getAllStudentUsers,
-    filterEligibleStudents
+    filterEligibleStudents,
+    inferEventCategory,
+    getStudentCertificateRecords,
+    updateCertificateDetails
 };
