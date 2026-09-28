@@ -83,8 +83,8 @@ function selectPortalMode(mode) {
   const tabPlacement = document.getElementById('tabPlacementPortal');
   const roleWrap = document.getElementById('rolePillsContainer');
   const regPrompt = document.getElementById('studentRegisterPrompt');
+  const facultyPrompt = document.getElementById('facultyRegisterPrompt');
   const btnText = document.getElementById('btnSubmitText');
-  const domainTag = document.getElementById('domainSuffixTag');
   const subtitle = document.getElementById('authCardSubtitle');
 
   if (mode === 'placement') {
@@ -108,6 +108,7 @@ function selectPortalMode(mode) {
     if (btnText) btnText.textContent = 'Login to Placement Portal';
     if (subtitle) subtitle.textContent = 'Access placement drives, drives management & profiles';
     if (regPrompt) regPrompt.classList.remove('form-hidden');
+    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
     selectStaffRole('student');
 
   } else {
@@ -136,6 +137,7 @@ function selectPortalMode(mode) {
     if (btnText) btnText.textContent = 'Login to Social Media Hub';
     if (subtitle) subtitle.textContent = 'Select a portal and log in to continue';
     if (regPrompt) regPrompt.classList.add('form-hidden');
+    if (facultyPrompt) facultyPrompt.classList.remove('form-hidden');
     selectStaffRole('faculty');
   }
 }
@@ -162,6 +164,7 @@ function selectStaffRole(role) {
   const domainTag = document.getElementById('domainSuffixTag');
   const btnText = document.getElementById('btnSubmitText');
   const regPrompt = document.getElementById('studentRegisterPrompt');
+  const facultyPrompt = document.getElementById('facultyRegisterPrompt');
 
   if (role === 'student') {
     if (lbl) lbl.textContent = 'Register Number / Official Email';
@@ -169,6 +172,7 @@ function selectStaffRole(role) {
     if (domainTag) domainTag.style.display = 'inline-block';
     if (btnText) btnText.textContent = 'Login to Placement Portal';
     if (regPrompt) regPrompt.classList.remove('form-hidden');
+    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
   } else if (role === 'admin') {
     if (lbl) lbl.textContent = 'Admin ID / Official Email';
     if (input) input.placeholder = 'e.g. admin@ritrjpm.ac.in';
@@ -179,12 +183,14 @@ function selectStaffRole(role) {
         : 'Login to Social Media Hub';
     }
     if (regPrompt) regPrompt.classList.add('form-hidden');
+    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
   } else if (role === 'hod') {
     if (lbl) lbl.textContent = 'HOD ID / Official Email';
     if (input) input.placeholder = 'e.g. hodcsbs@ritrjpm.ac.in';
     if (domainTag) domainTag.style.display = 'inline-block';
     if (btnText) btnText.textContent = 'Login as Head of Department';
     if (regPrompt) regPrompt.classList.add('form-hidden');
+    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
   } else {
     // Faculty
     if (lbl) lbl.textContent = 'Official Email';
@@ -192,6 +198,7 @@ function selectStaffRole(role) {
     if (domainTag) domainTag.style.display = 'inline-block';
     if (btnText) btnText.textContent = 'Login to Social Media Hub';
     if (regPrompt) regPrompt.classList.add('form-hidden');
+    if (facultyPrompt) facultyPrompt.classList.remove('form-hidden');
   }
 }
 
@@ -385,9 +392,7 @@ async function handleStudentRegister(e) {
 // ==========================================================================
 function handleGoogleSSO() {
   showAlert('Redirecting to Google Institutional Sign-In (@ritrjpm.ac.in)...', 'success');
-  // If backend supports Google OAuth redirect:
   setTimeout(() => {
-    // Check if OAuth endpoint exists
     window.location.href = `${API_BASE}/auth/google?portal=${currentPortalMode}`;
   }, 600);
 }
@@ -412,7 +417,6 @@ function routeAfterAuth(user) {
   }
 
   // Staff (Faculty, HOD, Admin) Routing:
-  // If user explicitly picked Social Media Hub or saved choice
   const preferredPortal = localStorage.getItem('csbs_active_portal');
 
   if (preferredPortal === 'social' || (!placementAccess && socialAccess)) {

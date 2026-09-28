@@ -1,0 +1,47 @@
+{
+  "faculty_placement_only@rit.ac.in": {
+    "placement_access": true,
+    "social_media_access": false
+  },
+  "FAC-PLACEMENT-ONLY": {
+    "placement_access": true,
+    "social_media_access": false
+  },
+  "faculty_social_only@rit.ac.in": {
+    "placement_access": false,
+    "social_media_access": true
+  },
+  "FAC-SOCIAL-ONLY": {
+    "placement_access": false,
+    "social_media_access": true
+  },
+  "faculty@rit.ac.in": {
+    "placement_access": true,
+    "social_media_access": true
+  },
+  "FACULTY001": {
+    "placement_access": true,
+    "social_media_access": true
+  },
+  "hod@rit.ac.in": {
+    "placement_access": true,
+    "social_media_access": true
+  },
+  "HOD001": {
+    "placement_access": true,
+    "social_media_access": true
+  },
+  "admin@rit.ac.in": {
+    "placement_access": true,
+    "social_media_access": true
+  },
+  "ADMIN001": {
+    "placement_access": true,
+    "social_media_access": true
+  },
+  "testprof_12345@ritrjpm.ac.in": {
+    "placement_access": true,
+    "social_media_access": true,
+    "updated_at": "2026-09-24T15:35:48.577Z"
+  }
+}

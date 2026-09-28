@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Portal Styles -->
-  <link rel="stylesheet" href="Form.css?v=2026.5">
+  <link rel="stylesheet" href="Form.css?v=2026.6">
 </head>
 <body class="enterprise-auth-body">
 
@@ -30,7 +30,7 @@
       
       <!-- Left: College Brand & Department Title -->
       <div class="header-brand-group">
-        <img src="rit_logo.png?v=2026.5" alt="Ramco Institute of Technology Emblem" class="header-college-logo">
+        <img src="rit_logo.png?v=2026.6" alt="Ramco Institute of Technology Emblem" class="header-college-logo">
         <div class="header-brand-titles">
           <h1 class="inst-name">RAMCO INSTITUTE OF TECHNOLOGY</h1>
           <div class="inst-sub-row">
@@ -277,10 +277,15 @@
                 <span id="btnSubmitText">Login to Social Media Hub</span>
               </button>
 
-              <!-- Secondary Option / Student Switch Prompt -->
+              <!-- Secondary Option / Registration Links -->
               <div class="student-auth-switch form-hidden" id="studentRegisterPrompt">
                 <span>New CSBS Student?</span>
                 <a href="javascript:void(0)" onclick="toggleStudentRegisterMode(true)">Create your placement account</a>
+              </div>
+
+              <div class="faculty-auth-switch" id="facultyRegisterPrompt">
+                <span>New Faculty Member?</span>
+                <a href="faculty-registration.html">Register here</a>
               </div>
 
               <!-- "OR" Divider -->
@@ -511,6 +516,6 @@
   </div>
 
   <!-- Portal Authentication Logic Script -->
-  <script src="Form.js?v=2026.5"></script>
+  <script src="Form.js?v=2026.6"></script>
 </body>
 </html>

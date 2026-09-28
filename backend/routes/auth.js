@@ -1,6 +1,8 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 const router = express.Router();
 const db = require("../db");
 const { normalizeDepartment, getDepartmentById } = require("../utils/departmentNormalizer");
@@ -332,7 +334,76 @@ router.post("/login", async (req, res) => {
                 }
 
                 if (!results || results.length === 0) {
-                    return res.status(404).json({ success: false, message: "Invalid email or password." });
+                    // Check local faculty registration store as fallback
+                    const facultyDataFile = path.join(__dirname, "../faculty_registration.json");
+                    if (fs.existsSync(facultyDataFile)) {
+                        try {
+                            const facJson = JSON.parse(fs.readFileSync(facultyDataFile, "utf8"));
+                            const registeredFaculty = (facJson.faculty_registrations || []).find(
+                                f => (f.email && f.email.toLowerCase() === identifier.toLowerCase()) ||
+                                     (f.mobile && f.mobile === identifier)
+                            );
+                            if (registeredFaculty) {
+                                const facMatch = await bcrypt.compare(password, registeredFaculty.password);
+                                if (!facMatch) {
+                                    return res.status(401).json({ success: false, message: "Invalid email or password." });
+                                }
+
+                                const isHod = (registeredFaculty.designation || "").toLowerCase().includes("head of department");
+                                const facRole = isHod ? "hod" : "faculty";
+                                const roleCheck = validateRoleMatch(facRole, requestedRole);
+                                if (!roleCheck.match) {
+                                    return res.status(403).json({ success: false, message: roleCheck.message });
+                                }
+
+                                // Sync to users in Supabase so future queries find user directly
+                                const client = require("../supabase").supabaseAdmin || require("../supabase").supabase;
+                                if (client) {
+                                    try {
+                                        const { data: existingUser } = await client.from("users").select("id").eq("email", registeredFaculty.email.toLowerCase());
+                                        if (!existingUser || existingUser.length === 0) {
+                                            await client.from("users").insert([{
+                                                full_name: registeredFaculty.name,
+                                                register_number: registeredFaculty.register_number || `FAC-${String(registeredFaculty.id).slice(-4)}`,
+                                                email: registeredFaculty.email.toLowerCase(),
+                                                password: registeredFaculty.password,
+                                                role: facRole,
+                                                department: registeredFaculty.department || "Computer Science and Business Systems",
+                                                phone: registeredFaculty.mobile || null,
+                                                created_at: registeredFaculty.created_at || new Date().toISOString()
+                                            }]);
+                                        }
+                                    } catch (e) {
+                                        console.warn("[Auth Fallback] Notice syncing faculty to users table:", e.message);
+                                    }
+                                }
+
+                                const userObj = {
+                                    id: registeredFaculty.id,
+                                    email: registeredFaculty.email,
+                                    role: facRole,
+                                    full_name: registeredFaculty.name,
+                                    designation: registeredFaculty.designation,
+                                    department: registeredFaculty.department || "Computer Science and Business Systems",
+                                    placement_access: true,
+                                    social_media_access: true
+                                };
+
+                                const token = jwt.sign(userObj, JWT_SECRET, { expiresIn: "7d" });
+                                return res.status(200).json({
+                                    success: true,
+                                    message: `${isHod ? "HOD" : "Faculty"} Login Successful!`,
+                                    token,
+                                    adminToken: token,
+                                    user: userObj
+                                });
+                            }
+                        } catch (e) {
+                            console.error("Error checking faculty fallback in auth:", e);
+                        }
+                    }
+
+                    return res.status(401).json({ success: false, message: "Invalid email or password." });
                 }
 
                 const user = results[0];
