@@ -1,13 +1,16 @@
 // ==========================================================================
-// FORM.JS — CSBS DEPARTMENT PORTAL AUTHENTICATION & ROUTING
-// Ramco Institute of Technology — Department of CSBS
+// FORM.JS — RIT CSBS DEPARTMENT PORTAL AUTHENTICATION & ROUTING
+// Modern Reactive UI Controller for Glassmorphic Dual-Portal Architecture
 // ==========================================================================
 
 const API_BASE = `${window.location.origin}/api`;
 
-let selectedStaffRole = 'faculty'; // 'faculty' | 'hod' | 'admin'
+let currentPortalMode = 'social'; // 'social' | 'placement'
+let currentRole = 'faculty';       // 'faculty' | 'hod' | 'admin' | 'student'
 
-// ---- Initialization ----
+// ==========================================================================
+// INITIALIZATION
+// ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
   // Check if session already exists
   const token = localStorage.getItem('token');
@@ -21,228 +24,320 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Handle URL hash shortcuts if requested (e.g., #student, #register, #faculty, #admin)
-  const hash = window.location.hash.toLowerCase();
-  if (hash === '#student') {
-    showStudentAuth();
-  } else if (hash === '#register' || hash === '#student-register') {
-    showStudentAuth();
-    switchStudentAuthMode('register');
-  } else if (hash === '#faculty') {
-    proceedToStaffAuth('faculty');
-  } else if (hash === '#hod') {
-    proceedToStaffAuth('hod');
-  } else if (hash === '#admin') {
-    proceedToStaffAuth('admin');
-  } else {
-    showPortalChoice();
+  // Restore remembered identifier if present
+  const savedUser = localStorage.getItem('rit_remembered_identifier');
+  if (savedUser) {
+    const input = document.getElementById('authIdentifier');
+    if (input) input.value = savedUser;
+    const chk = document.getElementById('rememberMeCheckbox');
+    if (chk) chk.checked = true;
+  }
+
+  // Check URL hash for direct links (e.g. #placement, #student, #faculty, #register)
+  handleUrlHashRouting();
+
+  // Allow clicking on domain suffix tag to append it
+  const domainTag = document.getElementById('domainSuffixTag');
+  if (domainTag) {
+    domainTag.addEventListener('click', () => {
+      const input = document.getElementById('authIdentifier');
+      if (!input) return;
+      const val = input.value.trim();
+      if (val && !val.includes('@')) {
+        input.value = `${val}@ritrjpm.ac.in`;
+      }
+      input.focus();
+    });
   }
 });
 
-// ==========================================================================
-// VIEW SWITCHING
-// ==========================================================================
+function handleUrlHashRouting() {
+  const hash = window.location.hash.toLowerCase();
+  if (hash === '#placement' || hash === '#student') {
+    selectPortalMode('placement');
+    selectStaffRole('student');
+  } else if (hash === '#register' || hash === '#student-register') {
+    selectPortalMode('placement');
+    toggleStudentRegisterMode(true);
+  } else if (hash === '#admin') {
+    selectPortalMode('social');
+    selectStaffRole('admin');
+  } else if (hash === '#hod') {
+    selectPortalMode('social');
+    selectStaffRole('hod');
+  } else {
+    selectPortalMode('social');
+    selectStaffRole('faculty');
+  }
+}
 
-function hideAllViews() {
-  const views = ['viewPortalChoice', 'viewStudentAuth', 'viewStaffRoleSelect', 'viewStaffAuth'];
-  views.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('form-hidden');
+// ==========================================================================
+// PORTAL MODE SWITCHING (Social Media Hub vs Placement Portal)
+// ==========================================================================
+function selectPortalMode(mode) {
+  currentPortalMode = mode;
+  hideAlert();
+  toggleStudentRegisterMode(false);
+
+  const tabSocial = document.getElementById('tabSocialHub');
+  const tabPlacement = document.getElementById('tabPlacementPortal');
+  const roleWrap = document.getElementById('rolePillsContainer');
+  const regPrompt = document.getElementById('studentRegisterPrompt');
+  const btnText = document.getElementById('btnSubmitText');
+  const domainTag = document.getElementById('domainSuffixTag');
+  const subtitle = document.getElementById('authCardSubtitle');
+
+  if (mode === 'placement') {
+    if (tabSocial) tabSocial.classList.remove('active');
+    if (tabPlacement) tabPlacement.classList.add('active');
+
+    // Role options for Placement Portal: Student & Placement Admin
+    if (roleWrap) {
+      roleWrap.innerHTML = `
+        <button type="button" class="role-pill-btn active" data-role="student" onclick="selectStaffRole('student')">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>Student</span>
+        </button>
+        <button type="button" class="role-pill-btn" data-role="admin" onclick="selectStaffRole('admin')">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Placement Admin</span>
+        </button>
+      `;
+    }
+
+    if (btnText) btnText.textContent = 'Login to Placement Portal';
+    if (subtitle) subtitle.textContent = 'Access placement drives, drives management & profiles';
+    if (regPrompt) regPrompt.classList.remove('form-hidden');
+    selectStaffRole('student');
+
+  } else {
+    // Social Media Hub mode
+    if (tabPlacement) tabPlacement.classList.remove('active');
+    if (tabSocial) tabSocial.classList.add('active');
+
+    // Role options for Social Media Hub: Faculty, HOD, Admin
+    if (roleWrap) {
+      roleWrap.innerHTML = `
+        <button type="button" class="role-pill-btn active" data-role="faculty" onclick="selectStaffRole('faculty')">
+          <i class="fa-solid fa-user"></i>
+          <span>Faculty</span>
+        </button>
+        <button type="button" class="role-pill-btn" data-role="hod" onclick="selectStaffRole('hod')">
+          <i class="fa-solid fa-building-columns"></i>
+          <span>HOD</span>
+        </button>
+        <button type="button" class="role-pill-btn" data-role="admin" onclick="selectStaffRole('admin')">
+          <i class="fa-solid fa-gear"></i>
+          <span>Admin</span>
+        </button>
+      `;
+    }
+
+    if (btnText) btnText.textContent = 'Login to Social Media Hub';
+    if (subtitle) subtitle.textContent = 'Select a portal and log in to continue';
+    if (regPrompt) regPrompt.classList.add('form-hidden');
+    selectStaffRole('faculty');
+  }
+}
+
+// ==========================================================================
+// ROLE SWITCHING
+// ==========================================================================
+function selectStaffRole(role) {
+  currentRole = role;
+  hideAlert();
+
+  // Update pill active classes
+  const pillBtns = document.querySelectorAll('.role-pill-btn');
+  pillBtns.forEach(btn => {
+    if (btn.getAttribute('data-role') === role) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
   });
-  hideAlerts();
-}
 
-function showPortalChoice() {
-  hideAllViews();
-  const el = document.getElementById('viewPortalChoice');
-  if (el) el.classList.remove('form-hidden');
-  history.replaceState(null, null, ' ');
-}
+  const lbl = document.getElementById('lblIdentifierText');
+  const input = document.getElementById('authIdentifier');
+  const domainTag = document.getElementById('domainSuffixTag');
+  const btnText = document.getElementById('btnSubmitText');
+  const regPrompt = document.getElementById('studentRegisterPrompt');
 
-function showStudentAuth() {
-  hideAllViews();
-  const el = document.getElementById('viewStudentAuth');
-  if (el) el.classList.remove('form-hidden');
-  switchStudentAuthMode('login');
-  window.location.hash = 'student';
-}
-
-function showStaffRoleSelect() {
-  hideAllViews();
-  const el = document.getElementById('viewStaffRoleSelect');
-  if (el) el.classList.remove('form-hidden');
-  history.replaceState(null, null, ' ');
-}
-
-function proceedToStaffAuth(role) {
-  selectedStaffRole = role;
-  hideAllViews();
-  const el = document.getElementById('viewStaffAuth');
-  if (el) el.classList.remove('form-hidden');
-
-  const titleEl = document.getElementById('staffAuthTitle');
-  const subEl = document.getElementById('staffAuthSub');
-  const lblEl = document.getElementById('lblStaffIdentifier');
-  const inputEl = document.getElementById('staffIdentifier');
-  const iconEl = document.getElementById('staffIdentIcon');
-  const headerIconEl = document.getElementById('staffRoleHeaderIcon');
-
-  if (role === 'admin') {
-    if (titleEl) titleEl.textContent = 'Placement Admin Login';
-    if (subEl) subEl.textContent = 'Sign in with placement administrator credentials';
-    if (lblEl) lblEl.textContent = 'Admin ID / Official Email';
-    if (inputEl) inputEl.placeholder = 'e.g. admin@rit.ac.in or Admin ID';
-    if (iconEl) iconEl.className = 'fa-solid fa-user-shield input-icon';
-    if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
-    window.location.hash = 'admin';
+  if (role === 'student') {
+    if (lbl) lbl.textContent = 'Register Number / Official Email';
+    if (input) input.placeholder = 'e.g. 953623244001 or student email';
+    if (domainTag) domainTag.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Login to Placement Portal';
+    if (regPrompt) regPrompt.classList.remove('form-hidden');
+  } else if (role === 'admin') {
+    if (lbl) lbl.textContent = 'Admin ID / Official Email';
+    if (input) input.placeholder = 'e.g. admin@ritrjpm.ac.in';
+    if (domainTag) domainTag.style.display = 'inline-block';
+    if (btnText) {
+      btnText.textContent = currentPortalMode === 'placement' 
+        ? 'Login as Placement Admin' 
+        : 'Login to Social Media Hub';
+    }
+    if (regPrompt) regPrompt.classList.add('form-hidden');
   } else if (role === 'hod') {
-    if (titleEl) titleEl.textContent = 'HOD Login';
-    if (subEl) subEl.textContent = 'Sign in with Head of Department credentials';
-    if (lblEl) lblEl.textContent = 'HOD ID / Official Email';
-    if (inputEl) inputEl.placeholder = 'e.g. hod@rit.ac.in or HOD ID';
-    if (iconEl) iconEl.className = 'fa-solid fa-building-columns input-icon';
-    if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-building-columns"></i>';
-    window.location.hash = 'hod';
+    if (lbl) lbl.textContent = 'HOD ID / Official Email';
+    if (input) input.placeholder = 'e.g. hodcsbs@ritrjpm.ac.in';
+    if (domainTag) domainTag.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Login as Head of Department';
+    if (regPrompt) regPrompt.classList.add('form-hidden');
   } else {
-    if (titleEl) titleEl.textContent = 'Faculty Login';
-    if (subEl) subEl.textContent = 'Sign in with your faculty ID or official email';
-    if (lblEl) lblEl.textContent = 'Faculty ID / Official Email';
-    if (inputEl) inputEl.placeholder = 'e.g. faculty@rit.ac.in or Staff ID';
-    if (iconEl) iconEl.className = 'fa-solid fa-chalkboard-user input-icon';
-    if (headerIconEl) headerIconEl.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i>';
-    window.location.hash = 'faculty';
-  }
-
-  setTimeout(() => {
-    if (inputEl) inputEl.focus();
-  }, 100);
-}
-
-function backToStaffRoleSelect() {
-  showStaffRoleSelect();
-}
-
-// ==========================================================================
-// STUDENT AUTHENTICATION (LOGIN & REGISTRATION)
-// ==========================================================================
-
-function switchStudentAuthMode(mode) {
-  hideAlerts();
-  const tabLogin = document.getElementById('tabStudentLogin');
-  const tabReg = document.getElementById('tabStudentRegister');
-  const formLogin = document.getElementById('studentLoginForm');
-  const formReg = document.getElementById('studentRegisterForm');
-  const title = document.getElementById('studentAuthTitle');
-  const subtitle = document.getElementById('studentAuthSubtitle');
-
-  if (mode === 'register') {
-    if (tabLogin) tabLogin.classList.remove('active');
-    if (tabReg) tabReg.classList.add('active');
-    if (formLogin) formLogin.classList.add('form-hidden');
-    if (formReg) formReg.classList.remove('form-hidden');
-    if (title) title.textContent = 'New Student Registration';
-    if (subtitle) subtitle.textContent = 'Create your institutional student placement profile';
-    window.location.hash = 'register';
-    setTimeout(() => {
-      const input = document.getElementById('regFullName');
-      if (input) input.focus();
-    }, 80);
-  } else {
-    if (tabReg) tabReg.classList.remove('active');
-    if (tabLogin) tabLogin.classList.add('active');
-    if (formReg) formReg.classList.add('form-hidden');
-    if (formLogin) formLogin.classList.remove('form-hidden');
-    if (title) title.textContent = 'Student Login';
-    if (subtitle) subtitle.textContent = 'Enter your institutional register number & password';
-    window.location.hash = 'student';
-    setTimeout(() => {
-      const input = document.getElementById('studentRegNo');
-      if (input) input.focus();
-    }, 80);
+    // Faculty
+    if (lbl) lbl.textContent = 'Official Email';
+    if (input) input.placeholder = 'Enter your official email';
+    if (domainTag) domainTag.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Login to Social Media Hub';
+    if (regPrompt) regPrompt.classList.add('form-hidden');
   }
 }
 
-async function handleStudentLogin(e) {
+// ==========================================================================
+// STUDENT REGISTRATION EXPANSION
+// ==========================================================================
+function toggleStudentRegisterMode(showRegister) {
+  hideAlert();
+  const loginFormContainer = document.getElementById('authMainFormContainer');
+  const registerContainer = document.getElementById('studentRegisterContainer');
+  const roleWrap = document.getElementById('roleSelectorWrap');
+
+  if (showRegister) {
+    if (loginFormContainer) loginFormContainer.classList.add('form-hidden');
+    if (registerContainer) registerContainer.classList.remove('form-hidden');
+    if (roleWrap) roleWrap.classList.add('form-hidden');
+    setTimeout(() => {
+      const nameInput = document.getElementById('regFullName');
+      if (nameInput) nameInput.focus();
+    }, 60);
+  } else {
+    if (registerContainer) registerContainer.classList.add('form-hidden');
+    if (loginFormContainer) loginFormContainer.classList.remove('form-hidden');
+    if (roleWrap) roleWrap.classList.remove('form-hidden');
+  }
+}
+
+// ==========================================================================
+// LOGIN SUBMISSION HANDLER
+// ==========================================================================
+async function handlePortalLogin(e) {
   e.preventDefault();
-  hideAlerts();
+  hideAlert();
 
-  const regNo = document.getElementById('studentRegNo')?.value.trim();
-  const password = document.getElementById('studentPassword')?.value;
+  let identifier = document.getElementById('authIdentifier')?.value.trim();
+  const password = document.getElementById('authPassword')?.value;
+  const rememberMe = document.getElementById('rememberMeCheckbox')?.checked;
 
-  if (!regNo || !password) {
-    showStudentAlert('Please enter both your Register Number and password.', 'error');
+  if (!identifier || !password) {
+    showAlert('Please fill in both your email/ID and password.', 'error');
     return;
   }
 
-  setBtnLoading('btnStudentSubmit', true, 'Signing in...');
+  // Handle Remember Me in localStorage
+  if (rememberMe) {
+    localStorage.setItem('rit_remembered_identifier', identifier);
+  } else {
+    localStorage.removeItem('rit_remembered_identifier');
+  }
+
+  setBtnLoading('btnSubmitLogin', true, 'Signing in...');
+
+  // Auto format email if user typed username without domain and it is an email field
+  let emailPayload = identifier;
+  if (!identifier.includes('@') && isNaN(identifier)) {
+    emailPayload = `${identifier}@ritrjpm.ac.in`;
+  }
 
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        identifier: regNo,
-        email: regNo,
+        identifier: identifier,
+        email: emailPayload,
         password,
-        role: 'student'
+        role: currentRole
       })
     });
 
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      showStudentAlert(data.message || 'Invalid Register Number or password.', 'error');
-      setBtnLoading('btnStudentSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> <span>Sign In to Student Portal</span>');
+      showAlert(data.message || 'Invalid credentials or unauthorized role access.', 'error');
+      resetSubmitButton();
       return;
     }
 
-    // Save tokens and user session
+    // Save tokens and session
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
+    if (data.adminToken) {
+      localStorage.setItem('adminToken', data.adminToken);
+    }
 
-    showStudentAlert('Authentication successful! Entering portal...', 'success');
-    showLoadingOverlay('Entering Student Placement Portal...');
+    // Record user's active portal choice for smart landing
+    localStorage.setItem('csbs_active_portal', currentPortalMode);
+
+    showAlert('Authentication successful! Entering portal...', 'success');
+    showLoadingOverlay(`Welcome ${data.user.full_name || ''}! Loading your portal...`);
 
     setTimeout(() => {
       routeAfterAuth(data.user);
-    }, 600);
+    }, 500);
 
   } catch (err) {
-    console.error('Student login error:', err);
-    showStudentAlert('Unable to connect to the portal server. Please verify your network.', 'error');
-    setBtnLoading('btnStudentSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> <span>Sign In to Student Portal</span>');
+    console.error('Portal Login error:', err);
+    showAlert('Unable to connect to portal server. Please verify backend connection.', 'error');
+    resetSubmitButton();
   }
 }
 
+function resetSubmitButton() {
+  const btn = document.getElementById('btnSubmitLogin');
+  if (!btn) return;
+  btn.disabled = false;
+  let text = 'Login to Social Media Hub';
+  if (currentPortalMode === 'placement') {
+    text = currentRole === 'admin' ? 'Login as Placement Admin' : 'Login to Placement Portal';
+  } else if (currentRole === 'hod') {
+    text = 'Login as Head of Department';
+  }
+  btn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket"></i> <span id="btnSubmitText">${text}</span>`;
+}
+
+// ==========================================================================
+// STUDENT REGISTRATION SUBMISSION HANDLER
+// ==========================================================================
 async function handleStudentRegister(e) {
   e.preventDefault();
-  hideAlerts();
+  hideAlert();
 
   const fullName = document.getElementById('regFullName')?.value.trim();
   const regNo = document.getElementById('regRegisterNo')?.value.trim();
   const email = document.getElementById('regEmail')?.value.trim();
   const phone = document.getElementById('regPhone')?.value.trim();
-  const department = document.getElementById('regDepartment')?.value || 'CSBS';
   const year = document.getElementById('regYear')?.value || 4;
   const password = document.getElementById('regPassword')?.value;
   const confirmPassword = document.getElementById('regConfirmPassword')?.value;
 
   if (!fullName || !regNo || !email || !password) {
-    showStudentAlert('Please fill in all required fields (Full Name, Register Number, Email, Password).', 'error');
+    showAlert('Please fill in all required fields marked with *.', 'error');
     return;
   }
 
   if (password.length < 6) {
-    showStudentAlert('Password must be at least 6 characters.', 'error');
+    showAlert('Password must be at least 6 characters long.', 'error');
     return;
   }
 
   if (password !== confirmPassword) {
-    showStudentAlert('Passwords do not match. Please verify your confirmation password.', 'error');
+    showAlert('Passwords do not match. Please re-enter carefully.', 'error');
     return;
   }
 
-  setBtnLoading('btnStudentRegister', true, 'Creating Student Account...');
+  setBtnLoading('btnSubmitRegister', true, 'Creating Student Account...');
 
   try {
     const res = await fetch(`${API_BASE}/auth/register`, {
@@ -253,7 +348,7 @@ async function handleStudentRegister(e) {
         register_number: regNo,
         email,
         phone: phone || null,
-        department,
+        department: 'CSBS',
         year: parseInt(year, 10),
         password,
         role: 'student'
@@ -263,92 +358,43 @@ async function handleStudentRegister(e) {
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      showStudentAlert(data.message || 'Registration failed. Please check your details and try again.', 'error');
-      setBtnLoading('btnStudentRegister', false, '<i class="fa-solid fa-user-plus"></i> <span>Register &amp; Create Student Account</span>');
+      showAlert(data.message || 'Registration failed. Please check your details.', 'error');
+      setBtnLoading('btnSubmitRegister', false, '<i class="fa-solid fa-user-plus"></i> <span>Create Student Account</span>');
       return;
     }
 
-    // Save token and user session
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
 
-    showStudentAlert('Account created successfully! Welcome to RIT CSBS Portal.', 'success');
-    showLoadingOverlay('Creating your student profile & entering portal...');
-
-    setTimeout(() => {
-      routeAfterAuth(data.user);
-    }, 700);
-
-  } catch (err) {
-    console.error('Student registration error:', err);
-    showStudentAlert('Unable to connect to the portal server. Please verify your network.', 'error');
-    setBtnLoading('btnStudentRegister', false, '<i class="fa-solid fa-user-plus"></i> <span>Register &amp; Create Student Account</span>');
-  }
-}
-
-// ==========================================================================
-// STAFF AUTHENTICATION (FACULTY / HOD / ADMIN)
-// ==========================================================================
-
-async function handleStaffLogin(e) {
-  e.preventDefault();
-  hideAlerts();
-
-  const identifier = document.getElementById('staffIdentifier')?.value.trim();
-  const password = document.getElementById('staffPassword')?.value;
-
-  if (!identifier || !password) {
-    showStaffAlert('Please enter your Staff ID or official email and password.', 'error');
-    return;
-  }
-
-  setBtnLoading('btnStaffSubmit', true, 'Authenticating...');
-
-  try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        identifier,
-        email: identifier,
-        password,
-        role: selectedStaffRole // Validated against actual role in DB
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      showStaffAlert(data.message || 'Invalid credentials or unauthorized role access.', 'error');
-      setBtnLoading('btnStaffSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> Authenticate &amp; Enter Portal');
-      return;
-    }
-
-    // Save tokens and user session
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    if (data.adminToken) {
-      localStorage.setItem('adminToken', data.adminToken);
-    }
-
-    showStaffAlert('Authentication successful! Verifying module permissions...', 'success');
-    showLoadingOverlay('Loading your authorized portal...');
+    showAlert('Student account registered! Entering Placement Portal...', 'success');
+    showLoadingOverlay('Creating your student profile...');
 
     setTimeout(() => {
       routeAfterAuth(data.user);
     }, 600);
 
   } catch (err) {
-    console.error('Staff login error:', err);
-    showStaffAlert('Unable to connect to portal server. Please check backend connection.', 'error');
-    setBtnLoading('btnStaffSubmit', false, '<i class="fa-solid fa-right-to-bracket"></i> Authenticate &amp; Enter Portal');
+    console.error('Registration error:', err);
+    showAlert('Unable to reach server. Please check your network connection.', 'error');
+    setBtnLoading('btnSubmitRegister', false, '<i class="fa-solid fa-user-plus"></i> <span>Create Student Account</span>');
   }
 }
 
 // ==========================================================================
-// AUTOMATIC DASHBOARD ROUTING ACCORDING TO ROLES & PERMISSIONS
+// GOOGLE SSO HANDLER (Institutional Account)
 // ==========================================================================
+function handleGoogleSSO() {
+  showAlert('Redirecting to Google Institutional Sign-In (@ritrjpm.ac.in)...', 'success');
+  // If backend supports Google OAuth redirect:
+  setTimeout(() => {
+    // Check if OAuth endpoint exists
+    window.location.href = `${API_BASE}/auth/google?portal=${currentPortalMode}`;
+  }, 600);
+}
 
+// ==========================================================================
+// AUTOMATIC ROUTING ACCORDING TO ROLES & PERMISSIONS
+// ==========================================================================
 function routeAfterAuth(user) {
   if (!user) {
     window.location.href = 'Form.html';
@@ -365,65 +411,41 @@ function routeAfterAuth(user) {
     return;
   }
 
-  // Staff (Faculty, HOD, Admin) Permission Routing:
-  // Case 1: Staff with Placement Access ONLY
-  if (placementAccess && !socialAccess) {
-    window.location.href = 'admin_dashboard.html';
-    return;
-  }
+  // Staff (Faculty, HOD, Admin) Routing:
+  // If user explicitly picked Social Media Hub or saved choice
+  const preferredPortal = localStorage.getItem('csbs_active_portal');
 
-  // Case 2: Staff with Social Media Hub Access ONLY
-  if (!placementAccess && socialAccess) {
+  if (preferredPortal === 'social' || (!placementAccess && socialAccess)) {
     window.location.href = 'social_dashboard.html';
     return;
   }
 
-  // Case 3: Staff with BOTH Placement and Social Media Hub Access
-  // Open default portal (Placement Portal) with module switcher active
-  if (placementAccess && socialAccess) {
-    // Check if user previously active on social media before login
-    const savedActivePortal = localStorage.getItem('csbs_active_portal');
-    if (savedActivePortal === 'social') {
-      window.location.href = 'social_dashboard.html';
-    } else {
-      window.location.href = 'admin_dashboard.html';
-    }
+  if (preferredPortal === 'placement' || (placementAccess && !socialAccess)) {
+    window.location.href = 'admin_dashboard.html';
     return;
   }
 
-  // Fallback if neither permission is explicitly set
+  // Fallback to Placement Dashboard with module switcher enabled
   window.location.href = 'admin_dashboard.html';
 }
 
 // ==========================================================================
 // UI HELPERS & MODALS
 // ==========================================================================
-
-function showStudentAlert(msg, type = 'error') {
-  const box = document.getElementById('studentAlertBox');
+function showAlert(msg, type = 'error') {
+  const box = document.getElementById('authAlertBox');
   if (!box) return;
   const icon = type === 'success' 
     ? '<i class="fa-solid fa-circle-check" style="color:#16A34A;"></i>' 
     : '<i class="fa-solid fa-circle-exclamation" style="color:#DC2626;"></i>';
   box.innerHTML = `${icon} <span>${msg}</span>`;
-  box.className = `alert-box ${type}`;
+  box.className = `auth-alert-box ${type}`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function showStaffAlert(msg, type = 'error') {
-  const box = document.getElementById('staffAlertBox');
-  if (!box) return;
-  const icon = type === 'success' 
-    ? '<i class="fa-solid fa-circle-check" style="color:#16A34A;"></i>' 
-    : '<i class="fa-solid fa-circle-exclamation" style="color:#DC2626;"></i>';
-  box.innerHTML = `${icon} <span>${msg}</span>`;
-  box.className = `alert-box ${type}`;
-}
-
-function hideAlerts() {
-  const sBox = document.getElementById('studentAlertBox');
-  const fBox = document.getElementById('staffAlertBox');
-  if (sBox) sBox.className = 'alert-box form-hidden';
-  if (fBox) fBox.className = 'alert-box form-hidden';
+function hideAlert() {
+  const box = document.getElementById('authAlertBox');
+  if (box) box.className = 'auth-alert-box form-hidden';
 }
 
 function setBtnLoading(btnId, isLoading, defaultHtml) {
@@ -459,7 +481,17 @@ function closeForgotModal(e) {
   if (modal) modal.classList.add('form-hidden');
 }
 
-function showLoadingOverlay(desc = 'Verifying role and module permissions') {
+function openDeptOverview() {
+  const modal = document.getElementById('deptModal');
+  if (modal) modal.classList.remove('form-hidden');
+}
+
+function closeDeptOverview(e) {
+  const modal = document.getElementById('deptModal');
+  if (modal) modal.classList.add('form-hidden');
+}
+
+function showLoadingOverlay(desc = 'Verifying institutional credentials') {
   const overlay = document.getElementById('portalLoadingOverlay');
   const descEl = document.getElementById('loadingOverlayDesc');
   if (descEl) descEl.textContent = desc;
