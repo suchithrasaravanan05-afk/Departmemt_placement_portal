@@ -1,12 +1,14 @@
 // ==========================================================================
-// FORM.JS — RIT CSBS DEPARTMENT PORTAL AUTHENTICATION & ROUTING
-// Modern Reactive UI Controller for Glassmorphic Dual-Portal Architecture
+// FORM.JS — RIT CSBS DIGITAL DEPARTMENT PORTAL
+// Enterprise Authentication & Routing Controller
+// Primary: Department Portal (Student & Placement Management)
+// Secondary: Department Social Media Hub (Communication & Media)
 // ==========================================================================
 
 const API_BASE = `${window.location.origin}/api`;
 
-let currentPortalMode = 'social'; // 'social' | 'placement'
-let currentRole = 'faculty';       // 'faculty' | 'hod' | 'admin' | 'student'
+let currentPortalMode = 'dept'; // 'dept' | 'social'
+let currentRole = 'faculty';     // 'faculty' | 'student' | 'admin' | 'hod'
 
 // ==========================================================================
 // INITIALIZATION
@@ -33,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chk) chk.checked = true;
   }
 
-  // Check URL hash for direct links (e.g. #placement, #student, #faculty, #register)
+  // Handle URL hash for direct bookmark routing
   handleUrlHashRouting();
 
   // Allow clicking on domain suffix tag to append it
@@ -53,48 +55,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function handleUrlHashRouting() {
   const hash = window.location.hash.toLowerCase();
-  if (hash === '#placement' || hash === '#student') {
-    selectPortalMode('placement');
-    selectStaffRole('student');
-  } else if (hash === '#register' || hash === '#student-register') {
-    selectPortalMode('placement');
-    toggleStudentRegisterMode(true);
-  } else if (hash === '#admin') {
+  if (hash === '#social' || hash === '#social-hub') {
     selectPortalMode('social');
-    selectStaffRole('admin');
+    selectStaffRole('faculty');
   } else if (hash === '#hod') {
     selectPortalMode('social');
     selectStaffRole('hod');
-  } else {
+  } else if (hash === '#admin' || hash === '#social-admin') {
     selectPortalMode('social');
+    selectStaffRole('admin');
+  } else if (hash === '#student' || hash === '#placement') {
+    selectPortalMode('dept');
+    selectStaffRole('student');
+  } else if (hash === '#register' || hash === '#student-register') {
+    selectPortalMode('dept');
+    toggleStudentRegisterMode(true);
+  } else if (hash === '#placement-admin') {
+    selectPortalMode('dept');
+    selectStaffRole('admin');
+  } else {
+    // Default: Department Portal with Faculty role
+    selectPortalMode('dept');
     selectStaffRole('faculty');
   }
 }
 
 // ==========================================================================
-// PORTAL MODE SWITCHING (Social Media Hub vs Placement Portal)
+// PORTAL MODE SWITCHING (Department Portal vs Social Media Hub)
 // ==========================================================================
 function selectPortalMode(mode) {
   currentPortalMode = mode;
   hideAlert();
   toggleStudentRegisterMode(false);
 
+  const tabDept = document.getElementById('tabDeptPortal');
   const tabSocial = document.getElementById('tabSocialHub');
-  const tabPlacement = document.getElementById('tabPlacementPortal');
   const roleWrap = document.getElementById('rolePillsContainer');
-  const regPrompt = document.getElementById('studentRegisterPrompt');
-  const facultyPrompt = document.getElementById('facultyRegisterPrompt');
-  const btnText = document.getElementById('btnSubmitText');
   const subtitle = document.getElementById('authCardSubtitle');
 
-  if (mode === 'placement') {
+  if (mode === 'dept') {
+    // Primary: Department Portal (Students, Placement, Faculty)
+    if (tabDept) tabDept.classList.add('active');
     if (tabSocial) tabSocial.classList.remove('active');
-    if (tabPlacement) tabPlacement.classList.add('active');
 
-    // Role options for Placement Portal: Student & Placement Admin
+    if (subtitle) {
+      subtitle.textContent = 'Manage students, placements and department career activities.';
+    }
+
     if (roleWrap) {
       roleWrap.innerHTML = `
-        <button type="button" class="role-pill-btn active" data-role="student" onclick="selectStaffRole('student')">
+        <button type="button" class="role-pill-btn active" data-role="faculty" onclick="selectStaffRole('faculty')">
+          <i class="fa-solid fa-user-tie"></i>
+          <span>Faculty</span>
+        </button>
+        <button type="button" class="role-pill-btn" data-role="student" onclick="selectStaffRole('student')">
           <i class="fa-solid fa-graduation-cap"></i>
           <span>Student</span>
         </button>
@@ -105,18 +119,17 @@ function selectPortalMode(mode) {
       `;
     }
 
-    if (btnText) btnText.textContent = 'Login to Placement Portal';
-    if (subtitle) subtitle.textContent = 'Access placement drives, drives management & profiles';
-    if (regPrompt) regPrompt.classList.remove('form-hidden');
-    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
-    selectStaffRole('student');
+    selectStaffRole('faculty');
 
   } else {
-    // Social Media Hub mode
-    if (tabPlacement) tabPlacement.classList.remove('active');
+    // Secondary: Department Social Media Hub (News, Events, Gallery, Staff)
     if (tabSocial) tabSocial.classList.add('active');
+    if (tabDept) tabDept.classList.remove('active');
 
-    // Role options for Social Media Hub: Faculty, HOD, Admin
+    if (subtitle) {
+      subtitle.textContent = 'Department news, events, announcements and institutional activities.';
+    }
+
     if (roleWrap) {
       roleWrap.innerHTML = `
         <button type="button" class="role-pill-btn active" data-role="faculty" onclick="selectStaffRole('faculty')">
@@ -134,10 +147,6 @@ function selectPortalMode(mode) {
       `;
     }
 
-    if (btnText) btnText.textContent = 'Login to Social Media Hub';
-    if (subtitle) subtitle.textContent = 'Select a portal and log in to continue';
-    if (regPrompt) regPrompt.classList.add('form-hidden');
-    if (facultyPrompt) facultyPrompt.classList.remove('form-hidden');
     selectStaffRole('faculty');
   }
 }
@@ -149,7 +158,7 @@ function selectStaffRole(role) {
   currentRole = role;
   hideAlert();
 
-  // Update pill active classes
+  // Update active pill classes
   const pillBtns = document.querySelectorAll('.role-pill-btn');
   pillBtns.forEach(btn => {
     if (btn.getAttribute('data-role') === role) {
@@ -163,42 +172,59 @@ function selectStaffRole(role) {
   const input = document.getElementById('authIdentifier');
   const domainTag = document.getElementById('domainSuffixTag');
   const btnText = document.getElementById('btnSubmitText');
-  const regPrompt = document.getElementById('studentRegisterPrompt');
+  const studentPrompt = document.getElementById('studentRegisterPrompt');
   const facultyPrompt = document.getElementById('facultyRegisterPrompt');
 
-  if (role === 'student') {
-    if (lbl) lbl.textContent = 'Register Number / Official Email';
-    if (input) input.placeholder = 'e.g. 953623244001 or student email';
-    if (domainTag) domainTag.style.display = 'inline-block';
-    if (btnText) btnText.textContent = 'Login to Placement Portal';
-    if (regPrompt) regPrompt.classList.remove('form-hidden');
-    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
-  } else if (role === 'admin') {
-    if (lbl) lbl.textContent = 'Admin ID / Official Email';
-    if (input) input.placeholder = 'e.g. admin@ritrjpm.ac.in';
-    if (domainTag) domainTag.style.display = 'inline-block';
-    if (btnText) {
-      btnText.textContent = currentPortalMode === 'placement' 
-        ? 'Login as Placement Admin' 
-        : 'Login to Social Media Hub';
+  if (currentPortalMode === 'dept') {
+    // Roles in Department Portal
+    if (role === 'student') {
+      if (lbl) lbl.textContent = 'Register Number / Official Email';
+      if (input) input.placeholder = 'e.g. 953623244001 or student email';
+      if (domainTag) domainTag.style.display = 'inline-block';
+      if (btnText) btnText.textContent = 'Login to Department Portal';
+      if (studentPrompt) studentPrompt.classList.remove('form-hidden');
+      if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
+    } else if (role === 'admin') {
+      if (lbl) lbl.textContent = 'Placement Admin ID / Official Email';
+      if (input) input.placeholder = 'admin@ritrjpm.ac.in';
+      if (domainTag) domainTag.style.display = 'inline-block';
+      if (btnText) btnText.textContent = 'Login as Placement Admin';
+      if (studentPrompt) studentPrompt.classList.add('form-hidden');
+      if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
+    } else {
+      // Faculty (Default)
+      if (lbl) lbl.textContent = 'Official Email';
+      if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
+      if (domainTag) domainTag.style.display = 'inline-block';
+      if (btnText) btnText.textContent = 'Login to Department Portal';
+      if (studentPrompt) studentPrompt.classList.add('form-hidden');
+      if (facultyPrompt) facultyPrompt.classList.remove('form-hidden');
     }
-    if (regPrompt) regPrompt.classList.add('form-hidden');
-    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
-  } else if (role === 'hod') {
-    if (lbl) lbl.textContent = 'HOD ID / Official Email';
-    if (input) input.placeholder = 'e.g. hodcsbs@ritrjpm.ac.in';
-    if (domainTag) domainTag.style.display = 'inline-block';
-    if (btnText) btnText.textContent = 'Login as Head of Department';
-    if (regPrompt) regPrompt.classList.add('form-hidden');
-    if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
   } else {
-    // Faculty
-    if (lbl) lbl.textContent = 'Official Email';
-    if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
-    if (domainTag) domainTag.style.display = 'inline-block';
-    if (btnText) btnText.textContent = 'Login to Social Media Hub';
-    if (regPrompt) regPrompt.classList.add('form-hidden');
-    if (facultyPrompt) facultyPrompt.classList.remove('form-hidden');
+    // Roles in Department Social Media Hub
+    if (role === 'hod') {
+      if (lbl) lbl.textContent = 'HOD ID / Official Email';
+      if (input) input.placeholder = 'hodcsbs@ritrjpm.ac.in';
+      if (domainTag) domainTag.style.display = 'inline-block';
+      if (btnText) btnText.textContent = 'Login as Head of Department';
+      if (studentPrompt) studentPrompt.classList.add('form-hidden');
+      if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
+    } else if (role === 'admin') {
+      if (lbl) lbl.textContent = 'Admin ID / Official Email';
+      if (input) input.placeholder = 'admin@ritrjpm.ac.in';
+      if (domainTag) domainTag.style.display = 'inline-block';
+      if (btnText) btnText.textContent = 'Login as Administrator';
+      if (studentPrompt) studentPrompt.classList.add('form-hidden');
+      if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
+    } else {
+      // Faculty
+      if (lbl) lbl.textContent = 'Official Email';
+      if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
+      if (domainTag) domainTag.style.display = 'inline-block';
+      if (btnText) btnText.textContent = 'Login to Social Media Hub';
+      if (studentPrompt) studentPrompt.classList.add('form-hidden');
+      if (facultyPrompt) facultyPrompt.classList.remove('form-hidden');
+    }
   }
 }
 
@@ -251,7 +277,7 @@ async function handlePortalLogin(e) {
 
   setBtnLoading('btnSubmitLogin', true, 'Signing in...');
 
-  // Auto format email if user typed username without domain and it is an email field
+  // Auto format email if user typed username without domain
   let emailPayload = identifier;
   if (!identifier.includes('@') && isNaN(identifier)) {
     emailPayload = `${identifier}@ritrjpm.ac.in`;
@@ -305,11 +331,11 @@ function resetSubmitButton() {
   const btn = document.getElementById('btnSubmitLogin');
   if (!btn) return;
   btn.disabled = false;
-  let text = 'Login to Social Media Hub';
-  if (currentPortalMode === 'placement') {
-    text = currentRole === 'admin' ? 'Login as Placement Admin' : 'Login to Placement Portal';
-  } else if (currentRole === 'hod') {
-    text = 'Login as Head of Department';
+  let text = 'Login to Department Portal';
+  if (currentPortalMode === 'social') {
+    text = currentRole === 'hod' ? 'Login as Head of Department' : (currentRole === 'admin' ? 'Login as Administrator' : 'Login to Social Media Hub');
+  } else {
+    text = currentRole === 'admin' ? 'Login as Placement Admin' : 'Login to Department Portal';
   }
   btn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket"></i> <span id="btnSubmitText">${text}</span>`;
 }
@@ -373,7 +399,7 @@ async function handleStudentRegister(e) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
 
-    showAlert('Student account registered! Entering Placement Portal...', 'success');
+    showAlert('Student account registered! Entering Department Portal...', 'success');
     showLoadingOverlay('Creating your student profile...');
 
     setTimeout(() => {
@@ -388,17 +414,7 @@ async function handleStudentRegister(e) {
 }
 
 // ==========================================================================
-// GOOGLE SSO HANDLER (Institutional Account)
-// ==========================================================================
-function handleGoogleSSO() {
-  showAlert('Redirecting to Google Institutional Sign-In (@ritrjpm.ac.in)...', 'success');
-  setTimeout(() => {
-    window.location.href = `${API_BASE}/auth/google?portal=${currentPortalMode}`;
-  }, 600);
-}
-
-// ==========================================================================
-// AUTOMATIC ROUTING ACCORDING TO ROLES & PERMISSIONS
+// AUTOMATIC ROUTING ACCORDING TO ROLES & PREFERRED PORTAL
 // ==========================================================================
 function routeAfterAuth(user) {
   if (!user) {
@@ -409,6 +425,7 @@ function routeAfterAuth(user) {
   const role = (user.role || '').toLowerCase();
   const placementAccess = user.placement_access !== false;
   const socialAccess = user.social_media_access === true;
+  const preferredPortal = localStorage.getItem('csbs_active_portal');
 
   // Student is strictly routed to Student Placement Dashboard
   if (role === 'student') {
@@ -417,19 +434,12 @@ function routeAfterAuth(user) {
   }
 
   // Staff (Faculty, HOD, Admin) Routing:
-  const preferredPortal = localStorage.getItem('csbs_active_portal');
-
   if (preferredPortal === 'social' || (!placementAccess && socialAccess)) {
     window.location.href = 'social_dashboard.html';
     return;
   }
 
-  if (preferredPortal === 'placement' || (placementAccess && !socialAccess)) {
-    window.location.href = 'admin_dashboard.html';
-    return;
-  }
-
-  // Fallback to Placement Dashboard with module switcher enabled
+  // Default for Department Portal / Placement: Admin Dashboard
   window.location.href = 'admin_dashboard.html';
 }
 
@@ -483,14 +493,6 @@ function openForgotModal() {
 function closeForgotModal(e) {
   const modal = document.getElementById('forgotModal');
   if (modal) modal.classList.add('form-hidden');
-}
-
-function openDeptOverview() {
-  // Department modal removed per requirements — information is permanently visible on the left side
-}
-
-function closeDeptOverview(e) {
-  // Department modal removed per requirements
 }
 
 function showLoadingOverlay(desc = 'Verifying institutional credentials') {
