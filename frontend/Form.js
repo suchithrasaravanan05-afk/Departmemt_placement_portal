@@ -93,10 +93,15 @@ function selectPortalMode(mode) {
   const roleWrap = document.getElementById('rolePillsContainer');
   const subtitle = document.getElementById('authCardSubtitle');
 
+  const badgeDept = document.getElementById('badgeDeptPortal');
+  const badgeSocial = document.getElementById('badgeSocialHub');
+
   if (mode === 'dept') {
     // Primary: Department Portal (Students, Placement, Faculty)
     if (tabDept) tabDept.classList.add('active');
     if (tabSocial) tabSocial.classList.remove('active');
+    if (badgeDept) badgeDept.classList.remove('form-hidden');
+    if (badgeSocial) badgeSocial.classList.add('form-hidden');
 
     if (subtitle) {
       subtitle.textContent = 'Manage students, placements and department career activities.';
@@ -105,7 +110,7 @@ function selectPortalMode(mode) {
     if (roleWrap) {
       roleWrap.innerHTML = `
         <button type="button" class="role-pill-btn active" data-role="faculty" onclick="selectStaffRole('faculty')">
-          <i class="fa-solid fa-user-tie"></i>
+          <i class="fa-solid fa-user"></i>
           <span>Faculty</span>
         </button>
         <button type="button" class="role-pill-btn" data-role="student" onclick="selectStaffRole('student')">
@@ -125,15 +130,17 @@ function selectPortalMode(mode) {
     // Secondary: Department Social Media Hub (News, Events, Gallery, Staff)
     if (tabSocial) tabSocial.classList.add('active');
     if (tabDept) tabDept.classList.remove('active');
+    if (badgeSocial) badgeSocial.classList.remove('form-hidden');
+    if (badgeDept) badgeDept.classList.add('form-hidden');
 
     if (subtitle) {
-      subtitle.textContent = 'Department news, events, announcements and institutional activities.';
+      subtitle.textContent = 'Manage department announcements, events, achievements and social media activities.';
     }
 
     if (roleWrap) {
       roleWrap.innerHTML = `
         <button type="button" class="role-pill-btn active" data-role="faculty" onclick="selectStaffRole('faculty')">
-          <i class="fa-solid fa-user-tie"></i>
+          <i class="fa-solid fa-user"></i>
           <span>Faculty</span>
         </button>
         <button type="button" class="role-pill-btn" data-role="hod" onclick="selectStaffRole('hod')">
@@ -193,7 +200,7 @@ function selectStaffRole(role) {
       if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
     } else {
       // Faculty (Default)
-      if (lbl) lbl.textContent = 'Official Email';
+      if (lbl) lbl.textContent = 'Official Email / Register Number';
       if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
       if (domainTag) domainTag.style.display = 'inline-block';
       if (btnText) btnText.textContent = 'Login to Department Portal';
