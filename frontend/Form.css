@@ -1,37 +1,39 @@
 /* ==========================================================================
    FORM.CSS — RIT CSBS DEPARTMENT PORTAL AUTHENTICATION
    Ramco Institute of Technology — Autonomous Institution
-   Aesthetic: Ultra-Premium Glassmorphism with Lilac Twilight Campus Backdrop
+   Aesthetic: Premium University Department Portal (Purple/Lavender Identity)
+   Optimized for 100% Browser Zoom Viewports
    ========================================================================== */
 
 :root {
-  /* Primary Purple & Indigo Tones */
-  --portal-indigo:        #1E1B4B;
-  --portal-purple-deep:   #352B68;
-  --portal-purple-primary:#6345BA;
-  --portal-purple-vibrant:#7C3AED;
-  --portal-purple-light:  #A78BFA;
-  --portal-lilac-soft:    #EDE9FE;
-  --portal-amber:         #D97706;
-  --portal-amber-light:   #FEF3C7;
-  --portal-text-dark:     #1E1B4B;
-  --portal-text-muted:    #4B5563;
-  --portal-text-subtle:   #6B7280;
+  /* Official Brand Palette */
+  --primary:            #5B3CC4;
+  --secondary:          #7C4DFF;
+  --primary-hover:      #4D32AB;
+  --dark-text:          #17152F;
+  --body-text:          #4F4B66;
+  --muted-text:         #6B7280;
+  --light-lavender:     #F3EEFF;
+  --lavender-subtle:    #FAF8FF;
+  --white:              #FFFFFF;
+  
+  /* Accent Tones */
+  --amber-gold:         #D97706;
+  --amber-gold-bg:      rgba(245, 158, 11, 0.12);
+  --amber-gold-border:  rgba(217, 119, 6, 0.35);
 
   /* Glassmorphic Surfaces */
-  --glass-card-bg:        rgba(255, 255, 255, 0.62);
-  --glass-card-border:    rgba(255, 255, 255, 0.82);
-  --glass-input-bg:       rgba(255, 255, 255, 0.75);
-  --glass-input-border:   rgba(255, 255, 255, 0.95);
-  --glass-tab-inactive:   rgba(255, 255, 255, 0.85);
+  --glass-card-bg:      rgba(255, 255, 255, 0.88);
+  --glass-card-border:  rgba(255, 255, 255, 0.7);
+  --glass-input-bg:     rgba(255, 255, 255, 0.85);
+  --glass-input-border: rgba(226, 232, 240, 0.9);
 
   /* Shadows */
-  --shadow-glass:         0 25px 60px rgba(59, 7, 100, 0.16), 0 10px 25px rgba(0, 0, 0, 0.08);
-  --shadow-btn:           0 10px 25px rgba(99, 69, 186, 0.38);
-  --shadow-glow:          0 0 24px rgba(124, 58, 237, 0.25);
+  --shadow-glass:       0 20px 45px rgba(23, 17, 58, 0.12), 0 4px 14px rgba(0, 0, 0, 0.04);
+  --shadow-btn:         0 8px 20px rgba(91, 60, 196, 0.32);
 
   /* Typography */
-  --font-main:            'Plus Jakarta Sans', 'Inter', 'Poppins', -apple-system, sans-serif;
+  --font-main:          'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 *, *::before, *::after {
@@ -47,13 +49,13 @@ html, body {
 
 body.enterprise-auth-body {
   font-family: var(--font-main);
-  background-color: #2E1B54;
+  background-color: #F8F6FD;
   background-image: url('login_background.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  color: var(--portal-text-dark);
+  color: var(--dark-text);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -62,7 +64,7 @@ body.enterprise-auth-body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Atmospheric Ethereal Twilight Lilac/Purple Wash Overlay */
+/* Subtle Lavender/Purple Gradient Overlay over Campus Photo */
 .portal-bg-overlay {
   position: fixed;
   top: 0;
@@ -70,9 +72,9 @@ body.enterprise-auth-body {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(ellipse 90% 70% at 85% 20%, rgba(196, 170, 245, 0.45) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 60% at 15% 85%, rgba(139, 92, 246, 0.35) 0%, transparent 70%),
-    linear-gradient(135deg, rgba(220, 205, 245, 0.42) 0%, rgba(165, 138, 230, 0.38) 42%, rgba(88, 55, 160, 0.55) 100%);
+    radial-gradient(ellipse 90% 70% at 85% 15%, rgba(243, 238, 255, 0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 60% at 10% 85%, rgba(124, 77, 255, 0.25) 0%, transparent 70%),
+    linear-gradient(135deg, rgba(246, 242, 255, 0.76) 0%, rgba(234, 226, 255, 0.58) 45%, rgba(91, 60, 196, 0.45) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -84,7 +86,7 @@ body.enterprise-auth-body {
   position: relative;
   z-index: 10;
   width: 100%;
-  padding: 24px 48px 12px 48px;
+  padding: 12px 36px 8px 36px;
 }
 
 .portal-header-container {
@@ -96,23 +98,22 @@ body.enterprise-auth-body {
   gap: 20px;
 }
 
-/* Left Brand Info */
 .header-brand-group {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .header-college-logo {
-  height: 60px;
+  height: 52px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22));
-  transition: transform 0.3s ease;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
+  transition: transform 0.25s ease;
 }
 
 .header-college-logo:hover {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .header-brand-titles {
@@ -121,23 +122,25 @@ body.enterprise-auth-body {
   gap: 2px;
 }
 
+.inst-brand-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .inst-name {
-  font-size: 19px;
+  font-size: 17.5px;
   font-weight: 800;
-  color: #17113A;
+  color: var(--dark-text);
   letter-spacing: 0.02em;
   line-height: 1.2;
 }
 
-.inst-sub-row {
-  display: flex;
-  align-items: center;
-}
-
 .inst-location {
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: #374151;
+  color: var(--body-text);
   letter-spacing: 0.04em;
 }
 
@@ -145,29 +148,30 @@ body.enterprise-auth-body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 3px;
+  margin-top: 1px;
 }
 
 .dept-portal-label {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  color: #3B2A68;
+  color: var(--primary);
+  letter-spacing: 0.01em;
 }
 
 .badge-autonomous {
   display: inline-flex;
   align-items: center;
-  background: rgba(245, 158, 11, 0.18);
-  border: 1px solid rgba(217, 119, 6, 0.45);
-  color: #B45309;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 1.5px 8px;
+  background: var(--amber-gold-bg);
+  border: 1px solid var(--amber-gold-border);
+  color: var(--amber-gold);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
   border-radius: 999px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 
-/* Right Vision Slogan Quote */
+/* Slogan Quote on Header Right */
 .header-slogan-wrap {
   text-align: right;
   display: flex;
@@ -177,23 +181,22 @@ body.enterprise-auth-body {
 
 .slogan-quote {
   font-style: italic;
-  font-size: 14.5px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: #1F1944;
-  line-height: 1.35;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4);
+  color: var(--dark-text);
+  line-height: 1.3;
 }
 
 .slogan-accent-line {
-  width: 38px;
-  height: 3px;
+  width: 32px;
+  height: 2.5px;
   background: #F59E0B;
   border-radius: 4px;
-  margin-top: 5px;
+  margin-top: 3px;
 }
 
 /* ==========================================================================
-   PORTAL MAIN LAYOUT (Split: Left Hero, Right Glass Card)
+   MAIN PORTAL LAYOUT (Two-Column Balanced Layout for 100% Zoom)
    ========================================================================== */
 .portal-main-layout {
   position: relative;
@@ -201,7 +204,8 @@ body.enterprise-auth-body {
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 16px 48px 90px 48px;
+  justify-content: center;
+  padding: 4px 36px 14px 36px;
 }
 
 .portal-content-grid {
@@ -209,183 +213,280 @@ body.enterprise-auth-body {
   width: 100%;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.15fr 0.95fr;
-  gap: 50px;
+  grid-template-columns: 1.25fr 0.95fr;
+  gap: 36px;
   align-items: center;
 }
 
 /* ==========================================================================
-   LEFT COLUMN: COMMUNITY HERO PRESENTATION
+   LEFT COLUMN: PROMINENT & PERMANENT CSBS INFORMATION
    ========================================================================== */
-.portal-hero-section {
+.portal-dept-presentation {
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-.hero-content-inner {
-  max-width: 620px;
+.dept-content-wrapper {
+  max-width: 660px;
 }
 
-.hero-headline {
-  font-size: 46px;
+/* Eyebrow Badge */
+.dept-eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(243, 238, 255, 0.9);
+  border: 1px solid rgba(91, 60, 196, 0.25);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(91, 60, 196, 0.08);
+}
+
+.eyebrow-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--secondary);
+  box-shadow: 0 0 8px rgba(124, 77, 255, 0.8);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+.eyebrow-text {
+  font-size: 11.5px;
   font-weight: 800;
-  line-height: 1.15;
-  color: #1A1341;
-  letter-spacing: -0.02em;
-  margin-bottom: 18px;
+  color: var(--primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.hero-gradient-text {
-  color: #4C1D95;
-  background: linear-gradient(135deg, #4C1D95 0%, #6D28D9 100%);
+/* Main Heading */
+.dept-main-heading {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.12;
+  color: var(--dark-text);
+  letter-spacing: -0.02em;
+}
+
+.dept-heading-accent {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
 }
 
-.hero-subtext {
-  font-size: 16.5px;
-  color: #2D3748;
-  font-weight: 500;
-  line-height: 1.6;
-  max-width: 500px;
-  margin-bottom: 34px;
+.dept-heading-underline {
+  width: 52px;
+  height: 3.5px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 4px;
+  margin: 8px 0 10px 0;
 }
 
-/* 4 Feature Badges (Connect, Collaborate, Learn, Grow) */
-.hero-features-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 22px;
-  margin-bottom: 38px;
+/* Mission & Description */
+.dept-mission-text {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #2D235E;
+  line-height: 1.4;
+  margin-bottom: 8px;
 }
 
-.feature-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  width: 96px;
+.dept-lead-desc {
+  font-size: 12.8px;
+  font-weight: 400;
+  color: var(--body-text);
+  line-height: 1.5;
+  margin-bottom: 12px;
 }
 
-.feature-icon-circle {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.52);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1.5px solid rgba(255, 255, 255, 0.88);
-  box-shadow: 0 10px 24px rgba(76, 29, 149, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+/* Learning Areas Pills */
+.learning-areas-group {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: #4C1D95;
-  font-size: 21px;
-  margin-bottom: 10px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
 }
 
-.feature-item:hover .feature-icon-circle {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 14px 30px rgba(76, 29, 149, 0.22);
-}
-
-.feature-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #17113A;
-  margin-bottom: 2px;
-}
-
-.feature-subtitle {
+.learning-areas-label {
   font-size: 11.5px;
-  font-weight: 500;
-  color: #4B5563;
-  line-height: 1.3;
-}
-
-/* Bottom-Left Glass Floating CSBS Capsule */
-.csbs-floating-capsule {
+  font-weight: 700;
+  color: var(--primary);
+  margin-right: 4px;
   display: inline-flex;
   align-items: center;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.32);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 16px 36px rgba(45, 27, 105, 0.14);
-  border-radius: 999px;
-  padding: 10px 14px 10px 14px;
-  max-width: 490px;
-  transition: all 0.3s ease;
+  gap: 5px;
 }
 
-.csbs-floating-capsule:hover {
-  background: rgba(255, 255, 255, 0.42);
-  transform: translateY(-2px);
-  box-shadow: 0 20px 42px rgba(45, 27, 105, 0.2);
+.learning-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.capsule-icon-wrap {
-  width: 44px;
-  height: 44px;
+.learning-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2F275E;
+  box-shadow: 0 1px 4px rgba(91, 60, 196, 0.05);
+}
+
+.learning-tag i {
+  color: var(--primary);
+  font-size: 10.5px;
+}
+
+/* 4 Compact Department Highlights (01 - 04) */
+.dept-highlights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.highlight-mini-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.88);
   border-radius: 12px;
-  background: #FFFFFF;
+  padding: 9px 11px;
+  box-shadow: 0 4px 12px rgba(91, 60, 196, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.highlight-mini-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 16px rgba(91, 60, 196, 0.1);
+}
+
+.hl-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--light-lavender);
+  border: 1px solid rgba(91, 60, 196, 0.22);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4C1D95;
-  font-size: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
 }
 
-.capsule-info-wrap {
-  display: flex;
-  flex-direction: column;
+.hl-body {
   flex: 1;
 }
 
-.capsule-title {
-  font-size: 13.5px;
+.hl-title {
+  font-size: 12.5px;
   font-weight: 700;
-  color: #160D33;
-  line-height: 1.3;
+  color: var(--dark-text);
+  line-height: 1.25;
+  margin-bottom: 2px;
 }
 
-.capsule-subtitle {
-  font-size: 12px;
-  font-weight: 500;
-  color: #374151;
-  opacity: 0.9;
+.hl-desc {
+  font-size: 10.8px;
+  font-weight: 400;
+  color: var(--body-text);
+  line-height: 1.35;
 }
 
-.capsule-action-btn {
-  width: 34px;
-  height: 34px;
+/* Bottom Left Signature & Social Links */
+.dept-bottom-signature {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  padding: 8px 14px;
+  box-shadow: 0 4px 14px rgba(91, 60, 196, 0.06);
+  flex-wrap: wrap;
+}
+
+.signature-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sig-college {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--dark-text);
+  letter-spacing: 0.03em;
+}
+
+.sig-dept {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.dept-social-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.social-links-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--body-text);
+  margin-right: 2px;
+}
+
+.dept-social-btn {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.65);
-  color: #3B2A68;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 1);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  font-size: 13px;
+  text-decoration: none;
+  font-size: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
-  flex-shrink: 0;
 }
 
-.capsule-action-btn:hover {
-  background: #FFFFFF;
-  transform: scale(1.08);
-  color: #6D28D9;
+.dept-social-btn:hover {
+  background: var(--primary);
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(91, 60, 196, 0.3);
 }
 
 /* ==========================================================================
-   RIGHT COLUMN: GLASSMORPHIC AUTHENTICATION CARD
+   RIGHT COLUMN: AUTHENTICATION CARD
    ========================================================================== */
 .portal-auth-section {
   display: flex;
@@ -394,47 +495,45 @@ body.enterprise-auth-body {
 
 .auth-glass-card {
   width: 100%;
-  max-width: 460px;
+  max-width: 425px;
   background: var(--glass-card-bg);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1.5px solid var(--glass-card-border);
-  border-radius: 28px;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid var(--glass-card-border);
+  border-radius: 24px;
   box-shadow: var(--shadow-glass);
-  padding: 34px 32px 28px 32px;
+  padding: 22px 26px 16px 26px;
   position: relative;
   overflow: hidden;
-  background-image: radial-gradient(circle at 95% 8%, rgba(192, 132, 252, 0.28) 0%, transparent 55%);
+  background-image: radial-gradient(circle at 95% 5%, rgba(124, 77, 255, 0.12) 0%, transparent 45%);
 }
 
 /* Card Header */
 .auth-card-header {
-  margin-bottom: 22px;
+  margin-bottom: 12px;
 }
 
 .auth-card-title {
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 800;
-  color: #17113A;
-  line-height: 1.25;
+  color: var(--dark-text);
+  line-height: 1.18;
   letter-spacing: -0.01em;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .auth-card-subtitle {
-  font-size: 13px;
-  color: #4B5563;
+  font-size: 12px;
+  color: var(--body-text);
   font-weight: 500;
 }
 
-/* ==========================================================================
-   PORTAL SWITCHER TABS (Social Media Hub vs Placement Portal)
-   ========================================================================== */
+/* Portal Switcher Tabs */
 .portal-tab-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .portal-tab-btn {
@@ -443,95 +542,91 @@ body.enterprise-auth-body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 16px 10px;
-  border-radius: 18px;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
-  background: var(--glass-tab-inactive);
+  padding: 9px 6px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.75);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  color: #1E1B4B;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  transition: all 0.22s ease;
+  color: var(--dark-text);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .portal-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.95);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  transform: translateY(-1px);
 }
 
 .portal-tab-btn.active {
-  background: #3B336A;
-  color: #FFFFFF;
-  border-color: #3B336A;
-  box-shadow: 0 10px 24px rgba(59, 51, 106, 0.38);
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+  box-shadow: 0 6px 16px rgba(91, 60, 196, 0.32);
 }
 
 .tab-btn-icon {
-  font-size: 22px;
-  margin-bottom: 8px;
+  font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .portal-tab-btn.active .tab-btn-icon {
-  color: #FFFFFF;
+  color: var(--white);
 }
 
 .portal-tab-btn:not(.active) .tab-btn-icon {
-  color: #3B336A;
+  color: var(--primary);
 }
 
 .tab-btn-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .tab-name {
-  font-size: 13px;
+  font-size: 11.8px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .tab-roles {
-  font-size: 10.5px;
+  font-size: 9.8px;
   font-weight: 500;
-  opacity: 0.85;
+  opacity: 0.88;
 }
 
 .portal-tab-btn.active .tab-roles {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .portal-tab-btn:not(.active) .tab-roles {
-  color: #6B7280;
+  color: var(--muted-text);
 }
 
-/* ==========================================================================
-   ROLE SELECTOR PILLS ("Login as")
-   ========================================================================== */
+/* Role Selector Pills ("Login as") */
 .role-selector-wrap {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .role-divider {
   display: flex;
   align-items: center;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .role-divider::before,
 .role-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid rgba(107, 114, 128, 0.25);
+  border-bottom: 1px solid rgba(107, 114, 128, 0.2);
 }
 
 .role-divider span {
-  padding: 0 12px;
-  font-size: 11.5px;
+  padding: 0 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: #6B7280;
-  text-transform: capitalize;
+  color: var(--muted-text);
   letter-spacing: 0.02em;
 }
 
@@ -539,67 +634,64 @@ body.enterprise-auth-body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .role-pill-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.75);
-  color: #1E1B4B;
-  font-size: 12.5px;
+  color: var(--dark-text);
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .role-pill-btn:hover {
-  background: rgba(255, 255, 255, 0.95);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .role-pill-btn.active {
-  background: #3B336A;
-  color: #FFFFFF;
-  border-color: #3B336A;
-  box-shadow: 0 4px 12px rgba(59, 51, 106, 0.28);
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+  box-shadow: 0 4px 10px rgba(91, 60, 196, 0.25);
 }
 
 .role-pill-btn.active i {
-  color: #FFFFFF;
+  color: var(--white);
 }
 
 .role-pill-btn:not(.active) i {
-  color: #4C1D95;
+  color: var(--primary);
 }
 
-/* ==========================================================================
-   GLASS FORM INPUTS & LABELS
-   ========================================================================== */
+/* Glass Form Inputs & Labels */
 .glass-form-group {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .glass-form-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12.5px;
+  font-size: 11.8px;
   font-weight: 600;
-  color: #1A1341;
-  margin-bottom: 6px;
+  color: var(--dark-text);
+  margin-bottom: 4px;
 }
 
 .glass-form-label i {
-  font-size: 13px;
-  color: #3B336A;
+  font-size: 12px;
+  color: var(--primary);
 }
 
 .req-star {
@@ -612,30 +704,27 @@ body.enterprise-auth-body {
   align-items: center;
   background: var(--glass-input-bg);
   border: 1.5px solid var(--glass-input-border);
-  border-radius: 13px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+  border-radius: 11px;
   transition: all 0.2s ease;
 }
 
 .glass-input-wrapper:focus-within {
-  background: #FFFFFF;
-  border-color: #6345BA;
-  box-shadow: 0 0 0 3px rgba(99, 69, 186, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
+  background: var(--white);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91, 60, 196, 0.16);
 }
 
 .glass-form-input {
   width: 100%;
-  height: 44px;
-  padding: 0 14px;
+  height: 38px;
+  padding: 0 12px;
   background: transparent;
   border: none;
   outline: none;
   font-family: var(--font-main);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
-  color: #17113A;
+  color: var(--dark-text);
 }
 
 .glass-form-input::placeholder {
@@ -645,37 +734,45 @@ body.enterprise-auth-body {
 
 .glass-form-select {
   width: 100%;
-  height: 44px;
-  padding: 0 14px;
+  height: 38px;
+  padding: 0 12px;
   background: transparent;
   border: none;
   outline: none;
   font-family: var(--font-main);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: #17113A;
+  color: var(--dark-text);
   cursor: pointer;
 }
 
 /* Domain Tag Suffix (@ritrjpm.ac.in) */
 .domain-tag-suffix {
-  padding: 0 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #4B5563;
+  padding: 3px 8px;
+  margin-right: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--light-lavender);
+  border-radius: 6px;
   user-select: none;
   white-space: nowrap;
-  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.domain-tag-suffix:hover {
+  background: #E8DEFC;
 }
 
 /* Password Toggle Eye Button */
 .glass-pw-toggle {
   background: transparent;
   border: none;
-  padding: 0 14px;
+  padding: 0 12px;
   cursor: pointer;
-  color: #6B7280;
-  font-size: 15px;
+  color: var(--muted-text);
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -683,7 +780,7 @@ body.enterprise-auth-body {
 }
 
 .glass-pw-toggle:hover {
-  color: #1E1B4B;
+  color: var(--dark-text);
 }
 
 /* Form Extras (Remember me & Forgot password) */
@@ -691,72 +788,70 @@ body.enterprise-auth-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
-  margin-bottom: 18px;
+  margin-top: 2px;
+  margin-bottom: 12px;
 }
 
 .remember-checkbox-label {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   cursor: pointer;
   user-select: none;
 }
 
 .remember-checkbox-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #6345BA;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary);
   cursor: pointer;
   border-radius: 4px;
 }
 
 .remember-text {
-  font-size: 12.5px;
+  font-size: 11.8px;
   font-weight: 500;
-  color: #374151;
+  color: var(--body-text);
 }
 
 .forgot-password-link {
-  font-size: 12.5px;
+  font-size: 11.8px;
   font-weight: 600;
-  color: #4B5563;
+  color: var(--primary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .forgot-password-link:hover {
-  color: #6D28D9;
+  color: var(--secondary);
   text-decoration: underline;
 }
 
-/* ==========================================================================
-   PRIMARY ACTION BUTTON
-   ========================================================================== */
+/* Primary Action Button */
 .btn-primary-purple {
   width: 100%;
-  height: 48px;
-  background: linear-gradient(135deg, #6345BA 0%, #764BD2 50%, #875CF0 100%);
-  color: #FFFFFF;
+  height: 42px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: var(--white);
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   font-family: var(--font-main);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
   letter-spacing: 0.01em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   box-shadow: var(--shadow-btn);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s ease;
 }
 
 .btn-primary-purple:hover {
-  background: linear-gradient(135deg, #5737B0 0%, #683FC6 50%, #7A4EE2 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(99, 69, 186, 0.48);
+  background: linear-gradient(135deg, var(--primary-hover) 0%, #6E3DEB 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(91, 60, 196, 0.42);
 }
 
 .btn-primary-purple:active {
@@ -769,137 +864,36 @@ body.enterprise-auth-body {
   transform: none;
 }
 
-/* Student Registration Switch Prompt */
-.student-auth-switch {
-  text-align: center;
-  margin-top: 12px;
-  font-size: 12.5px;
-  color: #4B5563;
-}
-
-.student-auth-switch a {
-  color: #6D28D9;
-  font-weight: 700;
-  text-decoration: none;
-  margin-left: 4px;
-}
-
-.student-auth-switch a:hover {
-  text-decoration: underline;
-}
-
-/* "OR" Divider */
-.glass-or-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 16px 0;
-}
-
-.glass-or-divider::before,
-.glass-or-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid rgba(107, 114, 128, 0.25);
-}
-
-.glass-or-divider span {
-  padding: 0 12px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #6B7280;
-  letter-spacing: 0.04em;
-}
-
-/* Google SSO Button */
-.btn-google-sso {
-  width: 100%;
-  height: 46px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 1);
-  border-radius: 14px;
-  color: #1F2937;
-  font-family: var(--font-main);
-  font-size: 13.5px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.btn-google-sso:hover {
-  background: #FFFFFF;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-}
-
-/* ==========================================================================
-   NEW STUDENT REGISTRATION EXPANDED FORM
-   ========================================================================== */
-.register-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(107, 114, 128, 0.2);
-}
-
-.btn-cancel-register {
-  background: transparent;
-  border: none;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #4C1D95;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-cancel-register:hover {
-  text-decoration: underline;
-}
-
-.reg-bar-badge {
-  font-size: 11px;
-  font-weight: 700;
-  color: #6D28D9;
-  background: #EDE9FE;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
-.form-grid-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.switch-back-prompt {
-  text-align: center;
-  font-size: 12px;
-  color: #4B5563;
+/* Secondary Registration Switch Links */
+.auth-switch-wrapper {
   margin-top: 10px;
+  text-align: center;
 }
 
-.switch-back-prompt a {
-  color: #6D28D9;
+.student-auth-switch,
+.faculty-auth-switch {
+  font-size: 11.8px;
+  color: var(--body-text);
+}
+
+.student-auth-switch a,
+.faculty-auth-switch a {
+  color: var(--primary);
   font-weight: 700;
   text-decoration: none;
+  margin-left: 3px;
 }
 
-/* ==========================================================================
-   CARD BOTTOM FOOTER
-   ========================================================================== */
+.student-auth-switch a:hover,
+.faculty-auth-switch a:hover {
+  text-decoration: underline;
+}
+
+/* Card Bottom Footer */
 .auth-card-footer {
-  margin-top: 24px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -908,40 +902,38 @@ body.enterprise-auth-body {
 .auth-footer-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .footer-auth-line {
-  font-size: 11.5px;
+  font-size: 10.5px;
   font-weight: 600;
-  color: #374151;
+  color: var(--dark-text);
 }
 
 .footer-inst-line {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--muted-text);
 }
 
 .footer-sparkle svg {
-  filter: drop-shadow(0 2px 6px rgba(124, 58, 237, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(91, 60, 196, 0.25));
   animation: pulseSparkle 3s ease-in-out infinite alternate;
 }
 
 @keyframes pulseSparkle {
-  0% { transform: scale(0.9) rotate(0deg); opacity: 0.6; }
-  100% { transform: scale(1.15) rotate(15deg); opacity: 1; }
+  0% { transform: scale(0.95); opacity: 0.6; }
+  100% { transform: scale(1.1); opacity: 1; }
 }
 
-/* ==========================================================================
-   ALERT BOX
-   ========================================================================== */
+/* Alert Notification Box */
 .auth-alert-box {
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 12.5px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -949,83 +941,71 @@ body.enterprise-auth-body {
 }
 
 .auth-alert-box.error {
-  background: rgba(254, 242, 242, 0.92);
+  background: rgba(254, 242, 242, 0.95);
   color: #991B1B;
   border: 1px solid #FECACA;
 }
 
 .auth-alert-box.success {
-  background: rgba(240, 253, 244, 0.92);
+  background: rgba(240, 253, 244, 0.95);
   color: #166534;
   border: 1px solid #BBF7D0;
 }
 
 /* ==========================================================================
-   FLOATING SOCIAL MEDIA ACCOUNTS FOOTER
+   STUDENT REGISTRATION EXPANDED FORM
    ========================================================================== */
-.portal-floating-footer {
-  position: fixed;
-  bottom: 16px;
-  left: 0;
-  right: 0;
-  z-index: 40;
+.register-header-bar {
   display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.floating-footer-pill {
-  pointer-events: auto;
-  display: inline-flex;
   align-items: center;
-  gap: 20px;
-  background: rgba(30, 27, 75, 0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  border-radius: 999px;
-  padding: 8px 16px 8px 22px;
-  transition: all 0.3s ease;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.floating-footer-pill:hover {
-  background: rgba(30, 27, 75, 0.9);
-  transform: translateY(-2px);
-}
-
-.footer-pill-label {
-  font-size: 12.5px;
+.btn-cancel-register {
+  background: transparent;
+  border: none;
+  font-size: 11.5px;
   font-weight: 600;
-  color: #FFFFFF;
-  letter-spacing: 0.02em;
-}
-
-.footer-social-icons {
+  color: var(--primary);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 
-.social-icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  color: #1E1B4B;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.btn-cancel-register:hover {
+  text-decoration: underline;
+}
+
+.reg-bar-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--light-lavender);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.switch-back-prompt {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--body-text);
+  margin-top: 8px;
+}
+
+.switch-back-prompt a {
+  color: var(--primary);
+  font-weight: 700;
   text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.social-icon-btn:hover {
-  background: #FFFFFF;
-  transform: translateY(-2px) scale(1.1);
-  color: #6D28D9;
 }
 
 /* ==========================================================================
@@ -1037,56 +1017,56 @@ body.enterprise-auth-body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(23, 17, 58, 0.65);
+  background: rgba(23, 17, 58, 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
 }
 
 .glass-modal-dialog {
   width: 100%;
-  max-width: 480px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 22px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-  padding: 28px;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+  padding: 24px;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .modal-header-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #EDE9FE;
-  color: #6D28D9;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--light-lavender);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .modal-header h3 {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
-  color: #17113A;
+  color: var(--dark-text);
 }
 
 .modal-header p {
-  font-size: 12px;
-  color: #6B7280;
+  font-size: 11.5px;
+  color: var(--muted-text);
 }
 
 .btn-close-modal {
@@ -1095,33 +1075,33 @@ body.enterprise-auth-body {
   top: 0;
   background: transparent;
   border: none;
-  font-size: 24px;
+  font-size: 22px;
   color: #9CA3AF;
   cursor: pointer;
   line-height: 1;
 }
 
 .btn-close-modal:hover {
-  color: #17113A;
+  color: var(--dark-text);
 }
 
 .modal-body {
-  font-size: 13.5px;
-  color: #374151;
-  line-height: 1.6;
-  margin-bottom: 20px;
+  font-size: 12.8px;
+  color: var(--body-text);
+  line-height: 1.5;
+  margin-bottom: 16px;
 }
 
 .contact-card-glass {
-  margin-top: 14px;
-  background: #FAF8FF;
+  margin-top: 12px;
+  background: var(--lavender-subtle);
   border: 1px solid #EDE9FE;
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 12px;
 }
 
 .contact-card-glass div {
@@ -1131,34 +1111,8 @@ body.enterprise-auth-body {
 }
 
 .contact-card-glass i {
-  color: #6D28D9;
+  color: var(--primary);
   width: 16px;
-}
-
-.dept-quick-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.stat-box {
-  background: #FAF8FF;
-  border: 1px solid #EDE9FE;
-  border-radius: 10px;
-  padding: 10px;
-  text-align: center;
-}
-
-.stat-box strong {
-  display: block;
-  font-size: 16px;
-  color: #6D28D9;
-}
-
-.stat-box span {
-  font-size: 10.5px;
-  color: #4B5563;
 }
 
 .modal-footer {
@@ -1167,19 +1121,19 @@ body.enterprise-auth-body {
 }
 
 .btn-modal-action {
-  padding: 10px 22px;
-  border-radius: 10px;
+  padding: 8px 18px;
+  border-radius: 8px;
   border: none;
-  background: #6345BA;
-  color: #FFFFFF;
-  font-size: 13.5px;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .btn-modal-action:hover {
-  background: #5032A0;
+  background: var(--primary-hover);
 }
 
 /* Loading Overlay */
@@ -1189,9 +1143,9 @@ body.enterprise-auth-body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(23, 17, 58, 0.7);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(23, 17, 58, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 110;
   display: flex;
   align-items: center;
@@ -1199,21 +1153,21 @@ body.enterprise-auth-body {
 }
 
 .loading-spinner-box {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 30px 40px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 18px;
+  padding: 26px 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  gap: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
 }
 
 .spinner-ring {
-  width: 44px;
-  height: 44px;
-  border: 4px solid #EDE9FE;
-  border-top-color: #6345BA;
+  width: 40px;
+  height: 40px;
+  border: 3.5px solid var(--light-lavender);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1223,14 +1177,14 @@ body.enterprise-auth-body {
 }
 
 .loading-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #17113A;
+  color: var(--dark-text);
 }
 
 .loading-desc {
-  font-size: 12.5px;
-  color: #6B7280;
+  font-size: 12px;
+  color: var(--muted-text);
 }
 
 /* Utility */
@@ -1239,64 +1193,64 @@ body.enterprise-auth-body {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN (Tablets & Mobile)
+   RESPONSIVE DESIGN & ZOOM COMPATIBILITY
    ========================================================================== */
-@media (max-width: 1024px) {
-  .portal-main-header {
-    padding: 20px 28px 10px 28px;
-  }
-  
-  .portal-main-layout {
-    padding: 16px 28px 100px 28px;
-  }
-
+@media (max-width: 1100px) {
   .portal-content-grid {
     grid-template-columns: 1fr;
-    gap: 36px;
+    gap: 30px;
   }
 
-  .portal-hero-section {
-    align-items: center;
+  .portal-dept-presentation {
     text-align: center;
+    align-items: center;
   }
 
-  .hero-content-inner {
+  .dept-content-wrapper {
     max-width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
 
-  .hero-headline {
-    font-size: 38px;
+  .dept-heading-underline {
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .hero-subtext {
-    max-width: 540px;
-  }
-
-  .hero-features-row {
+  .learning-areas-group {
     justify-content: center;
+  }
+
+  .dept-highlights-grid {
+    max-width: 600px;
+    width: 100%;
+  }
+
+  .dept-bottom-signature {
+    justify-content: center;
+    width: 100%;
   }
 
   .portal-auth-section {
     justify-content: center;
+    width: 100%;
   }
 
   .auth-glass-card {
-    max-width: 480px;
+    max-width: 440px;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .portal-main-header {
-    padding: 16px 20px;
+    padding: 12px 18px;
   }
 
   .portal-header-container {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
   }
 
   .header-slogan-wrap {
@@ -1304,40 +1258,19 @@ body.enterprise-auth-body {
   }
 
   .portal-main-layout {
-    padding: 12px 16px 90px 16px;
+    padding: 10px 16px 24px 16px;
   }
 
-  .hero-headline {
+  .dept-main-heading {
     font-size: 28px;
   }
 
-  .hero-features-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    width: 100%;
-  }
-
-  .feature-item {
-    width: auto;
-  }
-
-  .csbs-floating-capsule {
-    border-radius: 20px;
-    width: 100%;
+  .dept-highlights-grid {
+    grid-template-columns: 1fr;
   }
 
   .auth-glass-card {
-    padding: 24px 20px 20px 20px;
-    border-radius: 22px;
-  }
-
-  .floating-footer-pill {
-    flex-direction: column;
-    gap: 8px;
+    padding: 20px 18px 16px 18px;
     border-radius: 20px;
-    padding: 8px 14px;
-    width: 90%;
-    text-align: center;
   }
 }

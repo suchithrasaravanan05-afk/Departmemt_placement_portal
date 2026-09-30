@@ -120,7 +120,7 @@ function selectPortalMode(mode) {
     if (roleWrap) {
       roleWrap.innerHTML = `
         <button type="button" class="role-pill-btn active" data-role="faculty" onclick="selectStaffRole('faculty')">
-          <i class="fa-solid fa-user"></i>
+          <i class="fa-solid fa-user-tie"></i>
           <span>Faculty</span>
         </button>
         <button type="button" class="role-pill-btn" data-role="hod" onclick="selectStaffRole('hod')">
@@ -194,7 +194,7 @@ function selectStaffRole(role) {
   } else {
     // Faculty
     if (lbl) lbl.textContent = 'Official Email';
-    if (input) input.placeholder = 'Enter your official email';
+    if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
     if (domainTag) domainTag.style.display = 'inline-block';
     if (btnText) btnText.textContent = 'Login to Social Media Hub';
     if (regPrompt) regPrompt.classList.add('form-hidden');
@@ -486,13 +486,11 @@ function closeForgotModal(e) {
 }
 
 function openDeptOverview() {
-  const modal = document.getElementById('deptModal');
-  if (modal) modal.classList.remove('form-hidden');
+  // Department modal removed per requirements — information is permanently visible on the left side
 }
 
 function closeDeptOverview(e) {
-  const modal = document.getElementById('deptModal');
-  if (modal) modal.classList.add('form-hidden');
+  // Department modal removed per requirements
 }
 
 function showLoadingOverlay(desc = 'Verifying institutional credentials') {
