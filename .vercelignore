@@ -4,7 +4,3 @@ backend/node_modules
 backend/.env
 *.sqlite
 .DS_Store
-backend/uploads
-uploads
-*.pdf
-*.docx

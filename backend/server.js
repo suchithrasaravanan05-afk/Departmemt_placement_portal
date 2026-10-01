@@ -41,7 +41,32 @@ app.get(["/uploads/:filename", "/api/uploads/:filename"], (req, res) => {
         return res.sendFile(filePath);
     }
 
-    return res.status(404).json({ success: false, message: "Requested file not found on storage" });
+    return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>File Not Found</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; padding: 60px 20px; background: #f8fafc; color: #0f172a; }
+                .card { max-width: 480px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+                h2 { color: #ef4444; margin-bottom: 10px; }
+                p { color: #64748b; font-size: 14px; line-height: 1.6; }
+                code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #0f172a; }
+                a { display: inline-block; margin-top: 20px; text-decoration: none; background: #2563eb; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; }
+                a:hover { background: #1d4ed8; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h2>⚠️ File Not Found</h2>
+                <p>The requested file <code>${filename}</code> was not found on the server.</p>
+                <p>It may have been removed or was not saved to server storage.</p>
+                <a href="javascript:history.back()">← Go Back</a>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 // Serve frontend static files
