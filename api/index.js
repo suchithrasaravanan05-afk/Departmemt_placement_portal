@@ -19,9 +19,8 @@ module.exports = (req, res) => {
         return res.status(500).json({
             success: false,
             error: "Serverless Startup Error",
-            message: initError.message || String(initError),
-            code: initError.code,
-            stack: initError.stack
+            message: "An internal serverless startup error occurred. Please contact administrator.",
+            code: initError.code || "INIT_ERR"
         });
     }
     return app(req, res);
