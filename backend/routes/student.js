@@ -12,7 +12,16 @@ const feedbackCertificateStorage = require("../feedbackCertificateStorage");
 // ==========================================
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: (req, file, cb) => {
+        const allowedExts = [".pdf", ".docx", ".jpg", ".jpeg", ".png", ".webp"];
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (allowedExts.includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Invalid file type. Only PDF, DOCX, JPG, PNG, and WEBP files are permitted."));
+        }
+    }
 });
 
 const fs = require("fs");

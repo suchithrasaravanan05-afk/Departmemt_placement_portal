@@ -30,7 +30,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB max for video/image
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max for video/image
+    fileFilter: (req, file, cb) => {
+        const allowedExts = [".jpg", ".jpeg", ".png", ".webp", ".mp4", ".webm"];
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (allowedExts.includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Invalid file type. Only JPG, PNG, WEBP, MP4, and WEBM media are permitted."));
+        }
+    }
 });
 
 // Storage for broadcast posts submitted by department staff (starts empty)
