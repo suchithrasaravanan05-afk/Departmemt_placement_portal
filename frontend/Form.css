@@ -2,38 +2,39 @@
    FORM.CSS — RIT CSBS DIGITAL DEPARTMENT PORTAL
    Ramco Institute of Technology — Autonomous Institution
    Aesthetic: Premium University Department Portal & Placement Management
-   Optimized specifically for 100% Browser Zoom Viewports
+   Designed for 100% Native Browser Viewport
    ========================================================================== */
 
 :root {
   /* Brand Purple & Lavender Identity */
-  --primary:            #6D3FE8;
-  --primary-deep:       #5425D6;
-  --primary-light:      #8E52FF;
-  --dark-navy:          #17152F;
+  --primary:            #5B2FD6;
+  --primary-deep:       #461EBE;
+  --primary-light:      #7040E8;
+  --dark-navy:          #11133D;
   --body-text:          #4F4B66;
   --muted-text:         #6B7280;
-  --light-lavender:     #EDE9FE;
+  --light-lavender:     #E9DFFF;
   --lavender-subtle:    #F6F3FF;
   --white:              #FFFFFF;
   
   /* Accent Tones */
+  --accent-orange:      #F39A27;
   --amber-gold:         #D97706;
-  --amber-gold-bg:      rgba(245, 158, 11, 0.14);
-  --amber-gold-border:  rgba(217, 119, 6, 0.38);
+  --amber-gold-bg:      rgba(243, 154, 39, 0.14);
+  --amber-gold-border:  rgba(243, 154, 39, 0.40);
 
   /* Glassmorphic Surfaces */
-  --glass-card-bg:      rgba(255, 255, 255, 0.90);
-  --glass-card-border:  rgba(255, 255, 255, 0.75);
-  --glass-input-bg:     rgba(255, 255, 255, 0.85);
-  --glass-input-border: rgba(226, 232, 240, 0.92);
+  --glass-card-bg:      rgba(255, 255, 255, 0.93);
+  --glass-card-border:  rgba(255, 255, 255, 0.88);
+  --glass-input-bg:     rgba(255, 255, 255, 0.95);
+  --glass-input-border: rgba(226, 232, 240, 0.95);
 
   /* Shadows */
-  --shadow-glass:       0 20px 45px rgba(23, 17, 58, 0.11), 0 4px 12px rgba(0, 0, 0, 0.04);
-  --shadow-btn:         0 8px 22px rgba(109, 63, 232, 0.35);
+  --shadow-glass:       0 20px 60px rgba(17, 19, 61, 0.12), 0 4px 16px rgba(0, 0, 0, 0.03);
+  --shadow-btn:         0 8px 22px rgba(91, 47, 214, 0.35);
 
   /* Typography */
-  --font-main:          'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-main:          'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 *, *::before, *::after {
@@ -59,12 +60,13 @@ body.enterprise-auth-body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   position: relative;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Soft Lavender/Purple Gradient Wash over Campus Image */
+/* Atmospheric Luminous Lavender + Purple + Soft Pink Wash */
 .portal-bg-overlay {
   position: fixed;
   top: 0;
@@ -72,9 +74,10 @@ body.enterprise-auth-body {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(ellipse 90% 70% at 85% 15%, rgba(243, 238, 255, 0.62) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 60% at 10% 85%, rgba(109, 63, 232, 0.2) 0%, transparent 70%),
-    linear-gradient(135deg, rgba(248, 245, 255, 0.78) 0%, rgba(238, 232, 255, 0.58) 45%, rgba(109, 63, 232, 0.38) 100%);
+    radial-gradient(ellipse 90% 70% at 85% 15%, rgba(245, 236, 255, 0.70) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 60% at 90% 85%, rgba(112, 64, 232, 0.16) 0%, transparent 70%),
+    radial-gradient(ellipse 65% 55% at 15% 85%, rgba(255, 238, 248, 0.38) 0%, transparent 65%),
+    linear-gradient(135deg, rgba(248, 244, 255, 0.74) 0%, rgba(242, 235, 255, 0.46) 45%, rgba(91, 47, 214, 0.22) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -86,11 +89,11 @@ body.enterprise-auth-body {
   position: relative;
   z-index: 10;
   width: 100%;
-  padding: 10px 36px 6px 36px;
+  padding: 16px 48px 4px 48px;
 }
 
 .portal-header-container {
-  max-width: 1360px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -101,19 +104,19 @@ body.enterprise-auth-body {
 .header-brand-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .header-college-logo {
-  height: 48px;
+  height: 52px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.16));
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.14));
   transition: transform 0.2s ease;
 }
 
 .header-college-logo:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 .header-brand-titles {
@@ -125,12 +128,12 @@ body.enterprise-auth-body {
 .inst-brand-top {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .inst-name {
-  font-size: 17.5px;
+  font-size: 21px;
   font-weight: 800;
   color: var(--dark-navy);
   letter-spacing: 0.02em;
@@ -138,7 +141,7 @@ body.enterprise-auth-body {
 }
 
 .inst-location {
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--body-text);
   letter-spacing: 0.04em;
@@ -147,11 +150,11 @@ body.enterprise-auth-body {
 .inst-dept-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .dept-portal-label {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--primary);
   letter-spacing: 0.01em;
@@ -165,7 +168,7 @@ body.enterprise-auth-body {
   color: var(--amber-gold);
   font-size: 9.5px;
   font-weight: 800;
-  padding: 1px 7px;
+  padding: 1.5px 8px;
   border-radius: 999px;
   letter-spacing: 0.04em;
 }
@@ -180,16 +183,16 @@ body.enterprise-auth-body {
 
 .slogan-quote {
   font-style: italic;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--dark-navy);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .slogan-accent-line {
-  width: 28px;
-  height: 2px;
-  background: #F59E0B;
+  width: 32px;
+  height: 2.5px;
+  background: var(--accent-orange);
   border-radius: 4px;
   margin-top: 3px;
 }
@@ -205,29 +208,29 @@ body.enterprise-auth-body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4px 36px 10px 36px;
+  padding: 8px 48px 12px 48px;
 }
 
 .portal-shell {
-  max-width: 1360px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 /* Two-Column Grid: Left Content (58%), Right Login Card (42%) */
 .portal-content-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: 1.25fr 0.98fr;
-  gap: 38px;
+  grid-template-columns: 1.32fr 1fr;
+  gap: 48px;
   align-items: center;
 }
 
 /* ==========================================================================
-   LEFT HERO SECTION
+   LEFT HERO SECTION — CSBS DEPARTMENT
    ========================================================================== */
 .portal-dept-presentation {
   display: flex;
@@ -236,7 +239,7 @@ body.enterprise-auth-body {
 }
 
 .dept-content-wrapper {
-  max-width: 680px;
+  max-width: 720px;
 }
 
 /* Eyebrow Badge */
@@ -244,12 +247,12 @@ body.enterprise-auth-body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(109, 63, 232, 0.22);
-  padding: 3.5px 12px;
+  background: rgba(255, 255, 255, 0.90);
+  border: 1px solid rgba(91, 47, 214, 0.22);
+  padding: 4px 14px;
   border-radius: 999px;
-  margin-bottom: 8px;
-  box-shadow: 0 2px 6px rgba(109, 63, 232, 0.06);
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(91, 47, 214, 0.06);
 }
 
 .eyebrow-pulse-dot {
@@ -257,7 +260,7 @@ body.enterprise-auth-body {
   height: 7px;
   border-radius: 50%;
   background: var(--primary);
-  box-shadow: 0 0 8px rgba(109, 63, 232, 0.7);
+  box-shadow: 0 0 8px rgba(91, 47, 214, 0.7);
   animation: pulseDot 2s infinite ease-in-out;
 }
 
@@ -274,11 +277,11 @@ body.enterprise-auth-body {
   text-transform: uppercase;
 }
 
-/* Main Heading (52-56px desktop, 2 lines) */
+/* Main Heading (52-58px desktop, 2 lines) */
 .dept-main-heading {
-  font-size: clamp(38px, 3.8vw, 50px);
+  font-size: clamp(44px, 4.2vw, 56px);
   font-weight: 800;
-  line-height: 1.04;
+  line-height: 1.02;
   color: var(--dark-navy);
   letter-spacing: -0.02em;
 }
@@ -291,32 +294,32 @@ body.enterprise-auth-body {
 }
 
 .dept-heading-underline {
-  width: 48px;
-  height: 3.5px;
+  width: 60px;
+  height: 4px;
   background: linear-gradient(90deg, var(--primary), var(--primary-light));
   border-radius: 4px;
-  margin: 6px 0 10px 0;
+  margin: 8px 0 14px 0;
 }
 
 /* Subtitle Statement & Description */
 .dept-mission-text {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 600;
-  color: #1F1B3E;
-  line-height: 1.35;
-  margin-bottom: 8px;
+  color: var(--dark-navy);
+  line-height: 1.32;
+  margin-bottom: 10px;
+  max-width: 600px;
 }
 
 .dept-lead-desc {
-  font-size: 12.8px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--body-text);
-  line-height: 1.5;
-  margin-bottom: 14px;
-  max-width: 660px;
+  line-height: 1.52;
+  margin-bottom: 22px;
+  max-width: 650px;
 }
 
-/* 4 Feature Highlights in a single horizontal frosted bar */
 /* 4 Feature Highlights in a single horizontal row of individual frosted cards */
 .feature-highlights-bar {
   display: grid;
@@ -326,40 +329,40 @@ body.enterprise-auth-body {
   border: none;
   box-shadow: none;
   padding: 0;
-  max-width: 680px;
+  max-width: 720px;
   width: 100%;
 }
 
 .feature-highlight-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.95);
   border-radius: 12px;
-  padding: 8px 10px;
-  box-shadow: 0 4px 14px rgba(23, 17, 58, 0.05);
+  padding: 9px 11px;
+  box-shadow: 0 4px 14px rgba(17, 19, 61, 0.05);
   min-width: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .feature-highlight-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(109, 63, 232, 0.1);
+  box-shadow: 0 6px 18px rgba(91, 47, 214, 0.1);
 }
 
 .fh-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: var(--light-lavender);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -370,7 +373,7 @@ body.enterprise-auth-body {
 }
 
 .fh-title {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--dark-navy);
   line-height: 1.25;
@@ -380,7 +383,7 @@ body.enterprise-auth-body {
 }
 
 .fh-sub {
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 500;
   color: var(--muted-text);
   line-height: 1.2;
@@ -391,7 +394,7 @@ body.enterprise-auth-body {
 }
 
 /* ==========================================================================
-   RIGHT LOGIN CARD
+   RIGHT LOGIN CARD — LARGE & PREMIUM
    ========================================================================== */
 .portal-auth-section {
   display: flex;
@@ -400,27 +403,27 @@ body.enterprise-auth-body {
 
 .auth-glass-card {
   width: 100%;
-  max-width: 460px;
-  background: rgba(255, 255, 255, 0.95);
+  max-width: 490px;
+  background: var(--glass-card-bg);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-card-border);
-  border-radius: 24px;
+  border-radius: 26px;
   box-shadow: var(--shadow-glass);
-  padding: 20px 24px 14px 24px;
+  padding: 22px 26px 16px 26px;
   position: relative;
   overflow: hidden;
-  background-image: radial-gradient(circle at 95% 5%, rgba(109, 63, 232, 0.08) 0%, transparent 45%);
+  background-image: radial-gradient(circle at 95% 5%, rgba(91, 47, 214, 0.08) 0%, transparent 45%);
 }
 
 /* Card Header */
 .auth-card-header {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .auth-eyebrow {
   display: block;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--primary);
@@ -429,26 +432,26 @@ body.enterprise-auth-body {
 }
 
 .auth-card-title {
-  font-size: 27px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--primary);
   line-height: 1.15;
   letter-spacing: -0.01em;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .auth-card-subtitle {
-  font-size: 11.5px;
+  font-size: 13.5px;
   color: var(--body-text);
   font-weight: 500;
 }
 
-/* Portal Switcher Tabs (Option 1 & Option 2) */
+/* Portal Switcher Tabs (PRIMARY: Department Portal | SECONDARY: Social Media Hub) */
 .portal-tab-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 9px;
+  margin-bottom: 12px;
 }
 
 .portal-tab-btn {
@@ -459,7 +462,7 @@ body.enterprise-auth-body {
   justify-content: center;
   text-align: center;
   padding: 12px 10px 10px 10px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1.5px solid rgba(226, 232, 240, 0.95);
   background: #FFFFFF;
   cursor: pointer;
@@ -477,7 +480,7 @@ body.enterprise-auth-body {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
   color: #FFFFFF;
   border-color: var(--primary-deep);
-  box-shadow: 0 5px 14px rgba(109, 63, 232, 0.35);
+  box-shadow: 0 6px 16px rgba(91, 47, 214, 0.35);
 }
 
 .tab-btn-icon {
@@ -502,15 +505,15 @@ body.enterprise-auth-body {
 }
 
 .tab-name {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .tab-roles {
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 500;
-  opacity: 0.9;
+  opacity: 0.92;
   line-height: 1.2;
 }
 
@@ -527,12 +530,12 @@ body.enterprise-auth-body {
   position: absolute;
   top: 7px;
   right: 7px;
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #FFFFFF;
   color: var(--primary);
-  font-size: 9.5px;
+  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -541,14 +544,14 @@ body.enterprise-auth-body {
 
 /* Role Selector Pills ("Login As") */
 .role-selector-wrap {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .role-divider {
   display: flex;
   align-items: center;
   text-align: center;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 
 .role-divider::before,
@@ -559,8 +562,8 @@ body.enterprise-auth-body {
 }
 
 .role-divider span {
-  padding: 0 8px;
-  font-size: 10.5px;
+  padding: 0 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--muted-text);
   letter-spacing: 0.02em;
@@ -570,21 +573,21 @@ body.enterprise-auth-body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
 }
 
 .role-pill-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   flex: 1;
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid rgba(226, 232, 240, 0.95);
   background: #FFFFFF;
   color: var(--dark-navy);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -599,7 +602,7 @@ body.enterprise-auth-body {
   background: var(--primary);
   color: var(--white);
   border-color: var(--primary);
-  box-shadow: 0 3px 8px rgba(109, 63, 232, 0.25);
+  box-shadow: 0 4px 10px rgba(91, 47, 214, 0.28);
 }
 
 .role-pill-btn.active i {
@@ -612,21 +615,21 @@ body.enterprise-auth-body {
 
 /* Inputs & Labels */
 .glass-form-group {
-  margin-bottom: 9px;
+  margin-bottom: 10px;
 }
 
 .glass-form-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--dark-navy);
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .glass-form-label i {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--primary);
 }
 
@@ -640,25 +643,25 @@ body.enterprise-auth-body {
   align-items: center;
   background: var(--glass-input-bg);
   border: 1.5px solid var(--glass-input-border);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .glass-input-wrapper:focus-within {
   background: var(--white);
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(109, 63, 232, 0.16);
+  box-shadow: 0 0 0 3px rgba(91, 47, 214, 0.16);
 }
 
 .glass-form-input {
   width: 100%;
-  height: 38px;
-  padding: 0 12px;
+  height: 44px;
+  padding: 0 14px;
   background: transparent;
   border: none;
   outline: none;
   font-family: var(--font-main);
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--dark-navy);
 }
@@ -670,13 +673,13 @@ body.enterprise-auth-body {
 
 .glass-form-select {
   width: 100%;
-  height: 38px;
-  padding: 0 12px;
+  height: 44px;
+  padding: 0 14px;
   background: transparent;
   border: none;
   outline: none;
   font-family: var(--font-main);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--dark-navy);
   cursor: pointer;
@@ -684,13 +687,13 @@ body.enterprise-auth-body {
 
 /* Domain Tag Suffix (@ritrjpm.ac.in) */
 .domain-tag-suffix {
-  padding: 3px 7px;
-  margin-right: 5px;
-  font-size: 10.5px;
+  padding: 4px 9px;
+  margin-right: 6px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--primary);
   background: var(--light-lavender);
-  border-radius: 5px;
+  border-radius: 6px;
   user-select: none;
   white-space: nowrap;
   cursor: pointer;
@@ -698,17 +701,17 @@ body.enterprise-auth-body {
 }
 
 .domain-tag-suffix:hover {
-  background: #E0D6FC;
+  background: #DDD0FD;
 }
 
 /* Password Toggle Eye Button */
 .glass-pw-toggle {
   background: transparent;
   border: none;
-  padding: 0 10px;
+  padding: 0 12px;
   cursor: pointer;
   color: var(--muted-text);
-  font-size: 13px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -724,8 +727,8 @@ body.enterprise-auth-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 2px;
-  margin-bottom: 10px;
+  margin-top: 4px;
+  margin-bottom: 12px;
 }
 
 .remember-checkbox-label {
@@ -737,21 +740,21 @@ body.enterprise-auth-body {
 }
 
 .remember-checkbox-label input[type="checkbox"] {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   accent-color: var(--primary);
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .remember-text {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--body-text);
 }
 
 .forgot-password-link {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--primary);
   text-decoration: none;
@@ -766,14 +769,14 @@ body.enterprise-auth-body {
 /* Primary Action Button */
 .btn-primary-purple {
   width: 100%;
-  height: 42px;
+  height: 48px;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
   color: var(--white);
   border: none;
-  border-radius: 11px;
+  border-radius: 12px;
   font-family: var(--font-main);
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 700;
   letter-spacing: 0.01em;
   display: inline-flex;
   align-items: center;
@@ -785,9 +788,9 @@ body.enterprise-auth-body {
 }
 
 .btn-primary-purple:hover {
-  background: linear-gradient(135deg, #6034DA 0%, #471EC0 100%);
+  background: linear-gradient(135deg, #5026C2 0%, #3D18A8 100%);
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(109, 63, 232, 0.42);
+  box-shadow: 0 10px 26px rgba(91, 47, 214, 0.42);
 }
 
 .btn-primary-purple:active {
@@ -802,13 +805,13 @@ body.enterprise-auth-body {
 
 /* Secondary Registration Switch Links */
 .auth-switch-wrapper {
-  margin-top: 8px;
+  margin-top: 10px;
   text-align: center;
 }
 
 .student-auth-switch,
 .faculty-auth-switch {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--body-text);
 }
 
@@ -817,7 +820,7 @@ body.enterprise-auth-body {
   color: var(--primary);
   font-weight: 700;
   text-decoration: none;
-  margin-left: 3px;
+  margin-left: 4px;
 }
 
 .student-auth-switch a:hover,
@@ -827,8 +830,8 @@ body.enterprise-auth-body {
 
 /* Card Bottom Footer */
 .auth-card-footer {
-  margin-top: 10px;
-  padding-top: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid rgba(226, 232, 240, 0.8);
   display: flex;
   align-items: center;
@@ -842,7 +845,7 @@ body.enterprise-auth-body {
 }
 
 .footer-auth-line {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--dark-navy);
 }
@@ -854,7 +857,7 @@ body.enterprise-auth-body {
 }
 
 .footer-sparkle svg {
-  filter: drop-shadow(0 2px 4px rgba(109, 63, 232, 0.25));
+  filter: drop-shadow(0 2px 4px rgba(91, 47, 214, 0.25));
   animation: pulseSparkle 3s ease-in-out infinite alternate;
 }
 
@@ -867,9 +870,9 @@ body.enterprise-auth-body {
 .auth-alert-box {
   padding: 8px 12px;
   border-radius: 10px;
-  font-size: 11.8px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -895,7 +898,7 @@ body.enterprise-auth-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
@@ -903,7 +906,7 @@ body.enterprise-auth-body {
 .btn-cancel-register {
   background: transparent;
   border: none;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--primary);
   cursor: pointer;
@@ -917,11 +920,11 @@ body.enterprise-auth-body {
 }
 
 .reg-bar-badge {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   color: var(--primary);
   background: var(--light-lavender);
-  padding: 2px 7px;
+  padding: 2.5px 8px;
   border-radius: 999px;
 }
 
@@ -933,9 +936,9 @@ body.enterprise-auth-body {
 
 .switch-back-prompt {
   text-align: center;
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--body-text);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .switch-back-prompt a {
@@ -945,12 +948,16 @@ body.enterprise-auth-body {
 }
 
 /* ==========================================================================
-   LOWER CENTER: ELEGANT & COMPACT "CONNECT WITH CSBS"
+   LOWER CENTER: ELEGANT & FLOATING "CONNECT WITH CSBS"
    ========================================================================== */
 .portal-social-section {
   width: 100%;
   display: flex;
   justify-content: center;
+  padding-bottom: 18px;
+  margin-top: auto;
+  position: relative;
+  z-index: 10;
 }
 
 .social-section-inner {
@@ -958,13 +965,13 @@ body.enterprise-auth-body {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 6px 18px;
-  box-shadow: 0 4px 16px rgba(23, 17, 58, 0.06);
+  border-radius: 18px;
+  padding: 7px 22px;
+  box-shadow: 0 6px 20px rgba(17, 19, 61, 0.08);
 }
 
 .social-section-title-wrap {
@@ -972,17 +979,17 @@ body.enterprise-auth-body {
 }
 
 .social-section-title {
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--dark-navy);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .social-links-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .social-bar-item {
@@ -1001,16 +1008,16 @@ body.enterprise-auth-body {
 }
 
 .social-icon-box {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   color: #FFFFFF;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.14);
 }
 
 .icon-ig {
@@ -1051,7 +1058,7 @@ body.enterprise-auth-body {
 .social-bar-divider {
   width: 1px;
   height: 22px;
-  background: rgba(109, 63, 232, 0.18);
+  background: rgba(91, 47, 214, 0.18);
   flex-shrink: 0;
 }
 
@@ -1064,7 +1071,7 @@ body.enterprise-auth-body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(23, 17, 58, 0.55);
+  background: rgba(17, 19, 61, 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 100;
@@ -1190,7 +1197,7 @@ body.enterprise-auth-body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(23, 17, 58, 0.65);
+  background: rgba(17, 19, 61, 0.65);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 110;
@@ -1240,12 +1247,12 @@ body.enterprise-auth-body {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN & ZOOM COMPATIBILITY
+   RESPONSIVE DESIGN & VIEWPORT COMPATIBILITY (100% Zoom Desktop Standard)
    ========================================================================== */
-@media (max-width: 1050px) {
+@media (max-width: 1100px) {
   .portal-content-grid {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 28px;
   }
 
   .portal-dept-presentation {
@@ -1266,7 +1273,7 @@ body.enterprise-auth-body {
   }
 
   .feature-highlights-bar {
-    max-width: 600px;
+    max-width: 640px;
     width: 100%;
   }
 
@@ -1276,23 +1283,13 @@ body.enterprise-auth-body {
   }
 
   .auth-glass-card {
-    max-width: 460px;
-  }
-
-  .social-links-bar {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .social-bar-divider {
-    display: none;
+    max-width: 490px;
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 720px) {
   .portal-main-header {
-    padding: 10px 16px;
+    padding: 12px 18px 4px 18px;
   }
 
   .portal-header-container {
@@ -1306,25 +1303,30 @@ body.enterprise-auth-body {
   }
 
   .portal-main-layout {
-    padding: 10px 14px 18px 14px;
+    padding: 10px 16px 20px 16px;
   }
 
   .dept-main-heading {
-    font-size: 32px;
+    font-size: 34px;
   }
 
   .feature-highlights-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .fh-divider {
-    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .auth-glass-card {
-    padding: 18px 16px 14px 16px;
-    border-radius: 18px;
+    padding: 20px 18px 14px 18px;
+    border-radius: 20px;
+  }
+
+  .social-links-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .social-bar-divider {
+    display: none;
   }
 }

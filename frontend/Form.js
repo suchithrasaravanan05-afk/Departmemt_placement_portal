@@ -185,17 +185,17 @@ function selectStaffRole(role) {
   if (currentPortalMode === 'dept') {
     // Roles in Department Portal
     if (role === 'student') {
-      if (lbl) lbl.textContent = 'Register Number / Official Email';
-      if (input) input.placeholder = 'e.g. 953623244001 or student email';
+      if (lbl) lbl.textContent = 'Official Email / Register Number';
+      if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
       if (domainTag) domainTag.style.display = 'inline-block';
       if (btnText) btnText.textContent = 'Login to Department Portal';
       if (studentPrompt) studentPrompt.classList.remove('form-hidden');
       if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
     } else if (role === 'admin') {
-      if (lbl) lbl.textContent = 'Placement Admin ID / Official Email';
-      if (input) input.placeholder = 'admin@ritrjpm.ac.in';
+      if (lbl) lbl.textContent = 'Official Email / Register Number';
+      if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
       if (domainTag) domainTag.style.display = 'inline-block';
-      if (btnText) btnText.textContent = 'Login as Placement Admin';
+      if (btnText) btnText.textContent = 'Login to Department Portal';
       if (studentPrompt) studentPrompt.classList.add('form-hidden');
       if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
     } else {
@@ -213,19 +213,19 @@ function selectStaffRole(role) {
       if (lbl) lbl.textContent = 'HOD ID / Official Email';
       if (input) input.placeholder = 'hodcsbs@ritrjpm.ac.in';
       if (domainTag) domainTag.style.display = 'inline-block';
-      if (btnText) btnText.textContent = 'Login as Head of Department';
+      if (btnText) btnText.textContent = 'Login to Social Media Hub';
       if (studentPrompt) studentPrompt.classList.add('form-hidden');
       if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
     } else if (role === 'admin') {
       if (lbl) lbl.textContent = 'Admin ID / Official Email';
       if (input) input.placeholder = 'admin@ritrjpm.ac.in';
       if (domainTag) domainTag.style.display = 'inline-block';
-      if (btnText) btnText.textContent = 'Login as Administrator';
+      if (btnText) btnText.textContent = 'Login to Social Media Hub';
       if (studentPrompt) studentPrompt.classList.add('form-hidden');
       if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
     } else {
       // Faculty
-      if (lbl) lbl.textContent = 'Official Email';
+      if (lbl) lbl.textContent = 'Official Email / Register Number';
       if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
       if (domainTag) domainTag.style.display = 'inline-block';
       if (btnText) btnText.textContent = 'Login to Social Media Hub';
