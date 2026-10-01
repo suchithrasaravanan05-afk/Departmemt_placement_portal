@@ -58,9 +58,9 @@ function handleUrlHashRouting() {
   if (hash === '#social' || hash === '#social-hub') {
     selectPortalMode('social');
     selectStaffRole('faculty');
-  } else if (hash === '#hod') {
+  } else if (hash === '#social-student' || hash === '#hod') {
     selectPortalMode('social');
-    selectStaffRole('hod');
+    selectStaffRole('student');
   } else if (hash === '#admin' || hash === '#social-admin') {
     selectPortalMode('social');
     selectStaffRole('admin');
@@ -143,9 +143,9 @@ function selectPortalMode(mode) {
           <i class="fa-solid fa-user"></i>
           <span>Faculty</span>
         </button>
-        <button type="button" class="role-pill-btn" data-role="hod" onclick="selectStaffRole('hod')">
-          <i class="fa-solid fa-building-columns"></i>
-          <span>HOD</span>
+        <button type="button" class="role-pill-btn" data-role="student" onclick="selectStaffRole('student')">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>Student</span>
         </button>
         <button type="button" class="role-pill-btn" data-role="admin" onclick="selectStaffRole('admin')">
           <i class="fa-solid fa-gear"></i>
@@ -209,12 +209,12 @@ function selectStaffRole(role) {
     }
   } else {
     // Roles in Department Social Media Hub
-    if (role === 'hod') {
-      if (lbl) lbl.textContent = 'HOD ID / Official Email';
-      if (input) input.placeholder = 'hodcsbs@ritrjpm.ac.in';
+    if (role === 'student') {
+      if (lbl) lbl.textContent = 'Official Email / Register Number';
+      if (input) input.placeholder = 'faculty@ritrjpm.ac.in';
       if (domainTag) domainTag.style.display = 'inline-block';
       if (btnText) btnText.textContent = 'Login to Social Media Hub';
-      if (studentPrompt) studentPrompt.classList.add('form-hidden');
+      if (studentPrompt) studentPrompt.classList.remove('form-hidden');
       if (facultyPrompt) facultyPrompt.classList.add('form-hidden');
     } else if (role === 'admin') {
       if (lbl) lbl.textContent = 'Admin ID / Official Email';
@@ -430,23 +430,21 @@ function routeAfterAuth(user) {
   }
 
   const role = (user.role || '').toLowerCase();
-  const placementAccess = user.placement_access !== false;
-  const socialAccess = user.social_media_access === true;
   const preferredPortal = localStorage.getItem('csbs_active_portal');
 
-  // Student is strictly routed to Student Placement Dashboard
+  // If user selected or preferred Social Media Hub:
+  if (preferredPortal === 'social') {
+    window.location.href = 'social_dashboard.html';
+    return;
+  }
+
+  // Student default for Department Portal: Student Placement Dashboard
   if (role === 'student') {
     window.location.href = 'student_dashboard.html';
     return;
   }
 
-  // Staff (Faculty, HOD, Admin) Routing:
-  if (preferredPortal === 'social' || (!placementAccess && socialAccess)) {
-    window.location.href = 'social_dashboard.html';
-    return;
-  }
-
-  // Default for Department Portal / Placement: Admin Dashboard
+  // Staff (Faculty, Admin) default for Department Portal: Admin Dashboard
   window.location.href = 'admin_dashboard.html';
 }
 

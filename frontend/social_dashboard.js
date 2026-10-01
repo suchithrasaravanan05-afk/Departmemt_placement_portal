@@ -29,13 +29,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const role = (currentUser.role || '').toLowerCase();
+  const isStudent = (role === 'student');
   const isStaff = (role === 'faculty' || role === 'hod' || role === 'admin');
 
-  // 2. Role Check: Students strictly denied
-  if (!isStaff) {
-    alert('Access Denied: The Social Media Hub is restricted to Department Staff (Faculty / HOD / Admin).');
-    window.location.href = 'student_dashboard.html';
+  // 2. Role Check: Allow both staff and students
+  if (!isStaff && !isStudent) {
+    sessionStorage.setItem('auth_redirect_msg', 'Access Denied: Please log in with a valid account.');
+    window.location.href = 'Form.html';
     return;
+  }
+
+  // 3. For students, hide composer panel (broadcast studio is staff-only, feed is viewable by all)
+  if (isStudent) {
+    const composer = document.querySelector('.composer-panel');
+    if (composer) composer.style.display = 'none';
+    const grid = document.querySelector('.social-studio-grid');
+    if (grid) grid.style.gridTemplateColumns = '1fr';
   }
 
   // 3. Strict Permission Check: social_media_access must be true
@@ -87,7 +96,10 @@ function renderHeaderUserProfile() {
   let roleTitle = 'Faculty Member';
   let initial = 'F';
 
-  if (role === 'hod') {
+  if (role === 'student') {
+    roleTitle = 'CSBS Student';
+    initial = (currentUser.full_name ? currentUser.full_name.charAt(0) : 'S').toUpperCase();
+  } else if (role === 'hod') {
     roleTitle = 'Head of Department (HOD)';
     initial = 'H';
   } else if (role === 'admin') {
@@ -135,7 +147,12 @@ document.addEventListener('click', (e) => {
 function switchToPortal(portal) {
   if (portal === 'placement') {
     localStorage.setItem('csbs_active_portal', 'placement');
-    window.location.href = 'admin_dashboard.html';
+    const role = (currentUser?.role || '').toLowerCase();
+    if (role === 'student') {
+      window.location.href = 'student_dashboard.html';
+    } else {
+      window.location.href = 'admin_dashboard.html';
+    }
   } else {
     togglePortalSwitcherDropdown();
   }

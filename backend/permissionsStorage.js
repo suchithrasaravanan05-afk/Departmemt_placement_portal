@@ -8,7 +8,7 @@ const PERMISSIONS_FILE = path.join(__dirname, "permissions.json");
 const ROLE_DEFAULTS = {
     student: {
         placement_access: true,
-        social_media_access: false
+        social_media_access: true
     },
     faculty: {
         placement_access: true,
