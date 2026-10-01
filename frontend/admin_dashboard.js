@@ -863,7 +863,7 @@ function renderStudentRoster(students, tbody) {
     let resumeHtml = `<span style="color:#94a3b8;font-size:12px;">Not uploaded</span>`;
     if (s.resume_file) {
       const url = getFullFileUrl(s.resume_file);
-      resumeHtml = `<a href="${url}" target="_blank" download class="btn btn-success btn-sm" style="padding:4px 10px;font-size:11px;">
+      resumeHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer" download class="btn btn-success btn-sm" style="padding:4px 10px;font-size:11px;">
         <i class="fa-solid fa-download"></i> Resume
       </a>`;
     }
@@ -1055,17 +1055,17 @@ function viewStudentModal(student) {
         <span class="detail-label">Resume</span>
         <span class="detail-value">
           ${student.resume_file
-            ? `<a href="${student.resume_file}" target="_blank" class="btn btn-success btn-sm"><i class="fa-solid fa-download"></i> View Resume</a>`
+            ? `<a href="${student.resume_file}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm"><i class="fa-solid fa-download"></i> View Resume</a>`
             : 'Not uploaded'}
         </span>
       </div>
       ${student.linkedin_link ? `<div class="detail-item" style="grid-column:span 2;">
         <span class="detail-label">LinkedIn</span>
-        <span class="detail-value"><a href="${student.linkedin_link}" target="_blank">${student.linkedin_link}</a></span>
+        <span class="detail-value"><a href="${student.linkedin_link}" target="_blank" rel="noopener noreferrer">${student.linkedin_link}</a></span>
       </div>` : ''}
       ${student.github_link ? `<div class="detail-item" style="grid-column:span 2;">
         <span class="detail-label">GitHub</span>
-        <span class="detail-value"><a href="${student.github_link}" target="_blank">${student.github_link}</a></span>
+        <span class="detail-value"><a href="${student.github_link}" target="_blank" rel="noopener noreferrer">${student.github_link}</a></span>
       </div>` : ''}
     </div>
     
@@ -2211,7 +2211,7 @@ function renderEligibleStudentsTable() {
       : `<span style="color:#94a3b8;font-size:11.5px;font-style:italic;">Not Applied</span>`;
 
     const resumeBtn = s.resume_file
-      ? `<a href="${s.resume_file}" target="_blank" class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;" title="View Resume">
+      ? `<a href="${s.resume_file}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;" title="View Resume">
            <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Resume
          </a>`
       : `<span style="color:#94a3b8;font-size:11px;">--</span>`;
@@ -2460,7 +2460,7 @@ function renderApplicationsFiltered() {
   tbody.innerHTML = filtered.map(app => {
     const resumeHtml = app.resume_file
       ? `<a href="${app.resume_file.startsWith('http') ? app.resume_file : window.location.origin + app.resume_file}"
-             target="_blank" class="btn btn-success btn-sm" style="padding:4px 8px;font-size:11px;">
+             target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm" style="padding:4px 8px;font-size:11px;">
           <i class="fa-solid fa-download"></i> Resume
          </a>`
       : '<span style="color:#94a3b8;font-size:11px;">—</span>';
@@ -2817,7 +2817,7 @@ function renderPlacedStudents(placedList, tbody) {
     let resumeHtml = `<span style="color:#94a3b8;font-size:12px;">No resume</span>`;
     if (p.resume_file) {
       const url = getFullFileUrl(p.resume_file);
-      resumeHtml = `<a href="${url}" target="_blank" download class="btn btn-success btn-sm" style="padding:4px 10px;font-size:11px;">
+      resumeHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer" download class="btn btn-success btn-sm" style="padding:4px 10px;font-size:11px;">
         <i class="fa-solid fa-download"></i> Resume
       </a>`;
     }

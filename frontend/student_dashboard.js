@@ -369,10 +369,10 @@ function populateViewMode(p) {
   if (linksEl) {
     linksEl.innerHTML = '';
     if (p.linkedin_link) {
-      linksEl.innerHTML += `<a href="${p.linkedin_link}" target="_blank" class="profile-link linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>`;
+      linksEl.innerHTML += `<a href="${p.linkedin_link}" target="_blank" rel="noopener noreferrer" class="profile-link linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>`;
     }
     if (p.github_link) {
-      linksEl.innerHTML += `<a href="${p.github_link}" target="_blank" class="profile-link github"><i class="fa-brands fa-github"></i> GitHub</a>`;
+      linksEl.innerHTML += `<a href="${p.github_link}" target="_blank" rel="noopener noreferrer" class="profile-link github"><i class="fa-brands fa-github"></i> GitHub</a>`;
     }
   }
 
@@ -419,7 +419,7 @@ function populateViewMode(p) {
     docLinksEl.innerHTML = '';
     if (p.resume_file) {
       const url = getFullFileUrl(p.resume_file);
-      docLinksEl.innerHTML += `<a href="${url}" target="_blank" download class="profile-link"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> View / Download Resume</a>`;
+      docLinksEl.innerHTML += `<a href="${url}" target="_blank" rel="noopener noreferrer" download class="profile-link"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> View / Download Resume</a>`;
     } else {
       docLinksEl.innerHTML = '<span style="font-size:13px;color:#94a3b8;">No resume uploaded yet.</span>';
     }
@@ -492,7 +492,7 @@ function populateEditForm(p) {
   if (p.resume_file) {
     el('existingResumeUrl').value = p.resume_file;
     const url = getFullFileUrl(p.resume_file);
-    el('existingResumeInfo').innerHTML = `<a href="${url}" target="_blank" download style="color:#2563eb;font-weight:600;"><i class="fa-solid fa-file-pdf"></i> View current resume</a> — upload new to replace`;
+    el('existingResumeInfo').innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer" download style="color:#2563eb;font-weight:600;"><i class="fa-solid fa-file-pdf"></i> View current resume</a> — upload new to replace`;
   }
 
   handleYearChange();
