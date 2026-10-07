@@ -1,0 +1,21 @@
+# RAMCO INSTITUTE OF TECHNOLOGY — Department Portal | CSBS
+
+
+# RAMCO INSTITUTE OF TECHNOLOGY
+
+## One Platform, A Stronger Community
+Access your department services, stay connected and be part of our growing academic community.
+
+### Welcome toDepartment Portal
+Select a portal and log in to continue
+[Forgot password?](javascript:void(0))
+[Create your placement account](javascript:void(0))
+[Sign in here](javascript:void(0))
+
+### Computer Science & Business Systems
+Curriculum designed in partnership with TCS
+The CSBS Department at Ramco Institute of Technology combines core computer science engineering with enterprise business operations, financial computing, and human-centric design.
+
+### Credential Assistance
+Institutional Account Support
+To reset your institutional login credentials or obtain a password reset token, please reach out to the CSBS Department Coordinator or Campus IT Desk:
