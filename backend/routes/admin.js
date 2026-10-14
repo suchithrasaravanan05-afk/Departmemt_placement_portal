@@ -1466,13 +1466,15 @@ router.delete("/event-feedback/:id", requireFacultyOrCoordinatorWrite, async (re
 // Filterable by Category and Academic Year, with feedback submission & certificate generation status
 router.get("/student-certificate-records", checkFacultyOrAdminPermission, async (req, res) => {
     try {
-        const { category, academic_year, search, status, coordinator } = req.query;
+        const { category, academic_year, search, status, coordinator, event_id, event_name } = req.query;
         const result = await feedbackCertificateStorage.getStudentCertificateRecords({
             category,
             academic_year,
             search,
             status,
-            coordinator
+            coordinator,
+            event_id,
+            event_name
         });
         res.json({
             success: true,

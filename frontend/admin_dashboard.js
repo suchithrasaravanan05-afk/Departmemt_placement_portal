@@ -4778,6 +4778,9 @@ function openEventSpecificAnalytics(eventId) {
 // STUDENT CERTIFICATE TRACKING & ROLE-BASED ACCESS
 // ============================================================
 
+let certCurrentViewMode = 'event'; // 'event' (default event-wise) or 'year' (batch-wise)
+let cachedStudentCertEventGroups = [];
+let cachedStudentCertYearGroups = [];
 let cachedStudentCertGroups = [];
 let cachedStudentCertSummary = null;
 let certFilterDebounceTimer = null;
@@ -4795,10 +4798,53 @@ function toggleDirectLookupBox() {
   }
 }
 
+function setCertViewMode(mode) {
+  certCurrentViewMode = mode;
+  const btnEv = el('btnCertViewEvent');
+  const btnYr = el('btnCertViewYear');
+  if (btnEv && btnYr) {
+    if (mode === 'event') {
+      btnEv.style.background = '#4338ca';
+      btnEv.style.color = '#fff';
+      btnEv.style.fontWeight = '700';
+      btnYr.style.background = 'transparent';
+      btnYr.style.color = '#64748b';
+      btnYr.style.fontWeight = '600';
+    } else {
+      btnYr.style.background = '#4338ca';
+      btnYr.style.color = '#fff';
+      btnYr.style.fontWeight = '700';
+      btnEv.style.background = 'transparent';
+      btnEv.style.color = '#64748b';
+      btnEv.style.fontWeight = '600';
+    }
+  }
+  renderStudentCertificateRecords();
+}
+
+function onCertEventFilterChange() {
+  // Automatically switch to event-wise view if a specific event is selected
+  if (el('certFilterEvent')?.value !== 'all') {
+    certCurrentViewMode = 'event';
+    const btnEv = el('btnCertViewEvent');
+    const btnYr = el('btnCertViewYear');
+    if (btnEv && btnYr) {
+      btnEv.style.background = '#4338ca';
+      btnEv.style.color = '#fff';
+      btnEv.style.fontWeight = '700';
+      btnYr.style.background = 'transparent';
+      btnYr.style.color = '#64748b';
+      btnYr.style.fontWeight = '600';
+    }
+  }
+  loadStudentCertificateRecords();
+}
+
 async function loadStudentCertificateRecords(forceRefresh = false) {
   const container = el('studentCertRecordsContainer');
   if (!container) return;
 
+  const event_id = el('certFilterEvent')?.value || 'all';
   const category = el('certFilterCategory')?.value || 'all';
   const academic_year = el('certFilterYear')?.value || 'all';
   const status = el('certFilterStatus')?.value || 'all';
@@ -4808,13 +4854,14 @@ async function loadStudentCertificateRecords(forceRefresh = false) {
     container.innerHTML = `
       <div class="admin-panel-card" style="padding:48px 24px;text-align:center;color:#64748b;">
         <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:#4f46e5;margin-bottom:12px;"></i>
-        <p style="font-size:14px;font-weight:600;margin:0;">Loading student certificate records &amp; feedback submission data...</p>
+        <p style="font-size:14px;font-weight:600;margin:0;">Loading event certificate records &amp; student verification details...</p>
       </div>
     `;
   }
 
   try {
     const params = new URLSearchParams();
+    if (event_id && event_id !== 'all') params.set('event_id', event_id);
     if (category && category !== 'all') params.set('category', category);
     if (academic_year && academic_year !== 'all') params.set('academic_year', academic_year);
     if (status && status !== 'all') params.set('status', status);
@@ -4836,13 +4883,22 @@ async function loadStudentCertificateRecords(forceRefresh = false) {
       return;
     }
 
-    if (data.grouped_by_year && typeof data.grouped_by_year === 'object') {
-      cachedStudentCertGroups = Object.values(data.grouped_by_year);
-    } else if (Array.isArray(data.groups)) {
-      cachedStudentCertGroups = data.groups;
+    // Cache event-wise groups
+    if (data.grouped_by_event && typeof data.grouped_by_event === 'object') {
+      cachedStudentCertEventGroups = Object.values(data.grouped_by_event);
     } else {
-      cachedStudentCertGroups = [];
+      cachedStudentCertEventGroups = [];
     }
+
+    // Cache year-wise groups
+    if (data.grouped_by_year && typeof data.grouped_by_year === 'object') {
+      cachedStudentCertYearGroups = Object.values(data.grouped_by_year);
+    } else if (Array.isArray(data.groups)) {
+      cachedStudentCertYearGroups = data.groups;
+    } else {
+      cachedStudentCertYearGroups = [];
+    }
+
     cachedStudentCertSummary = data.summary || {};
 
     // Update KPI Ribbon counters
@@ -4851,6 +4907,20 @@ async function loadStudentCertificateRecords(forceRefresh = false) {
     if (el('certKpiPending')) el('certKpiPending').innerText = data.summary?.certificates_pending || 0;
     if (el('certKpiFeedbackSubmitted')) el('certKpiFeedbackSubmitted').innerText = data.summary?.feedback_submitted || 0;
     if (el('certKpiNoFeedback')) el('certKpiNoFeedback').innerText = data.summary?.no_feedback_recorded || 0;
+
+    // Dynamically populate Select Event dropdown if options not set yet or on refresh
+    const eventSelect = el('certFilterEvent');
+    const availableEvents = data.summary?.events || [];
+    if (eventSelect && Array.isArray(availableEvents) && availableEvents.length > 0) {
+      const currentSelected = eventSelect.value || 'all';
+      let optionsHtml = '<option value="all">🌟 All Events &amp; Programs</option>';
+      availableEvents.forEach(ev => {
+        const isSel = (String(ev.id) === String(currentSelected) || ev.event_name === currentSelected) ? 'selected' : '';
+        const dateFormatted = ev.event_date && ev.event_date !== '—' ? fmtDate(ev.event_date) : '';
+        optionsHtml += `<option value="${escapeHtml(ev.id)}" ${isSel}>${escapeHtml(ev.event_name)} (${escapeHtml(ev.category || 'Event')}${dateFormatted ? ' • ' + dateFormatted : ''})</option>`;
+      });
+      eventSelect.innerHTML = optionsHtml;
+    }
 
     // Dynamically update academic year dropdown options if new years exist
     const yearSelect = el('certFilterYear');
@@ -4869,8 +4939,8 @@ async function loadStudentCertificateRecords(forceRefresh = false) {
       yearSelect.value = currentYearVal;
     }
 
-    // Render Year-wise grouped records
-    renderStudentCertificateRecords(cachedStudentCertGroups);
+    // Render records according to current view mode
+    renderStudentCertificateRecords();
 
   } catch (err) {
     console.error('Error loading student certificate records:', err);
@@ -4892,19 +4962,28 @@ function filterStudentCertificateRecords() {
 }
 
 function resetCertFilters() {
+  if (el('certFilterEvent')) el('certFilterEvent').value = 'all';
   if (el('certFilterCategory')) el('certFilterCategory').value = 'all';
   if (el('certFilterYear')) el('certFilterYear').value = 'all';
   if (el('certFilterStatus')) el('certFilterStatus').value = 'all';
   if (el('certSearchInput')) el('certSearchInput').value = '';
+  setCertViewMode('event');
   loadStudentCertificateRecords(true);
 }
 
-function renderStudentCertificateRecords(groups) {
+function renderStudentCertificateRecords() {
   const container = el('studentCertRecordsContainer');
   if (!container) return;
 
   const effRole = getStaffEffectiveRole();
   const canManage = (effRole === 'faculty_coordinator' || effRole === 'faculty' || effRole === 'hod');
+
+  const isEventMode = (certCurrentViewMode === 'event');
+  const groups = isEventMode ? cachedStudentCertEventGroups : cachedStudentCertYearGroups;
+  cachedStudentCertGroups = groups; // Keep reference synchronized for modals
+
+  const selectedEventFilter = el('certFilterEvent')?.value;
+  const isFilteredSingleEvent = (selectedEventFilter && selectedEventFilter !== 'all');
 
   if (!groups || groups.length === 0) {
     container.innerHTML = `
@@ -4912,8 +4991,8 @@ function renderStudentCertificateRecords(groups) {
         <div style="width:60px;height:60px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#94a3b8;font-size:24px;">
           <i class="fa-regular fa-folder-open"></i>
         </div>
-        <h4 style="color:#334155;margin:0 0 6px;font-size:16px;font-weight:700;">No Student Certificate Records Found</h4>
-        <p style="font-size:13px;margin:0 auto 14px;max-width:440px;">No student records match the selected category, academic year, or search criteria.</p>
+        <h4 style="color:#334155;margin:0 0 6px;font-size:16px;font-weight:700;">No Event Certificate Records Found</h4>
+        <p style="font-size:13px;margin:0 auto 14px;max-width:440px;">No student records match the selected event, category, academic year, or search criteria.</p>
         <button type="button" class="btn btn-sm btn-outline" onclick="resetCertFilters()" style="padding:6px 14px;font-size:12px;">
           <i class="fa-solid fa-rotate-left"></i> Reset Filters
         </button>
@@ -4926,170 +5005,369 @@ function renderStudentCertificateRecords(groups) {
     const records = grp.records || [];
     const generatedCount = grp.certificates_generated !== undefined ? grp.certificates_generated : (grp.generated_count || 0);
     const pendingCount = grp.certificates_pending !== undefined ? grp.certificates_pending : (grp.pending_count || 0);
-    return `
-      <div class="admin-panel-card" style="margin-bottom:24px;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-        
-        <!-- Year Header Ribbon -->
-        <div style="padding:16px 22px;background:linear-gradient(135deg, #f8fafc, #f1f5f9);border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:38px;height:38px;border-radius:10px;background:#4338ca;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 10px rgba(67,56,202,0.25);">
-              <i class="fa-solid fa-graduation-cap"></i>
-            </div>
-            <div>
-              <div style="font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;">Academic Year Batch</div>
-              <h3 style="margin:1px 0 0;font-size:16.5px;font-weight:800;color:#0f172a;">${escapeHtml(grp.academic_year)}</h3>
-            </div>
-          </div>
+    const feedbackCount = grp.feedback_submitted !== undefined ? grp.feedback_submitted : 0;
+
+    if (isEventMode) {
+      // EVENT-WISE VIEW
+      return `
+        <div class="admin-panel-card" style="margin-bottom:26px;border:1.5px solid #e0e7ff;border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(79,70,229,0.06);">
           
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;padding:5px 12px;border-radius:8px;border:1px solid #cbd5e1;">
-              <i class="fa-solid fa-users" style="color:#6366f1;margin-right:4px;"></i> ${records.length} Student Record${records.length === 1 ? '' : 's'}
-            </span>
-            <span class="badge badge-green" style="font-size:11.5px;font-weight:700;padding:5px 12px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
-              <i class="fa-solid fa-award"></i> ${generatedCount} Generated
-            </span>
-            <span class="badge badge-yellow" style="font-size:11.5px;font-weight:700;padding:5px 12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">
-              <i class="fa-solid fa-clock"></i> ${pendingCount} Pending
-            </span>
+          <!-- Event Header Banner with Detailed Metadata -->
+          <div style="padding:18px 24px;background:linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);border-bottom:1.5px solid #e0e7ff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
+            <div style="display:flex;align-items:flex-start;gap:14px;flex:1;min-width:300px;">
+              <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg, #4f46e5, #4338ca);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 4px 12px rgba(79,70,229,0.28);flex-shrink:0;">
+                <i class="fa-solid fa-calendar-check"></i>
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:11px;font-weight:800;color:#4f46e5;text-transform:uppercase;letter-spacing:0.6px;background:#e0e7ff;padding:2px 8px;border-radius:6px;">Event Details</span>
+                  <span class="badge badge-purple" style="font-size:11px;font-weight:700;padding:2px 8px;">${escapeHtml(grp.category || 'General')}</span>
+                  ${grp.event_code ? `<span style="font-size:11px;font-weight:700;font-family:monospace;background:#fff;color:#3730a3;border:1px solid #c7d2fe;padding:2px 7px;border-radius:6px;">${escapeHtml(grp.event_code)}</span>` : ''}
+                </div>
+                <h3 style="margin:4px 0 6px;font-size:18px;font-weight:800;color:#0f172a;line-height:1.3;">
+                  ${escapeHtml(grp.event_name || 'Event')}
+                </h3>
+                
+                <!-- Event Metadata Subtitle Row -->
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:#475569;margin-top:4px;">
+                  ${grp.event_date && grp.event_date !== '—' ? `
+                    <span style="display:flex;align-items:center;gap:5px;">
+                      <i class="fa-regular fa-calendar" style="color:#6366f1;"></i> <strong>Date:</strong> ${fmtDate(grp.event_date)}
+                    </span>
+                  ` : ''}
+                  ${grp.coordinator ? `
+                    <span style="display:flex;align-items:center;gap:5px;">
+                      <i class="fa-solid fa-chalkboard-user" style="color:#6366f1;"></i> <strong>Coordinator:</strong> ${escapeHtml(grp.coordinator)}
+                    </span>
+                  ` : ''}
+                  ${grp.event_venue ? `
+                    <span style="display:flex;align-items:center;gap:5px;">
+                      <i class="fa-solid fa-location-dot" style="color:#6366f1;"></i> <strong>Venue:</strong> ${escapeHtml(grp.event_venue)}
+                    </span>
+                  ` : ''}
+                  ${grp.academic_year ? `
+                    <span style="display:flex;align-items:center;gap:5px;">
+                      <i class="fa-solid fa-graduation-cap" style="color:#6366f1;"></i> <strong>Batch:</strong> ${escapeHtml(grp.academic_year)}
+                    </span>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Quick Event KPI Badges -->
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:#1e1b4b;background:#fff;padding:6px 12px;border-radius:8px;border:1px solid #c7d2fe;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                <i class="fa-solid fa-users" style="color:#4f46e5;margin-right:4px;"></i> ${records.length} Student Record${records.length === 1 ? '' : 's'}
+              </span>
+              <span class="badge badge-green" style="font-size:12px;font-weight:700;padding:6px 12px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
+                <i class="fa-solid fa-award"></i> ${generatedCount} Generated
+              </span>
+              <span class="badge badge-yellow" style="font-size:12px;font-weight:700;padding:6px 12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">
+                <i class="fa-solid fa-clock"></i> ${pendingCount} Pending
+              </span>
+              <span style="font-size:12px;font-weight:700;padding:6px 12px;background:#e0e7ff;color:#3730a3;border-radius:8px;border:1px solid #c7d2fe;">
+                <i class="fa-solid fa-square-check"></i> ${feedbackCount} Feedback Submitted
+              </span>
+            </div>
           </div>
-        </div>
 
-        <!-- Student Records Table -->
-        <div class="table-responsive">
-          <table class="admin-table" style="width:100%;margin:0;">
-            <thead>
-              <tr style="background:#fafafa;">
-                <th style="padding:12px 18px;font-size:12px;">Student Details</th>
-                <th style="padding:12px 18px;font-size:12px;">Event &amp; Category</th>
-                <th style="padding:12px 18px;font-size:12px;">Feedback Submission Status</th>
-                <th style="padding:12px 18px;font-size:12px;">Certificate Number</th>
-                <th style="padding:12px 18px;font-size:12px;">Certificate Generation Status</th>
-                <th style="padding:12px 18px;font-size:12px;text-align:center;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${records.length === 0 ? `
-                <tr>
-                  <td colspan="6" style="text-align:center;padding:32px;color:#94a3b8;">
-                    No student records found in this academic year matching the filters.
-                  </td>
+          <!-- Student Records Table for this Event -->
+          <div class="table-responsive">
+            <table class="admin-table" style="width:100%;margin:0;">
+              <thead>
+                <tr style="background:#fafafa;">
+                  <th style="padding:12px 18px;font-size:12px;">Student Details</th>
+                  <th style="padding:12px 18px;font-size:12px;">Academic Year / Batch</th>
+                  <th style="padding:12px 18px;font-size:12px;">Feedback Submission Status</th>
+                  <th style="padding:12px 18px;font-size:12px;">Certificate Number</th>
+                  <th style="padding:12px 18px;font-size:12px;">Certificate Generation Status</th>
+                  <th style="padding:12px 18px;font-size:12px;text-align:center;">Action</th>
                 </tr>
-              ` : records.map((rec, recIdx) => {
-                const st = rec.student || {};
-                const ev = rec.event || {};
-                const fb = rec.feedback || {};
-                const cert = rec.certificate || {};
-
-                return `
-                  <tr style="transition:background .15s ease;">
-                    <!-- Student Details -->
-                    <td style="padding:14px 18px;">
-                      <div style="font-weight:700;color:#0f172a;font-size:13.5px;display:flex;align-items:center;gap:6px;">
-                        <i class="fa-solid fa-user-graduate" style="color:#6366f1;font-size:13px;"></i>
-                        <span>${escapeHtml(st.name || 'Student')}</span>
-                      </div>
-                      <div style="font-size:12px;color:#475569;margin-top:2px;">
-                        <span style="font-weight:700;font-family:monospace;color:#1e293b;letter-spacing:0.3px;">${escapeHtml(st.register_number || '—')}</span>
-                        ${st.department ? ` • <span style="color:#64748b;">${escapeHtml(st.department)}</span>` : ''}
-                      </div>
-                    </td>
-
-                    <!-- Event & Category -->
-                    <td style="padding:14px 18px;">
-                      <div style="font-weight:700;color:#1e293b;font-size:13px;display:flex;align-items:center;gap:6px;">
-                        <i class="fa-regular fa-calendar-check" style="color:#4338ca;"></i>
-                        <span>${escapeHtml(ev.event_name || 'Event')}</span>
-                        ${ev.event_code ? `<span class="badge badge-purple" style="font-size:10px;padding:1px 5px;">${escapeHtml(ev.event_code)}</span>` : ''}
-                      </div>
-                      <div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                        <span class="badge badge-purple" style="font-size:10.5px;font-weight:600;padding:2px 7px;">${escapeHtml(ev.category || 'General')}</span>
-                        ${ev.event_date ? `<span style="font-size:11.5px;color:#64748b;">${fmtDate(ev.event_date)}</span>` : ''}
-                      </div>
-                    </td>
-
-                    <!-- Feedback Submission Status -->
-                    <td style="padding:14px 18px;">
-                      ${fb.has_submission ? `
-                        <div>
-                          <span class="badge badge-green" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fa-solid fa-check"></i> Submitted
-                          </span>
-                          <div style="font-size:11px;color:#64748b;margin-top:4px;">
-                            Score: <strong style="color:${fb.quiz_passed ? '#15803d' : '#b45309'};">${fb.quiz_score !== null && fb.quiz_score !== undefined ? fb.quiz_score + '%' : 'N/A'}</strong>
-                            ${fb.submitted_at ? ` • ${fmtDate(fb.submitted_at)}` : ''}
-                          </div>
-                        </div>
-                      ` : `
-                        <div>
-                          <span class="badge badge-red" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fa-solid fa-circle-xmark"></i> No feedback submission was recorded
-                          </span>
-                          <div style="font-size:11px;color:#94a3b8;margin-top:3px;">No feedback submission on file</div>
-                        </div>
-                      `}
-                    </td>
-
-                    <!-- Certificate Number -->
-                    <td style="padding:14px 18px;">
-                      ${cert.is_generated && cert.certificate_number ? `
-                        <div>
-                          <span style="font-family:monospace;font-weight:800;color:#312e81;background:#e0e7ff;padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;letter-spacing:0.5px;">
-                            <i class="fa-solid fa-barcode" style="font-size:10px;margin-right:4px;"></i>${escapeHtml(cert.certificate_number)}
-                          </span>
-                          ${cert.issue_date ? `<div style="font-size:10.5px;color:#64748b;margin-top:3px;">Issued: ${fmtDate(cert.issue_date)}</div>` : ''}
-                        </div>
-                      ` : `
-                        <span style="color:#94a3b8;font-size:12px;font-style:italic;">Not Generated</span>
-                      `}
-                    </td>
-
-                    <!-- Certificate Generation Status -->
-                    <td style="padding:14px 18px;">
-                      ${cert.is_generated ? `
-                        <div>
-                          <span class="badge badge-green" style="font-size:12px;font-weight:700;padding:4px 10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fa-solid fa-award"></i> Generated
-                          </span>
-                          <div style="font-size:11px;color:#059669;margin-top:3px;font-weight:600;">
-                            <i class="fa-solid fa-circle-check" style="font-size:10px;"></i> ${escapeHtml(cert.status || 'Verified')}
-                          </div>
-                        </div>
-                      ` : `
-                        <div>
-                          <span class="badge badge-yellow" style="font-size:12px;font-weight:700;padding:4px 10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fa-solid fa-clock"></i> Not Generated
-                          </span>
-                          <div style="font-size:11px;color:#d97706;margin-top:3px;">Certificate pending</div>
-                        </div>
-                      `}
-                    </td>
-
-                    <!-- Action Controls -->
-                    <td style="padding:14px 18px;text-align:center;">
-                      <div style="display:inline-flex;gap:6px;align-items:center;">
-                        <button class="btn btn-sm btn-outline-primary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openCertRecordDetailsModal(${grpIdx}, ${recIdx})" title="View Complete Verification Details">
-                          <i class="fa-solid fa-eye"></i> View Details
-                        </button>
-
-                        ${canManage ? (cert.is_generated ? `
-                          <button class="btn btn-sm btn-outline-secondary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openEditCertificateModalFromRecord(${grpIdx}, ${recIdx})" title="Edit Certificate Details">
-                            <i class="fa-solid fa-pen-to-square"></i> Edit
-                          </button>
-                        ` : `
-                          <button class="btn btn-sm btn-outline-success" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;color:#15803d;border-color:#bbf7d0;" onclick="openDirectIssueModal('${escapeHtml(st.register_number || '')}', '${escapeHtml(ev.event_name || '')}')" title="Issue Certificate for Student">
-                            <i class="fa-solid fa-plus-circle"></i> Issue
-                          </button>
-                        `) : ''}
-                      </div>
+              </thead>
+              <tbody>
+                ${records.length === 0 ? `
+                  <tr>
+                    <td colspan="6" style="text-align:center;padding:32px;color:#94a3b8;">
+                      No student records registered for this event matching the filters.
                     </td>
                   </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
+                ` : records.map((rec, recIdx) => {
+                  const st = rec.student || {};
+                  const ev = rec.event || grp;
+                  const fb = rec.feedback || {};
+                  const cert = rec.certificate || {};
+
+                  return `
+                    <tr style="transition:background .15s ease;">
+                      <!-- Student Details -->
+                      <td style="padding:14px 18px;">
+                        <div style="font-weight:700;color:#0f172a;font-size:13.5px;display:flex;align-items:center;gap:6px;">
+                          <i class="fa-solid fa-user-graduate" style="color:#6366f1;font-size:13px;"></i>
+                          <span>${escapeHtml(st.name || 'Student')}</span>
+                        </div>
+                        <div style="font-size:12px;color:#475569;margin-top:2px;">
+                          <span style="font-weight:700;font-family:monospace;color:#1e293b;letter-spacing:0.3px;">${escapeHtml(st.register_number || '—')}</span>
+                          ${st.department ? ` • <span style="color:#64748b;">${escapeHtml(st.department)}</span>` : ''}
+                        </div>
+                      </td>
+
+                      <!-- Academic Year / Batch -->
+                      <td style="padding:14px 18px;">
+                        <span class="badge" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-size:11.5px;font-weight:600;padding:4px 9px;">
+                          <i class="fa-solid fa-graduation-cap" style="color:#6366f1;margin-right:4px;"></i>${escapeHtml(st.academic_year || st.year_label || '4th Year')}
+                        </span>
+                      </td>
+
+                      <!-- Feedback Submission Status -->
+                      <td style="padding:14px 18px;">
+                        ${fb.has_submission ? `
+                          <div>
+                            <span class="badge badge-green" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-check"></i> Submitted
+                            </span>
+                            <div style="font-size:11px;color:#64748b;margin-top:4px;">
+                              Score: <strong style="color:${fb.quiz_passed ? '#15803d' : '#b45309'};">${fb.quiz_score !== null && fb.quiz_score !== undefined ? fb.quiz_score : (fb.quiz_pct ? fb.quiz_pct + '%' : 'N/A')}</strong>
+                              ${fb.submitted_at ? ` • ${fmtDate(fb.submitted_at)}` : ''}
+                            </div>
+                          </div>
+                        ` : `
+                          <div>
+                            <span class="badge badge-red" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-circle-xmark"></i> No feedback submission was recorded
+                            </span>
+                            <div style="font-size:11px;color:#94a3b8;margin-top:3px;">No feedback submission on file</div>
+                          </div>
+                        `}
+                      </td>
+
+                      <!-- Certificate Number -->
+                      <td style="padding:14px 18px;">
+                        ${cert.is_generated && cert.certificate_number ? `
+                          <div>
+                            <span style="font-family:monospace;font-weight:800;color:#312e81;background:#e0e7ff;padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;letter-spacing:0.5px;">
+                              <i class="fa-solid fa-barcode" style="font-size:10px;margin-right:4px;"></i>${escapeHtml(cert.certificate_number)}
+                            </span>
+                            ${cert.issue_date ? `<div style="font-size:10.5px;color:#64748b;margin-top:3px;">Issued: ${fmtDate(cert.issue_date)}</div>` : ''}
+                          </div>
+                        ` : `
+                          <span style="color:#94a3b8;font-size:12px;font-style:italic;">Not Generated</span>
+                        `}
+                      </td>
+
+                      <!-- Certificate Generation Status -->
+                      <td style="padding:14px 18px;">
+                        ${cert.is_generated ? `
+                          <div>
+                            <span class="badge badge-green" style="font-size:12px;font-weight:700;padding:4px 10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-award"></i> Generated
+                            </span>
+                            <div style="font-size:11px;color:#059669;margin-top:3px;font-weight:600;">
+                              <i class="fa-solid fa-circle-check" style="font-size:10px;"></i> ${escapeHtml(cert.status || 'Verified')}
+                            </div>
+                          </div>
+                        ` : `
+                          <div>
+                            <span class="badge badge-yellow" style="font-size:12px;font-weight:700;padding:4px 10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-clock"></i> Not Generated
+                            </span>
+                            <div style="font-size:11px;color:#d97706;margin-top:3px;">Certificate pending</div>
+                          </div>
+                        `}
+                      </td>
+
+                      <!-- Action Controls -->
+                      <td style="padding:14px 18px;text-align:center;">
+                        <div style="display:inline-flex;gap:6px;align-items:center;">
+                          <button class="btn btn-sm btn-outline-primary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openCertRecordDetailsModal(${grpIdx}, ${recIdx})" title="View Complete Verification Details">
+                            <i class="fa-solid fa-eye"></i> View Details
+                          </button>
+
+                          ${canManage ? (cert.is_generated ? `
+                            <button class="btn btn-sm btn-outline-secondary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openEditCertificateModalFromRecord(${grpIdx}, ${recIdx})" title="Edit Certificate Details">
+                              <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </button>
+                          ` : `
+                            <button class="btn btn-sm btn-outline-success" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;color:#15803d;border-color:#bbf7d0;" onclick="openDirectIssueModal('${escapeHtml(st.register_number || '')}', '${escapeHtml(ev.event_name || '')}')" title="Issue Certificate for Student">
+                              <i class="fa-solid fa-plus-circle"></i> Issue
+                            </button>
+                          `) : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else {
+      // BATCH-WISE (ACADEMIC YEAR) VIEW
+      return `
+        <div class="admin-panel-card" style="margin-bottom:24px;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+          
+          <!-- Year Header Ribbon -->
+          <div style="padding:16px 22px;background:linear-gradient(135deg, #f8fafc, #f1f5f9);border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:#4338ca;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 10px rgba(67,56,202,0.25);">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;">Academic Year Batch</div>
+                <h3 style="margin:1px 0 0;font-size:16.5px;font-weight:800;color:#0f172a;">${escapeHtml(grp.academic_year)}</h3>
+              </div>
+            </div>
+            
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:#475569;background:#fff;padding:5px 12px;border-radius:8px;border:1px solid #cbd5e1;">
+                <i class="fa-solid fa-users" style="color:#6366f1;margin-right:4px;"></i> ${records.length} Student Record${records.length === 1 ? '' : 's'}
+              </span>
+              <span class="badge badge-green" style="font-size:11.5px;font-weight:700;padding:5px 12px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
+                <i class="fa-solid fa-award"></i> ${generatedCount} Generated
+              </span>
+              <span class="badge badge-yellow" style="font-size:11.5px;font-weight:700;padding:5px 12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">
+                <i class="fa-solid fa-clock"></i> ${pendingCount} Pending
+              </span>
+            </div>
+          </div>
+
+          <!-- Student Records Table -->
+          <div class="table-responsive">
+            <table class="admin-table" style="width:100%;margin:0;">
+              <thead>
+                <tr style="background:#fafafa;">
+                  <th style="padding:12px 18px;font-size:12px;">Student Details</th>
+                  <th style="padding:12px 18px;font-size:12px;">Event &amp; Category</th>
+                  <th style="padding:12px 18px;font-size:12px;">Feedback Submission Status</th>
+                  <th style="padding:12px 18px;font-size:12px;">Certificate Number</th>
+                  <th style="padding:12px 18px;font-size:12px;">Certificate Generation Status</th>
+                  <th style="padding:12px 18px;font-size:12px;text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${records.length === 0 ? `
+                  <tr>
+                    <td colspan="6" style="text-align:center;padding:32px;color:#94a3b8;">
+                      No student records found in this academic year matching the filters.
+                    </td>
+                  </tr>
+                ` : records.map((rec, recIdx) => {
+                  const st = rec.student || {};
+                  const ev = rec.event || {};
+                  const fb = rec.feedback || {};
+                  const cert = rec.certificate || {};
+
+                  return `
+                    <tr style="transition:background .15s ease;">
+                      <!-- Student Details -->
+                      <td style="padding:14px 18px;">
+                        <div style="font-weight:700;color:#0f172a;font-size:13.5px;display:flex;align-items:center;gap:6px;">
+                          <i class="fa-solid fa-user-graduate" style="color:#6366f1;font-size:13px;"></i>
+                          <span>${escapeHtml(st.name || 'Student')}</span>
+                        </div>
+                        <div style="font-size:12px;color:#475569;margin-top:2px;">
+                          <span style="font-weight:700;font-family:monospace;color:#1e293b;letter-spacing:0.3px;">${escapeHtml(st.register_number || '—')}</span>
+                          ${st.department ? ` • <span style="color:#64748b;">${escapeHtml(st.department)}</span>` : ''}
+                        </div>
+                      </td>
+
+                      <!-- Event & Category -->
+                      <td style="padding:14px 18px;">
+                        <div style="font-weight:700;color:#1e293b;font-size:13px;display:flex;align-items:center;gap:6px;">
+                          <i class="fa-regular fa-calendar-check" style="color:#4338ca;"></i>
+                          <span>${escapeHtml(ev.event_name || 'Event')}</span>
+                          ${ev.event_code ? `<span class="badge badge-purple" style="font-size:10px;padding:1px 5px;">${escapeHtml(ev.event_code)}</span>` : ''}
+                        </div>
+                        <div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                          <span class="badge badge-purple" style="font-size:10.5px;font-weight:600;padding:2px 7px;">${escapeHtml(ev.category || 'General')}</span>
+                          ${ev.event_date ? `<span style="font-size:11.5px;color:#64748b;">${fmtDate(ev.event_date)}</span>` : ''}
+                        </div>
+                      </td>
+
+                      <!-- Feedback Submission Status -->
+                      <td style="padding:14px 18px;">
+                        ${fb.has_submission ? `
+                          <div>
+                            <span class="badge badge-green" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-check"></i> Submitted
+                            </span>
+                            <div style="font-size:11px;color:#64748b;margin-top:4px;">
+                              Score: <strong style="color:${fb.quiz_passed ? '#15803d' : '#b45309'};">${fb.quiz_score !== null && fb.quiz_score !== undefined ? fb.quiz_score : (fb.quiz_pct ? fb.quiz_pct + '%' : 'N/A')}</strong>
+                              ${fb.submitted_at ? ` • ${fmtDate(fb.submitted_at)}` : ''}
+                            </div>
+                          </div>
+                        ` : `
+                          <div>
+                            <span class="badge badge-red" style="font-size:11.5px;font-weight:700;padding:4px 9px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-circle-xmark"></i> No feedback submission was recorded
+                            </span>
+                            <div style="font-size:11px;color:#94a3b8;margin-top:3px;">No feedback submission on file</div>
+                          </div>
+                        `}
+                      </td>
+
+                      <!-- Certificate Number -->
+                      <td style="padding:14px 18px;">
+                        ${cert.is_generated && cert.certificate_number ? `
+                          <div>
+                            <span style="font-family:monospace;font-weight:800;color:#312e81;background:#e0e7ff;padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;letter-spacing:0.5px;">
+                              <i class="fa-solid fa-barcode" style="font-size:10px;margin-right:4px;"></i>${escapeHtml(cert.certificate_number)}
+                            </span>
+                            ${cert.issue_date ? `<div style="font-size:10.5px;color:#64748b;margin-top:3px;">Issued: ${fmtDate(cert.issue_date)}</div>` : ''}
+                          </div>
+                        ` : `
+                          <span style="color:#94a3b8;font-size:12px;font-style:italic;">Not Generated</span>
+                        `}
+                      </td>
+
+                      <!-- Certificate Generation Status -->
+                      <td style="padding:14px 18px;">
+                        ${cert.is_generated ? `
+                          <div>
+                            <span class="badge badge-green" style="font-size:12px;font-weight:700;padding:4px 10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-award"></i> Generated
+                            </span>
+                            <div style="font-size:11px;color:#059669;margin-top:3px;font-weight:600;">
+                              <i class="fa-solid fa-circle-check" style="font-size:10px;"></i> ${escapeHtml(cert.status || 'Verified')}
+                            </div>
+                          </div>
+                        ` : `
+                          <div>
+                            <span class="badge badge-yellow" style="font-size:12px;font-weight:700;padding:4px 10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;display:inline-flex;align-items:center;gap:4px;">
+                              <i class="fa-solid fa-clock"></i> Not Generated
+                            </span>
+                            <div style="font-size:11px;color:#d97706;margin-top:3px;">Certificate pending</div>
+                          </div>
+                        `}
+                      </td>
+
+                      <!-- Action Controls -->
+                      <td style="padding:14px 18px;text-align:center;">
+                        <div style="display:inline-flex;gap:6px;align-items:center;">
+                          <button class="btn btn-sm btn-outline-primary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openCertRecordDetailsModal(${grpIdx}, ${recIdx})" title="View Complete Verification Details">
+                            <i class="fa-solid fa-eye"></i> View Details
+                          </button>
+
+                          ${canManage ? (cert.is_generated ? `
+                            <button class="btn btn-sm btn-outline-secondary" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" onclick="openEditCertificateModalFromRecord(${grpIdx}, ${recIdx})" title="Edit Certificate Details">
+                              <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </button>
+                          ` : `
+                            <button class="btn btn-sm btn-outline-success" style="padding:4px 9px;font-size:11px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;color:#15803d;border-color:#bbf7d0;" onclick="openDirectIssueModal('${escapeHtml(st.register_number || '')}', '${escapeHtml(ev.event_name || '')}')" title="Issue Certificate for Student">
+                              <i class="fa-solid fa-plus-circle"></i> Issue
+                            </button>
+                          `) : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
   }).join('');
 }
 
