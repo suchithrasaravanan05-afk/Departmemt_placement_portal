@@ -1548,7 +1548,7 @@ function inferEventCategory(eventName, message) {
     return "Placement Training";
 }
 
-async function getStudentCertificateRecords({ category, academic_year, search, status, coordinator } = {}) {
+async function getStudentCertificateRecords({ category, academic_year, event_id, event_name, search, status, coordinator } = {}) {
     const data = await getAllData();
     const allStudents = await getAllStudentUsers();
     const allEvents = data.event_feedbacks || [];
@@ -1600,6 +1600,7 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
                     register_number: stu.register_number || "—",
                     department: stu.department || "Computer Science and Business Systems",
                     year: stu.year || 4,
+                    academic_year: stuYearLabel,
                     year_label: stuYearLabel,
                     email: stu.email || ""
                 },
@@ -1608,20 +1609,25 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
                     event_name: ev.event_name,
                     event_code: ev.event_code || "EVT",
                     event_date: ev.event_date || "—",
+                    event_venue: ev.event_venue || "Department Placement Lab / Online",
                     category: evCat,
                     academic_year: evYear,
-                    coordinator: ev.coordinator || "Faculty Coordinator"
+                    coordinator: ev.coordinator || "Faculty Coordinator",
+                    signatory_title: ev.signatory_title || "Head of Department - CSBS"
                 },
                 feedback: {
                     submitted: !!sub,
+                    has_submission: !!sub,
                     submission_status: sub ? "Submitted" : "No feedback submission was recorded",
                     submitted_at: sub ? sub.submitted_at : null,
                     quiz_score: sub ? `${sub.quiz_score || 0}/${sub.quiz_total || 0}` : null,
                     quiz_pct: sub ? sub.quiz_pct : null,
+                    quiz_passed: sub ? !!sub.quiz_passed : false,
                     rating: sub ? sub.rating : null
                 },
                 certificate: {
                     generated: !!cert,
+                    is_generated: !!cert,
                     generation_status: cert ? "Generated" : "Not Generated",
                     certificate_number: cert ? (cert.certificate_number || `RIT-${cert.id}`) : null,
                     certificate_id: cert ? cert.id : null,
@@ -1654,6 +1660,7 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
                     register_number: cert.register_number || stuObj.register_number || "—",
                     department: cert.department || stuObj.department || "Computer Science and Business Systems",
                     year: cert.student_year || stuObj.year || 4,
+                    academic_year: stuYearLabel,
                     year_label: stuYearLabel,
                     email: cert.student_email || stuObj.email || ""
                 },
@@ -1662,20 +1669,25 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
                     event_name: cert.event_name || "Direct Certification",
                     event_code: cert.event_code || "DIR",
                     event_date: cert.event_date || cert.issue_date || "—",
+                    event_venue: cert.event_venue || "Department Placement Lab / Online",
                     category: cert.category || inferEventCategory(cert.event_name, ""),
                     academic_year: evYear,
-                    coordinator: cert.coordinator || "Faculty Coordinator"
+                    coordinator: cert.coordinator || "Faculty Coordinator",
+                    signatory_title: cert.signatory_title || "Head of Department - CSBS"
                 },
                 feedback: {
                     submitted: true,
+                    has_submission: true,
                     submission_status: "Direct Issuance / Certified",
                     submitted_at: cert.issue_date || cert.created_at,
                     quiz_score: "Exempted / Direct",
                     quiz_pct: 100,
+                    quiz_passed: true,
                     rating: 5
                 },
                 certificate: {
                     generated: true,
+                    is_generated: true,
                     generation_status: "Generated",
                     certificate_number: cert.certificate_number || `RIT-${cert.id}`,
                     certificate_id: cert.id,
@@ -1689,6 +1701,19 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
 
     // 3. Filters
     let filtered = records;
+
+    if (event_id && event_id !== "all") {
+        const eidStr = String(event_id).trim().toLowerCase();
+        filtered = filtered.filter(r => 
+            String(r.event.id).toLowerCase().trim() === eidStr ||
+            (r.event.event_name && r.event.event_name.toLowerCase().trim() === eidStr)
+        );
+    }
+
+    if (event_name && event_name !== "all") {
+        const enStr = event_name.trim().toLowerCase();
+        filtered = filtered.filter(r => r.event.event_name && r.event.event_name.toLowerCase().trim() === enStr);
+    }
 
     if (category && category !== "all") {
         const catNorm = category.toLowerCase().trim();
@@ -1742,12 +1767,35 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
     const distinctCategories = Array.from(new Set(records.map(r => r.event.category))).filter(Boolean);
     const distinctYears = Array.from(new Set(records.map(r => r.student.year_label))).filter(Boolean);
 
+    // Extract all distinct events for filter dropdown
+    const distinctEventsMap = new Map();
+    records.forEach(r => {
+        const ev = r.event;
+        if (ev && (ev.id || ev.event_name)) {
+            const k = String(ev.id || ev.event_name);
+            if (!distinctEventsMap.has(k)) {
+                distinctEventsMap.set(k, {
+                    id: ev.id,
+                    event_name: ev.event_name,
+                    event_code: ev.event_code || "EVT",
+                    event_date: ev.event_date || "—",
+                    event_venue: ev.event_venue || "Department Placement Lab / Online",
+                    category: ev.category || "General",
+                    academic_year: ev.academic_year || "2026-27",
+                    coordinator: ev.coordinator || "Faculty Coordinator"
+                });
+            }
+        }
+    });
+    const distinctEvents = Array.from(distinctEventsMap.values());
+
     // 5. Group by Academic Year
     const groupedByYear = {};
     filtered.forEach(r => {
         const yr = r.student.year_label || r.event.academic_year || "General";
         if (!groupedByYear[yr]) {
             groupedByYear[yr] = {
+                group_type: "year",
                 academic_year: yr,
                 total_records: 0,
                 certificates_generated: 0,
@@ -1772,6 +1820,45 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
         delete groupedByYear[k].students;
     });
 
+    // 6. Group by Event (Event-wise)
+    const groupedByEvent = {};
+    filtered.forEach(r => {
+        const evKey = String(r.event.id || r.event.event_name || "general");
+        if (!groupedByEvent[evKey]) {
+            groupedByEvent[evKey] = {
+                group_type: "event",
+                event_id: r.event.id,
+                event_name: r.event.event_name,
+                event_code: r.event.event_code,
+                event_date: r.event.event_date,
+                event_venue: r.event.event_venue,
+                category: r.event.category,
+                coordinator: r.event.coordinator,
+                academic_year: r.event.academic_year,
+                signatory_title: r.event.signatory_title,
+                total_records: 0,
+                certificates_generated: 0,
+                certificates_pending: 0,
+                feedback_submitted: 0,
+                no_feedback_recorded: 0,
+                students: new Set(),
+                records: []
+            };
+        }
+        groupedByEvent[evKey].total_records++;
+        if (r.certificate.generated) groupedByEvent[evKey].certificates_generated++;
+        else groupedByEvent[evKey].certificates_pending++;
+        if (r.feedback.submitted) groupedByEvent[evKey].feedback_submitted++;
+        else groupedByEvent[evKey].no_feedback_recorded++;
+        groupedByEvent[evKey].students.add(r.student.register_number || r.student.id);
+        groupedByEvent[evKey].records.push(r);
+    });
+
+    Object.keys(groupedByEvent).forEach(k => {
+        groupedByEvent[k].students_count = groupedByEvent[k].students.size;
+        delete groupedByEvent[k].students;
+    });
+
     return {
         summary: {
             total_records: totalRecords,
@@ -1780,10 +1867,12 @@ async function getStudentCertificateRecords({ category, academic_year, search, s
             feedback_submitted: feedbackSubmitted,
             no_feedback_recorded: noFeedbackRecorded,
             categories: distinctCategories,
-            academic_years: distinctYears
+            academic_years: distinctYears,
+            events: distinctEvents
         },
         records: filtered,
-        grouped_by_year: groupedByYear
+        grouped_by_year: groupedByYear,
+        grouped_by_event: groupedByEvent
     };
 }
 
