@@ -13,7 +13,9 @@ const DEFAULT_DATA = {
     feedback_submissions: [],
     certificates: [],
     notifications: [],
-    deleted_event_ids: []
+    deleted_event_ids: [],
+    certificate_batches: [],
+    certificate_audit_logs: []
 };
 
 // In-memory cache
@@ -52,6 +54,8 @@ function readLocalData() {
             if (parsed && Array.isArray(parsed.certificates)) {
                 if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
                 if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
+                if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
+                if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
                 return parsed;
             }
         }
@@ -83,6 +87,8 @@ async function loadFromSupabaseStorage() {
             if (parsed && Array.isArray(parsed.certificates)) {
                 if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
                 if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
+                if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
+                if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
                 return parsed;
             }
         }
@@ -169,19 +175,29 @@ async function getAllData() {
         const notifMap = new Map((base.notifications || []).map(n => [String(n.id), n]));
         (cloudData.notifications || []).forEach(n => notifMap.set(String(n.id), n));
 
+        const batchMap = new Map((base.certificate_batches || []).map(b => [String(b.id), b]));
+        (cloudData.certificate_batches || []).forEach(b => batchMap.set(String(b.id), b));
+
+        const auditMap = new Map((base.certificate_audit_logs || []).map(a => [String(a.id || (a.created_at + a.certificate_number)), a]));
+        (cloudData.certificate_audit_logs || []).forEach(a => auditMap.set(String(a.id || (a.created_at + a.certificate_number)), a));
+
         base = {
             event_feedbacks: Array.from(evMap.values()).filter(e => !deletedIdsSet.has(String(e.id))),
             feedback_submissions: Array.from(subMap.values()).filter(s => !deletedIdsSet.has(String(s.feedback_id))),
-            certificates: Array.from(certMap.values()).filter(c => !deletedIdsSet.has(String(c.feedback_id))),
+            certificates: Array.from(certMap.values()).filter(c => !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id))),
             notifications: Array.from(notifMap.values()).filter(n => !deletedIdsSet.has(String(n.event_id))),
-            deleted_event_ids: Array.from(deletedIdsSet)
+            deleted_event_ids: Array.from(deletedIdsSet),
+            certificate_batches: Array.from(batchMap.values()),
+            certificate_audit_logs: Array.from(auditMap.values())
         };
     } else {
         base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));
         base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
-        base.certificates = (base.certificates || []).filter(c => !deletedIdsSet.has(String(c.feedback_id)));
+        base.certificates = (base.certificates || []).filter(c => !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id)));
         base.notifications = (base.notifications || []).filter(n => !deletedIdsSet.has(String(n.event_id)));
         base.deleted_event_ids = Array.from(deletedIdsSet);
+        if (!Array.isArray(base.certificate_batches)) base.certificate_batches = [];
+        if (!Array.isArray(base.certificate_audit_logs)) base.certificate_audit_logs = [];
     }
 
     // Merge Supabase PostgreSQL tables if accessible
@@ -191,7 +207,7 @@ async function getAllData() {
     if (deletedIdsSet.size > 0) {
         base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));
         base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
-        base.certificates = (base.certificates || []).filter(c => !deletedIdsSet.has(String(c.feedback_id)));
+        base.certificates = (base.certificates || []).filter(c => !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id)));
         base.notifications = (base.notifications || []).filter(n => !deletedIdsSet.has(String(n.event_id)));
     }
 
@@ -213,6 +229,11 @@ async function commitData(data) {
         try {
             if (data.certificates && data.certificates.length > 0) {
                 await client.from("certificates").upsert(data.certificates, { onConflict: "certificate_number" });
+            }
+        } catch (e) {}
+        try {
+            if (data.certificate_batches && data.certificate_batches.length > 0) {
+                await client.from("certificate_batches").upsert(data.certificate_batches, { onConflict: "id" });
             }
         } catch (e) {}
         try {
@@ -1942,6 +1963,589 @@ async function updateEventFeedbackDetails(eventId, updateData) {
     return ev;
 }
 
+// ============================================================
+// UNIQUE CERTIFICATE ID GENERATOR (CRYPTOGRAPHIC & COLLISION RESISTANT)
+// Format: RIT-[DEPT]-[YEAR]-[TOKEN] e.g. RIT-CSBS-2026-A83F192C
+// ============================================================
+function generateUniqueCertificateId(year, departmentCode = "CSBS", existingCerts = []) {
+    const y = year || new Date().getFullYear();
+    const dept = (departmentCode || "CSBS").toUpperCase().replace(/[^A-Z0-9]/g, "") || "CSBS";
+    const prefix = `RIT-${dept}-${y}-`;
+    const existingIds = new Set((existingCerts || []).map(c => (c && c.certificate_number ? c.certificate_number.toUpperCase() : "")));
+
+    for (let attempt = 0; attempt < 100; attempt++) {
+        const token = crypto.randomBytes(4).toString("hex").toUpperCase();
+        const candidate = `${prefix}${token}`;
+        if (!existingIds.has(candidate)) {
+            existingIds.add(candidate);
+            return candidate;
+        }
+    }
+    return `${prefix}${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
+}
+
+function parseDateString(val) {
+    if (!val) return null;
+    if (val instanceof Date && !isNaN(val.getTime())) {
+        return val.toISOString().split("T")[0];
+    }
+    const str = String(val).trim();
+    if (!str) return null;
+    
+    // Check DD/MM/YYYY or DD-MM-YYYY
+    const dmy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (dmy) {
+        const day = parseInt(dmy[1], 10);
+        const month = parseInt(dmy[2], 10) - 1;
+        const year = parseInt(dmy[3], 10);
+        const d = new Date(year, month, day);
+        if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+    }
+
+    // Try standard ISO
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+        return d.toISOString().split("T")[0];
+    }
+    return null;
+}
+
+// ============================================================
+// SPREADSHEET BATCH RECORD VALIDATOR & DUPLICATE DETECTOR
+// ============================================================
+async function validateBatchRecords(records, customExisting = null) {
+    const data = await getAllData();
+    const allCerts = customExisting || data.certificates || [];
+
+    // Map existing non-revoked certs: reg::event -> cert
+    const existingMap = new Map();
+    allCerts.forEach(c => {
+        if (!c || c.status === "Revoked") return;
+        const reg = (c.register_number || "").trim().toLowerCase();
+        const ev = (c.event_name || "").trim().toLowerCase();
+        if (reg && ev) {
+            existingMap.set(`${reg}::${ev}`, c);
+        }
+    });
+
+    const intraBatchMap = new Map();
+    let validCount = 0;
+    let invalidCount = 0;
+    let duplicateCount = 0;
+
+function sanitizeCellValue(val) {
+    if (val === null || val === undefined) return "";
+    let str = String(val).trim();
+    if (/^[=+\-@\t\r]/.test(str)) {
+        str = "'" + str; // Prefix apostrophe to prevent execution in spreadsheet software
+    }
+    return str;
+}
+
+    const validated = (records || []).map((row, idx) => {
+        const rowNum = idx + 1;
+        const errors = [];
+        const warnings = [];
+
+        const studentName = sanitizeCellValue(
+            row.student_name || row['Student Name'] || row.studentName || row.Student_Name || row.name || row.Name || ""
+        );
+        const registerNumber = sanitizeCellValue(
+            row.register_number || row['Register Number'] || row.registerNumber || row['Register No'] || row.reg_no || row['Reg No'] || row.Reg_No || ""
+        ).toUpperCase();
+        const department = sanitizeCellValue(
+            row.department || row.Department || row['Department'] || row.dept || row.Dept || "Computer Science and Business Systems"
+        );
+        const academicYear = sanitizeCellValue(
+            row.academic_year || row['Academic Year'] || row.academicYear || row.Academic_Year || "2026-27"
+        );
+        const eventName = sanitizeCellValue(
+            row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || ""
+        );
+        const rawEventDate = sanitizeCellValue(
+            row.event_date || row['Event Date'] || row.eventDate || row.Event_Date || row.date || row.Date || ""
+        );
+        const participationType = sanitizeCellValue(
+            row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || row.Participation_Type || "Participation"
+        );
+        const rawIssueDate = sanitizeCellValue(
+            row.issue_date || row['Certificate Issue Date'] || row.certificate_issue_date || row['Issue Date'] || row.issueDate || row.Certificate_Issue_Date || ""
+        );
+
+        // 1. Mandatory checks
+        if (!studentName) {
+            errors.push("Student Name is mandatory");
+        }
+        if (!registerNumber) {
+            errors.push("Register Number is mandatory");
+        }
+        if (!eventName) {
+            errors.push("Event Name is mandatory");
+        }
+
+        // 2. Date checks
+        let eventDate = "";
+        if (rawEventDate) {
+            const parsed = parseDateString(rawEventDate);
+            if (!parsed) {
+                errors.push(`Invalid Event Date: "${rawEventDate}". Please use YYYY-MM-DD or DD/MM/YYYY`);
+            } else {
+                eventDate = parsed;
+            }
+        } else {
+            eventDate = new Date().toISOString().split("T")[0];
+        }
+
+        let issueDate = "";
+        if (rawIssueDate) {
+            const parsed = parseDateString(rawIssueDate);
+            if (!parsed) {
+                errors.push(`Invalid Issue Date: "${rawIssueDate}". Please use YYYY-MM-DD or DD/MM/YYYY`);
+            } else {
+                issueDate = parsed;
+            }
+        } else {
+            issueDate = eventDate || new Date().toISOString().split("T")[0];
+        }
+
+        // 3. Duplicate checks
+        let isDuplicate = false;
+        let duplicateType = null;
+        let duplicateMessage = "";
+        const regLower = registerNumber.toLowerCase();
+        const evLower = eventName.toLowerCase();
+        const dupKey = `${regLower}::${evLower}`;
+
+        if (regLower && evLower) {
+            if (intraBatchMap.has(dupKey)) {
+                isDuplicate = true;
+                duplicateType = 'file';
+                const priorRow = intraBatchMap.get(dupKey);
+                duplicateMessage = `Duplicate in file: Student already listed on Row ${priorRow} for this event`;
+                warnings.push(duplicateMessage);
+            } else {
+                intraBatchMap.set(dupKey, rowNum);
+            }
+
+            if (!isDuplicate && existingMap.has(dupKey)) {
+                const priorCert = existingMap.get(dupKey);
+                isDuplicate = true;
+                duplicateType = 'database';
+                duplicateMessage = `Duplicate: Certificate #${priorCert.certificate_number} already issued on ${priorCert.issue_date}`;
+                warnings.push(duplicateMessage);
+            }
+        }
+
+        const isValid = errors.length === 0;
+        if (isValid && !isDuplicate) {
+            validCount++;
+        }
+        if (!isValid) {
+            invalidCount++;
+        }
+        if (isDuplicate) {
+            duplicateCount++;
+        }
+
+        return {
+            row_index: rowNum,
+            rowNumber: rowNum,
+            student_name: studentName,
+            studentName: studentName,
+            register_number: registerNumber,
+            registerNumber: registerNumber,
+            department: department,
+            academic_year: academicYear,
+            academicYear: academicYear,
+            event_name: eventName,
+            eventName: eventName,
+            event_date: eventDate,
+            eventDate: eventDate,
+            participation_type: participationType,
+            participationType: participationType,
+            achievement: participationType,
+            issue_date: issueDate,
+            issueDate: issueDate,
+            is_valid: isValid,
+            isValid: isValid,
+            is_duplicate: isDuplicate,
+            isDuplicate: isDuplicate,
+            duplicate_type: duplicateType,
+            duplicateType: duplicateType,
+            errors: errors,
+            warnings: warnings,
+            raw_input: row
+        };
+    });
+
+    return {
+        total_records: validated.length,
+        valid_records: validCount,
+        invalid_records: invalidCount,
+        duplicate_records: duplicateCount,
+        summary: {
+            totalRows: validated.length,
+            validCount: validCount,
+            invalidCount: invalidCount,
+            duplicateCount: duplicateCount
+        },
+        records: validated
+    };
+}
+
+// ============================================================
+// BULK CERTIFICATE ISSUANCE ENGINE
+// ============================================================
+async function issueBulkCertificates({
+    batch_title = "Bulk Certificate Generation",
+    batchName,
+    event_name,
+    eventTitle,
+    event_date,
+    category = "Placement Training",
+    academic_year = "2026-27",
+    signatory_1_name = "Dr. D. Kesavaraja",
+    signatory_1_title = "Head of Department (HOD)",
+    signatory_2_name = "Dr. S. Rajakarunakarun",
+    signatory_2_title = "Vice Principal / Patron",
+    signatory_3_name = "Dr. L. Ganesan",
+    signatory_3_title = "Principal / Chief Patron",
+    signatories = null,
+    certificate_title = "CERTIFICATE OF PARTICIPATION",
+    certificateTitle,
+    certificate_type = "Participation",
+    allow_duplicates = false,
+    records = [],
+    issuer = {}
+}) {
+    if (!Array.isArray(records) || records.length === 0) {
+        throw new Error("No student records provided for certificate generation.");
+    }
+
+    const effectiveBatchTitle = batch_title || batchName || "Bulk Certificate Generation";
+    const effectiveEventName = event_name || eventTitle || "";
+    const effectiveCertTitle = certificate_title || certificateTitle || "CERTIFICATE OF PARTICIPATION";
+
+    const sig1Name = (signatories && signatories.signatory1 && signatories.signatory1.name) || signatory_1_name || "Dr. D. Kesavaraja";
+    const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Head of Department (HOD)";
+    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Dr. S. Rajakarunakarun";
+    const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "Vice Principal / Patron";
+    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "Dr. L. Ganesan";
+    const sig3Title = (signatories && signatories.signatory3 && signatories.signatory3.title) || signatory_3_title || "Principal / Chief Patron";
+
+    const data = await getAllData();
+    if (!Array.isArray(data.certificates)) data.certificates = [];
+    if (!Array.isArray(data.certificate_batches)) data.certificate_batches = [];
+    if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
+
+    const validationResult = await validateBatchRecords(records, data.certificates);
+    const validRecords = validationResult.records.filter(r => r.is_valid && (allow_duplicates || !r.is_duplicate));
+
+    if (validRecords.length === 0) {
+        throw new Error("None of the submitted records are eligible for generation. Please fix invalid records or allow duplicate override.");
+    }
+
+    const timestamp = Date.now();
+    const batchId = `BATCH-${timestamp.toString(36).toUpperCase()}-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+    const issuedCerts = [];
+    const failedRecords = [];
+
+    const allStudents = await getAllStudentUsers();
+    const studentUserMap = new Map();
+    allStudents.forEach(s => {
+        if (s.register_number) studentUserMap.set(String(s.register_number).trim().toUpperCase(), s);
+        if (s.email) studentUserMap.set(String(s.email).trim().toLowerCase(), s);
+    });
+
+    const issuedAt = new Date().toISOString();
+    const issueDateStr = issuedAt.split("T")[0];
+
+    for (let i = 0; i < validRecords.length; i++) {
+        const row = validRecords[i];
+        try {
+            const evDate = row.event_date || event_date || issueDateStr;
+            const certYear = evDate ? new Date(evDate).getFullYear() : new Date().getFullYear();
+            const certId = generateUniqueCertificateId(certYear, "CSBS", data.certificates);
+            const qrToken = crypto.randomBytes(16).toString("hex");
+
+            const regNo = String(row.register_number || "").trim().toUpperCase();
+            const stuUser = studentUserMap.get(regNo) || null;
+
+            const newCert = {
+                id: timestamp + i * 10 + Math.floor(Math.random() * 9),
+                batch_id: batchId,
+                user_id: stuUser ? stuUser.id : null,
+                feedback_id: null,
+                certificate_number: certId,
+                certificate_title: row.certificate_title || effectiveCertTitle,
+                certificate_type: row.participation_type || row.achievement || certificate_type || "Participation",
+                achievement: row.achievement || row.participation_type || "Participation",
+                college_name: "RAMCO INSTITUTE OF TECHNOLOGY",
+                department: row.department || "Computer Science and Business Systems",
+                student_name: row.student_name,
+                register_number: regNo,
+                student_id: stuUser ? stuUser.id : regNo,
+                student_year: (stuUser && stuUser.year) || 4,
+                student_email: (stuUser && stuUser.email) || "",
+                event_name: row.event_name || effectiveEventName,
+                event_code: "CSBS",
+                event_date: evDate,
+                event_venue: "Department Placement Lab / Online",
+                category: category,
+                academic_year: row.academic_year || academic_year || "2026-27",
+                issue_date: row.issue_date || issueDateStr,
+                coordinator: issuer.full_name || issuer.name || "Faculty Coordinator",
+                signatory_title: sig1Title,
+                signatory_1_name: sig1Name,
+                signatory1_name: sig1Name,
+                signatory_1_title: sig1Title,
+                signatory1_title: sig1Title,
+                signatory_2_name: sig2Name,
+                signatory2_name: sig2Name,
+                signatory_2_title: sig2Title,
+                signatory2_title: sig2Title,
+                signatory_3_name: sig3Name,
+                signatory3_name: sig3Name,
+                signatory_3_title: sig3Title,
+                signatory3_title: sig3Title,
+                status: "Digitally Verified",
+                verification_status: "VERIFIED",
+                revoked_at: null,
+                revoked_by: null,
+                revocation_reason: null,
+                issued_by_id: issuer.id || 0,
+                issued_by_name: issuer.full_name || issuer.name || "Faculty Authority",
+                issued_by_role: issuer.role || issuer.designation || "faculty_coordinator",
+                qr_token: qrToken,
+                created_at: issuedAt,
+                updated_at: issuedAt
+            };
+
+            data.certificates.unshift(newCert);
+            issuedCerts.push(newCert);
+        } catch (err) {
+            failedRecords.push({
+                row_index: row.row_index,
+                student_name: row.student_name,
+                register_number: row.register_number,
+                error: err.message
+            });
+        }
+    }
+
+    const batchRecord = {
+        id: batchId,
+        batch_title: effectiveBatchTitle,
+        event_name: effectiveEventName || (validRecords[0] ? validRecords[0].event_name : "Department Event"),
+        event_date: event_date || (validRecords[0] ? validRecords[0].event_date : issueDateStr),
+        academic_year: academic_year,
+        total_records: records.length,
+        generated_count: issuedCerts.length,
+        failed_count: failedRecords.length + (validationResult.invalid_records || 0),
+        issued_by_id: issuer.id || 0,
+        issued_by_name: issuer.full_name || issuer.name || "Faculty Coordinator",
+        created_at: issuedAt
+    };
+    data.certificate_batches.unshift(batchRecord);
+
+    const auditRecord = {
+        id: timestamp + 999,
+        action: "BATCH_CERTIFICATE_ISSUANCE",
+        batch_id: batchId,
+        actor_id: issuer.id || 0,
+        actor_name: issuer.full_name || issuer.name || "Faculty Coordinator",
+        actor_role: issuer.role || issuer.designation || "faculty_coordinator",
+        total_issued: issuedCerts.length,
+        created_at: issuedAt,
+        details: {
+            event_name: batchRecord.event_name,
+            total_attempted: records.length,
+            generated: issuedCerts.length,
+            failed: failedRecords.length
+        }
+    };
+    data.certificate_audit_logs.unshift(auditRecord);
+
+    await commitData(data);
+
+    return {
+        success: true,
+        batch_id: batchId,
+        batchId: batchId,
+        batch: batchRecord,
+        total_issued: issuedCerts.length,
+        issuedCount: issuedCerts.length,
+        failed_count: failedRecords.length,
+        failedCount: failedRecords.length,
+        certificates: issuedCerts,
+        failed_records: failedRecords
+    };
+}
+
+// ============================================================
+// CERTIFICATE REVOCATION
+// ============================================================
+async function revokeCertificate({ certId, reason = "Institutional certificate revocation", issuer = {} }) {
+    if (!certId) throw new Error("Certificate ID is required");
+    const data = await getAllData();
+    const query = String(certId).trim().toLowerCase();
+    const cert = (data.certificates || []).find(c =>
+        (c.certificate_number && c.certificate_number.toLowerCase() === query) ||
+        String(c.id) === query ||
+        (c.qr_token && c.qr_token.toLowerCase() === query)
+    );
+
+    if (!cert) {
+        throw new Error(`Certificate "${certId}" was not found in institutional records.`);
+    }
+
+    cert.status = "Revoked";
+    cert.revoked_at = new Date().toISOString();
+    cert.revoked_by = issuer.full_name || issuer.name || issuer.email || "Faculty Authority";
+    cert.revocation_reason = reason;
+    cert.updated_at = new Date().toISOString();
+
+    const auditEntry = {
+        id: Date.now() + Math.floor(Math.random() * 500),
+        certificate_number: cert.certificate_number,
+        action: "REVOKED",
+        actor_id: issuer.id || 0,
+        actor_name: issuer.full_name || issuer.name || "Faculty Authority",
+        performed_by_name: issuer.full_name || issuer.name || "Faculty Authority",
+        actor_role: issuer.role || issuer.designation || "faculty",
+        reason: reason,
+        created_at: new Date().toISOString(),
+        details: {
+            student_name: cert.student_name,
+            register_number: cert.register_number,
+            event_name: cert.event_name
+        }
+    };
+    if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
+    data.certificate_audit_logs.unshift(auditEntry);
+
+    await commitData(data);
+    return {
+        success: true,
+        certificate: cert,
+        ...cert
+    };
+}
+
+// ============================================================
+// PUBLIC CERTIFICATE VERIFICATION (NO LOGIN REQUIRED)
+// Exposes only approved public credential attributes
+// ============================================================
+async function getPublicCertificateDetails(certId) {
+    if (!certId || !String(certId).trim()) {
+        return {
+            found: false,
+            status: "NOT_FOUND",
+            message: "Certificate not found. Please check the certificate ID."
+        };
+    }
+
+    const query = String(certId).trim().toLowerCase();
+    const queryClean = query.replace(/[^a-z0-9]/g, "");
+    const data = await getAllData();
+    const allCerts = data.certificates || [];
+
+    const matchedCert = allCerts.find(c => {
+        if (!c) return false;
+        const cNum = (c.certificate_number || "").toLowerCase();
+        const cNumClean = cNum.replace(/[^a-z0-9]/g, "");
+        const qr = (c.qr_token || "").toLowerCase();
+        return cNum === query || (queryClean.length >= 6 && cNumClean === queryClean) || qr === query || String(c.id) === query;
+    });
+
+    if (!matchedCert) {
+        return {
+            found: false,
+            status: "NOT_FOUND",
+            message: "Certificate not found. Please check the certificate ID."
+        };
+    }
+
+    const isRevoked = matchedCert.status === "Revoked";
+    const publicInfo = {
+        certificate_id: matchedCert.certificate_number,
+        certificateId: matchedCert.certificate_number,
+        certificate_number: matchedCert.certificate_number,
+        certificateNumber: matchedCert.certificate_number,
+        certificate_title: matchedCert.certificate_title || "CERTIFICATE OF PARTICIPATION",
+        certificateTitle: matchedCert.certificate_title || "CERTIFICATE OF PARTICIPATION",
+        certificate_type: matchedCert.certificate_type || "Participation",
+        certificateType: matchedCert.certificate_type || "Participation",
+        achievement: matchedCert.achievement || matchedCert.certificate_type || "Participation",
+        college_name: matchedCert.college_name || "RAMCO INSTITUTE OF TECHNOLOGY",
+        collegeName: matchedCert.college_name || "RAMCO INSTITUTE OF TECHNOLOGY",
+        department: matchedCert.department || "Computer Science and Business Systems",
+        student_name: matchedCert.student_name,
+        studentName: matchedCert.student_name,
+        event_name: matchedCert.event_name,
+        eventName: matchedCert.event_name,
+        event_date: matchedCert.event_date,
+        eventDate: matchedCert.event_date,
+        issue_date: matchedCert.issue_date,
+        issueDate: matchedCert.issue_date,
+        signatory_title: matchedCert.signatory_title || "Head of Department - CSBS",
+        signatoryTitle: matchedCert.signatory_title || "Head of Department - CSBS",
+        signatory_1_name: matchedCert.signatory_1_name || "Dr. D. Kesavaraja",
+        signatory1_name: matchedCert.signatory_1_name || "Dr. D. Kesavaraja",
+        signatory_1_title: matchedCert.signatory_1_title || "Head of Department (HOD)",
+        signatory1_title: matchedCert.signatory_1_title || "Head of Department (HOD)",
+        signatory_2_name: matchedCert.signatory_2_name || "Dr. S. Rajakarunakarun",
+        signatory2_name: matchedCert.signatory_2_name || "Dr. S. Rajakarunakarun",
+        signatory_2_title: matchedCert.signatory_2_title || "Vice Principal / Patron",
+        signatory2_title: matchedCert.signatory_2_title || "Vice Principal / Patron",
+        signatory_3_name: matchedCert.signatory_3_name || "Dr. L. Ganesan",
+        signatory3_name: matchedCert.signatory_3_name || "Dr. L. Ganesan",
+        signatory_3_title: matchedCert.signatory_3_title || "Principal / Chief Patron",
+        signatory3_title: matchedCert.signatory_3_title || "Principal / Chief Patron",
+        status: isRevoked ? "Revoked" : (matchedCert.status || "Digitally Verified"),
+        verification_status: isRevoked ? "REVOKED" : "VERIFIED",
+        revoked_at: matchedCert.revoked_at || null,
+        revokedAt: matchedCert.revoked_at || null,
+        revocation_reason: matchedCert.revocation_reason || null,
+        revocationReason: matchedCert.revocation_reason || null,
+        qr_token: matchedCert.qr_token || null
+    };
+
+    if (isRevoked) {
+        return {
+            found: true,
+            status: "REVOKED",
+            message: "Certificate Revoked",
+            certificate: publicInfo
+        };
+    }
+
+    return {
+        found: true,
+        status: "VERIFIED",
+        message: "Verified Institutional Certificate",
+        certificate: publicInfo
+    };
+}
+
+// ============================================================
+// BATCH MANAGEMENT HELPERS
+// ============================================================
+async function getCertificateBatches() {
+    const data = await getAllData();
+    const batches = data.certificate_batches || [];
+    batches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return batches;
+}
+
+async function getBatchCertificates(batchId) {
+    const data = await getAllData();
+    const strBatchId = String(batchId);
+    return (data.certificates || []).filter(c => String(c.batch_id) === strBatchId);
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
@@ -1960,11 +2564,19 @@ module.exports = {
     issueCertificateToStudent,
     getFeedbackSubmissionsForAdmin,
     generateCertificateNumber,
+    generateUniqueCertificateId,
     verifyAndGetCertificateDetails,
     getAllCertificates,
     getAllStudentUsers,
     filterEligibleStudents,
     inferEventCategory,
     getStudentCertificateRecords,
-    updateCertificateDetails
+    updateCertificateDetails,
+    validateBatchRecords,
+    issueBulkCertificates,
+    revokeCertificate,
+    getPublicCertificateDetails,
+    getCertificateBatches,
+    getBatchCertificates,
+    getAllData
 };

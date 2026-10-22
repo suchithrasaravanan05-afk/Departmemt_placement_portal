@@ -307,9 +307,9 @@ function escapeHtml(str) {
 }
 
 function switchAdminTab(tabName, initialStatusFilter = null) {
-  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed', 'eventFeedback', 'certLookup', 'settings'];
-  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', eventFeedback: 'tabBtnEventFeedback', certLookup: 'tabBtnCertLookup', settings: 'tabBtnSettings' };
-  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', eventFeedback: 'adminTabEventFeedback', certLookup: 'adminTabCertLookup', settings: 'adminTabSettings' };
+  const tabs   = ['analytics', 'students', 'drives', 'applications', 'placed', 'eventFeedback', 'certLookup', 'certGen', 'settings'];
+  const tabMap = { analytics: 'tabBtnAnalytics', students: 'tabBtnStudents', drives: 'tabBtnDrives', applications: 'tabBtnApplications', placed: 'tabBtnPlaced', eventFeedback: 'tabBtnEventFeedback', certLookup: 'tabBtnCertLookup', certGen: 'tabBtnCertGen', settings: 'tabBtnSettings' };
+  const panMap = { analytics: 'adminTabAnalytics', students: 'adminTabStudents', drives: 'adminTabDrives', applications: 'adminTabApplications', placed: 'adminTabPlaced', eventFeedback: 'adminTabEventFeedback', certLookup: 'adminTabCertLookup', certGen: 'adminTabCertGen', settings: 'adminTabSettings' };
 
   tabs.forEach(t => {
     el(panMap[t])?.classList.toggle('hidden', t !== tabName);
@@ -330,6 +330,11 @@ function switchAdminTab(tabName, initialStatusFilter = null) {
   if (tabName === 'certLookup') {
     loadStudentCertificateRecords();
     setTimeout(() => el('certLookupInput')?.focus(), 80);
+  }
+  if (tabName === 'certGen') {
+    if (typeof initCertificateGenerationTab === 'function') {
+      initCertificateGenerationTab();
+    }
   }
   if (tabName === 'settings')     renderSettingsTab();
 }

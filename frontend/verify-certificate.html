@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate Verification Portal — Ramco Institute of Technology</title>
+  <meta name="description" content="Official public certificate verification portal for Ramco Institute of Technology, Department of Computer Science and Business Systems.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="rit_logo_data.js"></script>
+  <style>
+    :root {
+      --primary: #581C87;
+      --primary-dark: #3B0764;
+      --primary-light: #FAF5FF;
+      --primary-glow: rgba(126, 34, 206, 0.25);
+      --accent-gold: #b45309;
+      --accent-purple: #7E22CE;
+      --emerald: #059669;
+      --emerald-dark: #065f46;
+      --emerald-light: #ecfdf5;
+      --crimson: #dc2626;
+      --crimson-dark: #991b1b;
+      --crimson-light: #fef2f2;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #FAF5FF;
+      color: #1E1B4B;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 15% 20%, rgba(126, 34, 206, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 85% 80%, rgba(88, 28, 135, 0.06) 0%, transparent 45%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Top Institutional Header */
+    .top-header {
+      background: linear-gradient(135deg, #3B0764 0%, #4C1D95 55%, #581C87 100%);
+      border-bottom: 2.5px solid #7E22CE;
+      box-shadow: 0 4px 20px rgba(59, 7, 100, 0.3);
+      padding: 14px 24px;
+      color: #fff;
+    }
+
+    .top-header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      background: #fff;
+      padding: 3px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .brand-titles h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: #ffffff;
+      line-height: 1.25;
+    }
+
+    .brand-titles p {
+      font-size: 13px;
+      color: #E9D5FF;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Main Container */
+    .main-wrap {
+      flex: 1;
+      max-width: 940px;
+      width: 100%;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+
+    /* Search Box Card */
+    .search-card {
+      background: #ffffff;
+      border: 1px solid #E9D5FF;
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(88, 28, 135, 0.08);
+      margin-bottom: 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .search-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #7E22CE, #C084FC, #581C87);
+    }
+
+    .search-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #3B0764;
+      margin-bottom: 8px;
+    }
+
+    .search-desc {
+      font-size: 14px;
+      color: #64748B;
+      max-width: 620px;
+      margin: 0 auto 24px;
+      line-height: 1.5;
+    }
+
+    .search-form {
+      display: flex;
+      max-width: 640px;
+      margin: 0 auto;
+      gap: 10px;
+      position: relative;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input-wrap i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7E22CE;
+      font-size: 17px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 18px 14px 46px;
+      font-size: 15px;
+      border: 2px solid #D8B4FE;
+      border-radius: 12px;
+      outline: none;
+      font-weight: 600;
+      color: #0F172A;
+      background: #FAF5FF;
+      transition: all 0.2s ease;
+      font-family: monospace, sans-serif;
+    }
+
+    .search-input:focus {
+      border-color: #7E22CE;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(126, 34, 206, 0.15);
+    }
+
+    .btn-verify {
+      background: linear-gradient(135deg, #581C87, #7E22CE);
+      color: #ffffff;
+      border: none;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(88, 28, 135, 0.28);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-verify:hover {
+      background: linear-gradient(135deg, #4C1D95, #6B21A8);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(88, 28, 135, 0.35);
+    }
+
+    .btn-verify:active {
+      transform: translateY(0);
+    }
+
+    .btn-verify:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .sample-pill-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #64748B;
+      flex-wrap: wrap;
+    }
+
+    .sample-pill {
+      background: #F3E8FF;
+      color: #6B21A8;
+      border: 1px solid #D8B4FE;
+      padding: 3px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: monospace;
+      transition: background 0.15s;
+    }
+
+    .sample-pill:hover {
+      background: #E9D5FF;
+    }
+
+    /* Result Cards */
+    .result-container {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Status: VERIFIED */
+    .card-verified {
+      background: #ffffff;
+      border: 2px solid #059669;
+      border-radius: 20px;
+      box-shadow: 0 12px 36px rgba(5, 150, 105, 0.12);
+      overflow: hidden;
+    }
+
+    .card-verified-header {
+      background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+      color: #ffffff;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge-verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge-verified i {
+      font-size: 24px;
+      color: #6ee7b7;
+    }
+
+    .cert-id-tag {
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .verified-body {
+      padding: 32px;
+    }
+
+    .verified-hero {
+      text-align: center;
+      padding: 24px;
+      background: #f0fdf4;
+      border-radius: 14px;
+      border: 1px dashed #86efac;
+      margin-bottom: 28px;
+    }
+
+    .verified-hero h2 {
+      font-size: 25px;
+      font-weight: 900;
+      color: #14532d;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .verified-hero .dept-line {
+      font-size: 15px;
+      font-weight: 700;
+      color: #15803d;
+    }
+
+    .verified-hero .inst-line {
+      font-size: 13px;
+      color: #166534;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* Details Grid */
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .detail-item {
+      background: #FAF5FF;
+      border: 1px solid #E9D5FF;
+      border-radius: 12px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .detail-item:hover {
+      border-color: #C084FC;
+    }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #6B21A8;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .detail-value {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #0F172A;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .signatories-box {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 18px 24px;
+      margin-bottom: 28px;
+    }
+
+    .signatories-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #475569;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .signatories-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .signatory-item {
+      border-left: 3px solid #7E22CE;
+      padding-left: 12px;
+    }
+
+    .signatory-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1E1B4B;
+    }
+
+    .signatory-role {
+      font-size: 12px;
+      color: #64748B;
+      margin-top: 2px;
+    }
+
+    .verified-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding-top: 10px;
+      border-top: 1px solid #E2E8F0;
+    }
+
+    .btn-action {
+      padding: 11px 22px;
+      font-size: 13.5px;
+      font-weight: 700;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-pdf {
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
+    }
+
+    .btn-pdf:hover {
+      background: #065f46;
+      transform: translateY(-1px);
+    }
+
+    .btn-share {
+      background: #F3E8FF;
+      color: #6B21A8;
+      border: 1px solid #D8B4FE;
+    }
+
+    .btn-share:hover {
+      background: #E9D5FF;
+    }
+
+    /* Status: REVOKED */
+    .card-revoked {
+      background: #ffffff;
+      border: 2px solid #DC2626;
+      border-radius: 20px;
+      box-shadow: 0 12px 36px rgba(220, 38, 38, 0.12);
+      overflow: hidden;
+    }
+
+    .card-revoked-header {
+      background: linear-gradient(135deg, #991B1B 0%, #DC2626 100%);
+      color: #ffffff;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge-revoked {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge-revoked i {
+      font-size: 24px;
+      color: #fca5a5;
+    }
+
+    .revoked-body {
+      padding: 32px;
+    }
+
+    .revoked-alert-box {
+      background: #FEF2F2;
+      border: 1px solid #FCA5A5;
+      border-radius: 12px;
+      padding: 20px;
+      color: #991B1B;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .revoked-alert-box i {
+      font-size: 24px;
+      margin-top: 2px;
+      color: #DC2626;
+    }
+
+    .revoked-alert-box h3 {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .revoked-alert-box p {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #7F1D1D;
+    }
+
+    /* Status: NOT FOUND */
+    .card-notfound {
+      background: #ffffff;
+      border: 2px solid #E2E8F0;
+      border-radius: 20px;
+      padding: 48px 32px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+
+    .notfound-icon {
+      width: 72px;
+      height: 72px;
+      background: #FEF3C7;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: #D97706;
+      font-size: 32px;
+    }
+
+    .notfound-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1E293B;
+      margin-bottom: 10px;
+    }
+
+    .notfound-msg {
+      font-size: 14px;
+      color: #64748B;
+      max-width: 520px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+    }
+
+    .tips-box {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: left;
+      font-size: 13px;
+      color: #475569;
+    }
+
+    .tips-box ul {
+      margin-top: 8px;
+      padding-left: 20px;
+    }
+
+    .tips-box li {
+      margin-bottom: 4px;
+    }
+
+    /* Footer */
+    .site-footer {
+      background: #ffffff;
+      border-top: 1px solid #E9D5FF;
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: #64748B;
+      margin-top: auto;
+    }
+
+    .site-footer a {
+      color: #581C87;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .site-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1E293B;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      z-index: 1000;
+      display: none;
+      animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Institutional Header -->
+  <header class="top-header">
+    <div class="top-header-inner">
+      <div class="brand-wrap">
+        <img src="rit_logo.png" alt="RIT Logo" class="brand-logo" onerror="this.style.display='none'">
+        <div class="brand-titles">
+          <h1>RAMCO INSTITUTE OF TECHNOLOGY</h1>
+          <p>Department of Computer Science and Business Systems &bull; Credential Verification</p>
+        </div>
+      </div>
+      <div class="header-badge">
+        <i class="fa-solid fa-shield-halved"></i> Institutional Digital Verification
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrap -->
+  <main class="main-wrap">
+
+    <!-- Search Section -->
+    <section class="search-card">
+      <h2 class="search-title">Public Certificate Verification</h2>
+      <p class="search-desc">
+        Enter the unique Certificate ID printed on the institutional certificate or scan the QR code to verify its authenticity, student credentials, and issuance status.
+      </p>
+
+      <form class="search-form" id="verifyForm" onsubmit="handleVerificationSubmit(event)">
+        <div class="search-input-wrap">
+          <i class="fa-solid fa-barcode"></i>
+          <input
+            type="text"
+            id="certIdInput"
+            class="search-input"
+            placeholder="e.g. RIT-CSBS-2026-A83F192C"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          >
+        </div>
+        <button type="submit" class="btn-verify" id="btnSubmitVerify">
+          <span id="btnVerifyText"><i class="fa-solid fa-magnifying-glass"></i> Verify Certificate</span>
+          <span id="btnVerifySpinner" style="display:none;" class="spinner"></span>
+        </button>
+      </form>
+
+      <div class="sample-pill-wrap">
+        <span>Format:</span>
+        <span class="sample-pill" onclick="fillInput('RIT-CSBS-2026-')">RIT-CSBS-2026-XXXXXXXX</span>
+        <span class="sample-pill" onclick="fillInput('RIT-JAVA-2026-0001')">RIT-JAVA-2026-0001</span>
+      </div>
+    </section>
+
+    <!-- Result: Verified -->
+    <div id="resultVerified" class="result-container">
+      <div class="card-verified">
+        <div class="card-verified-header">
+          <div class="status-badge-verified">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>OFFICIALLY VERIFIED CERTIFICATE</span>
+          </div>
+          <div class="cert-id-tag" id="verifiedCertId">—</div>
+        </div>
+
+        <div class="verified-body">
+          <div class="verified-hero">
+            <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#059669;margin-bottom:4px;text-transform:uppercase;">
+              Authentic Institutional Credential
+            </div>
+            <h2 id="verifiedStudentName">—</h2>
+            <div class="dept-line" id="verifiedDepartment">Department of Computer Science and Business Systems</div>
+            <div class="inst-line">Ramco Institute of Technology &bull; Rajapalayam, Tamil Nadu</div>
+          </div>
+
+          <!-- Details Grid -->
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-award"></i> Certificate Title</div>
+              <div class="detail-value" id="verifiedCertTitle">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-star"></i> Achievement / Type</div>
+              <div class="detail-value" id="verifiedCertType">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-calendar-check"></i> Event Name</div>
+              <div class="detail-value" id="verifiedEventName">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-calendar-day"></i> Event Date</div>
+              <div class="detail-value" id="verifiedEventDate">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-calendar-plus"></i> Date of Issue</div>
+              <div class="detail-value" id="verifiedIssueDate">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-shield-halved"></i> Verification Status</div>
+              <div class="detail-value" style="color:#059669;" id="verifiedStatusText">
+                <i class="fa-solid fa-circle-check"></i> Digitally Verified
+              </div>
+            </div>
+          </div>
+
+          <!-- Signatories Box -->
+          <div class="signatories-box">
+            <div class="signatories-title">
+              <i class="fa-solid fa-signature"></i> Authorized Institutional Signatories
+            </div>
+            <div class="signatories-list">
+              <div class="signatory-item">
+                <div class="signatory-name" id="verifiedSig1Name">Dr. D. Kesavaraja</div>
+                <div class="signatory-role" id="verifiedSig1Title">Head of Department (HOD)</div>
+              </div>
+              <div class="signatory-item">
+                <div class="signatory-name" id="verifiedSig2Name">Dr. S. Rajakarunakarun</div>
+                <div class="signatory-role" id="verifiedSig2Title">Vice Principal / Patron</div>
+              </div>
+              <div class="signatory-item">
+                <div class="signatory-name" id="verifiedSig3Name">Dr. L. Ganesan</div>
+                <div class="signatory-role" id="verifiedSig3Title">Principal / Chief Patron</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="verified-actions">
+            <button type="button" class="btn-action btn-pdf" id="btnDownloadVerifiedPdf" onclick="downloadVerifiedCertificatePdf()">
+              <i class="fa-solid fa-file-pdf"></i> View &amp; Download Verified Certificate (PDF)
+            </button>
+            <button type="button" class="btn-action btn-share" onclick="copyVerificationLink()">
+              <i class="fa-solid fa-link"></i> Copy Verification Link
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result: Revoked -->
+    <div id="resultRevoked" class="result-container">
+      <div class="card-revoked">
+        <div class="card-revoked-header">
+          <div class="status-badge-revoked">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>CERTIFICATE REVOKED</span>
+          </div>
+          <div class="cert-id-tag" id="revokedCertId">—</div>
+        </div>
+
+        <div class="revoked-body">
+          <div class="revoked-alert-box">
+            <i class="fa-solid fa-ban"></i>
+            <div>
+              <h3>Institutional Notice: Certificate No Longer Valid</h3>
+              <p>
+                This credential was officially <strong>revoked</strong> by Ramco Institute of Technology Placement &amp; Training Administration and is no longer recognized as an active institutional credential.
+              </p>
+            </div>
+          </div>
+
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-user"></i> Student Name</div>
+              <div class="detail-value" id="revokedStudentName">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-building-columns"></i> Department</div>
+              <div class="detail-value" id="revokedDepartment">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-calendar-xmark"></i> Event Name</div>
+              <div class="detail-value" id="revokedEventName">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label"><i class="fa-solid fa-calendar-xmark"></i> Date Revoked</div>
+              <div class="detail-value" style="color:#DC2626;" id="revokedDate">—</div>
+            </div>
+            <div class="detail-item" style="grid-column: 1 / -1;">
+              <div class="detail-label"><i class="fa-solid fa-circle-info"></i> Reason for Revocation</div>
+              <div class="detail-value" style="color:#991B1B;" id="revokedReason">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result: Not Found -->
+    <div id="resultNotFound" class="result-container">
+      <div class="card-notfound">
+        <div class="notfound-icon">
+          <i class="fa-solid fa-circle-question"></i>
+        </div>
+        <h3 class="notfound-title">Certificate Not Found</h3>
+        <p class="notfound-msg" id="notFoundMsg">
+          Certificate not found. Please check the certificate ID.
+        </p>
+        <div class="tips-box">
+          <strong>Troubleshooting Tips:</strong>
+          <ul>
+            <li>Ensure the ID contains the complete prefix, e.g. <code>RIT-CSBS-2026-XXXXXXXX</code>.</li>
+            <li>Double-check for missing characters or typographical errors.</li>
+            <li>If scanned from a printed certificate, ensure the QR code was scanned accurately.</li>
+            <li>Contact the CSBS Department Placement Coordinator if you believe this is an error.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>
+      &copy; Ramco Institute of Technology &bull; Department of Computer Science and Business Systems
+    </p>
+    <p style="margin-top:6px;font-size:12px;">
+      Placement Cell Administration Portal &bull; <a href="/placement">Faculty Portal Login</a> &bull; <a href="/">Student Portal</a>
+    </p>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast-msg"></div>
+
+  <script>
+    let currentCertData = null;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    function fillInput(val) {
+      const inp = document.getElementById('certIdInput');
+      inp.value = val;
+      inp.focus();
+    }
+
+    function hideAllResults() {
+      document.getElementById('resultVerified').style.display = 'none';
+      document.getElementById('resultRevoked').style.display = 'none';
+      document.getElementById('resultNotFound').style.display = 'none';
+    }
+
+    function setLoading(isLoading) {
+      const btn = document.getElementById('btnSubmitVerify');
+      const text = document.getElementById('btnVerifyText');
+      const spinner = document.getElementById('btnVerifySpinner');
+      btn.disabled = isLoading;
+      text.style.display = isLoading ? 'none' : 'inline-flex';
+      spinner.style.display = isLoading ? 'inline-block' : 'none';
+    }
+
+    function copyVerificationLink() {
+      const url = window.location.href;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Verification URL copied to clipboard!');
+        });
+      } else {
+        showToast('Verification URL: ' + url);
+      }
+    }
+
+    // Main Verification Function
+    async function verifyCertificateId(certId) {
+      if (!certId || !certId.trim()) return;
+      const cleanId = certId.trim();
+
+      setLoading(true);
+      hideAllResults();
+
+      try {
+        const res = await fetch(`/api/public/verify-certificate/${encodeURIComponent(cleanId)}`);
+        const data = await res.json();
+
+        if (data.success && data.found && data.certificate) {
+          const cert = data.certificate;
+          currentCertData = cert;
+
+          if (data.status === 'REVOKED' || cert.status === 'Revoked') {
+            // Render Revoked State
+            document.getElementById('revokedCertId').innerText = cert.certificate_number || cleanId;
+            document.getElementById('revokedStudentName').innerText = cert.student_name || '—';
+            document.getElementById('revokedDepartment').innerText = cert.department || 'Computer Science and Business Systems';
+            document.getElementById('revokedEventName').innerText = cert.event_name || '—';
+            document.getElementById('revokedDate').innerText = cert.revoked_at ? new Date(cert.revoked_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Officially Revoked';
+            document.getElementById('revokedReason').innerText = cert.revocation_reason || 'Certificate was revoked by authorized department coordinator.';
+            document.getElementById('resultRevoked').style.display = 'block';
+          } else {
+            // Render Verified State
+            document.getElementById('verifiedCertId').innerText = cert.certificate_number || cleanId;
+            document.getElementById('verifiedStudentName').innerText = cert.student_name || '—';
+            document.getElementById('verifiedDepartment').innerText = `Department of ${cert.department || 'Computer Science and Business Systems'}`;
+            document.getElementById('verifiedCertTitle').innerText = cert.certificate_title || 'CERTIFICATE OF PARTICIPATION';
+            document.getElementById('verifiedCertType').innerText = cert.achievement || cert.certificate_type || 'Participation';
+            document.getElementById('verifiedEventName').innerText = cert.event_name || '—';
+
+            const evDate = cert.event_date ? new Date(cert.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+            document.getElementById('verifiedEventDate').innerText = evDate;
+
+            const isDate = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+            document.getElementById('verifiedIssueDate').innerText = isDate;
+
+            document.getElementById('verifiedSig1Name').innerText = cert.signatory_1_name || 'Dr. D. Kesavaraja';
+            document.getElementById('verifiedSig1Title').innerText = cert.signatory_1_title || 'Head of Department (HOD)';
+            document.getElementById('verifiedSig2Name').innerText = cert.signatory_2_name || 'Dr. S. Rajakarunakarun';
+            document.getElementById('verifiedSig2Title').innerText = cert.signatory_2_title || 'Vice Principal / Patron';
+            document.getElementById('verifiedSig3Name').innerText = cert.signatory_3_name || 'Dr. L. Ganesan';
+            document.getElementById('verifiedSig3Title').innerText = cert.signatory_3_title || 'Principal / Chief Patron';
+
+            document.getElementById('resultVerified').style.display = 'block';
+          }
+        } else {
+          // Render Not Found
+          document.getElementById('notFoundMsg').innerText = data.message || 'Certificate not found. Please check the certificate ID.';
+          document.getElementById('resultNotFound').style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Verification error:', err);
+        document.getElementById('notFoundMsg').innerText = 'Unable to connect to verification server. Please check your internet connection.';
+        document.getElementById('resultNotFound').style.display = 'block';
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function handleVerificationSubmit(e) {
+      if (e) e.preventDefault();
+      const val = document.getElementById('certIdInput').value;
+      if (val) {
+        // Update URL query string without reloading page
+        const newUrl = `${window.location.pathname}?id=${encodeURIComponent(val.trim())}`;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+        verifyCertificateId(val);
+      }
+    }
+
+    // High quality A4 PDF rendering of the verified certificate
+    async function downloadVerifiedCertificatePdf() {
+      if (!currentCertData) return;
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF generator is loading. Please try again in a moment.");
+        return;
+      }
+
+      const cert = currentCertData;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth(); // 297 mm
+      const pageHeight = doc.internal.pageSize.getHeight(); // 210 mm
+
+      // Background
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+      // Outer Border (Navy #1e1b4b)
+      doc.setDrawColor(30, 27, 75);
+      doc.setLineWidth(1.8);
+      doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
+
+      // Inner Border (Gold #b45309)
+      doc.setDrawColor(180, 83, 9);
+      doc.setLineWidth(0.8);
+      doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
+
+      // Corner marks
+      const corners = [
+        [12, 12], [pageWidth - 12, 12],
+        [12, pageHeight - 12], [pageWidth - 12, pageHeight - 12]
+      ];
+      doc.setFillColor(180, 83, 9);
+      corners.forEach(([cx, cy]) => {
+        doc.circle(cx, cy, 1.8, 'F');
+      });
+
+      // Logo
+      const logoBase64 = (typeof window !== 'undefined' && window.RIT_LOGO_BASE64) ? window.RIT_LOGO_BASE64 : null;
+      if (logoBase64) {
+        try {
+          doc.addImage(logoBase64, "PNG", 26, 17, 23, 23);
+        } catch (e) {}
+      }
+
+      // College Name Header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(21);
+      doc.setTextColor(30, 27, 75);
+      doc.text("RAMCO INSTITUTE OF TECHNOLOGY", pageWidth / 2, 26, { align: "center" });
+
+      // Department Subheader
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11.5);
+      doc.setTextColor(180, 83, 9);
+      doc.text("DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS", pageWidth / 2, 33, { align: "center" });
+
+      // Accreditation text
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai", pageWidth / 2, 38.5, { align: "center" });
+
+      // Gold Divider
+      doc.setDrawColor(180, 83, 9);
+      doc.setLineWidth(0.6);
+      doc.line(26, 43, pageWidth - 26, 43);
+
+      // Certificate Title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(180, 83, 9);
+      doc.text(cert.certificate_title || "CERTIFICATE OF PARTICIPATION", pageWidth / 2, 54, { align: "center" });
+
+      // Preamble
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(11.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text("This is to certify that", pageWidth / 2, 64, { align: "center" });
+
+      // Student Full Name
+      const studentName = (cert.student_name || "Student").toUpperCase();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(19);
+      doc.setTextColor(15, 23, 42);
+      doc.text(studentName, pageWidth / 2, 75, { align: "center" });
+
+      // Underline
+      const nameWidth = doc.getTextWidth(studentName);
+      doc.setDrawColor(15, 23, 42);
+      doc.setLineWidth(0.4);
+      doc.line((pageWidth - nameWidth) / 2, 77, (pageWidth + nameWidth) / 2, 77);
+
+      // Department Line
+      const dept = cert.department || "Computer Science and Business Systems";
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10.5);
+      doc.setTextColor(51, 65, 85);
+      doc.text(`Department of ${dept}`, pageWidth / 2, 86, { align: "center" });
+
+      // Participation Statement
+      const ach = cert.achievement || cert.certificate_type || "participation";
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`has demonstrated commendable ${ach.toLowerCase()} in the departmental event / workshop titled`, pageWidth / 2, 98, { align: "center" });
+
+      // Event Name
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14.5);
+      doc.setTextColor(30, 27, 75);
+      doc.text(`"${cert.event_name || 'Department Event'}"`, pageWidth / 2, 107.5, { align: "center" });
+
+      // Event Date
+      const eventDateStr = cert.event_date ? new Date(cert.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`conducted on ${eventDateStr}.`, pageWidth / 2, 116, { align: "center" });
+
+      // Signatories Line
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.line(26, 128, pageWidth - 26, 128);
+
+      // Signatory 1
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(30, 27, 75);
+      doc.text(cert.signatory_1_name || "Dr. D. Kesavaraja", 28, 139);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(cert.signatory_1_title || "Head of Department (HOD)", 28, 145);
+
+      // Signatory 2
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(30, 27, 75);
+      doc.text(cert.signatory_2_name || "Dr. S. Rajakarunakarun", pageWidth / 2, 139, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(cert.signatory_2_title || "Vice Principal / Patron", pageWidth / 2, 145, { align: "center" });
+
+      // Signatory 3
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(30, 27, 75);
+      doc.text(cert.signatory_3_name || "Dr. L. Ganesan", pageWidth - 28, 139, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(cert.signatory_3_title || "Principal / Chief Patron", pageWidth - 28, 145, { align: "right" });
+
+      // Footer Line
+      doc.setDrawColor(241, 245, 249);
+      doc.setLineWidth(0.4);
+      doc.line(26, 153, pageWidth - 26, 153);
+
+      // Footer - Left: Certificate ID & Issue Date
+      const certNumber = cert.certificate_number || "RIT-CSBS-CERT";
+      const issueDateStr = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB');
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text("Certificate ID / Verification Number:", 28, 163);
+
+      doc.setFont("courier", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(67, 56, 202);
+      doc.text(certNumber, 28, 169);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Date of Issue: ${issueDateStr}`, 28, 175);
+      doc.text(`Issuing Authority: Ramco Institute of Technology, CSBS Placement Cell`, 28, 180);
+
+      // QR Code Generation
+      const verifyUrl = `${window.location.origin}/verify-certificate.html?id=${encodeURIComponent(certNumber)}`;
+      try {
+        if (window.QRCode && window.QRCode.toDataURL) {
+          const qrDataUrl = await window.QRCode.toDataURL(verifyUrl, { margin: 1, width: 140 });
+          doc.addImage(qrDataUrl, "PNG", pageWidth - 60, 158, 24, 24);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(6.5);
+          doc.setTextColor(100, 116, 139);
+          doc.text("Scan to verify authenticity", pageWidth - 48, 185, { align: "center" });
+        }
+      } catch (qrErr) {
+        console.warn("QR code error:", qrErr);
+      }
+
+      // Digitally Verified Stamp Box
+      doc.setDrawColor(5, 150, 105);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(pageWidth - 125, 161, 58, 18, 2, 2);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(5, 150, 105);
+      doc.text("DIGITALLY VERIFIED", pageWidth - 125 + 29, 169, { align: "center" });
+      doc.setFontSize(6.5);
+      doc.setFont("helvetica", "normal");
+      doc.text("Institutional Digital Signature", pageWidth - 125 + 29, 174, { align: "center" });
+
+      const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${certNumber}.pdf`;
+      doc.save(safeFilename);
+    }
+
+    // Auto-verify if ID parameter is present in URL
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const certId = urlParams.get('id') || urlParams.get('certId') || urlParams.get('certificate_number');
+      if (certId) {
+        document.getElementById('certIdInput').value = certId;
+        verifyCertificateId(certId);
+      }
+    });
+  </script>
+</body>
+</html>

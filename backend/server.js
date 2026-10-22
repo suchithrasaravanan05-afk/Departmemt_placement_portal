@@ -11,6 +11,8 @@ const studentRoutes = require("./routes/student");
 const adminRoutes = require("./routes/admin");
 const socialRoutes = require("./routes/social");
 const facultyRoutes = require("./routes/faculty");
+const certificateGenRoutes = require("./routes/certificateGeneration");
+const feedbackCertificateStorage = require("./feedbackCertificateStorage");
 
 const app = express();
 const PORT = process.env.PORT || 5500;
@@ -75,9 +77,33 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 // API Routes (Support both /api/* and root paths for Vercel serverless rewrites)
 app.use(["/api/auth", "/auth"], authRoutes);
 app.use(["/api/student", "/student"], studentRoutes);
+app.use(["/api/admin/certificate-generation", "/admin/certificate-generation"], certificateGenRoutes);
 app.use(["/api/admin", "/admin"], adminRoutes);
 app.use(["/api/social", "/social"], socialRoutes);
 app.use(["/api/faculty", "/faculty"], facultyRoutes);
+
+// Dedicated Public Certificate Verification API (No authentication required)
+app.get(["/api/public/verify-certificate/:certId", "/public/verify-certificate/:certId"], async (req, res) => {
+    try {
+        const certId = req.params.certId;
+        const result = await feedbackCertificateStorage.getPublicCertificateDetails(certId);
+        if (!result.found) {
+            return res.status(404).json({
+                success: false,
+                found: false,
+                status: "NOT_FOUND",
+                message: result.message || "Certificate not found. Please check the certificate ID."
+            });
+        }
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (e) {
+        console.error("Public verify error:", e);
+        res.status(500).json({ success: false, message: "Internal server error during certificate verification." });
+    }
+});
 
 // Root Route
 app.get(["/api/health", "/health"], (req, res) => {
@@ -113,9 +139,14 @@ app.get(["/faculty-registration", "/faculty-register"], (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/faculty-registration.html"));
 });
 
-// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social, faculty)
+// Public Standalone Certificate Verification Page
+app.get(["/verify-certificate", "/verify-certificate.html", "/verify"], (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/verify-certificate.html"));
+});
+
+// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social, faculty, verify-certificate)
 app.get("*", (req, res) => {
-    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social") || req.path.startsWith("/faculty")) {
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social") || req.path.startsWith("/faculty") || req.path.startsWith("/verify")) {
         return res.status(404).json({ success: false, message: "Endpoint not found" });
     }
     res.sendFile(path.join(__dirname, "../frontend/Form.html"));

@@ -10,9 +10,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="admin_dashboard.css">
+  <link rel="stylesheet" href="css/certificate_generation.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body class="admin-body">
 
@@ -145,6 +148,9 @@
     </button>
     <button class="admin-tab-btn" id="tabBtnCertLookup" onclick="switchAdminTab('certLookup')">
       <i class="fa-solid fa-magnifying-glass-check"></i> Certificate Details
+    </button>
+    <button class="admin-tab-btn" id="tabBtnCertGen" onclick="switchAdminTab('certGen')">
+      <i class="fa-solid fa-file-circle-plus"></i> Certificate Generation
     </button>
     <button class="admin-tab-btn" id="tabBtnSettings" onclick="switchAdminTab('settings')">
       <i class="fa-solid fa-gear"></i> Settings
@@ -1823,6 +1829,786 @@
     </div>
   </div>
 
+  <!-- ========================================================
+       TAB: CERTIFICATE GENERATION & BULK ISSUANCE
+       Sections:
+       1. Upload Excel File
+       2. Preview and Validate Student Records
+       3. Certificate Template and Configuration
+       4. Generate Certificates
+       5. Generated Certificate Records
+       6. Verify Certificate
+       ======================================================== -->
+  <div id="adminTabCertGen" class="tab-content hidden">
+
+    <!-- Top Header Banner -->
+    <div class="settings-header-banner" style="background: linear-gradient(135deg, #3B0764 0%, #581C87 50%, #7E22CE 100%); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+      <div class="settings-header-title-wrap">
+        <div class="settings-header-icon" style="background: rgba(255,255,255,0.18); color: #fff;">
+          <i class="fa-solid fa-file-circle-plus"></i>
+        </div>
+        <div>
+          <h2 class="settings-title" style="color: #fff;">Bulk Certificate Generation &amp; QR Verification Hub</h2>
+          <p class="settings-subtitle" style="color: #E9D5FF;">Upload student records via Excel/CSV, validate credentials, configure certificate templates, and generate printable A4 verified credentials</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button type="button" class="btn btn-sm" onclick="downloadCertificateExcelTemplate()" style="background:#fff;color:#3B0764;font-weight:700;padding:10px 18px;border-radius:10px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,0.18);border:none;cursor:pointer;">
+          <i class="fa-solid fa-file-excel" style="color:#15803d;font-size:16px;"></i> Download Excel Template
+        </button>
+        <button type="button" class="btn btn-sm" onclick="refreshCertGenBatchesList()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:600;padding:10px 14px;border-radius:10px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <i class="fa-solid fa-rotate-right"></i> Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Role Status Notice Pill -->
+    <div id="certGenRoleNotice" style="margin-bottom:18px;padding:12px 18px;border-radius:10px;background:#FAF5FF;border:1px solid #E9D5FF;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="certGenRoleBadge" class="badge badge-purple" style="font-size:12px;padding:4px 10px;">Role: Faculty Coordinator</span>
+        <span id="certGenRoleDesc" style="font-size:13px;color:#475569;font-weight:500;">
+          Faculty Coordinators have permission to upload student spreadsheets, validate records, configure templates, issue verified certificates, and manage revocation.
+        </span>
+      </div>
+      <div style="font-size:12px;color:#64748b;font-weight:600;">
+        <i class="fa-solid fa-qrcode" style="color:#7E22CE;"></i> Dynamic QR-Based Public Verification Active
+      </div>
+    </div>
+
+    <!-- Stepper Navigation Quick Jump -->
+    <div class="certgen-stepper-wrap">
+      <button type="button" class="certgen-step-btn active" id="stepBtn1" onclick="jumpToCertGenSection('cgSecUpload')">
+        <span class="step-num">1</span> Upload Excel File
+      </button>
+      <button type="button" class="certgen-step-btn" id="stepBtn2" onclick="jumpToCertGenSection('cgSecPreview')">
+        <span class="step-num">2</span> Preview &amp; Validate Records
+      </button>
+      <button type="button" class="certgen-step-btn" id="stepBtn3" onclick="jumpToCertGenSection('cgSecTemplate')">
+        <span class="step-num">3</span> Template &amp; Configuration
+      </button>
+      <button type="button" class="certgen-step-btn" id="stepBtn4" onclick="jumpToCertGenSection('cgSecGenerate')">
+        <span class="step-num">4</span> Generate Certificates
+      </button>
+      <button type="button" class="certgen-step-btn" id="stepBtn5" onclick="jumpToCertGenSection('cgSecHistory')">
+        <span class="step-num">5</span> Generated Certificate Records
+      </button>
+      <button type="button" class="certgen-step-btn" id="stepBtn6" onclick="jumpToCertGenSection('cgSecVerify')">
+        <span class="step-num">6</span> Verify Certificate
+      </button>
+    </div>
+
+    <!-- ========================================================
+         SECTION 1: UPLOAD EXCEL FILE
+         ======================================================== -->
+    <section id="cgSecUpload" class="certgen-section-card">
+      <div class="certgen-section-header">
+        <div class="certgen-section-title-wrap">
+          <div class="certgen-section-icon">
+            <i class="fa-solid fa-file-excel"></i>
+          </div>
+          <div>
+            <h3 class="certgen-section-title">1. Upload Excel / CSV Spreadsheet</h3>
+            <p class="certgen-section-subtitle">Upload .xlsx, .xls, or .csv file containing student participation or achievement records</p>
+          </div>
+        </div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="downloadCertificateExcelTemplate()" style="display:inline-flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-download"></i> Get Sample Template (.xlsx)
+          </button>
+        </div>
+      </div>
+
+      <div class="certgen-section-body">
+        <!-- Hidden file input -->
+        <input type="file" id="certGenFileInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleCertGenFileSelected(event)">
+
+        <!-- Drag & Drop Zone -->
+        <div id="certGenDropzone" class="certgen-dropzone" onclick="document.getElementById('certGenFileInput').click()">
+          <div class="certgen-dropzone-icon">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <h4 class="certgen-dropzone-title">Click to Browse or Drag &amp; Drop Spreadsheet File Here</h4>
+          <p class="certgen-dropzone-sub">
+            Supported columns: <strong>Student Name</strong>, <strong>Register Number</strong>, <strong>Department</strong>, <strong>Academic Year</strong>, <strong>Event Name</strong>, <strong>Event Date</strong>, <strong>Achievement / Participation Type</strong>, <strong>Certificate Issue Date</strong>.
+          </p>
+          <div class="certgen-format-tags">
+            <span class="certgen-format-tag"><i class="fa-solid fa-file-excel" style="color:#15803d;"></i> .xlsx (Excel)</span>
+            <span class="certgen-format-tag"><i class="fa-solid fa-file-excel" style="color:#15803d;"></i> .xls (Legacy)</span>
+            <span class="certgen-format-tag"><i class="fa-solid fa-file-csv" style="color:#2563eb;"></i> .csv (Delimited)</span>
+            <span class="certgen-format-tag"><i class="fa-solid fa-shield-halved" style="color:#7E22CE;"></i> Max 10MB</span>
+          </div>
+        </div>
+
+        <!-- File Selected Banner -->
+        <div id="certGenFileSelectedBanner" class="certgen-file-selected" style="display:none;">
+          <div class="certgen-file-meta">
+            <i class="fa-solid fa-file-circle-check"></i>
+            <div>
+              <div class="certgen-file-name" id="certGenSelectedFileName">students_batch.xlsx</div>
+              <div class="certgen-file-size" id="certGenSelectedFileSize">0 KB</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetCertGenUploadForm()">
+              <i class="fa-solid fa-xmark"></i> Change File
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" id="btnExtractCertData" onclick="uploadAndParseCertificateSpreadsheet()" style="display:inline-flex;align-items:center;gap:6px;">
+              <span id="btnExtractText"><i class="fa-solid fa-bolt"></i> Upload &amp; Extract Data</span>
+              <span id="btnExtractSpinner" class="spinner" style="display:none;"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Batch Default Overrides Box (Optional values applied when row cells are omitted) -->
+        <div class="certgen-defaults-card">
+          <div class="certgen-defaults-title">
+            <i class="fa-solid fa-sliders"></i> Batch Default Fallbacks (Optional &mdash; auto-applies to rows missing these values)
+          </div>
+          <div class="form-grid form-grid-3">
+            <div class="form-group">
+              <label>Default Event Name</label>
+              <input type="text" id="cgDefEventName" class="form-control" placeholder="e.g. Full Stack Cloud Bootcamp 2026">
+            </div>
+            <div class="form-group">
+              <label>Default Event Date</label>
+              <input type="date" id="cgDefEventDate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Default Academic Year</label>
+              <select id="cgDefAcademicYear" class="form-control">
+                <option value="4th Year (2023-2027)">4th Year (2023-2027)</option>
+                <option value="3rd Year (2024-2028)">3rd Year (2024-2028)</option>
+                <option value="2nd Year (2025-2029)">2nd Year (2025-2029)</option>
+                <option value="1st Year (2026-2030)">1st Year (2026-2030)</option>
+                <option value="2026-27" selected>2026-27 (General Academic)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid form-grid-3" style="margin-top:10px;">
+            <div class="form-group">
+              <label>Default Department</label>
+              <input type="text" id="cgDefDepartment" class="form-control" value="Computer Science and Business Systems">
+            </div>
+            <div class="form-group">
+              <label>Default Participation Type / Award</label>
+              <input type="text" id="cgDefParticipationType" class="form-control" value="Participation" placeholder="e.g. Participation, First Prize">
+            </div>
+            <div class="form-group">
+              <label>Default Certificate Issue Date</label>
+              <input type="date" id="cgDefIssueDate" class="form-control">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION 2: PREVIEW AND VALIDATE STUDENT RECORDS
+         ======================================================== -->
+    <section id="cgSecPreview" class="certgen-section-card">
+      <div class="certgen-section-header">
+        <div class="certgen-section-title-wrap">
+          <div class="certgen-section-icon" style="background: linear-gradient(135deg, #1e293b, #334155);">
+            <i class="fa-solid fa-table-list"></i>
+          </div>
+          <div>
+            <h3 class="certgen-section-title">2. Preview and Validate Extracted Records</h3>
+            <p class="certgen-section-subtitle">Review records, inspect validation checks, make inline edits to fix errors, and verify duplicate statuses</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-outline-danger" id="btnDownloadErrorReport" onclick="downloadCertGenErrorReport()" style="display:none;align-items:center;gap:6px;">
+            <i class="fa-solid fa-file-circle-exclamation"></i> Download Error Report (.xlsx)
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addManualStudentRow()" style="display:inline-flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-user-plus"></i> Add Row
+          </button>
+        </div>
+      </div>
+
+      <div class="certgen-section-body">
+        <!-- Validation Summary KPI Ribbon -->
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:18px;">
+          <div class="stat-card" style="padding:14px 18px;border-left:4px solid #3b82f6;">
+            <div style="font-size:11.5px;font-weight:700;color:#64748b;text-transform:uppercase;">Total Records</div>
+            <div id="cgKpiTotal" style="font-size:22px;font-weight:800;color:#0f172a;margin-top:2px;">0</div>
+          </div>
+          <div class="stat-card" style="padding:14px 18px;border-left:4px solid #059669;">
+            <div style="font-size:11.5px;font-weight:700;color:#059669;text-transform:uppercase;">Valid Records</div>
+            <div id="cgKpiValid" style="font-size:22px;font-weight:800;color:#059669;margin-top:2px;">0</div>
+          </div>
+          <div class="stat-card" style="padding:14px 18px;border-left:4px solid #dc2626;">
+            <div style="font-size:11.5px;font-weight:700;color:#dc2626;text-transform:uppercase;">Invalid Records</div>
+            <div id="cgKpiInvalid" style="font-size:22px;font-weight:800;color:#dc2626;margin-top:2px;">0</div>
+          </div>
+          <div class="stat-card" style="padding:14px 18px;border-left:4px solid #d97706;">
+            <div style="font-size:11.5px;font-weight:700;color:#d97706;text-transform:uppercase;">Potential Duplicates</div>
+            <div id="cgKpiDuplicates" style="font-size:22px;font-weight:800;color:#d97706;margin-top:2px;">0</div>
+          </div>
+        </div>
+
+        <!-- Table Toolbar: Filters, Search, and Duplicate Override Option -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:#FAF5FF;border:1px solid #E9D5FF;border-radius:12px;padding:12px 18px;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:12px;font-weight:700;color:#581C87;">Filter View:</span>
+            <button type="button" class="btn btn-sm" id="cgFilterAll" onclick="setCertGenTableFilter('all')" style="padding:4px 12px;font-size:12px;background:#581C87;color:#fff;">All (<span id="cntFltAll">0</span>)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="cgFilterValid" onclick="setCertGenTableFilter('valid')" style="padding:4px 12px;font-size:12px;">Valid (<span id="cntFltValid">0</span>)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="cgFilterInvalid" onclick="setCertGenTableFilter('invalid')" style="padding:4px 12px;font-size:12px;">Errors (<span id="cntFltInvalid">0</span>)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="cgFilterDup" onclick="setCertGenTableFilter('duplicates')" style="padding:4px 12px;font-size:12px;">Duplicates (<span id="cntFltDup">0</span>)</button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="position:relative;width:240px;">
+              <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;"></i>
+              <input type="text" id="cgTableSearchInput" class="form-control" placeholder="Search preview rows..." oninput="handleCertGenTableSearch()" style="padding-left:30px;font-size:12px;height:34px;">
+            </div>
+
+            <!-- Duplicate Override Option -->
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;padding:6px 12px;border-radius:8px;cursor:pointer;" title="If checked, allows generating certificates for flagged duplicates (e.g. repeated participation or updated achievement)">
+              <input type="checkbox" id="cgAllowDuplicatesCheckbox" onchange="handleDuplicateOverrideToggle()">
+              <span>Allow Duplicates Override</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Interactive Editable Table -->
+        <div class="certgen-table-wrap">
+          <table class="certgen-table" id="certGenPreviewTable">
+            <thead>
+              <tr>
+                <th style="width:40px;text-align:center;">#</th>
+                <th style="width:110px;">Status</th>
+                <th style="min-width:180px;">Student Name <span style="color:#f87171;">*</span></th>
+                <th style="min-width:140px;">Register No <span style="color:#f87171;">*</span></th>
+                <th style="min-width:170px;">Department</th>
+                <th style="min-width:180px;">Event Name <span style="color:#f87171;">*</span></th>
+                <th style="min-width:120px;">Event Date</th>
+                <th style="min-width:140px;">Achievement / Type</th>
+                <th style="min-width:120px;">Issue Date</th>
+                <th style="min-width:220px;">Validation Status / Notes</th>
+                <th style="width:70px;text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="certGenTableBody">
+              <tr>
+                <td colspan="11" style="text-align:center;padding:40px;color:#64748b;">
+                  <i class="fa-solid fa-file-arrow-up" style="font-size:32px;color:#cbd5e1;display:block;margin-bottom:8px;"></i>
+                  No spreadsheet records loaded yet. Upload an Excel or CSV file in Section 1 to preview records.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bottom Table Status Info -->
+        <div id="cgValidationStatusBar" style="margin-top:14px;padding:12px 18px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div id="cgValidationStatusMessage" style="font-size:13px;font-weight:600;color:#475569;">
+            <i class="fa-solid fa-circle-info" style="color:#3b82f6;"></i> Ready to preview student records.
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="revalidateAllTableRecords()">
+              <i class="fa-solid fa-rotate"></i> Re-check Validation
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="confirmBatchAndProceedToTemplate()">
+              <i class="fa-solid fa-arrow-right"></i> Confirm Records &amp; Proceed to Template
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION 3: CERTIFICATE TEMPLATE AND CONFIGURATION
+         ======================================================== -->
+    <section id="cgSecTemplate" class="certgen-section-card">
+      <div class="certgen-section-header">
+        <div class="certgen-section-title-wrap">
+          <div class="certgen-section-icon" style="background: linear-gradient(135deg, #b45309, #d97706);">
+            <i class="fa-solid fa-certificate"></i>
+          </div>
+          <div>
+            <h3 class="certgen-section-title">3. Certificate Template and Configuration</h3>
+            <p class="certgen-section-subtitle">Customize titles, institutional branding, signatories, and live preview the printable A4 certificate</p>
+          </div>
+        </div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="updateLiveCertificatePreview()" style="display:inline-flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-eye"></i> Refresh Template Preview
+          </button>
+        </div>
+      </div>
+
+      <div class="certgen-section-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:24px;align-items:start;">
+
+          <!-- Left Column: Controls & Configuration Form -->
+          <div style="background:#FAF5FF;border:1px solid #E9D5FF;border-radius:14px;padding:22px;">
+            <h4 style="font-size:15px;font-weight:800;color:#581C87;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+              <i class="fa-solid fa-sliders"></i> Template Customization Parameters
+            </h4>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>Certificate Title</label>
+              <div style="display:flex;gap:8px;">
+                <input type="text" id="tplCertTitle" class="form-control" value="CERTIFICATE OF PARTICIPATION" oninput="updateLiveCertificatePreview()">
+                <select class="form-control" style="width:160px;" onchange="document.getElementById('tplCertTitle').value=this.value;updateLiveCertificatePreview();">
+                  <option value="CERTIFICATE OF PARTICIPATION">Participation</option>
+                  <option value="CERTIFICATE OF MERIT">Merit</option>
+                  <option value="CERTIFICATE OF EXCELLENCE">Excellence</option>
+                  <option value="CERTIFICATE OF APPRECIATION">Appreciation</option>
+                  <option value="CERTIFICATE OF ACHIEVEMENT">Achievement</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid form-grid-2" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label>Institution Name</label>
+                <input type="text" id="tplInstName" class="form-control" value="RAMCO INSTITUTE OF TECHNOLOGY" readonly style="background:#f1f5f9;">
+              </div>
+              <div class="form-group">
+                <label>Department Name</label>
+                <input type="text" id="tplDeptName" class="form-control" value="DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS" oninput="updateLiveCertificatePreview()">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>Accreditation Subtitle</label>
+              <input type="text" id="tplAccreditation" class="form-control" value="Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai" oninput="updateLiveCertificatePreview()">
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>Preamble Statement</label>
+              <input type="text" id="tplPreamble" class="form-control" value="This is to certify that" oninput="updateLiveCertificatePreview()">
+            </div>
+
+            <!-- Signatories Configuration -->
+            <div style="border-top:1px dashed #D8B4FE;padding-top:14px;margin-top:14px;">
+              <h5 style="font-size:13px;font-weight:800;color:#3B0764;margin-bottom:12px;">Authorized Signatories</h5>
+              <div class="form-grid form-grid-2" style="margin-bottom:10px;">
+                <div class="form-group">
+                  <label style="font-size:11.5px;">Signatory 1 (Left: HOD)</label>
+                  <input type="text" id="tplSig1Name" class="form-control" value="Dr. D. Kesavaraja" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig1Title" class="form-control" value="Head of Department (HOD)" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                </div>
+                <div class="form-group">
+                  <label style="font-size:11.5px;">Signatory 2 (Center: Vice Principal)</label>
+                  <input type="text" id="tplSig2Name" class="form-control" value="Dr. S. Rajakarunakarun" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig2Title" class="form-control" value="Vice Principal / Patron" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                </div>
+              </div>
+              <div class="form-group">
+                <label style="font-size:11.5px;">Signatory 3 (Right: Principal / Chief Patron)</label>
+                <div class="form-grid form-grid-2">
+                  <input type="text" id="tplSig3Name" class="form-control" value="Dr. L. Ganesan" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig3Title" class="form-control" value="Principal / Chief Patron" oninput="updateLiveCertificatePreview()">
+                </div>
+              </div>
+            </div>
+
+            <!-- ID Prefix & Verification Target Display -->
+            <div style="border-top:1px dashed #D8B4FE;padding-top:14px;margin-top:14px;font-size:12px;color:#64748B;">
+              <div><strong>Unique ID Prefix:</strong> <code id="tplIdPrefixPreview" style="color:#581C87;font-weight:700;">RIT-CSBS-2026-XXXXXXXX</code></div>
+              <div style="margin-top:4px;"><strong>Verification Endpoint:</strong> <code id="tplVerifyUrlPreview" style="color:#059669;word-break:break-all;">https://.../verify-certificate.html?id=...</code></div>
+            </div>
+          </div>
+
+          <!-- Right Column: Visual Live Certificate Template Preview -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-size:13px;font-weight:700;color:#581C87;"><i class="fa-solid fa-image"></i> Printable A4 Certificate Preview</span>
+              <span class="badge badge-purple" style="font-size:11px;">Scale: 60% Responsive Preview</span>
+            </div>
+
+            <!-- Live Certificate Card -->
+            <div class="cert-preview-frame" id="liveCertPreviewCard">
+              <div class="cert-preview-inner">
+                <!-- 4 Corner dots -->
+                <div class="cert-preview-corners cert-preview-c-tl"></div>
+                <div class="cert-preview-corners cert-preview-c-tr"></div>
+                <div class="cert-preview-corners cert-preview-c-bl"></div>
+                <div class="cert-preview-corners cert-preview-c-br"></div>
+
+                <!-- Header Logo & Branding -->
+                <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:6px;">
+                  <img src="rit_logo.png" alt="RIT Logo" style="width:42px;height:42px;object-fit:contain;" onerror="this.style.display='none'">
+                  <div>
+                    <h2 id="prevCollegeName" style="font-size:16px;font-weight:900;color:#1e1b4b;letter-spacing:0.4px;margin:0;">RAMCO INSTITUTE OF TECHNOLOGY</h2>
+                    <h4 id="prevDeptName" style="font-size:9.5px;font-weight:800;color:#b45309;margin:2px 0 0;letter-spacing:0.3px;">DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS</h4>
+                    <p id="prevAccreditation" style="font-size:7.5px;color:#64748b;margin:2px 0 0;">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</p>
+                  </div>
+                </div>
+
+                <div style="height:1.5px;background:#b45309;margin:8px 16px 12px;"></div>
+
+                <!-- Certificate Title -->
+                <h3 id="prevCertTitle" style="font-size:14px;font-weight:900;color:#b45309;letter-spacing:0.8px;margin-bottom:8px;">
+                  CERTIFICATE OF PARTICIPATION
+                </h3>
+
+                <p id="prevPreamble" style="font-style:italic;font-size:9.5px;color:#475569;margin-bottom:6px;">
+                  This is to certify that
+                </p>
+
+                <!-- Student Name -->
+                <h2 id="prevStudentName" style="font-size:15px;font-weight:900;color:#0f172a;text-decoration:underline;text-underline-offset:4px;margin-bottom:6px;letter-spacing:0.5px;">
+                  SIVARANJANI S
+                </h2>
+
+                <p id="prevStudentMeta" style="font-size:9px;color:#334155;margin-bottom:8px;">
+                  Register No: <strong>953623244001</strong> &bull; Department of <strong>Computer Science and Business Systems</strong>
+                </p>
+
+                <p style="font-size:9px;color:#475569;margin-bottom:6px;line-height:1.4;">
+                  has actively participated in and successfully completed the departmental event / workshop titled
+                </p>
+
+                <h4 id="prevEventName" style="font-size:11.5px;font-weight:800;color:#1e1b4b;margin-bottom:4px;">
+                  "Full Stack Cloud Architecture Masterclass"
+                </h4>
+
+                <p id="prevEventDate" style="font-size:8.5px;color:#475569;margin-bottom:14px;">
+                  conducted on 22 October, 2026.
+                </p>
+
+                <div style="height:1px;background:#e2e8f0;margin:10px 10px 12px;"></div>
+
+                <!-- Signatures -->
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;padding:0 10px;">
+                  <div style="text-align:left;">
+                    <div id="prevSig1Name" style="font-size:9px;font-weight:800;color:#1e1b4b;">Dr. D. Kesavaraja</div>
+                    <div id="prevSig1Title" style="font-size:7.5px;color:#64748b;">Head of Department (HOD)</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div id="prevSig2Name" style="font-size:9px;font-weight:800;color:#1e1b4b;">Dr. S. Rajakarunakarun</div>
+                    <div id="prevSig2Title" style="font-size:7.5px;color:#64748b;">Vice Principal / Patron</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div id="prevSig3Name" style="font-size:9px;font-weight:800;color:#1e1b4b;">Dr. L. Ganesan</div>
+                    <div id="prevSig3Title" style="font-size:7.5px;color:#64748b;">Principal / Chief Patron</div>
+                  </div>
+                </div>
+
+                <div style="height:1px;background:#f1f5f9;margin:8px 0;"></div>
+
+                <!-- Security Footer -->
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0 10px;">
+                  <div style="text-align:left;">
+                    <div style="font-size:7px;color:#64748b;">Certificate ID:</div>
+                    <div id="prevCertIdNumber" style="font-size:8.5px;font-weight:800;font-family:monospace;color:#4338ca;">
+                      RIT-CSBS-2026-A83F192C
+                    </div>
+                    <div id="prevIssueDate" style="font-size:7px;color:#64748b;">Date of Issue: 22 Oct 2026</div>
+                  </div>
+
+                  <!-- Digitally Verified Badge -->
+                  <div style="border:1px solid #059669;border-radius:4px;padding:3px 8px;text-align:center;">
+                    <div style="font-size:7.5px;font-weight:800;color:#059669;">DIGITALLY VERIFIED</div>
+                    <div style="font-size:6.5px;color:#059669;">RIT CSBS Verification Portal</div>
+                  </div>
+
+                  <!-- Sample QR Placeholder -->
+                  <div style="text-align:center;">
+                    <div id="prevQrThumbnail" style="width:34px;height:34px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+                      <i class="fa-solid fa-qrcode" style="font-size:20px;color:#7e22ce;"></i>
+                    </div>
+                    <div style="font-size:6px;color:#64748b;margin-top:2px;">Scan to Verify</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION 4: GENERATE CERTIFICATES
+         ======================================================== -->
+    <section id="cgSecGenerate" class="certgen-section-card">
+      <div class="certgen-section-header">
+        <div class="certgen-section-title-wrap">
+          <div class="certgen-section-icon" style="background: linear-gradient(135deg, #059669, #10b981);">
+            <i class="fa-solid fa-stamp"></i>
+          </div>
+          <div>
+            <h3 class="certgen-section-title">4. Issue &amp; Generate Certificates</h3>
+            <p class="certgen-section-subtitle">Assign unique cryptographic certificate IDs, encode QR verification URLs, and generate institutional records</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="certgen-section-body">
+        <div style="background:#FAF5FF;border:1.5px solid #E9D5FF;border-radius:14px;padding:26px;text-align:center;max-width:760px;margin:0 auto;">
+          <h4 style="font-size:18px;font-weight:800;color:#3B0764;margin-bottom:8px;">Ready for Batch Certificate Generation</h4>
+          <p style="font-size:13.5px;color:#64748B;margin-bottom:20px;line-height:1.5;">
+            You have <strong id="cgReadyValidCount" style="color:#059669;">0</strong> valid student records ready to be issued. Each issued certificate will be permanently assigned a non-guessable certificate ID, an individual QR verification URL, and stored in institutional database records.
+          </p>
+
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;">
+            <div style="background:#ffffff;border:1px solid #D8B4FE;border-radius:10px;padding:10px 18px;font-size:13px;">
+              <span style="color:#64748b;">Batch Event:</span> <strong id="cgConfirmEventName" style="color:#3B0764;">—</strong>
+            </div>
+            <div style="background:#ffffff;border:1px solid #D8B4FE;border-radius:10px;padding:10px 18px;font-size:13px;">
+              <span style="color:#64748b;">ID Format:</span> <strong style="color:#7E22CE;font-family:monospace;">RIT-CSBS-YYYY-TOKEN</strong>
+            </div>
+            <div style="background:#ffffff;border:1px solid #D8B4FE;border-radius:10px;padding:10px 18px;font-size:13px;">
+              <span style="color:#64748b;">QR Destination:</span> <strong style="color:#059669;">/verify-certificate.html</strong>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary" id="btnExecuteBatchGeneration" onclick="openBatchConfirmationModal()" style="padding:14px 34px;font-size:16px;border-radius:12px;display:inline-flex;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(88,28,135,0.3);">
+            <i class="fa-solid fa-stamp" style="font-size:18px;"></i>
+            <span>Confirm &amp; Generate Batch Certificates</span>
+          </button>
+        </div>
+
+        <!-- Live Generation Progress Indicator -->
+        <div id="certGenProgressBox" class="certgen-progress-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:700;">
+            <span style="color:#3B0764;" id="cgProgressStatusText">
+              <i class="fa-solid fa-spinner fa-spin"></i> Generating certificates and assigning unique IDs...
+            </span>
+            <span id="cgProgressPct" style="color:#7E22CE;font-size:15px;font-weight:800;">0%</span>
+          </div>
+
+          <div class="certgen-progress-track">
+            <div id="certGenProgressBar" class="certgen-progress-fill"></div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748B;">
+            <span id="cgProgressCounts">Processed 0 of 0 records</span>
+            <span id="cgProgressSuccessFail" style="font-weight:600;">Success: 0 &bull; Failed: 0</span>
+          </div>
+        </div>
+
+        <!-- Batch Generation Summary Alert -->
+        <div id="certGenSuccessAlert" style="display:none;margin-top:20px;padding:18px 22px;border-radius:12px;background:#ecfdf5;border:1.5px solid #86efac;color:#065f46;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <i class="fa-solid fa-circle-check" style="font-size:24px;color:#059669;"></i>
+            <div>
+              <h4 style="font-size:15px;font-weight:800;margin:0;" id="cgSuccessAlertTitle">Batch Generated Successfully!</h4>
+              <p style="font-size:13px;margin:2px 0 0;" id="cgSuccessAlertMsg">All certificates have been permanently issued and stored.</p>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" onclick="downloadAllGeneratedCertificatesZip()" style="background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <i class="fa-solid fa-file-zipper"></i> Download All as ZIP Archive
+            </button>
+            <button type="button" class="btn btn-sm" onclick="jumpToCertGenSection('cgSecHistory')" style="background:#fff;color:#065f46;border:1px solid #86efac;padding:8px 16px;border-radius:8px;font-weight:700;cursor:pointer;">
+              <i class="fa-solid fa-list"></i> View Generated Records Table
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION 5: GENERATED CERTIFICATE RECORDS
+         ======================================================== -->
+    <section id="cgSecHistory" class="certgen-section-card">
+      <div class="certgen-section-header">
+        <div class="certgen-section-title-wrap">
+          <div class="certgen-section-icon" style="background: linear-gradient(135deg, #4338ca, #6366f1);">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3 class="certgen-section-title">5. Generated Certificate Records &amp; History</h3>
+            <p class="certgen-section-subtitle">Browse issued certificate batches, download individual PDFs or bulk ZIP archives, and inspect statuses</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" id="btnDownloadBatchZipTop" onclick="downloadAllGeneratedCertificatesZip()" style="background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+            <i class="fa-solid fa-file-zipper"></i> Download All as ZIP
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportIssuedCertificatesExcel()" style="display:inline-flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-file-excel"></i> Export Excel List
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadIssuedCertificatesHistoryTable()" style="display:inline-flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-rotate-right"></i> Refresh Table
+          </button>
+        </div>
+      </div>
+
+      <div class="certgen-section-body">
+        <!-- Batches Selector Ribbon -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label style="font-size:12.5px;font-weight:700;color:#581C87;">Filter by Generation Batch:</label>
+            <select id="cgBatchSelector" class="form-control" style="width:280px;height:36px;font-size:12.5px;" onchange="handleCertGenBatchSelect()">
+              <option value="all">All Issued Certificates (Master History)</option>
+            </select>
+          </div>
+
+          <div style="position:relative;width:240px;">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;"></i>
+            <input type="text" id="cgHistorySearchInput" class="form-control" placeholder="Search by name, reg, ID..." oninput="handleCertGenHistorySearch()" style="padding-left:30px;font-size:12px;height:36px;">
+          </div>
+        </div>
+
+        <!-- Generated Records History Table -->
+        <div class="certgen-table-wrap" style="max-height:540px;">
+          <table class="certgen-table">
+            <thead>
+              <tr>
+                <th style="width:40px;text-align:center;">#</th>
+                <th style="min-width:180px;">Certificate ID</th>
+                <th style="min-width:160px;">Student Name</th>
+                <th style="min-width:120px;">Register No</th>
+                <th style="min-width:180px;">Event Name</th>
+                <th style="min-width:110px;">Issue Date</th>
+                <th style="min-width:130px;">Verification Status</th>
+                <th style="min-width:210px;text-align:center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cgHistoryTableBody">
+              <tr>
+                <td colspan="8" style="text-align:center;padding:40px;color:#64748b;">
+                  <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;color:#7e22ce;display:block;margin-bottom:8px;"></i>
+                  Loading issued certificate records...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748B;">
+          <span>Showing <strong id="cgHistoryDisplayCount" style="color:#0f172a;">0</strong> certificate records</span>
+          <span style="display:flex;gap:12px;align-items:center;">
+            <span><i class="fa-solid fa-circle" style="color:#059669;font-size:8px;"></i> Digitally Verified</span>
+            <span><i class="fa-solid fa-circle" style="color:#dc2626;font-size:8px;"></i> Revoked</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         SECTION 6: VERIFY CERTIFICATE (IN-DASHBOARD TOOL)
+         ======================================================== -->
+    <section id="cgSecVerify" class="certgen-section-card">
+      <div class="certgen-section-header">
+        <div class="certgen-section-title-wrap">
+          <div class="certgen-section-icon" style="background: linear-gradient(135deg, #0f172a, #334155);">
+            <i class="fa-solid fa-magnifying-glass-check"></i>
+          </div>
+          <div>
+            <h3 class="certgen-section-title">6. Quick Certificate Verification</h3>
+            <p class="certgen-section-subtitle">Instant real-time lookup tool to verify any certificate ID or QR token against database storage</p>
+          </div>
+        </div>
+        <div>
+          <a href="/verify-certificate.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Public Verification Portal
+          </a>
+        </div>
+      </div>
+
+      <div class="certgen-section-body">
+        <div class="certgen-quick-verify-card">
+          <div style="font-size:14px;font-weight:700;color:#3B0764;">Search Institutional Certificate by ID:</div>
+          <form class="quick-verify-form" onsubmit="executeQuickCertificateVerification(event)">
+            <input type="text" id="cgQuickVerifyInput" class="form-control" placeholder="e.g. RIT-CSBS-2026-A83F192C" style="font-family:monospace;font-weight:600;" required>
+            <button type="submit" class="btn btn-primary" id="btnCgQuickVerify" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+              <i class="fa-solid fa-magnifying-glass"></i> Verify
+            </button>
+          </form>
+
+          <!-- Quick Verify Result Box -->
+          <div id="cgQuickVerifyResult" style="display:none;margin-top:20px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========================================================
+       MODAL: REVOKE CERTIFICATE CONFIRMATION
+       ======================================================== -->
+  <div id="certGenRevokeModal" class="modal-backdrop hidden" onclick="_closeCgRevokeModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:520px;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #fee2e2;background:#FEF2F2;color:#991B1B;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size:20px;color:#DC2626;"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:#991B1B;">Revoke Certificate Credential</h3>
+        </div>
+        <button type="button" onclick="closeCertGenRevokeModal()" style="background:transparent;border:none;font-size:22px;color:#991B1B;cursor:pointer;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:22px 24px;">
+        <p style="font-size:13.5px;color:#475569;line-height:1.5;margin-bottom:14px;">
+          Are you sure you want to revoke certificate <strong id="cgRevokeModalCertId" style="color:#DC2626;font-family:monospace;">—</strong> for student <strong id="cgRevokeModalStudentName">—</strong>?
+        </p>
+        <p style="font-size:12.5px;color:#64748b;margin-bottom:14px;">
+          Once revoked, scanning the QR code or searching this ID on the public verification portal will display <strong>"Certificate Revoked"</strong> with the provided audit reason.
+        </p>
+
+        <div class="form-group">
+          <label style="font-size:12.5px;font-weight:700;color:#0F172A;">Revocation Reason (Required for Institutional Audit Log) <span style="color:#DC2626;">*</span></label>
+          <textarea id="cgRevokeReasonInput" class="form-control" rows="3" placeholder="e.g. Issued in error; Course attendance criteria not met; Updated credential reissued." required></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding:14px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeCertGenRevokeModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmRevocation" onclick="submitCertificateRevocation()" style="display:inline-flex;align-items:center;gap:6px;background:#DC2626;color:#fff;border:none;">
+          <i class="fa-solid fa-ban"></i> Confirm Revocation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: BATCH ISSUANCE CONFIRMATION
+       ======================================================== -->
+  <div id="certGenConfirmBatchModal" class="modal-backdrop hidden" onclick="_closeCgConfirmBatchModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:540px;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #E9D5FF;background:linear-gradient(135deg, #3B0764, #581C87);color:#fff;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fa-solid fa-certificate" style="font-size:20px;color:#C084FC;"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:#fff;">Confirm Certificate Batch Issuance</h3>
+        </div>
+        <button type="button" onclick="closeBatchConfirmationModal()" style="background:transparent;border:none;font-size:22px;color:#fff;cursor:pointer;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:22px 24px;">
+        <p style="font-size:14px;color:#334155;line-height:1.5;margin-bottom:16px;">
+          Please confirm that you want to issue institutional certificates for this batch:
+        </p>
+
+        <div style="background:#FAF5FF;border:1px solid #E9D5FF;border-radius:12px;padding:14px 18px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+            <span style="color:#64748b;">Event Name:</span>
+            <strong id="cgModalEventName" style="color:#0f172a;">—</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+            <span style="color:#64748b;">Total Eligible Records:</span>
+            <strong id="cgModalEligibleCount" style="color:#059669;font-size:15px;">0</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:#64748b;">Duplicates Handling:</span>
+            <strong id="cgModalDuplicatesNote" style="color:#d97706;">Duplicates Skipped (Safe Mode)</strong>
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:#64748b;line-height:1.4;">
+          <i class="fa-solid fa-shield-halved" style="color:#7E22CE;"></i> Each certificate will be assigned an institutional ID with permanent digital verification records.
+        </p>
+      </div>
+
+      <div class="modal-footer" style="padding:14px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeBatchConfirmationModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="proceedWithBatchGeneration()" style="display:inline-flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-stamp"></i> Issue Certificates Now
+        </button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ========================================================
        TAB 6: PORTAL SETTINGS & BATCH MANAGEMENT
@@ -2637,6 +3423,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="rit_logo_data.js"></script>
+<script src="certificate_generation.js"></script>
 <script src="admin_dashboard.js?v=2.3"></script>
 </body>
 </html>
