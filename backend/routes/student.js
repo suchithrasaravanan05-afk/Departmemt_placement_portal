@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
+const multer = require("../multerConfig");
 const db = require("../db");
 const { supabaseAdmin, supabase } = require("../supabase");
 const { normalizeDepartment, getDepartmentById } = require("../utils/departmentNormalizer");

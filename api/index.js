@@ -1,5 +1,16 @@
+const fs = require("fs");
+const path = require("path");
+
 let app = null;
 let initError = null;
+
+// Ensure any phantom/corrupt backend/node_modules from legacy build cache is purged
+try {
+    const corruptBackendModules = path.join(__dirname, "../backend/node_modules");
+    if (fs.existsSync(corruptBackendModules)) {
+        fs.rmSync(corruptBackendModules, { recursive: true, force: true });
+    }
+} catch (e) {}
 
 function initializeApp() {
     if (app) return app;

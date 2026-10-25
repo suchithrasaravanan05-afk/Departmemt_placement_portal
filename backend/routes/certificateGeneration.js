@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
+const multer = require("../multerConfig");
 const xlsx = require("xlsx");
 const path = require("path");
 const jwt = require("jsonwebtoken");
