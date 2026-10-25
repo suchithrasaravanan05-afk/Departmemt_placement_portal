@@ -37,7 +37,7 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "backend/**"
+      "includeFiles": "backend/**,faculty_registration.json,*.json"
     }
   },
   "rewrites": [

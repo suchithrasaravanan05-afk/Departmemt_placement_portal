@@ -6,13 +6,56 @@ const multer = require("multer");
 const fs = require("fs");
 
 const db = require("./db");
-const authRoutes = require("./routes/auth");
-const studentRoutes = require("./routes/student");
-const adminRoutes = require("./routes/admin");
-const socialRoutes = require("./routes/social");
-const facultyRoutes = require("./routes/faculty");
-const certificateGenRoutes = require("./routes/certificateGeneration");
-const feedbackCertificateStorage = require("./feedbackCertificateStorage");
+
+let authRoutes;
+try {
+    authRoutes = require("./routes/auth");
+} catch (e) {
+    console.error("❌ Critical: Failed to load authRoutes:", e);
+    throw e;
+}
+
+let studentRoutes;
+try {
+    studentRoutes = require("./routes/student");
+} catch (e) {
+    console.warn("⚠️ Warning: Failed to load studentRoutes:", e.message || e);
+}
+
+let adminRoutes;
+try {
+    adminRoutes = require("./routes/admin");
+} catch (e) {
+    console.warn("⚠️ Warning: Failed to load adminRoutes:", e.message || e);
+}
+
+let socialRoutes;
+try {
+    socialRoutes = require("./routes/social");
+} catch (e) {
+    console.warn("⚠️ Warning: Failed to load socialRoutes:", e.message || e);
+}
+
+let facultyRoutes;
+try {
+    facultyRoutes = require("./routes/faculty");
+} catch (e) {
+    console.warn("⚠️ Warning: Failed to load facultyRoutes:", e.message || e);
+}
+
+let certificateGenRoutes;
+try {
+    certificateGenRoutes = require("./routes/certificateGeneration");
+} catch (e) {
+    console.warn("⚠️ Warning: Failed to load certificateGenRoutes:", e.message || e);
+}
+
+let feedbackCertificateStorage;
+try {
+    feedbackCertificateStorage = require("./feedbackCertificateStorage");
+} catch (e) {
+    console.warn("⚠️ Warning: Failed to load feedbackCertificateStorage:", e.message || e);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5500;
@@ -75,15 +118,18 @@ app.get(["/uploads/:filename", "/api/uploads/:filename"], (req, res) => {
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 // API Routes (Support both /api/* and root paths for Vercel serverless rewrites)
-app.use(["/api/auth", "/auth"], authRoutes);
-app.use(["/api/student", "/student"], studentRoutes);
-app.use(["/api/admin/certificate-generation", "/admin/certificate-generation"], certificateGenRoutes);
-app.use(["/api/admin", "/admin"], adminRoutes);
-app.use(["/api/social", "/social"], socialRoutes);
-app.use(["/api/faculty", "/faculty"], facultyRoutes);
+if (authRoutes) app.use(["/api/auth", "/auth"], authRoutes);
+if (studentRoutes) app.use(["/api/student", "/student"], studentRoutes);
+if (certificateGenRoutes) app.use(["/api/admin/certificate-generation", "/admin/certificate-generation"], certificateGenRoutes);
+if (adminRoutes) app.use(["/api/admin", "/admin"], adminRoutes);
+if (socialRoutes) app.use(["/api/social", "/social"], socialRoutes);
+if (facultyRoutes) app.use(["/api/faculty", "/faculty"], facultyRoutes);
 
 // Dedicated Public Certificate Verification API (No authentication required)
 app.get(["/api/public/verify-certificate/:certId", "/public/verify-certificate/:certId"], async (req, res) => {
+    if (!feedbackCertificateStorage) {
+        return res.status(503).json({ success: false, message: "Certificate verification service temporarily unavailable." });
+    }
     try {
         const certId = req.params.certId;
         const result = await feedbackCertificateStorage.getPublicCertificateDetails(certId);

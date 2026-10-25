@@ -4,11 +4,13 @@ let initError = null;
 function initializeApp() {
     if (app) return app;
     try {
-        // Pre-load core dependencies statically for Vercel NFT bundler tracing
-        require("multer");
-        require("express");
-        require("cors");
-        require("@supabase/supabase-js");
+        // Statically declare dependencies for Vercel NFT tracing with defensive execution
+        try { require("express"); } catch (e) {}
+        try { require("cors"); } catch (e) {}
+        try { require("multer"); } catch (e) {}
+        try { require("@supabase/supabase-js"); } catch (e) {}
+        try { require("jsonwebtoken"); } catch (e) {}
+        try { require("bcryptjs"); } catch (e) {}
 
         app = require("../backend/server");
         initError = null;
@@ -33,7 +35,7 @@ module.exports = (req, res) => {
         return res.status(500).json({
             success: false,
             error: "Serverless Startup Error",
-            message: "Authentication service is temporarily unavailable. Please try again or contact the CSBS department administrator.",
+            message: initError ? `Backend startup error: ${initError.message || initError}` : "Authentication service is temporarily unavailable. Please try again.",
             code: initError?.code || "INIT_ERR"
         });
     }
