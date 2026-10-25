@@ -5,7 +5,8 @@
   "main": "api/index.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
+    "dev": "nodemon backend/server.js",
+    "test": "node scratch/test_auth_suite.js && node scratch/test_http_endpoints.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

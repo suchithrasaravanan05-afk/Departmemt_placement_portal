@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const multer = require(require.resolve("multer", { paths: [process.cwd()] }));
+const multer = require("multer");
 
 const fs = require("fs");
 
@@ -152,8 +152,8 @@ app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/Form.html"));
 });
 
-// Start Server — never listen() on Vercel (it uses serverless handler instead)
-if (!process.env.VERCEL) {
+// Start Server — only listen() when executed directly, never when required as serverless function
+if (!process.env.VERCEL && require.main === module) {
     app.listen(PORT, () => {
         console.log(`=======================================================`);
         console.log(`🚀 RIT Placement Portal Backend running on http://localhost:${PORT}`);

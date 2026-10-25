@@ -6,19 +6,22 @@ const router = express.Router();
 const { supabase, supabaseAdmin } = require("../supabase");
 const permissionsStorage = require("../permissionsStorage");
 
-// Local JSON persistence fallback file
-const FACULTY_DATA_FILE = path.join(__dirname, "../faculty_registration.json");
+// Local JSON persistence fallback file (supports read-only serverless filesystems)
+const BUNDLED_FACULTY_FILE = path.join(__dirname, "../faculty_registration.json");
+const TMP_FACULTY_FILE = path.join("/tmp", "faculty_registration.json");
 
 // Helper: Read local faculty registrations
 function readLocalFacultyRegistrations() {
     try {
-        if (!fs.existsSync(FACULTY_DATA_FILE)) {
-            const initial = { faculty_registrations: [] };
-            fs.writeFileSync(FACULTY_DATA_FILE, JSON.stringify(initial, null, 2), "utf8");
-            return initial;
+        if (process.env.VERCEL && fs.existsSync(TMP_FACULTY_FILE)) {
+            const content = fs.readFileSync(TMP_FACULTY_FILE, "utf8");
+            return JSON.parse(content || '{"faculty_registrations":[]}');
         }
-        const content = fs.readFileSync(FACULTY_DATA_FILE, "utf8");
-        return JSON.parse(content || '{"faculty_registrations":[]}');
+        if (fs.existsSync(BUNDLED_FACULTY_FILE)) {
+            const content = fs.readFileSync(BUNDLED_FACULTY_FILE, "utf8");
+            return JSON.parse(content || '{"faculty_registrations":[]}');
+        }
+        return { faculty_registrations: [] };
     } catch (err) {
         console.error("Error reading local faculty registrations:", err);
         return { faculty_registrations: [] };
@@ -27,11 +30,12 @@ function readLocalFacultyRegistrations() {
 
 // Helper: Save local faculty registrations
 function saveLocalFacultyRegistrations(data) {
+    const targetFile = process.env.VERCEL ? TMP_FACULTY_FILE : BUNDLED_FACULTY_FILE;
     try {
-        fs.writeFileSync(FACULTY_DATA_FILE, JSON.stringify(data, null, 2), "utf8");
+        fs.writeFileSync(targetFile, JSON.stringify(data, null, 2), "utf8");
         return true;
     } catch (err) {
-        console.error("Error writing local faculty registrations:", err);
+        console.warn("Notice: Local faculty registration write notice:", err.message);
         return false;
     }
 }

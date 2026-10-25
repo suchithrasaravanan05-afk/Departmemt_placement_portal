@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const multer = require(require.resolve("multer", { paths: [process.cwd()] }));
+const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
