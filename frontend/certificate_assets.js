@@ -35,6 +35,9 @@ function ritLoadImage(src) {
 /**
  * High-fidelity Canvas renderer matching the Ramco Institute of Technology reference certificate
  * Aspect ratio: A4 Landscape 2000 x 1414 (1.414 : 1)
+ * Clean design: White background, purple & gold corner ribbons, double gold borders,
+ * prominent student name, comfortable line spacing, 5 aligned signatories,
+ * NO vertical lines, NO dates, NO register numbers.
  */
 async function drawRitCertificate(canvas, certData = {}, options = {}) {
   const ctx = canvas.getContext('2d');
@@ -47,24 +50,18 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Faint Architectural Campus Watermark
+  // 2. Faint Architectural Campus Watermark (Smooth dome arch only, NO vertical lines or grids)
   ctx.save();
-  ctx.globalAlpha = 0.055;
+  ctx.globalAlpha = 0.04;
   ctx.strokeStyle = '#3B0764';
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   const wmCx = width / 2;
-  const wmCy = height / 2 + 30;
-  // Draw subtle campus building silhouette
+  const wmCy = height / 2 + 50;
   ctx.beginPath();
-  ctx.rect(wmCx - 360, wmCy - 120, 720, 240);
-  for (let i = -340; i <= 340; i += 40) {
-    ctx.moveTo(wmCx + i, wmCy - 120);
-    ctx.lineTo(wmCx + i, wmCy + 120);
-  }
+  ctx.arc(wmCx, wmCy - 60, 160, Math.PI, 0, false);
   ctx.stroke();
-  // Central dome / arch
   ctx.beginPath();
-  ctx.arc(wmCx, wmCy - 120, 90, Math.PI, 0, false);
+  ctx.arc(wmCx, wmCy - 60, 120, Math.PI, 0, false);
   ctx.stroke();
   ctx.restore();
 
@@ -162,9 +159,9 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(width, height);
-  ctx.lineTo(width - 440, height);
-  ctx.bezierCurveTo(width - 340, height - 50, width - 210, height - 130, width - 130, height - 230);
-  ctx.bezierCurveTo(width - 70, height - 310, width - 25, height - 380, width, height - 440);
+  ctx.lineTo(width, height - 420);
+  ctx.bezierCurveTo(width - 25, height - 360, width - 70, height - 290, width - 130, height - 220);
+  ctx.bezierCurveTo(width - 210, height - 130, width - 330, height - 50, width - 420, height);
   ctx.closePath();
   const gradBR1 = ctx.createLinearGradient(width, height, width - 350, height - 350);
   gradBR1.addColorStop(0, '#2E0249');
@@ -174,18 +171,18 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(width - 440, height);
-  ctx.bezierCurveTo(width - 340, height - 50, width - 210, height - 130, width - 130, height - 230);
-  ctx.bezierCurveTo(width - 70, height - 310, width - 25, height - 380, width, height - 440);
+  ctx.moveTo(width, height - 420);
+  ctx.bezierCurveTo(width - 25, height - 360, width - 70, height - 290, width - 130, height - 220);
+  ctx.bezierCurveTo(width - 210, height - 130, width - 330, height - 50, width - 420, height);
   ctx.strokeStyle = '#D4AF37';
   ctx.lineWidth = 6;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.moveTo(width, height);
-  ctx.lineTo(width - 330, height);
-  ctx.bezierCurveTo(width - 250, height - 35, width - 160, height - 90, width - 95, height - 170);
-  ctx.bezierCurveTo(width - 50, height - 230, width - 18, height - 290, width, height - 330);
+  ctx.lineTo(width, height - 310);
+  ctx.bezierCurveTo(width - 20, height - 270, width - 50, height - 210, width - 100, height - 160);
+  ctx.bezierCurveTo(width - 160, height - 90, width - 240, height - 35, width - 310, height);
   ctx.closePath();
   const gradBR2 = ctx.createLinearGradient(width, height, width - 250, height - 250);
   gradBR2.addColorStop(0, '#1E1B4B');
@@ -194,9 +191,9 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(width - 330, height);
-  ctx.bezierCurveTo(width - 250, height - 35, width - 160, height - 90, width - 95, height - 170);
-  ctx.bezierCurveTo(width - 50, height - 230, width - 18, height - 290, width, height - 330);
+  ctx.moveTo(width, height - 310);
+  ctx.bezierCurveTo(width - 20, height - 270, width - 50, height - 210, width - 100, height - 160);
+  ctx.bezierCurveTo(width - 160, height - 90, width - 240, height - 35, width - 310, height);
   ctx.strokeStyle = '#F59E0B';
   ctx.lineWidth = 3.5;
   ctx.stroke();
@@ -204,12 +201,10 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
 
   // 4. Double Gold Border with Corner Diamonds
   ctx.save();
-  // Outer Border
   ctx.strokeStyle = '#C5A059';
   ctx.lineWidth = 3.2;
   ctx.strokeRect(55, 45, width - 110, height - 90);
 
-  // Inner Border
   ctx.strokeStyle = '#D4AF37';
   ctx.lineWidth = 1.4;
   ctx.strokeRect(70, 60, width - 140, height - 120);
@@ -244,27 +239,27 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   // Left: RIT Shield Logo
   const ritLogoImg = await ritLoadImage(certData.rit_logo || window.CERT_ASSETS.RIT_LOGO);
   if (ritLogoImg) {
-    ctx.drawImage(ritLogoImg, 150, 75, 110, 125);
+    ctx.drawImage(ritLogoImg, 145, 75, 115, 130);
   }
 
   // Right: CSBS Department Logo Badge
   const csbsLogoImg = await ritLoadImage(certData.csbs_logo || window.CERT_ASSETS.CSBS_LOGO);
   if (csbsLogoImg) {
-    ctx.drawImage(csbsLogoImg, width - 265, 75, 110, 110);
+    ctx.drawImage(csbsLogoImg, width - 275, 75, 115, 115);
   }
 
   // Text below CSBS logo
   ctx.save();
   ctx.fillStyle = '#1E1B4B';
-  ctx.font = 'bold 12px "Plus Jakarta Sans", Arial, sans-serif';
+  ctx.font = 'bold 12.5px "Plus Jakarta Sans", Arial, sans-serif';
   ctx.textAlign = 'center';
-  const csbsTextX = width - 210;
-  ctx.fillText('DEPARTMENT OF', csbsTextX, 202);
-  ctx.fillText('COMPUTER SCIENCE AND', csbsTextX, 218);
-  ctx.fillText('BUSINESS SYSTEMS', csbsTextX, 234);
+  const csbsTextX = width - 218;
+  ctx.fillText('DEPARTMENT OF', csbsTextX, 206);
+  ctx.fillText('COMPUTER SCIENCE AND', csbsTextX, 222);
+  ctx.fillText('BUSINESS SYSTEMS', csbsTextX, 238);
   ctx.fillStyle = '#475569';
-  ctx.font = 'italic 11px "Plus Jakarta Sans", Arial, sans-serif';
-  ctx.fillText('Learn | Innovate | Grow', csbsTextX, 250);
+  ctx.font = 'italic 11.5px "Plus Jakarta Sans", Arial, sans-serif';
+  ctx.fillText('Learn | Innovate | Grow', csbsTextX, 255);
   ctx.restore();
 
   // 6. Institutional Header Text Hierarchy
@@ -273,7 +268,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
 
   // Institution Name
   ctx.fillStyle = '#1E1B4B';
-  ctx.font = '800 33px "Plus Jakarta Sans", Arial, sans-serif';
+  ctx.font = '800 34px "Plus Jakarta Sans", Arial, sans-serif';
   ctx.fillText(certData.institution_name || 'RAMCO INSTITUTE OF TECHNOLOGY', width / 2, 98);
 
   // Autonomous Institution
@@ -298,81 +293,100 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.textAlign = 'center';
   const certTitle = (certData.certificate_title || 'CERTIFICATE OF PARTICIPATION').toUpperCase();
   ctx.fillStyle = '#3B0764';
-  ctx.font = 'bold 44px "Times New Roman", Georgia, serif';
-  ctx.fillText(certTitle, width / 2, 296);
+  ctx.font = 'bold 46px "Times New Roman", Georgia, serif';
+  ctx.fillText(certTitle, width / 2, 310);
 
   // Ornamental diamond below title
-  drawDiamond(width / 2, 320, 7, '#D4AF37');
+  drawDiamond(width / 2, 336, 7, '#D4AF37');
   ctx.restore();
 
   // 8. Preamble & Student Name (NO REGISTER NUMBER)
   ctx.save();
   ctx.textAlign = 'center';
   ctx.fillStyle = '#475569';
-  ctx.font = 'italic 21px Georgia, serif';
-  ctx.fillText(certData.preamble || 'This certificate is proudly presented to', width / 2, 372);
+  ctx.font = 'italic 23px Georgia, serif';
+  ctx.fillText(certData.preamble || 'This certificate is proudly presented to', width / 2, 405);
 
-  // Student Name
-  const studentName = certData.student_name || 'Sivaranjani S';
+  // Student Name (Prominent bold italic serif with safe auto-scaling)
+  const studentName = (certData.student_name || 'Sivaranjani S').trim();
   ctx.fillStyle = '#0F172A';
-  ctx.font = 'bold italic 50px Georgia, serif';
-  ctx.fillText(studentName, width / 2, 442);
+  let nameFontSize = 54;
+  ctx.font = 'bold italic ' + nameFontSize + 'px Georgia, serif';
+  let nameMetric = ctx.measureText(studentName);
+  while (nameMetric.width > 1250 && nameFontSize > 32) {
+    nameFontSize -= 2;
+    ctx.font = 'bold italic ' + nameFontSize + 'px Georgia, serif';
+    nameMetric = ctx.measureText(studentName);
+  }
+  ctx.fillText(studentName, width / 2, 480);
 
-  // Underline with center diamond
-  const nameMetric = ctx.measureText(studentName);
-  const nameHalf = Math.max(nameMetric.width / 2 + 35, 140);
+  // Elegant gold underline with center diamond
+  const nameHalf = Math.max(nameMetric.width / 2 + 40, 150);
   ctx.strokeStyle = '#D4AF37';
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 1.8;
   ctx.beginPath();
-  ctx.moveTo(width / 2 - nameHalf, 460);
-  ctx.lineTo(width / 2 + nameHalf, 460);
+  ctx.moveTo(width / 2 - nameHalf, 502);
+  ctx.lineTo(width / 2 + nameHalf, 502);
   ctx.stroke();
-  drawDiamond(width / 2, 460, 5, '#D4AF37');
+  drawDiamond(width / 2, 502, 5, '#D4AF37');
   ctx.restore();
 
-  // 9. Event Description & Programme Topic
+  // 9. Event Description & Programme Topic (Comfortable line spacing, NO dates)
   ctx.save();
   ctx.textAlign = 'center';
   ctx.fillStyle = '#334155';
-  ctx.font = '500 19px "Plus Jakarta Sans", Arial, sans-serif';
-  const pProg = certData.programme_title || 'Short-Term Training Programme (STTP)';
-  ctx.fillText(`In recognition of active participation in the ${pProg} on`, width / 2, 514);
+  ctx.font = '500 21px "Plus Jakarta Sans", Arial, sans-serif';
+  const pProg = certData.programme_title || 'One Week STTP';
+  ctx.fillText(`In recognition of active participation in the ${pProg} on`, width / 2, 570);
 
-  // Topic (Prominent bold italic)
+  // Topic formatting
   const topic = certData.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives';
   ctx.fillStyle = '#3B0764';
-  ctx.font = 'bold italic 25px Georgia, serif';
 
-  // Wrap topic if too long
-  if (topic.length > 70) {
-    const mid = topic.lastIndexOf(' ', 65);
-    const line1 = topic.substring(0, mid);
-    const line2 = topic.substring(mid + 1);
-    ctx.fillText(`“${line1}`, width / 2, 558);
-    ctx.fillText(`${line2}”`, width / 2, 594);
+  // Support splitting clean topic lines for STTP reference
+  if (topic.includes('–') || topic.includes(' - ') || topic.length > 55) {
+    let line1 = topic;
+    let line2 = '';
+    if (topic.includes('–')) {
+      const parts = topic.split('–');
+      line1 = parts[0].trim();
+      line2 = parts.slice(1).join('–').trim();
+    } else if (topic.includes(' - ')) {
+      const parts = topic.split(' - ');
+      line1 = parts[0].trim();
+      line2 = parts.slice(1).join(' - ').trim();
+    } else {
+      const mid = topic.lastIndexOf(' ', 50);
+      line1 = topic.substring(0, mid).trim();
+      line2 = topic.substring(mid + 1).trim();
+    }
+
+    ctx.font = 'bold italic 29px Georgia, serif';
+    ctx.fillText(`“${line1}`, width / 2, 625);
+    ctx.fillStyle = '#4C1D95';
+    ctx.font = 'bold italic 25px Georgia, serif';
+    ctx.fillText(`${line2}”`, width / 2, 668);
 
     ctx.fillStyle = '#334155';
-    ctx.font = '500 18.5px "Plus Jakarta Sans", Arial, sans-serif';
-    ctx.fillText(`organized by the ${certData.department || 'Department of Computer Science and Business Systems'},`, width / 2, 642);
-    ctx.fillText(`${certData.college_name || 'Ramco Institute of Technology'}.`, width / 2, 672);
+    ctx.font = '500 20px "Plus Jakarta Sans", Arial, sans-serif';
+    ctx.fillText(`organized by the ${certData.department || 'Department of Computer Science and Business Systems'},`, width / 2, 730);
+    ctx.fillStyle = '#1E1B4B';
+    ctx.font = '600 20px "Plus Jakarta Sans", Arial, sans-serif';
+    ctx.fillText(`${certData.college_name || 'Ramco Institute of Technology'}.`, width / 2, 762);
   } else {
-    ctx.fillText(`“${topic}”`, width / 2, 560);
+    ctx.font = 'bold italic 29px Georgia, serif';
+    ctx.fillText(`“${topic}”`, width / 2, 630);
 
     ctx.fillStyle = '#334155';
-    ctx.font = '500 18.5px "Plus Jakarta Sans", Arial, sans-serif';
-    ctx.fillText(`organized by the ${certData.department || 'Department of Computer Science and Business Systems'},`, width / 2, 610);
-    ctx.fillText(`${certData.college_name || 'Ramco Institute of Technology'}.`, width / 2, 640);
+    ctx.font = '500 20px "Plus Jakarta Sans", Arial, sans-serif';
+    ctx.fillText(`organized by the ${certData.department || 'Department of Computer Science and Business Systems'},`, width / 2, 695);
+    ctx.fillStyle = '#1E1B4B';
+    ctx.font = '600 20px "Plus Jakarta Sans", Arial, sans-serif';
+    ctx.fillText(`${certData.college_name || 'Ramco Institute of Technology'}.`, width / 2, 728);
   }
-
-  // Programme Dates & Issue Date
-  const pDates = certData.programme_dates || '10 – 12 October 2026';
-  const iDate = certData.issue_date || '12 October 2026';
-  ctx.font = '16px "Plus Jakarta Sans", Arial, sans-serif';
-  ctx.fillStyle = '#1E293B';
-  ctx.fillText(`Programme Dates: ${pDates}    |    Issue Date: ${iDate}`, width / 2, 706);
   ctx.restore();
 
-  // 10. Authorized Signatories (Supports 3 or 5 Signatories)
+  // 10. Authorized Signatories (5 Evenly Distributed & Aligned, NO vertical dividers)
   const sigCount = parseInt(certData.signatory_count || (certData.signatory_4_name ? 5 : 3), 10);
   const signatories = [
     {
@@ -412,42 +426,30 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
 
   if (sigCount === 5) {
     const centers = [270, 635, 1000, 1365, 1730];
-    const dividers = [452, 817, 1182, 1547];
 
     for (let i = 0; i < 5; i++) {
       const s = signatories[i];
       const cx = centers[i];
       const sigImg = await ritLoadImage(s.sig);
       if (sigImg) {
-        ctx.drawImage(sigImg, cx - 65, 785, 130, 48);
+        ctx.drawImage(sigImg, cx - 75, 875, 150, 58);
       }
       // Signatory Details
       ctx.fillStyle = '#0F172A';
-      ctx.font = 'bold 15px "Plus Jakarta Sans", Arial, sans-serif';
-      ctx.fillText(s.name, cx, 862);
+      ctx.font = 'bold 17px "Plus Jakarta Sans", Arial, sans-serif';
+      ctx.fillText(s.name, cx, 965);
 
       ctx.fillStyle = '#475569';
-      ctx.font = '500 12.5px "Plus Jakarta Sans", Arial, sans-serif';
-      ctx.fillText(s.title, cx, 882);
+      ctx.font = '600 13.5px "Plus Jakarta Sans", Arial, sans-serif';
+      ctx.fillText(s.title, cx, 988);
 
       ctx.fillStyle = '#64748B';
-      ctx.font = '500 12px "Plus Jakarta Sans", Arial, sans-serif';
-      ctx.fillText(s.dept, cx, 900);
+      ctx.font = '500 12.5px "Plus Jakarta Sans", Arial, sans-serif';
+      ctx.fillText(s.dept, cx, 1008);
     }
-
-    // Dividers
-    ctx.strokeStyle = '#CBD5E1';
-    ctx.lineWidth = 1;
-    dividers.forEach(dx => {
-      ctx.beginPath();
-      ctx.moveTo(dx, 840);
-      ctx.lineTo(dx, 905);
-      ctx.stroke();
-    });
   } else {
     // 3 Signatories
-    const centers = [400, 1000, 1600];
-    const dividers = [700, 1300];
+    const centers = [420, 1000, 1580];
     const indices = [0, 2, 3]; // Coordinator, HOD, Principal
 
     for (let i = 0; i < 3; i++) {
@@ -455,29 +457,20 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
       const cx = centers[i];
       const sigImg = await ritLoadImage(s.sig);
       if (sigImg) {
-        ctx.drawImage(sigImg, cx - 75, 785, 150, 48);
+        ctx.drawImage(sigImg, cx - 85, 875, 170, 58);
       }
       ctx.fillStyle = '#0F172A';
-      ctx.font = 'bold 16px "Plus Jakarta Sans", Arial, sans-serif';
-      ctx.fillText(s.name, cx, 862);
+      ctx.font = 'bold 18px "Plus Jakarta Sans", Arial, sans-serif';
+      ctx.fillText(s.name, cx, 965);
 
       ctx.fillStyle = '#475569';
-      ctx.font = '500 13.5px "Plus Jakarta Sans", Arial, sans-serif';
-      ctx.fillText(s.title, cx, 882);
+      ctx.font = '600 14px "Plus Jakarta Sans", Arial, sans-serif';
+      ctx.fillText(s.title, cx, 988);
 
       ctx.fillStyle = '#64748B';
-      ctx.font = '500 12.5px "Plus Jakarta Sans", Arial, sans-serif';
-      ctx.fillText(s.dept, cx, 902);
+      ctx.font = '500 13px "Plus Jakarta Sans", Arial, sans-serif';
+      ctx.fillText(s.dept, cx, 1008);
     }
-
-    ctx.strokeStyle = '#CBD5E1';
-    ctx.lineWidth = 1;
-    dividers.forEach(dx => {
-      ctx.beginPath();
-      ctx.moveTo(dx, 840);
-      ctx.lineTo(dx, 905);
-      ctx.stroke();
-    });
   }
   ctx.restore();
 
@@ -486,12 +479,12 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.save();
   ctx.textAlign = 'center';
   ctx.fillStyle = '#0F172A';
-  ctx.font = 'bold 13.5px "Plus Jakarta Sans", Arial, sans-serif';
-  ctx.fillText(`Certificate ID: ${certId}`, width / 2, 975);
+  ctx.font = 'bold 15px "Plus Jakarta Sans", Arial, sans-serif';
+  ctx.fillText(`Certificate ID: ${certId}`, width / 2, 1140);
 
   ctx.fillStyle = '#64748B';
-  ctx.font = '500 11.5px "Plus Jakarta Sans", Arial, sans-serif';
-  ctx.fillText('Scan the QR code to verify the certificate', width / 2, 995);
+  ctx.font = '500 13px "Plus Jakarta Sans", Arial, sans-serif';
+  ctx.fillText('Scan the QR code to verify the authenticity of this certificate', width / 2, 1165);
   ctx.restore();
 
   // 12. QR Code Rendering on Bottom-Right
@@ -506,7 +499,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
       });
       const qrImg = await ritLoadImage(qrDataUrl);
       if (qrImg) {
-        ctx.drawImage(qrImg, width - 215, height - 190, 100, 100);
+        ctx.drawImage(qrImg, width - 235, height - 215, 120, 120);
       }
     } catch (e) {
       console.warn('QR code canvas render error:', e);

@@ -2080,18 +2080,32 @@ function parseDateString(val) {
 // ============================================================
 // SPREADSHEET BATCH RECORD VALIDATOR & DUPLICATE DETECTOR
 // ============================================================
+// Helper: Student identity normalizer for collision-free duplicate detection
+function normalizeStudentIdentity(name, regNo, dept) {
+    const cleanReg = String(regNo || "").trim().toLowerCase();
+    const cleanDept = String(dept || "").trim().toLowerCase();
+    if (cleanReg && cleanReg.length >= 3 && cleanReg !== cleanDept && cleanReg !== "undefined" && cleanReg !== "null") {
+        return cleanReg;
+    }
+    return String(name || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .trim();
+}
+
 async function validateBatchRecords(records, customExisting = null, defaultOptions = {}) {
     const data = await getAllData();
     const allCerts = customExisting || data.certificates || [];
 
-    // Map existing non-revoked certs: reg::event -> cert
+    // Map existing non-revoked certs: studentIdent::event -> cert
     const existingMap = new Map();
     allCerts.forEach(c => {
         if (!c || c.status === "Revoked") return;
-        const reg = (c.register_number || "").trim().toLowerCase();
         const ev = (c.event_name || "").trim().toLowerCase();
-        if (reg && ev) {
-            existingMap.set(`${reg}::${ev}`, c);
+        if (!ev) return;
+        const studentIdent = normalizeStudentIdentity(c.student_name, c.register_number, c.department);
+        if (studentIdent) {
+            existingMap.set(`${studentIdent}::${ev}`, c);
         }
     });
 
@@ -2100,14 +2114,14 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
     let invalidCount = 0;
     let duplicateCount = 0;
 
-function sanitizeCellValue(val) {
-    if (val === null || val === undefined) return "";
-    let str = String(val).trim();
-    if (/^[=+\-@\t\r]/.test(str)) {
-        str = "'" + str; // Prefix apostrophe to prevent execution in spreadsheet software
+    function sanitizeCellValue(val) {
+        if (val === null || val === undefined) return "";
+        let str = String(val).trim();
+        if (/^[=+\-@\t\r]/.test(str)) {
+            str = "'" + str; // Prefix apostrophe to prevent execution in spreadsheet software
+        }
+        return str;
     }
-    return str;
-}
 
     const validated = (records || []).map((row, idx) => {
         const rowNum = idx + 1;
@@ -2143,9 +2157,6 @@ function sanitizeCellValue(val) {
         if (!studentName) {
             errors.push("Student Name is mandatory");
         }
-        if (!registerNumber) {
-            errors.push("Register Number is mandatory");
-        }
         if (!eventName) {
             errors.push("Event Name is mandatory");
         }
@@ -2179,11 +2190,11 @@ function sanitizeCellValue(val) {
         let isDuplicate = false;
         let duplicateType = null;
         let duplicateMessage = "";
-        const regLower = registerNumber.toLowerCase();
+        const studentIdent = normalizeStudentIdentity(studentName, registerNumber, department);
         const evLower = eventName.toLowerCase();
-        const dupKey = `${regLower}::${evLower}`;
+        const dupKey = (studentIdent && evLower) ? `${studentIdent}::${evLower}` : "";
 
-        if (regLower && evLower) {
+        if (dupKey) {
             if (intraBatchMap.has(dupKey)) {
                 isDuplicate = true;
                 duplicateType = 'file';

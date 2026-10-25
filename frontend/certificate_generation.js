@@ -34,12 +34,12 @@ function updateCertGenRoleNotice() {
 
   if (role === 'admin' || role === 'administrator') {
     roleBadge.className = 'badge badge-purple';
-    roleBadge.innerText = 'Role: Placement Admin (View-Only)';
-    roleDesc.innerText = 'Administrators have read-only access to certificate batches and records. Batch spreadsheet upload, certificate generation, and revocation are restricted to Faculty Coordinators.';
+    roleBadge.innerText = 'Role: Administrator (Manage & Issue Access)';
+    roleDesc.innerText = 'Administrators have full permission to configure certificate events, upload rosters, validate records, customize templates, issue certificates, and manage revocations.';
   } else if (role === 'ja_faculty' || role === 'ja') {
     roleBadge.className = 'badge badge-blue';
     roleBadge.innerText = 'Role: JA Faculty (Verification Access)';
-    roleDesc.innerText = 'JA Faculty members have access to verify certificates and browse issued records. Generation is restricted to Faculty Coordinators.';
+    roleDesc.innerText = 'JA Faculty members have access to verify certificates and browse issued records. Generation is restricted to Faculty Coordinators and Administrators.';
   } else {
     roleBadge.className = 'badge badge-green';
     roleBadge.innerText = 'Role: Faculty Coordinator (Manage & Issue Access)';
@@ -310,15 +310,15 @@ function renderCertGenTable() {
     const q = certGenState.searchQuery;
     displayed = displayed.filter(r =>
       (r.student_name && r.student_name.toLowerCase().includes(q)) ||
-      (r.register_number && r.register_number.toLowerCase().includes(q)) ||
-      (r.event_name && r.event_name.toLowerCase().includes(q))
+      (r.event_name && r.event_name.toLowerCase().includes(q)) ||
+      (r.department && r.department.toLowerCase().includes(q))
     );
   }
 
   if (displayed.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="11" style="text-align:center;padding:36px;color:#64748b;">
+        <td colspan="10" style="text-align:center;padding:36px;color:#64748b;">
           <i class="fa-solid fa-filter" style="font-size:24px;color:#cbd5e1;display:block;margin-bottom:6px;"></i>
           No student records match the active filter.
         </td>
@@ -359,9 +359,6 @@ function renderCertGenTable() {
         <td>${statusBadge}</td>
         <td>
           <input type="text" class="certgen-table-input ${!row.student_name ? 'has-error' : ''}" value="${escapeHtml(row.student_name || '')}" placeholder="Student Name" onchange="handleCertGenCellChange(${actualIdx}, 'student_name', this.value)">
-        </td>
-        <td>
-          <input type="text" class="certgen-table-input ${!row.register_number ? 'has-error' : ''}" style="font-family:monospace;font-weight:600;" value="${escapeHtml(row.register_number || '')}" placeholder="Reg No" onchange="handleCertGenCellChange(${actualIdx}, 'register_number', this.value)">
         </td>
         <td>
           <input type="text" class="certgen-table-input" value="${escapeHtml(row.department || 'Computer Science and Business Systems')}" onchange="handleCertGenCellChange(${actualIdx}, 'department', this.value)">
@@ -411,7 +408,6 @@ function handleCertGenCellChange(idx, field, value) {
   const r = certGenState.records[idx];
   const errors = [];
   if (!r.student_name) errors.push('Student Name is mandatory');
-  if (!r.register_number) errors.push('Register Number is mandatory');
   if (!r.event_name) errors.push('Event Name is mandatory');
 
   r.errors = errors;
@@ -449,7 +445,7 @@ function addManualStudentRow() {
     issue_date: defIssueDate,
     is_valid: false,
     is_duplicate: false,
-    errors: ['Student Name is mandatory', 'Register Number is mandatory'],
+    errors: ['Student Name is mandatory'],
     warnings: []
   });
 
@@ -496,7 +492,7 @@ function downloadCertGenErrorReport() {
     'Row #': r.row_index,
     'Status': !r.is_valid ? 'INVALID' : 'DUPLICATE',
     'Student Name': r.student_name,
-    'Register Number': r.register_number,
+    'Department': r.department,
     'Event Name': r.event_name,
     'Error Details': (r.errors || []).concat(r.warnings || []).join('; ')
   }));
@@ -772,12 +768,6 @@ function updateLiveCertificatePreview() {
 // 5. BATCH CONFIRMATION & GENERATION
 // ============================================================
 function openBatchConfirmationModal() {
-  const role = (window.currentAdminUser && window.currentAdminUser.role) ? window.currentAdminUser.role.toLowerCase() : '';
-  if (role === 'admin' || role === 'administrator') {
-    showAdminAlert('Permission Denied: Administrators have view-only access. Certificate generation is restricted to Faculty Coordinators.');
-    return;
-  }
-
   const records = certGenState.records || [];
   const eligible = records.filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate));
 
@@ -1071,10 +1061,8 @@ function exportIssuedCertificatesExcel() {
     '#': idx + 1,
     'Certificate ID': c.certificate_number,
     'Student Name': c.student_name,
-    'Register Number': c.register_number,
     'Department': c.department,
     'Event Name': c.event_name,
-    'Event Date': c.event_date,
     'Achievement': c.achievement || c.certificate_type,
     'Issue Date': c.issue_date,
     'Status': c.status,
@@ -1097,7 +1085,7 @@ async function loadIssuedCertificatesHistoryTable() {
   if (tbody) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align:center;padding:36px;color:#64748b;">
+        <td colspan="7" style="text-align:center;padding:36px;color:#64748b;">
           <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;color:#7e22ce;display:block;margin-bottom:8px;"></i>
           Loading institutional certificate records...
         </td>
@@ -1223,7 +1211,6 @@ function renderHistoryTable() {
           </span>
         </td>
         <td><strong>${escapeHtml(cert.student_name || 'Student')}</strong></td>
-        <td><code style="font-size:11.5px;color:#475569;">${escapeHtml(cert.register_number || '—')}</code></td>
         <td>${escapeHtml(cert.event_name || 'Department Event')}</td>
         <td>${isDate}</td>
         <td>${statusBadge}</td>
@@ -1261,12 +1248,6 @@ function refreshCertGenBatchesList() {
 let activeRevokeCertId = null;
 
 function openCertGenRevokeModal(certId, studentName) {
-  const role = (window.currentAdminUser && window.currentAdminUser.role) ? window.currentAdminUser.role.toLowerCase() : '';
-  if (role === 'admin' || role === 'administrator') {
-    showAdminAlert('Permission Denied: Administrators have view-only access. Certificate revocation is restricted to Faculty Coordinators.');
-    return;
-  }
-
   activeRevokeCertId = certId;
   const idEl = document.getElementById('cgRevokeModalCertId');
   const nameEl = document.getElementById('cgRevokeModalStudentName');

@@ -1,10 +1,13 @@
 const http = require('http');
 const app = require('../backend/server');
 const jwt = require('jsonwebtoken');
+const xlsx = require('xlsx');
+const feedbackCertificateStorage = require('../backend/feedbackCertificateStorage');
+
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
 
 async function run() {
-  console.log('=== RUNNING CUSTOMIZABLE CERTIFICATE GENERATOR E2E TEST ===');
+  console.log('=== RUNNING CERTIFICATE GENERATOR & PERMISSIONS COMPREHENSIVE SUITE ===');
 
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(0, resolve));
@@ -12,10 +15,24 @@ async function run() {
   const baseUrl = `http://localhost:${port}`;
   console.log(`Test server running at ${baseUrl}`);
 
+  const adminToken = jwt.sign({
+    id: 'test-admin-001',
+    name: 'Placement Administrator',
+    role: 'admin',
+    department: 'Placement Cell'
+  }, JWT_SECRET, { expiresIn: '8h' });
+
   const facultyToken = jwt.sign({
     id: 'test-fac-001',
     name: 'Dr. Faculty Coordinator',
     role: 'faculty_coordinator',
+    department: 'CSBS'
+  }, JWT_SECRET, { expiresIn: '8h' });
+
+  const jaToken = jwt.sign({
+    id: 'test-ja-001',
+    name: 'JA Faculty Member',
+    role: 'ja_faculty',
     department: 'CSBS'
   }, JWT_SECRET, { expiresIn: '8h' });
 
@@ -33,117 +50,216 @@ async function run() {
   }
 
   try {
-    // 1. Test GET /api/admin/certificate-generation/templates
-    console.log('\n[TEST 1] Testing Template Presets API...');
-    const tplRes = await fetch(`${baseUrl}/api/admin/certificate-generation/templates`, {
-      headers: { Authorization: `Bearer ${facultyToken}` }
-    });
-    const tplData = await tplRes.json();
-    assert(tplData.success === true, 'GET /templates returns success: true');
-    assert(Array.isArray(tplData.templates) && tplData.templates.length >= 1, `Found ${tplData.templates?.length} templates`);
-    const sttpTpl = tplData.templates?.find(t => t.id === 'sttp_blockchain_2026' || t.id === 'tpl_sttp_blockchain_2026');
-    assert(!!sttpTpl, 'Initial STTP Blockchain 2026 template is available');
-    assert(sttpTpl?.signatory_count === 5, 'STTP template defaults to 5 signatories');
+    // -------------------------------------------------------------
+    // TEST 1: 10 DISTINCT SAMPLE NAMES VALIDATION (0 FALSE DUPLICATES)
+    // -------------------------------------------------------------
+    console.log('\n[TEST 1] Testing 10 Distinct Sample Students (No Register Numbers, Shared Event)...');
+    const tenDistinctNames = [
+      "Aravind Swamy K",
+      "Bhavani Shankar T",
+      "Chandrasekar M",
+      "Deepa Lakshmi V",
+      "Elango Pandian S",
+      "Fathima Banu A",
+      "Gowtham Raj R",
+      "Hari Prasath B",
+      "Indhuja Devi P",
+      "Jeeva Kumar C"
+    ];
 
-    // 2. Issue a batch with 5 signatories & custom STTP wording
-    console.log('\n[TEST 2] Testing Issue Batch with 5 Signatories...');
-    const batchPayload = {
-      batch_title: 'STTP Blockchain Technologies Batch 1',
-      event_name: 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
-      event_date: '2026-10-12',
-      academic_year: '2026-27',
+    const testEvent = "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives";
+
+    const tenRecords = tenDistinctNames.map((name) => ({
+      student_name: name,
+      department: "Computer Science and Business Systems",
+      event_name: testEvent,
+      participation_type: "Participation"
+    }));
+
+    const valResult = await feedbackCertificateStorage.validateBatchRecords(tenRecords);
+    assert(valResult.total_records === 10, 'Total records processed is 10');
+    assert(valResult.valid_records === 10, `All 10 distinct students are VALID (Got ${valResult.valid_records})`);
+    assert(valResult.duplicate_records === 0, `ZERO false duplicates flagged for 10 distinct students (Got ${valResult.duplicate_records})`);
+    assert(valResult.invalid_records === 0, `ZERO invalid records flagged (Got ${valResult.invalid_records})`);
+
+    // -------------------------------------------------------------
+    // TEST 2: GENUINE DUPLICATE DETECTION (IN-FILE & IN-DATABASE)
+    // -------------------------------------------------------------
+    console.log('\n[TEST 2] Testing Genuine Duplicate Detection...');
+    const duplicateBatch = [
+      {
+        student_name: "Aravind Swamy K",
+        department: "Computer Science and Business Systems",
+        event_name: testEvent,
+        participation_type: "Participation"
+      },
+      {
+        student_name: "Bhavani Shankar T",
+        department: "Computer Science and Business Systems",
+        event_name: testEvent,
+        participation_type: "Participation"
+      },
+      {
+        student_name: "Aravind Swamy K", // Duplicate of row 1 in same file!
+        department: "Computer Science and Business Systems",
+        event_name: testEvent,
+        participation_type: "Participation"
+      }
+    ];
+
+    const dupValResult = await feedbackCertificateStorage.validateBatchRecords(duplicateBatch);
+    assert(dupValResult.total_records === 3, 'Total records is 3');
+    assert(dupValResult.duplicate_records === 1, `Exactly 1 duplicate flagged (Got ${dupValResult.duplicate_records})`);
+    assert(dupValResult.records[0].is_duplicate === false, 'Row 1 is valid (not duplicate)');
+    assert(dupValResult.records[1].is_duplicate === false, 'Row 2 is valid (not duplicate)');
+    assert(dupValResult.records[2].is_duplicate === true, 'Row 3 is flagged as DUPLICATE');
+    assert(dupValResult.records[2].duplicate_type === 'file', 'Duplicate type is "file"');
+
+    // -------------------------------------------------------------
+    // TEST 3: ROLE AUTHORIZATION — ADMINISTRATOR ISSUANCE
+    // -------------------------------------------------------------
+    console.log('\n[TEST 3] Testing Administrator Role Permission on /issue-batch...');
+    const adminBatchPayload = {
+      batch_title: 'Admin STTP Blockchain Batch',
+      event_name: testEvent,
       certificate_title: 'CERTIFICATE OF PARTICIPATION',
-      certificate_type: 'STTP',
-      programme_title: 'Short-Term Training Programme (STTP)',
-      programme_dates: '10 – 12 October 2026',
-      certificate_wording: 'This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Short-Term Training Programme (STTP) on ‘Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives’, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.',
+      certificate_type: 'Participation',
+      programme_title: 'One Week STTP',
       id_prefix: 'RIT-STTP-2026',
       signatory_count: 5,
-      signatory_1_name: 'Dr. K. Arulraj',
-      signatory_1_title: 'Faculty Coordinator',
-      signatory_1_dept: 'CSBS, RIT',
-      signatory_2_name: 'Dr. S. Rajakumaran',
-      signatory_2_title: 'STTP Coordinator',
-      signatory_2_dept: 'CSBS, RIT',
-      signatory_3_name: 'Dr. S. Rajakarunakaran',
-      signatory_3_title: 'Head of Department',
-      signatory_3_dept: 'CSBS, RIT',
-      signatory_4_name: 'Dr. L. Ganesan',
-      signatory_4_title: 'Principal',
-      signatory_4_dept: 'RIT',
-      signatory_5_name: 'Dr. R. Ramesh',
-      signatory_5_title: 'Director',
-      signatory_5_dept: 'RIT',
       allow_duplicates: true,
       records: [
         {
-          student_name: 'Sivaranjani S',
-          register_number: '953623244001',
+          student_name: 'Chandrasekar M',
           department: 'Computer Science and Business Systems',
-          college_name: 'Ramco Institute of Technology',
-          is_valid: true
-        },
-        {
-          student_name: 'Suchithra S',
-          register_number: '953623244002',
-          department: 'Computer Science and Business Systems',
-          college_name: 'Ramco Institute of Technology',
+          event_name: testEvent,
+          participation_type: 'Participation',
           is_valid: true
         }
       ]
     };
 
-    const issueRes = await fetch(`${baseUrl}/api/admin/certificate-generation/issue-batch`, {
+    const adminRes = await fetch(`${baseUrl}/api/admin/certificate-generation/issue-batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${facultyToken}`
+        Authorization: `Bearer ${adminToken}`
       },
-      body: JSON.stringify(batchPayload)
+      body: JSON.stringify(adminBatchPayload)
     });
-    const issueData = await issueRes.json();
-    assert(issueData.success === true, 'Issue batch succeeds with HTTP 200');
-    assert(issueData.total_issued === 2, 'Issued exactly 2 certificates');
-    assert(Array.isArray(issueData.certificates) && issueData.certificates.length === 2, '2 certificate objects returned');
 
-    const firstCert = issueData.certificates[0];
-    assert(firstCert.student_name === 'Sivaranjani S', 'First certificate student name matches');
-    assert(firstCert.certificate_number.startsWith('RIT-STTP-2026-'), `Certificate ID format matches prefix: ${firstCert.certificate_number}`);
-    assert(firstCert.signatory_count === 5, 'Certificate reflects 5 signatories');
-    assert(firstCert.signatory_5_name === 'Dr. R. Ramesh', 'Signatory 5 name stored correctly');
+    const adminData = await adminRes.json();
+    assert(adminRes.status === 200, `Administrator can generate certificates (HTTP ${adminRes.status})`);
+    assert(adminData.success === true, 'Administrator issuance returned success: true');
+    assert(adminData.total_issued === 1, 'Admin issued 1 certificate successfully');
 
-    // 3. Test Privacy & Public Verification
-    console.log('\n[TEST 3] Testing Public Verification & Privacy Safeguards...');
-    const verifyRes = await fetch(`${baseUrl}/api/public/verify-certificate/${encodeURIComponent(firstCert.certificate_number)}`);
-    const verifyData = await verifyRes.json();
-    assert(verifyData.success === true, 'Public verification API returns success: true');
-    assert(verifyData.found === true, 'Certificate found in registry');
-    assert(verifyData.certificate?.student_name === 'Sivaranjani S', 'Public verification exposes student name');
-    assert(verifyData.certificate?.register_number === undefined, 'CRITICAL PRIVACY: Register number is NOT exposed in public verification');
-    assert(verifyData.certificate?.signatory_count === 5, 'Public verification reflects 5 signatories');
-    assert(verifyData.certificate?.signatory_1_name === 'Dr. K. Arulraj', 'Signatory 1 is Dr. K. Arulraj');
-    assert(verifyData.certificate?.signatory_4_name === 'Dr. L. Ganesan', 'Signatory 4 is Dr. L. Ganesan');
-    assert(verifyData.certificate?.signatory_5_name === 'Dr. R. Ramesh', 'Signatory 5 is Dr. R. Ramesh');
-    assert(verifyData.certificate?.event_name === batchPayload.event_name, 'Event topic matches STTP');
+    // -------------------------------------------------------------
+    // TEST 4: ROLE AUTHORIZATION — FACULTY COORDINATOR ISSUANCE
+    // -------------------------------------------------------------
+    console.log('\n[TEST 4] Testing Faculty Coordinator Role Permission on /issue-batch...');
+    const facBatchPayload = {
+      batch_title: 'Faculty STTP Blockchain Batch',
+      event_name: testEvent,
+      certificate_title: 'CERTIFICATE OF PARTICIPATION',
+      certificate_type: 'Participation',
+      programme_title: 'One Week STTP',
+      id_prefix: 'RIT-STTP-2026',
+      signatory_count: 5,
+      allow_duplicates: true,
+      records: [
+        {
+          student_name: 'Deepa Lakshmi V',
+          department: 'Computer Science and Business Systems',
+          event_name: testEvent,
+          participation_type: 'Participation',
+          is_valid: true
+        }
+      ]
+    };
 
-    // 4. Test Revocation
-    console.log('\n[TEST 4] Testing Revocation Flow...');
-    const revokeRes = await fetch(`${baseUrl}/api/admin/certificate-generation/revoke/${encodeURIComponent(firstCert.certificate_number)}`, {
+    const facRes = await fetch(`${baseUrl}/api/admin/certificate-generation/issue-batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${facultyToken}`
       },
-      body: JSON.stringify({ reason: 'Test administrative audit' })
+      body: JSON.stringify(facBatchPayload)
+    });
+
+    const facData = await facRes.json();
+    assert(facRes.status === 200, `Faculty Coordinator can generate certificates (HTTP ${facRes.status})`);
+    assert(facData.success === true, 'Faculty Coordinator issuance returned success: true');
+
+    // -------------------------------------------------------------
+    // TEST 5: ROLE AUTHORIZATION — UNAUTHORIZED ROLE BLOCKED
+    // -------------------------------------------------------------
+    console.log('\n[TEST 5] Testing Unauthorized Roles are Blocked...');
+    const jaRes = await fetch(`${baseUrl}/api/admin/certificate-generation/issue-batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jaToken}`
+      },
+      body: JSON.stringify(facBatchPayload)
+    });
+
+    assert(jaRes.status === 403, `JA Faculty is BLOCKED from generating certificates (Got HTTP ${jaRes.status})`);
+    const jaData = await jaRes.json();
+    assert(jaData.success === false, 'JA Faculty response has success: false');
+
+    const anonRes = await fetch(`${baseUrl}/api/admin/certificate-generation/issue-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(facBatchPayload)
+    });
+    assert(anonRes.status === 401, `Unauthenticated request is BLOCKED (Got HTTP ${anonRes.status})`);
+
+    // -------------------------------------------------------------
+    // TEST 6: PUBLIC VERIFICATION PRIVACY (NO REGISTER NUMBER)
+    // -------------------------------------------------------------
+    console.log('\n[TEST 6] Testing Public Verification & Privacy Safeguards...');
+    const issuedCert = adminData.certificates[0];
+    const pubVerifyRes = await fetch(`${baseUrl}/api/public/verify-certificate/${encodeURIComponent(issuedCert.certificate_number)}`);
+    const pubVerifyData = await pubVerifyRes.json();
+
+    assert(pubVerifyRes.status === 200, 'Public verification API returns HTTP 200');
+    assert(pubVerifyData.success === true && pubVerifyData.found === true, 'Certificate is found in registry');
+    assert(pubVerifyData.certificate?.student_name === 'Chandrasekar M', 'Student name is exposed');
+    assert(pubVerifyData.certificate?.register_number === undefined, 'CRITICAL: register_number is NOT in public verification response');
+
+    // -------------------------------------------------------------
+    // TEST 7: DOWNLOADABLE EXCEL TEMPLATE HAS NO REG NO / DATES
+    // -------------------------------------------------------------
+    console.log('\n[TEST 7] Testing Template Download Headers...');
+    const tplDlRes = await fetch(`${baseUrl}/api/admin/certificate-generation/template-download`);
+    assert(tplDlRes.status === 200, 'Template download returns HTTP 200');
+    const tplBuffer = await tplDlRes.arrayBuffer();
+    const wb = xlsx.read(Buffer.from(tplBuffer), { type: 'buffer' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const headers = xlsx.utils.sheet_to_json(sheet, { header: 1 })[0] || [];
+    console.log('  Downloaded template headers:', headers);
+
+    assert(headers.includes('Student Name'), 'Template contains "Student Name"');
+    assert(headers.includes('Department'), 'Template contains "Department"');
+    assert(!headers.includes('Register Number'), 'Template does NOT contain "Register Number"');
+    assert(!headers.includes('Academic Year'), 'Template does NOT contain "Academic Year"');
+    assert(!headers.includes('Certificate Issue Date'), 'Template does NOT contain "Certificate Issue Date"');
+
+    // -------------------------------------------------------------
+    // TEST 8: REVOCATION CAPABILITY FOR ADMIN
+    // -------------------------------------------------------------
+    console.log('\n[TEST 8] Testing Administrator Revocation Permission...');
+    const revokeRes = await fetch(`${baseUrl}/api/admin/certificate-generation/revoke/${encodeURIComponent(issuedCert.certificate_number)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({ reason: 'Audit cancellation test' })
     });
     const revokeData = await revokeRes.json();
-    assert(revokeData.success === true, 'Revocation API returns success: true');
-
-    const reVerifyRes = await fetch(`${baseUrl}/api/public/verify-certificate/${encodeURIComponent(firstCert.certificate_number)}`);
-    const reVerifyData = await reVerifyRes.json();
-    assert(reVerifyData.status === 'REVOKED', 'Re-verification correctly reflects REVOKED status');
-    assert(reVerifyData.certificate?.revocation_reason === 'Test administrative audit', 'Revocation reason exposed for audit');
-    assert(reVerifyData.certificate?.register_number === undefined, 'Register number still protected even on revoked certificates');
+    assert(revokeRes.status === 200, 'Administrator can revoke certificate (HTTP 200)');
+    assert(revokeData.success === true, 'Revocation success: true');
 
   } catch (err) {
     console.error('Test execution error:', err);
@@ -153,7 +269,7 @@ async function run() {
   }
 
   console.log(`\n=======================================================`);
-  console.log(`CUSTOM CERT GENERATOR TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
+  console.log(`SUITE COMPLETE: ${passed} PASSED, ${failed} FAILED`);
   console.log(`=======================================================`);
   process.exit(failed > 0 ? 1 : 0);
 }

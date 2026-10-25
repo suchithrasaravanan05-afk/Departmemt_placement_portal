@@ -73,17 +73,18 @@ function requireFacultyOrCoordinatorWrite(req, res, next) {
         req.user = decoded;
 
         const effectiveRole = getEffectiveRole(req.user);
-        // Administrators have view-only access, JA Faculty has verification-only access
-        if (effectiveRole === "admin") {
+        // Both Administrator and authorized Faculty Coordinator have permission to generate and manage certificates
+        const allowedRoles = ["admin", "administrator", "faculty_coordinator", "coordinator", "hod"];
+        if (!allowedRoles.includes(effectiveRole)) {
+            if (effectiveRole === "ja_faculty") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Permission Denied: JA Faculty has verification-only access. Certificate generation and revocation are restricted to Administrators and Faculty Coordinators."
+                });
+            }
             return res.status(403).json({
                 success: false,
-                message: "Permission Denied: Administrators have view-only access. Certificate generation and revocation are restricted to authorized Faculty Coordinators."
-            });
-        }
-        if (effectiveRole === "ja_faculty") {
-            return res.status(403).json({
-                success: false,
-                message: "Permission Denied: JA Faculty has verification-only access. Certificate generation is restricted to Faculty Coordinators."
+                message: "Permission Denied: Certificate generation and revocation are restricted to Administrators and authorized Faculty Coordinators."
             });
         }
 
@@ -184,7 +185,6 @@ function parseUploadedSpreadsheet(buffer) {
 
     // Fallbacks if not detected
     if (!headerMap.student_name) headerMap.student_name = sampleKeys[0];
-    if (!headerMap.register_number && sampleKeys.length > 1) headerMap.register_number = sampleKeys[1];
 
     const mapped = rawData.map(r => mapSpreadsheetRow(r, headerMap));
     return mapped;
@@ -426,45 +426,29 @@ router.get("/template-download", (req, res) => {
     try {
         const headers = [
             "Student Name",
-            "Register Number",
             "Department",
-            "Academic Year",
             "Event Name",
-            "Event Date",
-            "Participation Type or Achievement",
-            "Certificate Issue Date"
+            "Participation Type"
         ];
 
         const sampleRows = [
             [
                 "SIVARANJANI S",
-                "953623244001",
                 "Computer Science and Business Systems",
-                "2026-27",
                 "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-                "2026-10-12",
-                "Participation",
-                "2026-10-12"
+                "Participation"
             ],
             [
                 "ARUN KUMAR M",
-                "953623244002",
                 "Computer Science and Business Systems",
-                "2026-27",
                 "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-                "2026-10-12",
-                "Participation",
-                "2026-10-12"
+                "Participation"
             ],
             [
                 "PRIYA DHARSHINI R",
-                "953623244003",
                 "Computer Science and Business Systems",
-                "2026-27",
                 "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-                "2026-10-12",
-                "Certificate of Merit",
-                "2026-10-12"
+                "Certificate of Merit"
             ]
         ];
 
@@ -473,14 +457,10 @@ router.get("/template-download", (req, res) => {
 
         // Column widths
         ws["!cols"] = [
-            { wch: 24 }, // Student Name
-            { wch: 18 }, // Register Number
+            { wch: 26 }, // Student Name
             { wch: 38 }, // Department
-            { wch: 16 }, // Academic Year
-            { wch: 42 }, // Event Name
-            { wch: 16 }, // Event Date
-            { wch: 34 }, // Participation Type / Achievement
-            { wch: 22 }  // Issue Date
+            { wch: 45 }, // Event Name
+            { wch: 25 }  // Participation Type
         ];
 
         const wb = xlsx.utils.book_new();
