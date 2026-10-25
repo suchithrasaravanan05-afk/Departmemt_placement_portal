@@ -67,7 +67,8 @@ async function run() {
       "Jeeva Kumar C"
     ];
 
-    const testEvent = "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives";
+    const testRunId = Date.now();
+    const testEvent = `Emerging Blockchain Technologies – STTP Batch ${testRunId}`;
 
     const tenRecords = tenDistinctNames.map((name) => ({
       student_name: name,
@@ -226,6 +227,42 @@ async function run() {
     assert(pubVerifyData.success === true && pubVerifyData.found === true, 'Certificate is found in registry');
     assert(pubVerifyData.certificate?.student_name === 'Chandrasekar M', 'Student name is exposed');
     assert(pubVerifyData.certificate?.register_number === undefined, 'CRITICAL: register_number is NOT in public verification response');
+
+    // -------------------------------------------------------------
+    // TEST 6B: OPTICAL QR CODE GENERATION & SCANNING VERIFICATION
+    // -------------------------------------------------------------
+    console.log('\n[TEST 6B] Testing Real QR Code Generation & Optical Decode...');
+    const QRCode = require('qrcode');
+    const jsQR = require('jsqr');
+    const qrTargetUrl = `https://rit-csbs-portal.vercel.app/verify-certificate.html?id=${encodeURIComponent(issuedCert.certificate_number)}`;
+    const qrMatrix = QRCode.create(qrTargetUrl, { errorCorrectionLevel: 'M' });
+    const qrModSize = qrMatrix.modules.size;
+    const qrScale = 4;
+    const qrMargin = 4;
+    const qrDim = (qrModSize + qrMargin * 2) * qrScale;
+    const qrBuf = new Uint8ClampedArray(qrDim * qrDim * 4);
+    qrBuf.fill(255);
+    for (let r = 0; r < qrModSize; r++) {
+      for (let c = 0; c < qrModSize; c++) {
+        if (qrMatrix.modules.get(r, c)) {
+          const sx = (c + qrMargin) * qrScale;
+          const sy = (r + qrMargin) * qrScale;
+          for (let py = 0; py < qrScale; py++) {
+            for (let px = 0; px < qrScale; px++) {
+              const idx = ((sy + py) * qrDim + (sx + px)) * 4;
+              qrBuf[idx] = 0;
+              qrBuf[idx + 1] = 0;
+              qrBuf[idx + 2] = 0;
+              qrBuf[idx + 3] = 255;
+            }
+          }
+        }
+      }
+    }
+    const scannedQr = jsQR(qrBuf, qrDim, qrDim);
+    assert(scannedQr !== null, 'Generated QR code was successfully scanned by optical decoder');
+    assert(scannedQr?.data === qrTargetUrl, `QR code contains deployed verification URL (${scannedQr?.data})`);
+
 
     // -------------------------------------------------------------
     // TEST 7: DOWNLOADABLE EXCEL TEMPLATE HAS NO REG NO / DATES
