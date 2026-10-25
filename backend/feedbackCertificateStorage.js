@@ -15,8 +15,71 @@ const DEFAULT_DATA = {
     notifications: [],
     deleted_event_ids: [],
     certificate_batches: [],
-    certificate_audit_logs: []
+    certificate_audit_logs: [],
+    certificate_templates: []
 };
+
+// Initial verified RIT STTP & Workshop templates
+const INITIAL_TEMPLATES = [
+    {
+        id: "tpl_sttp_blockchain_2026",
+        is_default: true,
+        template_title: "STTP — Emerging Blockchain Technologies (Reference Standard)",
+        certificate_title: "CERTIFICATE OF PARTICIPATION",
+        certificate_type: "Participation",
+        programme_title: "Short-Term Training Programme (STTP)",
+        event_name: "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
+        department: "Department of Computer Science and Business Systems (CSBS)",
+        college_name: "Ramco Institute of Technology",
+        programme_dates: "10 – 12 October 2026",
+        issue_date: "12 October 2026",
+        certificate_wording: "This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.",
+        signatory_count: 5,
+        signatory_1_name: "Dr. K. Arulraj",
+        signatory_1_title: "Faculty Coordinator",
+        signatory_1_org: "CSBS, RIT",
+        signatory_2_name: "Dr. S. Rajakumaran",
+        signatory_2_title: "STTP Coordinator",
+        signatory_2_org: "CSBS, RIT",
+        signatory_3_name: "Dr. S. Rajakarunakaran",
+        signatory_3_title: "Head of Department",
+        signatory_3_org: "CSBS, RIT",
+        signatory_4_name: "Dr. L. Ganesan",
+        signatory_4_title: "Principal",
+        signatory_4_org: "RIT",
+        signatory_5_name: "Dr. R. Ramesh",
+        signatory_5_title: "Director",
+        signatory_5_org: "RIT",
+        template_style: "rit_purple_gold",
+        id_prefix: "RIT-STTP-2026-"
+    },
+    {
+        id: "tpl_workshop_fullstack",
+        is_default: false,
+        template_title: "Workshop — Full Stack Cloud Architecture Masterclass",
+        certificate_title: "CERTIFICATE OF PARTICIPATION",
+        certificate_type: "Participation",
+        programme_title: "Value Added Training Programme",
+        event_name: "Full Stack Cloud Architecture & Scalability Masterclass",
+        department: "Department of Computer Science and Business Systems (CSBS)",
+        college_name: "Ramco Institute of Technology",
+        programme_dates: "22 October 2026",
+        issue_date: "22 October 2026",
+        certificate_wording: "This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Full Stack Cloud Architecture & Scalability Masterclass, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.",
+        signatory_count: 3,
+        signatory_1_name: "Dr. D. Kesavaraja",
+        signatory_1_title: "Head of Department (HOD)",
+        signatory_1_org: "CSBS, RIT",
+        signatory_2_name: "Dr. S. Rajakarunakarun",
+        signatory_2_title: "Vice Principal / Patron",
+        signatory_2_org: "RIT",
+        signatory_3_name: "Dr. L. Ganesan",
+        signatory_3_title: "Principal / Chief Patron",
+        signatory_3_org: "RIT",
+        template_style: "rit_purple_gold",
+        id_prefix: "RIT-CSBS-2026-"
+    }
+];
 
 // In-memory cache
 let inMemoryData = null;
@@ -56,6 +119,7 @@ function readLocalData() {
                 if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
                 if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
                 if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
+                if (!Array.isArray(parsed.certificate_templates)) parsed.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
                 return parsed;
             }
         }
@@ -89,6 +153,7 @@ async function loadFromSupabaseStorage() {
                 if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
                 if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
                 if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
+                if (!Array.isArray(parsed.certificate_templates)) parsed.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
                 return parsed;
             }
         }
@@ -2015,7 +2080,7 @@ function parseDateString(val) {
 // ============================================================
 // SPREADSHEET BATCH RECORD VALIDATOR & DUPLICATE DETECTOR
 // ============================================================
-async function validateBatchRecords(records, customExisting = null) {
+async function validateBatchRecords(records, customExisting = null, defaultOptions = {}) {
     const data = await getAllData();
     const allCerts = customExisting || data.certificates || [];
 
@@ -2062,10 +2127,10 @@ function sanitizeCellValue(val) {
             row.academic_year || row['Academic Year'] || row.academicYear || row.Academic_Year || "2026-27"
         );
         const eventName = sanitizeCellValue(
-            row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || ""
+            row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || (defaultOptions && defaultOptions.event_name) || ""
         );
         const rawEventDate = sanitizeCellValue(
-            row.event_date || row['Event Date'] || row.eventDate || row.Event_Date || row.date || row.Date || ""
+            row.event_date || row['Event Date'] || row.eventDate || row.Event_Date || row.date || row.Date || (defaultOptions && defaultOptions.event_date) || ""
         );
         const participationType = sanitizeCellValue(
             row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || row.Participation_Type || "Participation"
@@ -2206,12 +2271,27 @@ async function issueBulkCertificates({
     event_date,
     category = "Placement Training",
     academic_year = "2026-27",
-    signatory_1_name = "Dr. D. Kesavaraja",
-    signatory_1_title = "Head of Department (HOD)",
-    signatory_2_name = "Dr. S. Rajakarunakarun",
-    signatory_2_title = "Vice Principal / Patron",
-    signatory_3_name = "Dr. L. Ganesan",
-    signatory_3_title = "Principal / Chief Patron",
+    signatory_count = 5,
+    signatory_1_name = "Dr. K. Arulraj",
+    signatory_1_title = "Faculty Coordinator",
+    signatory_1_org = "CSBS, RIT",
+    signatory_2_name = "Dr. S. Rajakumaran",
+    signatory_2_title = "STTP Coordinator",
+    signatory_2_org = "CSBS, RIT",
+    signatory_3_name = "Dr. S. Rajakarunakaran",
+    signatory_3_title = "Head of Department",
+    signatory_3_org = "CSBS, RIT",
+    signatory_4_name = "Dr. L. Ganesan",
+    signatory_4_title = "Principal",
+    signatory_4_org = "RIT",
+    signatory_5_name = "Dr. R. Ramesh",
+    signatory_5_title = "Director",
+    signatory_5_org = "RIT",
+    programme_title = "Short-Term Training Programme (STTP)",
+    programme_dates = "10 – 12 October 2026",
+    certificate_wording = "",
+    template_style = "rit_purple_gold",
+    id_prefix = "RIT-STTP-2026-",
     signatories = null,
     certificate_title = "CERTIFICATE OF PARTICIPATION",
     certificateTitle,
@@ -2228,19 +2308,36 @@ async function issueBulkCertificates({
     const effectiveEventName = event_name || eventTitle || "";
     const effectiveCertTitle = certificate_title || certificateTitle || "CERTIFICATE OF PARTICIPATION";
 
-    const sig1Name = (signatories && signatories.signatory1 && signatories.signatory1.name) || signatory_1_name || "Dr. D. Kesavaraja";
-    const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Head of Department (HOD)";
-    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Dr. S. Rajakarunakarun";
-    const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "Vice Principal / Patron";
-    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "Dr. L. Ganesan";
-    const sig3Title = (signatories && signatories.signatory3 && signatories.signatory3.title) || signatory_3_title || "Principal / Chief Patron";
+    const sigCount = Number(signatory_count) || (signatory_5_name ? 5 : 3);
+    const sig1Name = (signatories && signatories.signatory1 && signatories.signatory1.name) || signatory_1_name || "Dr. K. Arulraj";
+    const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Faculty Coordinator";
+    const sig1Org = (signatories && signatories.signatory1 && signatories.signatory1.org) || signatory_1_org || "CSBS, RIT";
+
+    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Dr. S. Rajakumaran";
+    const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "STTP Coordinator";
+    const sig2Org = (signatories && signatories.signatory2 && signatories.signatory2.org) || signatory_2_org || "CSBS, RIT";
+
+    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "Dr. S. Rajakarunakaran";
+    const sig3Title = (signatories && signatories.signatory3 && signatories.signatory3.title) || signatory_3_title || "Head of Department";
+    const sig3Org = (signatories && signatories.signatory3 && signatories.signatory3.org) || signatory_3_org || "CSBS, RIT";
+
+    const sig4Name = (signatories && signatories.signatory4 && signatories.signatory4.name) || signatory_4_name || "Dr. L. Ganesan";
+    const sig4Title = (signatories && signatories.signatory4 && signatories.signatory4.title) || signatory_4_title || "Principal";
+    const sig4Org = (signatories && signatories.signatory4 && signatories.signatory4.org) || signatory_4_org || "RIT";
+
+    const sig5Name = (signatories && signatories.signatory5 && signatories.signatory5.name) || signatory_5_name || "Dr. R. Ramesh";
+    const sig5Title = (signatories && signatories.signatory5 && signatories.signatory5.title) || signatory_5_title || "Director";
+    const sig5Org = (signatories && signatories.signatory5 && signatories.signatory5.org) || signatory_5_org || "RIT";
 
     const data = await getAllData();
     if (!Array.isArray(data.certificates)) data.certificates = [];
     if (!Array.isArray(data.certificate_batches)) data.certificate_batches = [];
     if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
 
-    const validationResult = await validateBatchRecords(records, data.certificates);
+    const validationResult = await validateBatchRecords(records, data.certificates, {
+        event_name: event_name || eventTitle,
+        event_date: event_date
+    });
     const validRecords = validationResult.records.filter(r => r.is_valid && (allow_duplicates || !r.is_duplicate));
 
     if (validRecords.length === 0) {
@@ -2262,12 +2359,23 @@ async function issueBulkCertificates({
     const issuedAt = new Date().toISOString();
     const issueDateStr = issuedAt.split("T")[0];
 
+    let cleanPrefix = (id_prefix || "RIT-STTP-2026-").trim();
+    if (!cleanPrefix.endsWith("-")) cleanPrefix += "-";
+    const existingIds = new Set((data.certificates || []).map(c => (c && c.certificate_number ? c.certificate_number.toUpperCase() : "")));
+
     for (let i = 0; i < validRecords.length; i++) {
         const row = validRecords[i];
         try {
             const evDate = row.event_date || event_date || issueDateStr;
             const certYear = evDate ? new Date(evDate).getFullYear() : new Date().getFullYear();
-            const certId = generateUniqueCertificateId(certYear, "CSBS", data.certificates);
+            
+            // Unique certificate ID generation
+            let candidateId = `${cleanPrefix}${String(i + 1).padStart(4, '0')}`;
+            if (existingIds.has(candidateId)) {
+                candidateId = `${cleanPrefix}${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
+            }
+            existingIds.add(candidateId);
+            const certId = candidateId;
             const qrToken = crypto.randomBytes(16).toString("hex");
 
             const regNo = String(row.register_number || "").trim().toUpperCase();
@@ -2285,31 +2393,49 @@ async function issueBulkCertificates({
                 college_name: "RAMCO INSTITUTE OF TECHNOLOGY",
                 department: row.department || "Computer Science and Business Systems",
                 student_name: row.student_name,
-                register_number: regNo,
+                register_number: regNo, // Stored internally for matching/duplicates, never printed on PDF or public verification
                 student_id: stuUser ? stuUser.id : regNo,
                 student_year: (stuUser && stuUser.year) || 4,
                 student_email: (stuUser && stuUser.email) || "",
                 event_name: row.event_name || effectiveEventName,
-                event_code: "CSBS",
+                programme_title: row.programme_title || programme_title || "Short-Term Training Programme (STTP)",
+                programme_dates: row.programme_dates || programme_dates || "10 – 12 October 2026",
+                certificate_wording: row.certificate_wording || certificate_wording || "",
+                template_style: template_style || "rit_purple_gold",
+                event_code: "STTP",
                 event_date: evDate,
                 event_venue: "Department Placement Lab / Online",
                 category: category,
                 academic_year: row.academic_year || academic_year || "2026-27",
                 issue_date: row.issue_date || issueDateStr,
                 coordinator: issuer.full_name || issuer.name || "Faculty Coordinator",
-                signatory_title: sig1Title,
+                signatory_count: sigCount,
+                signatory_title: sig3Title,
                 signatory_1_name: sig1Name,
                 signatory1_name: sig1Name,
                 signatory_1_title: sig1Title,
                 signatory1_title: sig1Title,
+                signatory_1_org: sig1Org,
                 signatory_2_name: sig2Name,
                 signatory2_name: sig2Name,
                 signatory_2_title: sig2Title,
                 signatory2_title: sig2Title,
+                signatory_2_org: sig2Org,
                 signatory_3_name: sig3Name,
                 signatory3_name: sig3Name,
                 signatory_3_title: sig3Title,
                 signatory3_title: sig3Title,
+                signatory_3_org: sig3Org,
+                signatory_4_name: sig4Name,
+                signatory4_name: sig4Name,
+                signatory_4_title: sig4Title,
+                signatory4_title: sig4Title,
+                signatory_4_org: sig4Org,
+                signatory_5_name: sig5Name,
+                signatory5_name: sig5Name,
+                signatory_5_title: sig5Title,
+                signatory5_title: sig5Title,
+                signatory_5_org: sig5Org,
                 status: "Digitally Verified",
                 verification_status: "VERIFIED",
                 revoked_at: null,
@@ -2492,18 +2618,38 @@ async function getPublicCertificateDetails(certId) {
         issueDate: matchedCert.issue_date,
         signatory_title: matchedCert.signatory_title || "Head of Department - CSBS",
         signatoryTitle: matchedCert.signatory_title || "Head of Department - CSBS",
-        signatory_1_name: matchedCert.signatory_1_name || "Dr. D. Kesavaraja",
-        signatory1_name: matchedCert.signatory_1_name || "Dr. D. Kesavaraja",
-        signatory_1_title: matchedCert.signatory_1_title || "Head of Department (HOD)",
-        signatory1_title: matchedCert.signatory_1_title || "Head of Department (HOD)",
-        signatory_2_name: matchedCert.signatory_2_name || "Dr. S. Rajakarunakarun",
-        signatory2_name: matchedCert.signatory_2_name || "Dr. S. Rajakarunakarun",
-        signatory_2_title: matchedCert.signatory_2_title || "Vice Principal / Patron",
-        signatory2_title: matchedCert.signatory_2_title || "Vice Principal / Patron",
-        signatory_3_name: matchedCert.signatory_3_name || "Dr. L. Ganesan",
-        signatory3_name: matchedCert.signatory_3_name || "Dr. L. Ganesan",
-        signatory_3_title: matchedCert.signatory_3_title || "Principal / Chief Patron",
-        signatory3_title: matchedCert.signatory_3_title || "Principal / Chief Patron",
+        signatory_1_name: matchedCert.signatory_1_name || "Dr. K. Arulraj",
+        signatory1_name: matchedCert.signatory_1_name || "Dr. K. Arulraj",
+        signatory_1_title: matchedCert.signatory_1_title || "Faculty Coordinator",
+        signatory1_title: matchedCert.signatory_1_title || "Faculty Coordinator",
+        signatory_1_org: matchedCert.signatory_1_org || "CSBS, RIT",
+        signatory_2_name: matchedCert.signatory_2_name || "Dr. S. Rajakumaran",
+        signatory2_name: matchedCert.signatory_2_name || "Dr. S. Rajakumaran",
+        signatory_2_title: matchedCert.signatory_2_title || "STTP Coordinator",
+        signatory2_title: matchedCert.signatory_2_title || "STTP Coordinator",
+        signatory_2_org: matchedCert.signatory_2_org || "CSBS, RIT",
+        signatory_3_name: matchedCert.signatory_3_name || "Dr. S. Rajakarunakaran",
+        signatory3_name: matchedCert.signatory_3_name || "Dr. S. Rajakarunakaran",
+        signatory_3_title: matchedCert.signatory_3_title || "Head of Department",
+        signatory3_title: matchedCert.signatory_3_title || "Head of Department",
+        signatory_3_org: matchedCert.signatory_3_org || "CSBS, RIT",
+        signatory_4_name: matchedCert.signatory_4_name || "Dr. L. Ganesan",
+        signatory4_name: matchedCert.signatory_4_name || "Dr. L. Ganesan",
+        signatory_4_title: matchedCert.signatory_4_title || "Principal",
+        signatory4_title: matchedCert.signatory_4_title || "Principal",
+        signatory_4_org: matchedCert.signatory_4_org || "RIT",
+        signatory_5_name: matchedCert.signatory_5_name || "Dr. R. Ramesh",
+        signatory5_name: matchedCert.signatory_5_name || "Dr. R. Ramesh",
+        signatory_5_title: matchedCert.signatory_5_title || "Director",
+        signatory5_title: matchedCert.signatory_5_title || "Director",
+        signatory_5_org: matchedCert.signatory_5_org || "RIT",
+        signatory_count: matchedCert.signatory_count || (matchedCert.signatory_5_name ? 5 : 3),
+        programme_title: matchedCert.programme_title || "Short-Term Training Programme (STTP)",
+        programmeTitle: matchedCert.programme_title || "Short-Term Training Programme (STTP)",
+        programme_dates: matchedCert.programme_dates || "",
+        programmeDates: matchedCert.programme_dates || "",
+        certificate_wording: matchedCert.certificate_wording || "",
+        template_style: matchedCert.template_style || "rit_purple_gold",
         status: isRevoked ? "Revoked" : (matchedCert.status || "Digitally Verified"),
         verification_status: isRevoked ? "REVOKED" : "VERIFIED",
         revoked_at: matchedCert.revoked_at || null,
@@ -2546,6 +2692,50 @@ async function getBatchCertificates(batchId) {
     return (data.certificates || []).filter(c => String(c.batch_id) === strBatchId);
 }
 
+// ============================================================
+// REUSABLE EVENT & CERTIFICATE TEMPLATES MANAGEMENT
+// ============================================================
+async function getCertificateTemplates() {
+    const data = await getAllData();
+    if (!Array.isArray(data.certificate_templates) || data.certificate_templates.length === 0) {
+        data.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
+        await commitData(data);
+    }
+    return data.certificate_templates;
+}
+
+async function saveCertificateTemplate(template) {
+    if (!template || !template.template_title) {
+        throw new Error("Template title is required.");
+    }
+    const data = await getAllData();
+    if (!Array.isArray(data.certificate_templates)) {
+        data.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
+    }
+    const id = template.id || `tpl_${Date.now().toString(36)}`;
+    const cleanTpl = {
+        ...template,
+        id,
+        updated_at: new Date().toISOString()
+    };
+    const idx = data.certificate_templates.findIndex(t => t.id === id);
+    if (idx >= 0) {
+        data.certificate_templates[idx] = cleanTpl;
+    } else {
+        data.certificate_templates.push(cleanTpl);
+    }
+    await commitData(data);
+    return cleanTpl;
+}
+
+async function deleteCertificateTemplate(templateId) {
+    const data = await getAllData();
+    if (!Array.isArray(data.certificate_templates)) return false;
+    data.certificate_templates = data.certificate_templates.filter(t => t.id !== templateId);
+    await commitData(data);
+    return true;
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
@@ -2578,5 +2768,8 @@ module.exports = {
     getPublicCertificateDetails,
     getCertificateBatches,
     getBatchCertificates,
+    getCertificateTemplates,
+    saveCertificateTemplate,
+    deleteCertificateTemplate,
     getAllData
 };

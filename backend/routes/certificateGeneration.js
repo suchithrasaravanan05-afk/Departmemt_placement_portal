@@ -254,12 +254,27 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             event_date,
             category,
             academic_year,
+            signatory_count,
             signatory_1_name,
             signatory_1_title,
+            signatory_1_org,
             signatory_2_name,
             signatory_2_title,
+            signatory_2_org,
             signatory_3_name,
             signatory_3_title,
+            signatory_3_org,
+            signatory_4_name,
+            signatory_4_title,
+            signatory_4_org,
+            signatory_5_name,
+            signatory_5_title,
+            signatory_5_org,
+            programme_title,
+            programme_dates,
+            certificate_wording,
+            template_style,
+            id_prefix,
             certificate_title,
             certificate_type,
             allow_duplicates,
@@ -276,12 +291,27 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             event_date,
             category: category || "Placement Training",
             academic_year: academic_year || "2026-27",
-            signatory_1_name: signatory_1_name || "Dr. D. Kesavaraja",
-            signatory_1_title: signatory_1_title || "Head of Department (HOD)",
-            signatory_2_name: signatory_2_name || "Dr. S. Rajakarunakarun",
-            signatory_2_title: signatory_2_title || "Vice Principal / Patron",
-            signatory_3_name: signatory_3_name || "Dr. L. Ganesan",
-            signatory_3_title: signatory_3_title || "Principal / Chief Patron",
+            signatory_count: signatory_count || 5,
+            signatory_1_name: signatory_1_name || "Dr. K. Arulraj",
+            signatory_1_title: signatory_1_title || "Faculty Coordinator",
+            signatory_1_org: signatory_1_org || "CSBS, RIT",
+            signatory_2_name: signatory_2_name || "Dr. S. Rajakumaran",
+            signatory_2_title: signatory_2_title || "STTP Coordinator",
+            signatory_2_org: signatory_2_org || "CSBS, RIT",
+            signatory_3_name: signatory_3_name || "Dr. S. Rajakarunakaran",
+            signatory_3_title: signatory_3_title || "Head of Department",
+            signatory_3_org: signatory_3_org || "CSBS, RIT",
+            signatory_4_name: signatory_4_name || "Dr. L. Ganesan",
+            signatory_4_title: signatory_4_title || "Principal",
+            signatory_4_org: signatory_4_org || "RIT",
+            signatory_5_name: signatory_5_name || "Dr. R. Ramesh",
+            signatory_5_title: signatory_5_title || "Director",
+            signatory_5_org: signatory_5_org || "RIT",
+            programme_title: programme_title || "Short-Term Training Programme (STTP)",
+            programme_dates: programme_dates || "10 – 12 October 2026",
+            certificate_wording: certificate_wording || "",
+            template_style: template_style || "rit_purple_gold",
+            id_prefix: id_prefix || "RIT-STTP-2026-",
             certificate_title: certificate_title || "CERTIFICATE OF PARTICIPATION",
             certificate_type: certificate_type || "Participation",
             allow_duplicates: !!allow_duplicates,
@@ -357,7 +387,40 @@ router.get("/batch/:batchId/certificates", checkFacultyOrAdminPermission, async 
 });
 
 // ============================================================
-// 7. DOWNLOAD EXCEL TEMPLATE (.XLSX)
+// 7. REUSABLE CERTIFICATE TEMPLATES CRUD
+// ============================================================
+router.get("/templates", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const templates = await feedbackCertificateStorage.getCertificateTemplates();
+        res.json({ success: true, count: templates.length, templates });
+    } catch (e) {
+        console.error("Get templates error:", e);
+        res.status(500).json({ success: false, message: "Failed to load certificate templates." });
+    }
+});
+
+router.post("/templates", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const saved = await feedbackCertificateStorage.saveCertificateTemplate(req.body);
+        res.json({ success: true, message: "Template saved successfully.", template: saved });
+    } catch (e) {
+        console.error("Save template error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to save template." });
+    }
+});
+
+router.delete("/templates/:templateId", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const ok = await feedbackCertificateStorage.deleteCertificateTemplate(req.params.templateId);
+        res.json({ success: ok, message: ok ? "Template removed." : "Template not found." });
+    } catch (e) {
+        console.error("Delete template error:", e);
+        res.status(500).json({ success: false, message: "Failed to delete template." });
+    }
+});
+
+// ============================================================
+// 8. DOWNLOAD EXCEL TEMPLATE (.XLSX)
 // ============================================================
 router.get("/template-download", (req, res) => {
     try {
@@ -378,30 +441,30 @@ router.get("/template-download", (req, res) => {
                 "953623244001",
                 "Computer Science and Business Systems",
                 "2026-27",
-                "Full Stack Cloud Architecture Masterclass",
-                "2026-10-22",
-                "First Class with Distinction",
-                "2026-10-22"
+                "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
+                "2026-10-12",
+                "Participation",
+                "2026-10-12"
             ],
             [
                 "ARUN KUMAR M",
                 "953623244002",
                 "Computer Science and Business Systems",
                 "2026-27",
-                "Full Stack Cloud Architecture Masterclass",
-                "2026-10-22",
+                "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
+                "2026-10-12",
                 "Participation",
-                "2026-10-22"
+                "2026-10-12"
             ],
             [
                 "PRIYA DHARSHINI R",
                 "953623244003",
                 "Computer Science and Business Systems",
                 "2026-27",
-                "Full Stack Cloud Architecture Masterclass",
-                "2026-10-22",
+                "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
+                "2026-10-12",
                 "Certificate of Merit",
-                "2026-10-22"
+                "2026-10-12"
             ]
         ];
 

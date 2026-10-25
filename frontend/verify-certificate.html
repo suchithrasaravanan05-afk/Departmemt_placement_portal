@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="certificate_assets.js"></script>
   <script src="rit_logo_data.js"></script>
   <style>
     :root {
@@ -789,18 +790,21 @@
             <div class="signatories-title">
               <i class="fa-solid fa-signature"></i> Authorized Institutional Signatories
             </div>
-            <div class="signatories-list">
+            <div class="signatories-list" id="verifiedSignatoriesList">
               <div class="signatory-item">
-                <div class="signatory-name" id="verifiedSig1Name">Dr. D. Kesavaraja</div>
-                <div class="signatory-role" id="verifiedSig1Title">Head of Department (HOD)</div>
+                <div class="signatory-name" id="verifiedSig1Name">Dr. K. Arulraj</div>
+                <div class="signatory-role" id="verifiedSig1Title">Faculty Coordinator</div>
+                <div style="font-size:11px;color:#64748B;" id="verifiedSig1Dept">CSBS, RIT</div>
               </div>
               <div class="signatory-item">
-                <div class="signatory-name" id="verifiedSig2Name">Dr. S. Rajakarunakarun</div>
-                <div class="signatory-role" id="verifiedSig2Title">Vice Principal / Patron</div>
+                <div class="signatory-name" id="verifiedSig2Name">Dr. S. Rajakumaran</div>
+                <div class="signatory-role" id="verifiedSig2Title">STTP Coordinator</div>
+                <div style="font-size:11px;color:#64748B;" id="verifiedSig2Dept">CSBS, RIT</div>
               </div>
               <div class="signatory-item">
-                <div class="signatory-name" id="verifiedSig3Name">Dr. L. Ganesan</div>
-                <div class="signatory-role" id="verifiedSig3Title">Principal / Chief Patron</div>
+                <div class="signatory-name" id="verifiedSig3Name">Dr. S. Rajakarunakaran</div>
+                <div class="signatory-role" id="verifiedSig3Title">Head of Department</div>
+                <div style="font-size:11px;color:#64748B;" id="verifiedSig3Dept">CSBS, RIT</div>
               </div>
             </div>
           </div>
@@ -985,12 +989,43 @@
             const isDate = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
             document.getElementById('verifiedIssueDate').innerText = isDate;
 
-            document.getElementById('verifiedSig1Name').innerText = cert.signatory_1_name || 'Dr. D. Kesavaraja';
-            document.getElementById('verifiedSig1Title').innerText = cert.signatory_1_title || 'Head of Department (HOD)';
-            document.getElementById('verifiedSig2Name').innerText = cert.signatory_2_name || 'Dr. S. Rajakarunakarun';
-            document.getElementById('verifiedSig2Title').innerText = cert.signatory_2_title || 'Vice Principal / Patron';
-            document.getElementById('verifiedSig3Name').innerText = cert.signatory_3_name || 'Dr. L. Ganesan';
-            document.getElementById('verifiedSig3Title').innerText = cert.signatory_3_title || 'Principal / Chief Patron';
+            function escapeHtml(str) {
+              if (!str) return '';
+              return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            }
+
+            const sigListEl = document.getElementById('verifiedSignatoriesList');
+            if (sigListEl) {
+              let sigHtml = '';
+              const count = parseInt(cert.signatory_count || (cert.signatory_4_name ? 5 : 3), 10);
+              const sigArr = [];
+              if (count === 5) {
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakumaran', title: cert.signatory_2_title || 'STTP Coordinator', dept: cert.signatory_2_dept || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Head of Department', dept: cert.signatory_3_dept || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Principal', dept: cert.signatory_4_dept || 'RIT' });
+                sigArr.push({ name: cert.signatory_5_name || 'Dr. R. Ramesh', title: cert.signatory_5_title || 'Director', dept: cert.signatory_5_dept || 'RIT' });
+              } else {
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_2_title || 'Head of Department', dept: cert.signatory_2_dept || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. L. Ganesan', title: cert.signatory_3_title || 'Principal', dept: cert.signatory_3_dept || 'RIT' });
+              }
+              sigArr.forEach(s => {
+                sigHtml += `
+                  <div class="signatory-item">
+                    <div class="signatory-name">${escapeHtml(s.name)}</div>
+                    <div class="signatory-role">${escapeHtml(s.title)}</div>
+                    <div style="font-size:11px;color:#64748B;">${escapeHtml(s.dept || '')}</div>
+                  </div>
+                `;
+              });
+              sigListEl.innerHTML = sigHtml;
+            }
 
             document.getElementById('resultVerified').style.display = 'block';
           }
@@ -1019,7 +1054,7 @@
       }
     }
 
-    // High quality A4 PDF rendering of the verified certificate
+    // High quality A4 landscape PDF rendering of the verified certificate
     async function downloadVerifiedCertificatePdf() {
       if (!currentCertData) return;
       if (!window.jspdf || !window.jspdf.jsPDF) {
@@ -1028,6 +1063,47 @@
       }
 
       const cert = currentCertData;
+      const certFullData = {
+        student_name: cert.student_name || 'Student',
+        certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
+        certificate_title: cert.certificate_title || 'CERTIFICATE OF PARTICIPATION',
+        programme_title: cert.programme_title || 'Short-Term Training Programme (STTP)',
+        event_name: cert.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
+        department: cert.department || 'Department of Computer Science and Business Systems',
+        college_name: cert.college_name || 'Ramco Institute of Technology',
+        programme_dates: cert.programme_dates || '10 – 12 October 2026',
+        issue_date: cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '12 October 2026',
+        signatory_count: cert.signatory_count || (cert.signatory_4_name ? 5 : 3),
+        signatory_1_name: cert.signatory_1_name || 'Dr. K. Arulraj',
+        signatory_1_title: cert.signatory_1_title || 'Faculty Coordinator',
+        signatory_1_dept: cert.signatory_1_dept || 'CSBS, RIT',
+        signatory_1_sig: cert.signatory_1_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.arulraj),
+        signatory_2_name: cert.signatory_2_name || 'Dr. S. Rajakumaran',
+        signatory_2_title: cert.signatory_2_title || 'STTP Coordinator',
+        signatory_2_dept: cert.signatory_2_dept || 'CSBS, RIT',
+        signatory_2_sig: cert.signatory_2_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakumaran),
+        signatory_3_name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran',
+        signatory_3_title: cert.signatory_3_title || 'Head of Department',
+        signatory_3_dept: cert.signatory_3_dept || 'CSBS, RIT',
+        signatory_3_sig: cert.signatory_3_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakarunakaran),
+        signatory_4_name: cert.signatory_4_name || 'Dr. L. Ganesan',
+        signatory_4_title: cert.signatory_4_title || 'Principal',
+        signatory_4_dept: cert.signatory_4_dept || 'RIT',
+        signatory_4_sig: cert.signatory_4_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan),
+        signatory_5_name: cert.signatory_5_name || 'Dr. R. Ramesh',
+        signatory_5_title: cert.signatory_5_title || 'Director',
+        signatory_5_dept: cert.signatory_5_dept || 'RIT',
+        signatory_5_sig: cert.signatory_5_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramesh)
+      };
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 2000;
+      canvas.height = 1414;
+
+      if (window.RIT_CERT_ASSETS && typeof window.RIT_CERT_ASSETS.drawCertificate === 'function') {
+        await window.RIT_CERT_ASSETS.drawCertificate(canvas, certFullData);
+      }
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({
         orientation: "landscape",
@@ -1035,205 +1111,10 @@
         format: "a4"
       });
 
-      const pageWidth = doc.internal.pageSize.getWidth(); // 297 mm
-      const pageHeight = doc.internal.pageSize.getHeight(); // 210 mm
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      doc.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
 
-      // Background
-      doc.setFillColor(255, 255, 255);
-      doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
-      // Outer Border (Navy #1e1b4b)
-      doc.setDrawColor(30, 27, 75);
-      doc.setLineWidth(1.8);
-      doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
-
-      // Inner Border (Gold #b45309)
-      doc.setDrawColor(180, 83, 9);
-      doc.setLineWidth(0.8);
-      doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
-
-      // Corner marks
-      const corners = [
-        [12, 12], [pageWidth - 12, 12],
-        [12, pageHeight - 12], [pageWidth - 12, pageHeight - 12]
-      ];
-      doc.setFillColor(180, 83, 9);
-      corners.forEach(([cx, cy]) => {
-        doc.circle(cx, cy, 1.8, 'F');
-      });
-
-      // Logo
-      const logoBase64 = (typeof window !== 'undefined' && window.RIT_LOGO_BASE64) ? window.RIT_LOGO_BASE64 : null;
-      if (logoBase64) {
-        try {
-          doc.addImage(logoBase64, "PNG", 26, 17, 23, 23);
-        } catch (e) {}
-      }
-
-      // College Name Header
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(21);
-      doc.setTextColor(30, 27, 75);
-      doc.text("RAMCO INSTITUTE OF TECHNOLOGY", pageWidth / 2, 26, { align: "center" });
-
-      // Department Subheader
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11.5);
-      doc.setTextColor(180, 83, 9);
-      doc.text("DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS", pageWidth / 2, 33, { align: "center" });
-
-      // Accreditation text
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text("Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai", pageWidth / 2, 38.5, { align: "center" });
-
-      // Gold Divider
-      doc.setDrawColor(180, 83, 9);
-      doc.setLineWidth(0.6);
-      doc.line(26, 43, pageWidth - 26, 43);
-
-      // Certificate Title
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(180, 83, 9);
-      doc.text(cert.certificate_title || "CERTIFICATE OF PARTICIPATION", pageWidth / 2, 54, { align: "center" });
-
-      // Preamble
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(11.5);
-      doc.setTextColor(71, 85, 105);
-      doc.text("This is to certify that", pageWidth / 2, 64, { align: "center" });
-
-      // Student Full Name
-      const studentName = (cert.student_name || "Student").toUpperCase();
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(19);
-      doc.setTextColor(15, 23, 42);
-      doc.text(studentName, pageWidth / 2, 75, { align: "center" });
-
-      // Underline
-      const nameWidth = doc.getTextWidth(studentName);
-      doc.setDrawColor(15, 23, 42);
-      doc.setLineWidth(0.4);
-      doc.line((pageWidth - nameWidth) / 2, 77, (pageWidth + nameWidth) / 2, 77);
-
-      // Department Line
-      const dept = cert.department || "Computer Science and Business Systems";
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10.5);
-      doc.setTextColor(51, 65, 85);
-      doc.text(`Department of ${dept}`, pageWidth / 2, 86, { align: "center" });
-
-      // Participation Statement
-      const ach = cert.achievement || cert.certificate_type || "participation";
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(71, 85, 105);
-      doc.text(`has demonstrated commendable ${ach.toLowerCase()} in the departmental event / workshop titled`, pageWidth / 2, 98, { align: "center" });
-
-      // Event Name
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14.5);
-      doc.setTextColor(30, 27, 75);
-      doc.text(`"${cert.event_name || 'Department Event'}"`, pageWidth / 2, 107.5, { align: "center" });
-
-      // Event Date
-      const eventDateStr = cert.event_date ? new Date(cert.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(71, 85, 105);
-      doc.text(`conducted on ${eventDateStr}.`, pageWidth / 2, 116, { align: "center" });
-
-      // Signatories Line
-      doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.5);
-      doc.line(26, 128, pageWidth - 26, 128);
-
-      // Signatory 1
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10.5);
-      doc.setTextColor(30, 27, 75);
-      doc.text(cert.signatory_1_name || "Dr. D. Kesavaraja", 28, 139);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(71, 85, 105);
-      doc.text(cert.signatory_1_title || "Head of Department (HOD)", 28, 145);
-
-      // Signatory 2
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10.5);
-      doc.setTextColor(30, 27, 75);
-      doc.text(cert.signatory_2_name || "Dr. S. Rajakarunakarun", pageWidth / 2, 139, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(71, 85, 105);
-      doc.text(cert.signatory_2_title || "Vice Principal / Patron", pageWidth / 2, 145, { align: "center" });
-
-      // Signatory 3
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10.5);
-      doc.setTextColor(30, 27, 75);
-      doc.text(cert.signatory_3_name || "Dr. L. Ganesan", pageWidth - 28, 139, { align: "right" });
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(71, 85, 105);
-      doc.text(cert.signatory_3_title || "Principal / Chief Patron", pageWidth - 28, 145, { align: "right" });
-
-      // Footer Line
-      doc.setDrawColor(241, 245, 249);
-      doc.setLineWidth(0.4);
-      doc.line(26, 153, pageWidth - 26, 153);
-
-      // Footer - Left: Certificate ID & Issue Date
-      const certNumber = cert.certificate_number || "RIT-CSBS-CERT";
-      const issueDateStr = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB');
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text("Certificate ID / Verification Number:", 28, 163);
-
-      doc.setFont("courier", "bold");
-      doc.setFontSize(9.5);
-      doc.setTextColor(67, 56, 202);
-      doc.text(certNumber, 28, 169);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`Date of Issue: ${issueDateStr}`, 28, 175);
-      doc.text(`Issuing Authority: Ramco Institute of Technology, CSBS Placement Cell`, 28, 180);
-
-      // QR Code Generation
-      const verifyUrl = `${window.location.origin}/verify-certificate.html?id=${encodeURIComponent(certNumber)}`;
-      try {
-        if (window.QRCode && window.QRCode.toDataURL) {
-          const qrDataUrl = await window.QRCode.toDataURL(verifyUrl, { margin: 1, width: 140 });
-          doc.addImage(qrDataUrl, "PNG", pageWidth - 60, 158, 24, 24);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(6.5);
-          doc.setTextColor(100, 116, 139);
-          doc.text("Scan to verify authenticity", pageWidth - 48, 185, { align: "center" });
-        }
-      } catch (qrErr) {
-        console.warn("QR code error:", qrErr);
-      }
-
-      // Digitally Verified Stamp Box
-      doc.setDrawColor(5, 150, 105);
-      doc.setLineWidth(0.5);
-      doc.roundedRect(pageWidth - 125, 161, 58, 18, 2, 2);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8.5);
-      doc.setTextColor(5, 150, 105);
-      doc.text("DIGITALLY VERIFIED", pageWidth - 125 + 29, 169, { align: "center" });
-      doc.setFontSize(6.5);
-      doc.setFont("helvetica", "normal");
-      doc.text("Institutional Digital Signature", pageWidth - 125 + 29, 174, { align: "center" });
-
-      const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${certNumber}.pdf`;
+      const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${cert.certificate_number || 'CERT'}.pdf`;
       doc.save(safeFilename);
     }
 

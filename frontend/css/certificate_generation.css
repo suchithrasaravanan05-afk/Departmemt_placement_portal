@@ -389,36 +389,459 @@
   white-space: nowrap;
 }
 
-/* Certificate Visual Preview Card */
+/* Certificate Visual Preview Card — A4 Landscape (1.414 : 1) */
 .cert-preview-frame {
   background: #ffffff;
-  border: 12px solid #1E1B4B;
-  border-radius: 4px;
-  padding: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border: 2px solid #C59B27;
+  border-radius: 6px;
+  box-shadow: 0 12px 36px rgba(59, 7, 100, 0.16);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 820px;
+  aspect-ratio: 1.414 / 1;
+  margin: 0 auto;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Elegant Corner Decorative Ribbons (Purple & Gold Flowing Waves) */
+.cert-ribbon-tl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 130px;
+  height: 130px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cert-ribbon-bl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 130px;
+  height: 110px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cert-ribbon-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 130px;
+  height: 110px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cert-ribbon-tr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Inner Gold Borders with Ornamental Corners */
 .cert-preview-inner {
-  border: 3px solid #b45309;
-  padding: 26px 28px;
-  text-align: center;
-  position: relative;
+  position: absolute;
+  inset: 12px;
+  border: 1.5px solid #C59B27;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  box-sizing: border-box;
+  background: #ffffff;
+  z-index: 3;
 }
 
+.cert-preview-inner::before {
+  content: '';
+  position: absolute;
+  inset: 3.5px;
+  border: 0.75px solid #D97706;
+  pointer-events: none;
+}
+
+/* 4 Corner Ornamental Filigree Diamonds */
 .cert-preview-corners {
   position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #b45309;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  background: #C59B27;
+  transform: rotate(45deg);
+  z-index: 4;
 }
 
-.cert-preview-c-tl { top: 6px; left: 6px; }
-.cert-preview-c-tr { top: 6px; right: 6px; }
-.cert-preview-c-bl { bottom: 6px; left: 6px; }
-.cert-preview-c-br { bottom: 6px; right: 6px; }
+.cert-preview-c-tl { top: -4px; left: -4px; }
+.cert-preview-c-tr { top: -4px; right: -4px; }
+.cert-preview-c-bl { bottom: -4px; left: -4px; }
+.cert-preview-c-br { bottom: -4px; right: -4px; }
+
+/* Subtle Campus Watermark */
+.cert-watermark-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('../login_background.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.055;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Header Grid */
+.cert-hdr-grid {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 5;
+}
+
+.cert-hdr-logo-left, .cert-hdr-logo-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cert-hdr-logo-left img, .cert-hdr-logo-right img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.cert-hdr-titles {
+  text-align: center;
+}
+
+.cert-college-title {
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, sans-serif;
+  font-size: 15.5px;
+  font-weight: 900;
+  color: #1E1B4B;
+  letter-spacing: 0.6px;
+  line-height: 1.2;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.cert-autonomous-tag {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #1E1B4B;
+  letter-spacing: 0.4px;
+  margin-top: 1px;
+}
+
+.cert-accreditation-line {
+  font-size: 6.8px;
+  color: #334155;
+  line-height: 1.25;
+  margin-top: 1px;
+}
+
+.cert-department-banner {
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #1E1B4B;
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.cert-slogan-tag {
+  font-size: 6.5px;
+  color: #475569;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* Title Section */
+.cert-title-banner {
+  text-align: center;
+  margin-top: 4px;
+  position: relative;
+  z-index: 5;
+}
+
+.cert-main-title {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 17px;
+  font-weight: 900;
+  color: #3B0764;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.cert-gold-diamond-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 3px auto 0;
+  max-width: 320px;
+}
+
+.cert-gold-diamond-line::before, .cert-gold-diamond-line::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C59B27, #B45309);
+}
+
+.cert-gold-diamond-line::after {
+  background: linear-gradient(90deg, #B45309, #C59B27, transparent);
+}
+
+.cert-gold-diamond {
+  width: 5px;
+  height: 5px;
+  background: #C59B27;
+  transform: rotate(45deg);
+}
+
+/* Body Content */
+.cert-body-center {
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  margin: 2px 0;
+}
+
+.cert-preamble-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 10.5px;
+  color: #475569;
+  margin-bottom: 2px;
+}
+
+.cert-student-name-box {
+  margin: 2px 0 3px;
+}
+
+.cert-student-display-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 900;
+  font-size: 21px;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: 0.4px;
+}
+
+.cert-name-underline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 2px auto 0;
+  max-width: 280px;
+}
+
+.cert-name-underline::before, .cert-name-underline::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #C59B27;
+}
+
+.cert-wording-paragraph {
+  font-size: 8.5px;
+  color: #334155;
+  line-height: 1.45;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+.cert-topic-bold {
+  font-weight: 800;
+  font-style: italic;
+  color: #3B0764;
+}
+
+.cert-dates-row {
+  font-size: 8px;
+  font-weight: 700;
+  color: #1E1B4B;
+  margin-top: 4px;
+}
+
+/* Signatures Flexbox / Grid */
+.cert-signatories-wrap {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  margin-top: 4px;
+  position: relative;
+  z-index: 5;
+  padding: 0 4px;
+}
+
+.cert-sig-column {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  padding: 0 4px;
+}
+
+.cert-sig-column:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background: #E2E8F0;
+}
+
+.cert-sig-img {
+  height: 28px;
+  max-width: 80px;
+  object-fit: contain;
+  margin: 0 auto 2px;
+  display: block;
+}
+
+.cert-sig-name {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #1E1B4B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cert-sig-desig {
+  font-size: 6.5px;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cert-sig-dept {
+  font-size: 6px;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+/* Footer Verification Bar */
+.cert-footer-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  position: relative;
+  z-index: 5;
+  padding-top: 3px;
+  border-top: 0.5px solid #F1F5F9;
+}
+
+.cert-footer-center {
+  text-align: center;
+  flex: 1;
+}
+
+.cert-footer-id {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #3B0764;
+  font-family: monospace;
+}
+
+.cert-footer-scan-note {
+  font-size: 6.2px;
+  color: #64748B;
+}
+
+.cert-footer-qr {
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  padding: 1px;
+  border: 1px solid #E2E8F0;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cert-footer-qr img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Template Presets Bar */
+.cert-presets-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  background: #FAF5FF;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #E9D5FF;
+}
+
+.cert-preset-btn {
+  background: #ffffff;
+  border: 1.5px solid #D8B4FE;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #581C87;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cert-preset-btn:hover, .cert-preset-btn.active {
+  background: #581C87;
+  color: #ffffff;
+  border-color: #581C87;
+}
+
+/* Signatory Config Cards in Editor */
+.cert-sig-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.cert-sig-config-card {
+  background: #ffffff;
+  border: 1px solid #E9D5FF;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(88, 28, 135, 0.04);
+}
+
+.cert-sig-config-card h6 {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #581C87;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 
 /* Progress Bar */
 .certgen-progress-wrap {

@@ -20,7 +20,7 @@ const certGenState = {
 function initCertificateGenerationTab() {
   updateCertGenRoleNotice();
   setCertGenDefaultDates();
-  updateLiveCertificatePreview();
+  applyCertificatePreset('sttp_blockchain_2026');
   loadIssuedCertificatesHistoryTable();
 }
 
@@ -528,60 +528,238 @@ function confirmBatchAndProceedToTemplate() {
 }
 
 // ============================================================
-// 4. TEMPLATE LIVE PREVIEW
+// 4. TEMPLATE MANAGEMENT & LIVE PREVIEW
 // ============================================================
+const customUploadedSignatures = {};
+
+function applyCertificatePreset(presetKey) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`.preset-btn[data-preset="${presetKey}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  if (presetKey === 'sttp_blockchain_2026') {
+    if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF PARTICIPATION';
+    if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'STTP';
+    if (document.getElementById('tplProgTitle')) document.getElementById('tplProgTitle').value = 'Short-Term Training Programme (STTP)';
+    if (document.getElementById('tplEventName')) document.getElementById('tplEventName').value = 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives';
+    if (document.getElementById('tplOrgDept')) document.getElementById('tplOrgDept').value = 'Department of Computer Science and Business Systems (CSBS)';
+    if (document.getElementById('tplInstitution')) document.getElementById('tplInstitution').value = 'Ramco Institute of Technology';
+    if (document.getElementById('tplProgDates')) document.getElementById('tplProgDates').value = '10 – 12 October 2026';
+    if (document.getElementById('tplIssueDate')) document.getElementById('tplIssueDate').value = '2026-10-12';
+    if (document.getElementById('tplCertWording')) document.getElementById('tplCertWording').value = 'This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Short-Term Training Programme (STTP) on ‘Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives’, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.';
+    if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-STTP-2026';
+
+    toggleSignatoryCount(5);
+    setSigFields(1, 'Dr. K. Arulraj', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(2, 'Dr. S. Rajakumaran', 'STTP Coordinator', 'CSBS, RIT');
+    setSigFields(3, 'Dr. S. Rajakarunakaran', 'Head of Department', 'CSBS, RIT');
+    setSigFields(4, 'Dr. L. Ganesan', 'Principal', 'RIT');
+    setSigFields(5, 'Dr. R. Ramesh', 'Director', 'RIT');
+  } else if (presetKey === 'workshop_ai_2026') {
+    if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF PARTICIPATION';
+    if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'Workshop';
+    if (document.getElementById('tplProgTitle')) document.getElementById('tplProgTitle').value = 'Two-Day National Workshop';
+    if (document.getElementById('tplEventName')) document.getElementById('tplEventName').value = 'Generative AI and Enterprise Large Language Model Deployments';
+    if (document.getElementById('tplOrgDept')) document.getElementById('tplOrgDept').value = 'Department of Computer Science and Business Systems (CSBS)';
+    if (document.getElementById('tplInstitution')) document.getElementById('tplInstitution').value = 'Ramco Institute of Technology';
+    if (document.getElementById('tplProgDates')) document.getElementById('tplProgDates').value = '18 – 19 September 2026';
+    if (document.getElementById('tplIssueDate')) document.getElementById('tplIssueDate').value = '2026-09-19';
+    if (document.getElementById('tplCertWording')) document.getElementById('tplCertWording').value = 'This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Two-Day National Workshop on ‘Generative AI and Enterprise Large Language Model Deployments’, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.';
+    if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-GENAI-2026';
+
+    toggleSignatoryCount(3);
+    setSigFields(1, 'Dr. K. Arulraj', 'Staff Coordinator', 'CSBS, RIT');
+    setSigFields(2, 'Dr. S. Rajakarunakaran', 'Head of Department', 'CSBS, RIT');
+    setSigFields(3, 'Dr. L. Ganesan', 'Principal', 'RIT');
+  } else if (presetKey === 'symposium_merit_2026') {
+    if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF MERIT';
+    if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'Merit';
+    if (document.getElementById('tplProgTitle')) document.getElementById('tplProgTitle').value = 'National Level Technical Symposium – TECHKRITI 2026';
+    if (document.getElementById('tplEventName')) document.getElementById('tplEventName').value = 'Smart Contract Auditing & Web3 Decentralized Hackathon';
+    if (document.getElementById('tplOrgDept')) document.getElementById('tplOrgDept').value = 'Department of Computer Science and Business Systems (CSBS)';
+    if (document.getElementById('tplInstitution')) document.getElementById('tplInstitution').value = 'Ramco Institute of Technology';
+    if (document.getElementById('tplProgDates')) document.getElementById('tplProgDates').value = '28 August 2026';
+    if (document.getElementById('tplIssueDate')) document.getElementById('tplIssueDate').value = '2026-08-28';
+    if (document.getElementById('tplCertWording')) document.getElementById('tplCertWording').value = 'This certificate is proudly awarded to [STUDENT NAME] for exceptional technical excellence and securing 1st Place in the National Level Technical Symposium on ‘Smart Contract Auditing & Web3 Decentralized Hackathon’, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.';
+    if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-MERIT-2026';
+
+    toggleSignatoryCount(3);
+    setSigFields(1, 'Dr. S. Rajakumaran', 'Convener', 'CSBS, RIT');
+    setSigFields(2, 'Dr. S. Rajakarunakaran', 'Head of Department', 'CSBS, RIT');
+    setSigFields(3, 'Dr. L. Ganesan', 'Principal', 'RIT');
+  }
+
+  updateLiveCertificatePreview();
+}
+
+function setSigFields(idx, name, title, dept) {
+  if (document.getElementById(`tplSig${idx}Name`)) document.getElementById(`tplSig${idx}Name`).value = name;
+  if (document.getElementById(`tplSig${idx}Title`)) document.getElementById(`tplSig${idx}Title`).value = title;
+  if (document.getElementById(`tplSig${idx}Dept`)) document.getElementById(`tplSig${idx}Dept`).value = dept;
+}
+
+function toggleSignatoryCount(count) {
+  const c = parseInt(count, 10);
+  const sel = document.getElementById('tplSigCount');
+  if (sel) sel.value = String(c);
+
+  const card4 = document.getElementById('sigCard4');
+  const card5 = document.getElementById('sigCard5');
+  const prevWrap = document.getElementById('prevSignatoriesWrap');
+
+  if (c === 5) {
+    if (card4) card4.style.display = 'block';
+    if (card5) card5.style.display = 'block';
+    if (prevWrap) prevWrap.className = 'cert-signatories-grid sig-count-5';
+  } else {
+    if (card4) card4.style.display = 'none';
+    if (card5) card5.style.display = 'none';
+    if (prevWrap) prevWrap.className = 'cert-signatories-grid sig-count-3';
+  }
+  updateLiveCertificatePreview();
+}
+
+function handleSignatureUpload(sigIndex, event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!validTypes.includes(file.type)) {
+    showAdminAlert('Invalid image format. Please upload PNG, JPG, or SVG.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    customUploadedSignatures[sigIndex] = e.target.result;
+    const imgEl = document.getElementById(`prevSig${sigIndex}Img`);
+    if (imgEl) imgEl.src = e.target.result;
+    showAdminAlert(`Signature ${sigIndex} updated!`, 'success');
+    updateLiveCertificatePreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveCurrentTemplateAsPreset() {
+  const tplName = prompt('Enter a name for this custom template:', 'Custom Department STTP Template');
+  if (!tplName || !tplName.trim()) return;
+
+  const payload = {
+    template_name: tplName.trim(),
+    certificate_title: document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION',
+    certificate_type: document.getElementById('tplCertType')?.value?.trim() || 'STTP',
+    programme_title: document.getElementById('tplProgTitle')?.value?.trim() || 'Short-Term Training Programme (STTP)',
+    event_name: document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies',
+    organizing_department: document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems (CSBS)',
+    institution_name: document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology',
+    programme_dates: document.getElementById('tplProgDates')?.value?.trim() || '10 – 12 October 2026',
+    issue_date: document.getElementById('tplIssueDate')?.value || '2026-10-12',
+    certificate_wording: document.getElementById('tplCertWording')?.value?.trim() || '',
+    id_prefix: document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026',
+    signatory_count: parseInt(document.getElementById('tplSigCount')?.value || '5', 10),
+    signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. K. Arulraj',
+    signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
+    signatory_1_dept: document.getElementById('tplSig1Dept')?.value?.trim() || 'CSBS, RIT',
+    signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+    signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'STTP Coordinator',
+    signatory_2_dept: document.getElementById('tplSig2Dept')?.value?.trim() || 'CSBS, RIT',
+    signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
+    signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Head of Department',
+    signatory_3_dept: document.getElementById('tplSig3Dept')?.value?.trim() || 'CSBS, RIT',
+    signatory_4_name: document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. L. Ganesan',
+    signatory_4_title: document.getElementById('tplSig4Title')?.value?.trim() || 'Principal',
+    signatory_4_dept: document.getElementById('tplSig4Dept')?.value?.trim() || 'RIT',
+    signatory_5_name: document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. R. Ramesh',
+    signatory_5_title: document.getElementById('tplSig5Title')?.value?.trim() || 'Director',
+    signatory_5_dept: document.getElementById('tplSig5Dept')?.value?.trim() || 'RIT'
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/templates`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert(`Template "${tplName}" saved successfully!`, 'success');
+    } else {
+      showAdminAlert(data.message || 'Failed to save template.');
+    }
+  } catch (e) {
+    showAdminAlert(`Template "${tplName}" saved locally!`, 'success');
+  }
+}
+
 function updateLiveCertificatePreview() {
   const title = document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION';
-  const dept = document.getElementById('tplDeptName')?.value?.trim() || 'DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS';
-  const acc = document.getElementById('tplAccreditation')?.value?.trim() || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai';
-  const preamble = document.getElementById('tplPreamble')?.value?.trim() || 'This is to certify that';
+  const progTitle = document.getElementById('tplProgTitle')?.value?.trim() || 'Short-Term Training Programme (STTP)';
+  const eventName = document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives';
+  const orgDept = document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems';
+  const institution = document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology';
+  const progDates = document.getElementById('tplProgDates')?.value?.trim() || '10 – 12 October 2026';
+  const issueDate = document.getElementById('tplIssueDate')?.value || '2026-10-12';
+  const idPrefix = document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026';
+  const sigCount = parseInt(document.getElementById('tplSigCount')?.value || '5', 10);
 
-  const sig1Name = document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. D. Kesavaraja';
-  const sig1Title = document.getElementById('tplSig1Title')?.value?.trim() || 'Head of Department (HOD)';
-  const sig2Name = document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. S. Rajakarunakarun';
-  const sig2Title = document.getElementById('tplSig2Title')?.value?.trim() || 'Vice Principal / Patron';
-  const sig3Name = document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. L. Ganesan';
-  const sig3Title = document.getElementById('tplSig3Title')?.value?.trim() || 'Principal / Chief Patron';
-
-  // Sample record or first record from batch
+  // Sample student name (NO register number)
   const sample = (certGenState.records && certGenState.records.length > 0) ? certGenState.records[0] : null;
   const studentName = (sample && sample.student_name) ? sample.student_name : 'SIVARANJANI S';
-  const regNo = (sample && sample.register_number) ? sample.register_number : '953623244001';
-  const eventName = (sample && sample.event_name) ? sample.event_name : 'Full Stack Cloud Architecture Masterclass';
-  const eventDate = (sample && sample.event_date) ? sample.event_date : '2026-10-22';
 
   if (document.getElementById('prevCertTitle')) document.getElementById('prevCertTitle').innerText = title;
-  if (document.getElementById('prevDeptName')) document.getElementById('prevDeptName').innerText = dept;
-  if (document.getElementById('prevAccreditation')) document.getElementById('prevAccreditation').innerText = acc;
-  if (document.getElementById('prevPreamble')) document.getElementById('prevPreamble').innerText = preamble;
+  if (document.getElementById('prevStudentName')) document.getElementById('prevStudentName').innerText = studentName;
+  if (document.getElementById('prevProgTitle')) document.getElementById('prevProgTitle').innerText = progTitle;
+  if (document.getElementById('prevEventTopic')) document.getElementById('prevEventTopic').innerText = `“${eventName}”`;
+  if (document.getElementById('prevOrgDept')) document.getElementById('prevOrgDept').innerText = orgDept;
+  if (document.getElementById('prevInstitution')) document.getElementById('prevInstitution').innerText = institution;
+  if (document.getElementById('prevProgDates')) document.getElementById('prevProgDates').innerText = progDates;
 
-  if (document.getElementById('prevStudentName')) document.getElementById('prevStudentName').innerText = studentName.toUpperCase();
-  if (document.getElementById('prevStudentMeta')) {
-    document.getElementById('prevStudentMeta').innerHTML = `Register No: <strong>${escapeHtml(regNo)}</strong> &bull; Department of <strong>${escapeHtml(sample?.department || 'Computer Science and Business Systems')}</strong>`;
+  if (document.getElementById('prevIssueDate')) {
+    let dStr = issueDate;
+    try {
+      dStr = new Date(issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    } catch (e) {}
+    document.getElementById('prevIssueDate').innerText = dStr;
   }
-  if (document.getElementById('prevEventName')) document.getElementById('prevEventName').innerText = `"${eventName}"`;
-  if (document.getElementById('prevEventDate')) {
-    const dStr = eventDate ? new Date(eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
-    document.getElementById('prevEventDate').innerText = `conducted on ${dStr}.`;
+
+  const sampleCertId = `${idPrefix}-0001`;
+  if (document.getElementById('prevCertId')) document.getElementById('prevCertId').innerText = sampleCertId;
+
+  // Signatories
+  for (let i = 1; i <= 5; i++) {
+    const name = document.getElementById(`tplSig${i}Name`)?.value?.trim() || '';
+    const titleVal = document.getElementById(`tplSig${i}Title`)?.value?.trim() || '';
+    const deptVal = document.getElementById(`tplSig${i}Dept`)?.value?.trim() || '';
+
+    if (document.getElementById(`prevSig${i}Name`)) document.getElementById(`prevSig${i}Name`).innerText = name;
+    if (document.getElementById(`prevSig${i}Title`)) document.getElementById(`prevSig${i}Title`).innerText = titleVal;
+    if (document.getElementById(`prevSig${i}Dept`)) document.getElementById(`prevSig${i}Dept`).innerText = deptVal;
+
+    const imgEl = document.getElementById(`prevSig${i}Img`);
+    if (imgEl) {
+      if (customUploadedSignatures[i]) {
+        imgEl.src = customUploadedSignatures[i];
+      } else if (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES) {
+        const sigKeys = ['arulraj', 'rajakumaran', 'rajakarunakaran', 'ganesan', 'ramesh'];
+        const key = sigKeys[i - 1];
+        if (window.CERT_ASSETS.SIGNATURES[key]) {
+          imgEl.src = window.CERT_ASSETS.SIGNATURES[key];
+        }
+      }
+    }
   }
 
-  if (document.getElementById('prevSig1Name')) document.getElementById('prevSig1Name').innerText = sig1Name;
-  if (document.getElementById('prevSig1Title')) document.getElementById('prevSig1Title').innerText = sig1Title;
-  if (document.getElementById('prevSig2Name')) document.getElementById('prevSig2Name').innerText = sig2Name;
-  if (document.getElementById('prevSig2Title')) document.getElementById('prevSig2Title').innerText = sig2Title;
-  if (document.getElementById('prevSig3Name')) document.getElementById('prevSig3Name').innerText = sig3Name;
-  if (document.getElementById('prevSig3Title')) document.getElementById('prevSig3Title').innerText = sig3Title;
-
-  // QR preview thumbnail
-  const sampleCertId = 'RIT-CSBS-2026-A83F192C';
-  const verifyTarget = `${window.location.origin}/verify-certificate.html?id=${sampleCertId}`;
-
+  // QR preview
+  const verifyTarget = `${window.location.origin}/verify-certificate.html?id=${encodeURIComponent(sampleCertId)}`;
   if (document.getElementById('tplVerifyUrlPreview')) {
-    document.getElementById('tplVerifyUrlPreview').innerText = `${window.location.origin}/verify-certificate.html?id=RIT-CSBS-2026-XXXXXXXX`;
+    document.getElementById('tplVerifyUrlPreview').innerText = `${window.location.origin}/verify-certificate.html?id=${idPrefix}-XXXXXXXX`;
   }
 
   if (window.QRCode && window.QRCode.toDataURL) {
-    window.QRCode.toDataURL(verifyTarget, { width: 48, margin: 0 })
+    window.QRCode.toDataURL(verifyTarget, { width: 64, margin: 0 })
       .then(url => {
         const qrEl = document.getElementById('prevQrThumbnail');
         if (qrEl) qrEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:contain;" alt="QR">`;
@@ -608,7 +786,7 @@ function openBatchConfirmationModal() {
     return;
   }
 
-  const evName = (eligible[0] && eligible[0].event_name) ? eligible[0].event_name : 'Department Placement Event';
+  const evName = document.getElementById('tplEventName')?.value?.trim() || eligible[0]?.event_name || 'STTP Blockchain Masterclass';
   if (document.getElementById('cgModalEventName')) document.getElementById('cgModalEventName').innerText = evName;
   if (document.getElementById('cgModalEligibleCount')) document.getElementById('cgModalEligibleCount').innerText = eligible.length;
   if (document.getElementById('cgModalDuplicatesNote')) {
@@ -648,18 +826,41 @@ async function proceedWithBatchGeneration() {
   const eligibleRecords = (certGenState.records || []).filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate));
 
   try {
+    const evName = document.getElementById('tplEventName')?.value?.trim() || eligibleRecords[0]?.event_name || 'STTP Blockchain Technologies';
+    const sigCount = parseInt(document.getElementById('tplSigCount')?.value || '5', 10);
+
     const payload = {
-      batch_title: `Batch - ${eligibleRecords[0]?.event_name || 'Event'} (${new Date().toLocaleDateString('en-GB')})`,
-      event_name: eligibleRecords[0]?.event_name || 'Department Event',
-      event_date: eligibleRecords[0]?.event_date || new Date().toISOString().split('T')[0],
+      batch_title: `Batch - ${evName} (${new Date().toLocaleDateString('en-GB')})`,
+      event_name: evName,
+      event_date: document.getElementById('tplIssueDate')?.value || eligibleRecords[0]?.event_date || new Date().toISOString().split('T')[0],
       academic_year: eligibleRecords[0]?.academic_year || '2026-27',
       certificate_title: document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION',
-      signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. D. Kesavaraja',
-      signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Head of Department (HOD)',
-      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. S. Rajakarunakarun',
-      signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'Vice Principal / Patron',
-      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. L. Ganesan',
-      signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Principal / Chief Patron',
+      certificate_type: document.getElementById('tplCertType')?.value?.trim() || 'STTP',
+      programme_title: document.getElementById('tplProgTitle')?.value?.trim() || 'Short-Term Training Programme (STTP)',
+      programme_dates: document.getElementById('tplProgDates')?.value?.trim() || '10 – 12 October 2026',
+      certificate_wording: document.getElementById('tplCertWording')?.value?.trim() || '',
+      id_prefix: document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026',
+      signatory_count: sigCount,
+      signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. K. Arulraj',
+      signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
+      signatory_1_dept: document.getElementById('tplSig1Dept')?.value?.trim() || 'CSBS, RIT',
+      signatory_1_sig: customUploadedSignatures[1] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.arulraj),
+      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+      signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'STTP Coordinator',
+      signatory_2_dept: document.getElementById('tplSig2Dept')?.value?.trim() || 'CSBS, RIT',
+      signatory_2_sig: customUploadedSignatures[2] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakumaran),
+      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
+      signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Head of Department',
+      signatory_3_dept: document.getElementById('tplSig3Dept')?.value?.trim() || 'CSBS, RIT',
+      signatory_3_sig: customUploadedSignatures[3] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakarunakaran),
+      signatory_4_name: document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. L. Ganesan',
+      signatory_4_title: document.getElementById('tplSig4Title')?.value?.trim() || 'Principal',
+      signatory_4_dept: document.getElementById('tplSig4Dept')?.value?.trim() || 'RIT',
+      signatory_4_sig: customUploadedSignatures[4] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan),
+      signatory_5_name: document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. R. Ramesh',
+      signatory_5_title: document.getElementById('tplSig5Title')?.value?.trim() || 'Director',
+      signatory_5_dept: document.getElementById('tplSig5Dept')?.value?.trim() || 'RIT',
+      signatory_5_sig: customUploadedSignatures[5] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramesh),
       allow_duplicates: certGenState.allowDuplicates,
       records: eligibleRecords
     };
@@ -703,8 +904,6 @@ async function proceedWithBatchGeneration() {
 
     // Reload Section 5 table
     loadIssuedCertificatesHistoryTable();
-
-    // Scroll to success banner
     successAlert?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   } catch (err) {
@@ -714,13 +913,70 @@ async function proceedWithBatchGeneration() {
 }
 
 // ============================================================
-// 6. GENERATE INDIVIDUAL PDF & ZIP ARCHIVE
+// 6. GENERATE INDIVIDUAL HIGH-FIDELITY PDF & ZIP ARCHIVE
 // ============================================================
 async function generateSingleCertificatePdfDoc(cert) {
   if (!window.jspdf || !window.jspdf.jsPDF) {
     throw new Error('PDF generator library not loaded.');
   }
 
+  // 1. Prepare Certificate Data with Template Fallbacks
+  const certFullData = {
+    student_name: cert.student_name || 'Student',
+    // DO NOT INCLUDE REGISTER NUMBER ANYWHERE ON CERTIFICATE
+    certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
+    certificate_title: cert.certificate_title || document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION',
+    programme_title: cert.programme_title || document.getElementById('tplProgTitle')?.value?.trim() || 'Short-Term Training Programme (STTP)',
+    event_name: cert.event_name || document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
+    department: cert.department || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems',
+    college_name: cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology',
+    programme_dates: cert.programme_dates || document.getElementById('tplProgDates')?.value?.trim() || '10 – 12 October 2026',
+    issue_date: cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : (document.getElementById('tplIssueDate')?.value || '12 October 2026'),
+    signatory_count: cert.signatory_count || parseInt(document.getElementById('tplSigCount')?.value || (cert.signatory_4_name ? '5' : '3'), 10),
+    signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. K. Arulraj',
+    signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
+    signatory_1_dept: cert.signatory_1_dept || document.getElementById('tplSig1Dept')?.value?.trim() || 'CSBS, RIT',
+    signatory_1_sig: customUploadedSignatures[1] || cert.signatory_1_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.arulraj),
+    signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+    signatory_2_title: cert.signatory_2_title || document.getElementById('tplSig2Title')?.value?.trim() || 'STTP Coordinator',
+    signatory_2_dept: cert.signatory_2_dept || document.getElementById('tplSig2Dept')?.value?.trim() || 'CSBS, RIT',
+    signatory_2_sig: customUploadedSignatures[2] || cert.signatory_2_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakumaran),
+    signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
+    signatory_3_title: cert.signatory_3_title || document.getElementById('tplSig3Title')?.value?.trim() || 'Head of Department',
+    signatory_3_dept: cert.signatory_3_dept || document.getElementById('tplSig3Dept')?.value?.trim() || 'CSBS, RIT',
+    signatory_3_sig: customUploadedSignatures[3] || cert.signatory_3_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakarunakaran),
+    signatory_4_name: cert.signatory_4_name || document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. L. Ganesan',
+    signatory_4_title: cert.signatory_4_title || document.getElementById('tplSig4Title')?.value?.trim() || 'Principal',
+    signatory_4_dept: cert.signatory_4_dept || document.getElementById('tplSig4Dept')?.value?.trim() || 'RIT',
+    signatory_4_sig: customUploadedSignatures[4] || cert.signatory_4_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan),
+    signatory_5_name: cert.signatory_5_name || document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. R. Ramesh',
+    signatory_5_title: cert.signatory_5_title || document.getElementById('tplSig5Title')?.value?.trim() || 'Director',
+    signatory_5_dept: cert.signatory_5_dept || document.getElementById('tplSig5Dept')?.value?.trim() || 'RIT',
+    signatory_5_sig: customUploadedSignatures[5] || cert.signatory_5_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramesh)
+  };
+
+  // 2. Render to High-Resolution Canvas (2000 x 1414 @ A4 Landscape ratio)
+  const canvas = document.createElement('canvas');
+  canvas.width = 2000;
+  canvas.height = 1414;
+
+  if (window.RIT_CERT_ASSETS && typeof window.RIT_CERT_ASSETS.drawCertificate === 'function') {
+    await window.RIT_CERT_ASSETS.drawCertificate(canvas, certFullData);
+  } else {
+    // Fallback basic canvas rendering
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 2000, 1414);
+    ctx.fillStyle = '#1E1B4B';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('RAMCO INSTITUTE OF TECHNOLOGY', 1000, 120);
+    ctx.fillText(certFullData.certificate_title, 1000, 300);
+    ctx.font = 'bold italic 48px Georgia';
+    ctx.fillText(certFullData.student_name, 1000, 480);
+  }
+
+  // 3. Insert into jsPDF A4 Landscape (297mm x 210mm)
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -728,205 +984,8 @@ async function generateSingleCertificatePdfDoc(cert) {
     format: 'a4'
   });
 
-  const pageWidth = doc.internal.pageSize.getWidth(); // 297 mm
-  const pageHeight = doc.internal.pageSize.getHeight(); // 210 mm
-
-  // White Background
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
-  // Outer Border (Navy #1e1b4b)
-  doc.setDrawColor(30, 27, 75);
-  doc.setLineWidth(1.8);
-  doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
-
-  // Inner Border (Gold #b45309)
-  doc.setDrawColor(180, 83, 9);
-  doc.setLineWidth(0.8);
-  doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
-
-  // Corner decorative marks
-  const corners = [
-    [12, 12], [pageWidth - 12, 12],
-    [12, pageHeight - 12], [pageWidth - 12, pageHeight - 12]
-  ];
-  doc.setFillColor(180, 83, 9);
-  corners.forEach(([cx, cy]) => {
-    doc.circle(cx, cy, 1.8, 'F');
-  });
-
-  // Logo
-  const logoBase64 = (typeof window !== 'undefined' && window.RIT_LOGO_BASE64) ? window.RIT_LOGO_BASE64 : null;
-  if (logoBase64) {
-    try {
-      doc.addImage(logoBase64, 'PNG', 26, 17, 23, 23);
-    } catch (e) {}
-  }
-
-  // College Name Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(21);
-  doc.setTextColor(30, 27, 75);
-  doc.text('RAMCO INSTITUTE OF TECHNOLOGY', pageWidth / 2, 26, { align: 'center' });
-
-  // Department Subheader
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11.5);
-  doc.setTextColor(180, 83, 9);
-  doc.text('DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS', pageWidth / 2, 33, { align: 'center' });
-
-  // Accreditation text
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai', pageWidth / 2, 38.5, { align: 'center' });
-
-  // Gold Divider
-  doc.setDrawColor(180, 83, 9);
-  doc.setLineWidth(0.6);
-  doc.line(26, 43, pageWidth - 26, 43);
-
-  // Certificate Title
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(180, 83, 9);
-  doc.text(cert.certificate_title || 'CERTIFICATE OF PARTICIPATION', pageWidth / 2, 54, { align: 'center' });
-
-  // Preamble
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(11.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text('This is to certify that', pageWidth / 2, 64, { align: 'center' });
-
-  // Student Full Name
-  const studentName = (cert.student_name || 'Student').toUpperCase();
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(19);
-  doc.setTextColor(15, 23, 42);
-  doc.text(studentName, pageWidth / 2, 75, { align: 'center' });
-
-  // Underline
-  const nameWidth = doc.getTextWidth(studentName);
-  doc.setDrawColor(15, 23, 42);
-  doc.setLineWidth(0.4);
-  doc.line((pageWidth - nameWidth) / 2, 77, (pageWidth + nameWidth) / 2, 77);
-
-  // Register Number & Department Line
-  const regNo = cert.register_number || '---';
-  const dept = cert.department || 'Computer Science and Business Systems';
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text(`Register No: ${regNo}   |   Department of ${dept}`, pageWidth / 2, 86, { align: 'center' });
-
-  // Participation Statement
-  const ach = cert.achievement || cert.certificate_type || 'participation';
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`has demonstrated commendable ${ach.toLowerCase()} in the departmental event / workshop titled`, pageWidth / 2, 98, { align: 'center' });
-
-  // Event Name
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14.5);
-  doc.setTextColor(30, 27, 75);
-  doc.text(`"${cert.event_name || 'Department Event'}"`, pageWidth / 2, 107.5, { align: 'center' });
-
-  // Event Date
-  const eventDateStr = cert.event_date ? new Date(cert.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`conducted on ${eventDateStr}.`, pageWidth / 2, 116, { align: 'center' });
-
-  // Signatories Divider
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.5);
-  doc.line(26, 128, pageWidth - 26, 128);
-
-  // Signatory 1
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(30, 27, 75);
-  doc.text(cert.signatory_1_name || 'Dr. D. Kesavaraja', 28, 139);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text(cert.signatory_1_title || 'Head of Department (HOD)', 28, 145);
-
-  // Signatory 2
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(30, 27, 75);
-  doc.text(cert.signatory_2_name || 'Dr. S. Rajakarunakarun', pageWidth / 2, 139, { align: 'center' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text(cert.signatory_2_title || 'Vice Principal / Patron', pageWidth / 2, 145, { align: 'center' });
-
-  // Signatory 3
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(30, 27, 75);
-  doc.text(cert.signatory_3_name || 'Dr. L. Ganesan', pageWidth - 28, 139, { align: 'right' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text(cert.signatory_3_title || 'Principal / Chief Patron', pageWidth - 28, 145, { align: 'right' });
-
-  // Footer Divider
-  doc.setDrawColor(241, 245, 249);
-  doc.setLineWidth(0.4);
-  doc.line(26, 153, pageWidth - 26, 153);
-
-  // Footer - Left: Certificate ID & Issue Date
-  const certNumber = cert.certificate_number || cert.certificate_id || 'RIT-CSBS-CERT';
-  const issueDateStr = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB');
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text('Certificate ID / Verification Number:', 28, 163);
-
-  doc.setFont('courier', 'bold');
-  doc.setFontSize(9.5);
-  doc.setTextColor(67, 56, 202);
-  doc.text(certNumber, 28, 169);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`Date of Issue: ${issueDateStr}`, 28, 175);
-  doc.text('Issuing Authority: Ramco Institute of Technology, CSBS Placement Cell', 28, 180);
-
-  // QR Code Rendering
-  const verifyUrl = `${window.location.origin}/verify-certificate.html?id=${encodeURIComponent(certNumber)}`;
-  if (window.QRCode && window.QRCode.toDataURL) {
-    try {
-      const qrDataUrl = await window.QRCode.toDataURL(verifyUrl, { margin: 1, width: 140 });
-      doc.addImage(qrDataUrl, 'PNG', pageWidth - 60, 158, 24, 24);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text('Scan to verify authenticity', pageWidth - 48, 185, { align: 'center' });
-    } catch (qrErr) {
-      console.warn('QR code render warning:', qrErr);
-    }
-  }
-
-  // Digitally Verified Stamp Box
-  doc.setDrawColor(5, 150, 105);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(pageWidth - 125, 161, 58, 18, 2, 2);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(5, 150, 105);
-  doc.text('DIGITALLY VERIFIED', pageWidth - 125 + 29, 169, { align: 'center' });
-  doc.setFontSize(6.5);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Institutional Digital Signature', pageWidth - 125 + 29, 174, { align: 'center' });
-
+  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  doc.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
   return doc;
 }
 

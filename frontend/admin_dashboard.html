@@ -2140,180 +2140,328 @@
       </div>
 
       <div class="certgen-section-body">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:24px;align-items:start;">
+        <!-- Reusable Template Presets Bar -->
+        <div class="cert-presets-bar">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:#581C87;margin-right:8px;">
+            <i class="fa-solid fa-layer-group"></i> Event Templates:
+          </div>
+          <button type="button" class="cert-preset-btn active" id="btnPresetSTTP" onclick="applyCertificatePreset('sttp_blockchain')">
+            <i class="fa-solid fa-award"></i> STTP — Blockchain (Current Reference)
+          </button>
+          <button type="button" class="cert-preset-btn" id="btnPresetWorkshop" onclick="applyCertificatePreset('workshop_fullstack')">
+            <i class="fa-solid fa-code"></i> Workshop — Full Stack Cloud
+          </button>
+          <button type="button" class="cert-preset-btn" id="btnPresetMerit" onclick="applyCertificatePreset('merit_excellence')">
+            <i class="fa-solid fa-medal"></i> Technical Symposium — Merit
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="saveCurrentTemplateAsPreset()" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Current as Custom Preset
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));gap:24px;align-items:start;">
 
           <!-- Left Column: Controls & Configuration Form -->
           <div style="background:#FAF5FF;border:1px solid #E9D5FF;border-radius:14px;padding:22px;">
             <h4 style="font-size:15px;font-weight:800;color:#581C87;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-              <i class="fa-solid fa-sliders"></i> Template Customization Parameters
+              <i class="fa-solid fa-sliders"></i> Event &amp; Certificate Parameters
             </h4>
 
-            <div class="form-group" style="margin-bottom:14px;">
-              <label>Certificate Title</label>
-              <div style="display:flex;gap:8px;">
+            <div class="form-grid form-grid-2" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label>Certificate Title</label>
                 <input type="text" id="tplCertTitle" class="form-control" value="CERTIFICATE OF PARTICIPATION" oninput="updateLiveCertificatePreview()">
-                <select class="form-control" style="width:160px;" onchange="document.getElementById('tplCertTitle').value=this.value;updateLiveCertificatePreview();">
-                  <option value="CERTIFICATE OF PARTICIPATION">Participation</option>
-                  <option value="CERTIFICATE OF MERIT">Merit</option>
-                  <option value="CERTIFICATE OF EXCELLENCE">Excellence</option>
-                  <option value="CERTIFICATE OF APPRECIATION">Appreciation</option>
-                  <option value="CERTIFICATE OF ACHIEVEMENT">Achievement</option>
+              </div>
+              <div class="form-group">
+                <label>Quick Title Preset</label>
+                <select class="form-control" onchange="document.getElementById('tplCertTitle').value=this.value;updateLiveCertificatePreview();">
+                  <option value="CERTIFICATE OF PARTICIPATION">Certificate of Participation</option>
+                  <option value="CERTIFICATE OF MERIT">Certificate of Merit</option>
+                  <option value="CERTIFICATE OF EXCELLENCE">Certificate of Excellence</option>
+                  <option value="CERTIFICATE OF APPRECIATION">Certificate of Appreciation</option>
+                  <option value="CERTIFICATE OF ACHIEVEMENT">Certificate of Achievement</option>
                 </select>
               </div>
             </div>
 
-            <div class="form-grid form-grid-2" style="margin-bottom:14px;">
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Programme / Event Category</label>
+              <input type="text" id="tplProgrammeTitle" class="form-control" value="Short-Term Training Programme (STTP)" oninput="updateLiveCertificatePreview()">
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Event Topic / Description</label>
+              <textarea id="tplEventTopic" class="form-control" rows="2" style="resize:vertical;" oninput="updateLiveCertificatePreview()">Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives</textarea>
+            </div>
+
+            <div class="form-grid form-grid-2" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label>Programme Dates (Freeform / Range)</label>
+                <input type="text" id="tplProgrammeDates" class="form-control" value="10 – 12 October 2026" oninput="updateLiveCertificatePreview()">
+              </div>
+              <div class="form-group">
+                <label>Date of Issue</label>
+                <input type="text" id="tplIssueDate" class="form-control" value="12 October 2026" oninput="updateLiveCertificatePreview()">
+              </div>
+            </div>
+
+            <div class="form-grid form-grid-2" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label>Organizing Department</label>
+                <input type="text" id="tplDeptName" class="form-control" value="Department of Computer Science and Business Systems" oninput="updateLiveCertificatePreview()">
+              </div>
               <div class="form-group">
                 <label>Institution Name</label>
-                <input type="text" id="tplInstName" class="form-control" value="RAMCO INSTITUTE OF TECHNOLOGY" readonly style="background:#f1f5f9;">
-              </div>
-              <div class="form-group">
-                <label>Department Name</label>
-                <input type="text" id="tplDeptName" class="form-control" value="DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS" oninput="updateLiveCertificatePreview()">
+                <input type="text" id="tplInstName" class="form-control" value="Ramco Institute of Technology" readonly style="background:#f1f5f9;">
               </div>
             </div>
 
-            <div class="form-group" style="margin-bottom:14px;">
-              <label>Accreditation Subtitle</label>
-              <input type="text" id="tplAccreditation" class="form-control" value="Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai" oninput="updateLiveCertificatePreview()">
-            </div>
-
-            <div class="form-group" style="margin-bottom:14px;">
-              <label>Preamble Statement</label>
-              <input type="text" id="tplPreamble" class="form-control" value="This is to certify that" oninput="updateLiveCertificatePreview()">
-            </div>
-
-            <!-- Signatories Configuration -->
+            <!-- Signatory Layout Configuration -->
             <div style="border-top:1px dashed #D8B4FE;padding-top:14px;margin-top:14px;">
-              <h5 style="font-size:13px;font-weight:800;color:#3B0764;margin-bottom:12px;">Authorized Signatories</h5>
-              <div class="form-grid form-grid-2" style="margin-bottom:10px;">
-                <div class="form-group">
-                  <label style="font-size:11.5px;">Signatory 1 (Left: HOD)</label>
-                  <input type="text" id="tplSig1Name" class="form-control" value="Dr. D. Kesavaraja" oninput="updateLiveCertificatePreview()">
-                  <input type="text" id="tplSig1Title" class="form-control" value="Head of Department (HOD)" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
-                </div>
-                <div class="form-group">
-                  <label style="font-size:11.5px;">Signatory 2 (Center: Vice Principal)</label>
-                  <input type="text" id="tplSig2Name" class="form-control" value="Dr. S. Rajakarunakarun" oninput="updateLiveCertificatePreview()">
-                  <input type="text" id="tplSig2Title" class="form-control" value="Vice Principal / Patron" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <h5 style="font-size:13px;font-weight:800;color:#3B0764;margin:0;">
+                  <i class="fa-solid fa-signature"></i> Authorized Signatories Configuration
+                </h5>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <label style="font-size:11.5px;font-weight:700;color:#581C87;margin:0;">Layout:</label>
+                  <select id="tplSigCount" class="form-control form-control-sm" style="width:145px;padding:4px 8px;font-weight:700;" onchange="toggleSignatoryCount(this.value)">
+                    <option value="5" selected>5 Signatories (STTP)</option>
+                    <option value="3">3 Signatories (Standard)</option>
+                  </select>
                 </div>
               </div>
-              <div class="form-group">
-                <label style="font-size:11.5px;">Signatory 3 (Right: Principal / Chief Patron)</label>
-                <div class="form-grid form-grid-2">
-                  <input type="text" id="tplSig3Name" class="form-control" value="Dr. L. Ganesan" oninput="updateLiveCertificatePreview()">
-                  <input type="text" id="tplSig3Title" class="form-control" value="Principal / Chief Patron" oninput="updateLiveCertificatePreview()">
+
+              <!-- 5 Signatory Cards Grid -->
+              <div class="cert-sig-config-grid">
+                <!-- Signatory 1 -->
+                <div class="cert-sig-config-card">
+                  <h6>Signatory 1 (Faculty Coordinator)</h6>
+                  <input type="text" id="tplSig1Name" class="form-control form-control-sm" value="Dr. K. Arulraj" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig1Title" class="form-control form-control-sm" value="Faculty Coordinator" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig1Org" class="form-control form-control-sm" value="CSBS, RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
+                    <i class="fa-solid fa-upload"></i> Custom Signature
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleSignatureUpload(1, event)">
+                  </label>
+                </div>
+
+                <!-- Signatory 2 -->
+                <div class="cert-sig-config-card">
+                  <h6>Signatory 2 (STTP Coordinator)</h6>
+                  <input type="text" id="tplSig2Name" class="form-control form-control-sm" value="Dr. S. Rajakumaran" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig2Title" class="form-control form-control-sm" value="STTP Coordinator" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig2Org" class="form-control form-control-sm" value="CSBS, RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
+                    <i class="fa-solid fa-upload"></i> Custom Signature
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleSignatureUpload(2, event)">
+                  </label>
+                </div>
+
+                <!-- Signatory 3 -->
+                <div class="cert-sig-config-card">
+                  <h6>Signatory 3 (Head of Dept)</h6>
+                  <input type="text" id="tplSig3Name" class="form-control form-control-sm" value="Dr. S. Rajakarunakaran" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig3Title" class="form-control form-control-sm" value="Head of Department" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig3Org" class="form-control form-control-sm" value="CSBS, RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
+                    <i class="fa-solid fa-upload"></i> Custom Signature
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleSignatureUpload(3, event)">
+                  </label>
+                </div>
+
+                <!-- Signatory 4 -->
+                <div class="cert-sig-config-card" id="cardSig4">
+                  <h6>Signatory 4 (Principal)</h6>
+                  <input type="text" id="tplSig4Name" class="form-control form-control-sm" value="Dr. L. Ganesan" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig4Title" class="form-control form-control-sm" value="Principal" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig4Org" class="form-control form-control-sm" value="RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
+                    <i class="fa-solid fa-upload"></i> Custom Signature
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleSignatureUpload(4, event)">
+                  </label>
+                </div>
+
+                <!-- Signatory 5 -->
+                <div class="cert-sig-config-card" id="cardSig5">
+                  <h6>Signatory 5 (Director)</h6>
+                  <input type="text" id="tplSig5Name" class="form-control form-control-sm" value="Dr. R. Ramesh" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig5Title" class="form-control form-control-sm" value="Director" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig5Org" class="form-control form-control-sm" value="RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
+                  <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
+                    <i class="fa-solid fa-upload"></i> Custom Signature
+                    <input type="file" accept="image/*" style="display:none;" onchange="handleSignatureUpload(5, event)">
+                  </label>
                 </div>
               </div>
             </div>
 
-            <!-- ID Prefix & Verification Target Display -->
+            <!-- Identifier & Privacy Notice -->
             <div style="border-top:1px dashed #D8B4FE;padding-top:14px;margin-top:14px;font-size:12px;color:#64748B;">
-              <div><strong>Unique ID Prefix:</strong> <code id="tplIdPrefixPreview" style="color:#581C87;font-weight:700;">RIT-CSBS-2026-XXXXXXXX</code></div>
-              <div style="margin-top:4px;"><strong>Verification Endpoint:</strong> <code id="tplVerifyUrlPreview" style="color:#059669;word-break:break-all;">https://.../verify-certificate.html?id=...</code></div>
+              <div><strong>Unique ID Prefix:</strong> <input type="text" id="tplIdPrefix" class="form-control form-control-sm" value="RIT-STTP-2026-" style="display:inline-block;width:170px;margin-left:6px;" oninput="updateLiveCertificatePreview()"></div>
+              <div style="margin-top:8px;padding:8px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#065f46;font-size:11.5px;">
+                <i class="fa-solid fa-shield-halved"></i> <strong>Student Privacy Shield Active:</strong> Student register number is used internally for duplicate verification only, and is strictly omitted from the certificate PDF and public verification.
+              </div>
             </div>
           </div>
 
           <!-- Right Column: Visual Live Certificate Template Preview -->
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-              <span style="font-size:13px;font-weight:700;color:#581C87;"><i class="fa-solid fa-image"></i> Printable A4 Certificate Preview</span>
-              <span class="badge badge-purple" style="font-size:11px;">Scale: 60% Responsive Preview</span>
+              <span style="font-size:13px;font-weight:700;color:#581C87;"><i class="fa-solid fa-image"></i> A4 Landscape Certificate Live Preview</span>
+              <span class="badge badge-purple" style="font-size:11px;">RIT Purple &amp; Gold Executive Style</span>
             </div>
 
-            <!-- Live Certificate Card -->
+            <!-- Live Certificate Card (A4 Aspect Ratio: 1.414 : 1) -->
             <div class="cert-preview-frame" id="liveCertPreviewCard">
+              <!-- Corner Flowing SVG Ribbons -->
+              <svg viewBox="0 0 140 140" class="cert-ribbon-tl" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 0 0 L 135 0 C 105 20, 45 45, 25 110 L 0 135 Z" fill="#3B0764"/>
+                <path d="M 0 0 L 105 0 C 85 24, 38 48, 18 105 L 0 115 Z" fill="url(#goldGradTL)"/>
+                <path d="M 0 0 L 75 0 C 58 22, 28 42, 10 80 L 0 88 Z" fill="#581C87"/>
+                <path d="M 0 0 L 45 0 C 35 15, 18 28, 5 50 L 0 55 Z" fill="#F59E0B"/>
+                <defs>
+                  <linearGradient id="goldGradTL" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#F59E0B"/>
+                    <stop offset="50%" stop-color="#D97706"/>
+                    <stop offset="100%" stop-color="#B45309"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <svg viewBox="0 0 140 110" class="cert-ribbon-bl" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 0 110 L 135 110 C 105 92, 45 68, 25 8 L 0 0 Z" fill="#3B0764"/>
+                <path d="M 0 110 L 105 110 C 85 92, 38 72, 18 22 L 0 15 Z" fill="url(#goldGradBL)"/>
+                <path d="M 0 110 L 75 110 C 58 94, 28 78, 10 40 L 0 35 Z" fill="#581C87"/>
+                <defs>
+                  <linearGradient id="goldGradBL" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#F59E0B"/>
+                    <stop offset="50%" stop-color="#D97706"/>
+                    <stop offset="100%" stop-color="#B45309"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <svg viewBox="0 0 140 110" class="cert-ribbon-br" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 140 110 L 5 110 C 35 92, 95 68, 115 8 L 140 0 Z" fill="#3B0764"/>
+                <path d="M 140 110 L 35 110 C 55 92, 102 72, 122 22 L 140 15 Z" fill="url(#goldGradBR)"/>
+                <path d="M 140 110 L 65 110 C 82 94, 112 78, 130 40 L 140 35 Z" fill="#581C87"/>
+                <defs>
+                  <linearGradient id="goldGradBR" x1="100%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stop-color="#F59E0B"/>
+                    <stop offset="50%" stop-color="#D97706"/>
+                    <stop offset="100%" stop-color="#B45309"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <!-- Subtle Watermark Background -->
+              <div class="cert-watermark-bg"></div>
+
+              <!-- Inner Certificate Box with Gold Double Border -->
               <div class="cert-preview-inner">
-                <!-- 4 Corner dots -->
                 <div class="cert-preview-corners cert-preview-c-tl"></div>
                 <div class="cert-preview-corners cert-preview-c-tr"></div>
                 <div class="cert-preview-corners cert-preview-c-bl"></div>
                 <div class="cert-preview-corners cert-preview-c-br"></div>
 
-                <!-- Header Logo & Branding -->
-                <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:6px;">
-                  <img src="rit_logo.png" alt="RIT Logo" style="width:42px;height:42px;object-fit:contain;" onerror="this.style.display='none'">
-                  <div>
-                    <h2 id="prevCollegeName" style="font-size:16px;font-weight:900;color:#1e1b4b;letter-spacing:0.4px;margin:0;">RAMCO INSTITUTE OF TECHNOLOGY</h2>
-                    <h4 id="prevDeptName" style="font-size:9.5px;font-weight:800;color:#b45309;margin:2px 0 0;letter-spacing:0.3px;">DEPARTMENT OF COMPUTER SCIENCE AND BUSINESS SYSTEMS</h4>
-                    <p id="prevAccreditation" style="font-size:7.5px;color:#64748b;margin:2px 0 0;">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</p>
+                <!-- 1. Header with Left Crest, Institutional Hierarchy & Right Badge -->
+                <div class="cert-hdr-grid">
+                  <div class="cert-hdr-logo-left">
+                    <img id="prevLogoLeft" src="rit_logo.png" alt="RIT Crest" onerror="this.style.display='none'">
+                  </div>
+                  <div class="cert-hdr-titles">
+                    <h2 class="cert-college-title" id="prevCollegeName">RAMCO INSTITUTE OF TECHNOLOGY</h2>
+                    <div class="cert-autonomous-tag">(AN AUTONOMOUS INSTITUTION)</div>
+                    <div class="cert-accreditation-line">Approved by AICTE, New Delhi &amp; Affiliated to Anna University</div>
+                    <div class="cert-accreditation-line">NAAC Accredited with 'A+' Grade &amp; An ISO 9001: 2015 Certified Institution</div>
+                    <div class="cert-accreditation-line">NBA Accredited UG Programmes: CSE, EEE, ECE, MECH and CIVIL</div>
+                    <div class="cert-accreditation-line">Rajapalayam - 626117, Tamil Nadu, India</div>
+                  </div>
+                  <div class="cert-hdr-logo-right">
+                    <div style="text-align:center;">
+                      <img id="prevLogoRight" src="csbs_logo_clean.png" alt="CSBS Logo" style="width:48px;height:48px;object-fit:contain;" onerror="this.src='csbs_logo.png'">
+                      <div class="cert-department-banner" style="font-size:7px;margin-top:2px;">DEPARTMENT OF CSBS</div>
+                      <div class="cert-slogan-tag" style="font-size:5.5px;">Learn | Innovate | Grow</div>
+                    </div>
                   </div>
                 </div>
 
-                <div style="height:1.5px;background:#b45309;margin:8px 16px 12px;"></div>
-
-                <!-- Certificate Title -->
-                <h3 id="prevCertTitle" style="font-size:14px;font-weight:900;color:#b45309;letter-spacing:0.8px;margin-bottom:8px;">
-                  CERTIFICATE OF PARTICIPATION
-                </h3>
-
-                <p id="prevPreamble" style="font-style:italic;font-size:9.5px;color:#475569;margin-bottom:6px;">
-                  This is to certify that
-                </p>
-
-                <!-- Student Name -->
-                <h2 id="prevStudentName" style="font-size:15px;font-weight:900;color:#0f172a;text-decoration:underline;text-underline-offset:4px;margin-bottom:6px;letter-spacing:0.5px;">
-                  SIVARANJANI S
-                </h2>
-
-                <p id="prevStudentMeta" style="font-size:9px;color:#334155;margin-bottom:8px;">
-                  Register No: <strong>953623244001</strong> &bull; Department of <strong>Computer Science and Business Systems</strong>
-                </p>
-
-                <p style="font-size:9px;color:#475569;margin-bottom:6px;line-height:1.4;">
-                  has actively participated in and successfully completed the departmental event / workshop titled
-                </p>
-
-                <h4 id="prevEventName" style="font-size:11.5px;font-weight:800;color:#1e1b4b;margin-bottom:4px;">
-                  "Full Stack Cloud Architecture Masterclass"
-                </h4>
-
-                <p id="prevEventDate" style="font-size:8.5px;color:#475569;margin-bottom:14px;">
-                  conducted on 22 October, 2026.
-                </p>
-
-                <div style="height:1px;background:#e2e8f0;margin:10px 10px 12px;"></div>
-
-                <!-- Signatures -->
-                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;padding:0 10px;">
-                  <div style="text-align:left;">
-                    <div id="prevSig1Name" style="font-size:9px;font-weight:800;color:#1e1b4b;">Dr. D. Kesavaraja</div>
-                    <div id="prevSig1Title" style="font-size:7.5px;color:#64748b;">Head of Department (HOD)</div>
-                  </div>
-                  <div style="text-align:center;">
-                    <div id="prevSig2Name" style="font-size:9px;font-weight:800;color:#1e1b4b;">Dr. S. Rajakarunakarun</div>
-                    <div id="prevSig2Title" style="font-size:7.5px;color:#64748b;">Vice Principal / Patron</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div id="prevSig3Name" style="font-size:9px;font-weight:800;color:#1e1b4b;">Dr. L. Ganesan</div>
-                    <div id="prevSig3Title" style="font-size:7.5px;color:#64748b;">Principal / Chief Patron</div>
+                <!-- 2. Large Centered Certificate Title -->
+                <div class="cert-title-banner">
+                  <h3 class="cert-main-title" id="prevCertTitle">CERTIFICATE OF PARTICIPATION</h3>
+                  <div class="cert-gold-diamond-line">
+                    <div class="cert-gold-diamond"></div>
                   </div>
                 </div>
 
-                <div style="height:1px;background:#f1f5f9;margin:8px 0;"></div>
-
-                <!-- Security Footer -->
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:0 10px;">
-                  <div style="text-align:left;">
-                    <div style="font-size:7px;color:#64748b;">Certificate ID:</div>
-                    <div id="prevCertIdNumber" style="font-size:8.5px;font-weight:800;font-family:monospace;color:#4338ca;">
-                      RIT-CSBS-2026-A83F192C
+                <!-- 3. Body Content -->
+                <div class="cert-body-center">
+                  <div class="cert-preamble-text" id="prevPreamble">This certificate is proudly presented to</div>
+                  <div class="cert-student-name-box">
+                    <h2 class="cert-student-display-name" id="prevStudentName">Sivaranjani S</h2>
+                    <div class="cert-name-underline">
+                      <div class="cert-gold-diamond" style="width:4px;height:4px;"></div>
                     </div>
-                    <div id="prevIssueDate" style="font-size:7px;color:#64748b;">Date of Issue: 22 Oct 2026</div>
                   </div>
-
-                  <!-- Digitally Verified Badge -->
-                  <div style="border:1px solid #059669;border-radius:4px;padding:3px 8px;text-align:center;">
-                    <div style="font-size:7.5px;font-weight:800;color:#059669;">DIGITALLY VERIFIED</div>
-                    <div style="font-size:6.5px;color:#059669;">RIT CSBS Verification Portal</div>
+                  <div class="cert-wording-paragraph" id="prevWordingParagraph">
+                    In recognition of active participation in the <span id="prevProgrammeType">Short-Term Training Programme (STTP)</span> on
+                    <div class="cert-topic-bold" id="prevTopicName" style="margin:2px 0;">“Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”</div>
+                    organized by the <span id="prevDeptName">Department of Computer Science and Business Systems</span>,
+                    <span id="prevCollegeAffil">Ramco Institute of Technology</span>.
                   </div>
+                  <div class="cert-dates-row" id="prevDatesRow">
+                    Programme Dates: <span id="prevProgDates">10 – 12 October 2026</span> &nbsp;|&nbsp; Issue Date: <span id="prevIssueDate">12 October 2026</span>
+                  </div>
+                </div>
 
-                  <!-- Sample QR Placeholder -->
-                  <div style="text-align:center;">
-                    <div id="prevQrThumbnail" style="width:34px;height:34px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;display:flex;align-items:center;justify-content:center;margin:0 auto;">
-                      <i class="fa-solid fa-qrcode" style="font-size:20px;color:#7e22ce;"></i>
-                    </div>
-                    <div style="font-size:6px;color:#64748b;margin-top:2px;">Scan to Verify</div>
+                <!-- 4. Signatories Row (3 or 5 Signatories) -->
+                <div class="cert-signatories-wrap" id="prevSignatoriesWrap">
+                  <!-- Col 1 -->
+                  <div class="cert-sig-column" id="prevColSig1">
+                    <img id="prevSig1Img" class="cert-sig-img" alt="Signature">
+                    <div class="cert-sig-name" id="prevSig1Name">Dr. K. Arulraj</div>
+                    <div class="cert-sig-desig" id="prevSig1Title">Faculty Coordinator</div>
+                    <div class="cert-sig-dept" id="prevSig1Org">CSBS, RIT</div>
+                  </div>
+                  <!-- Col 2 -->
+                  <div class="cert-sig-column" id="prevColSig2">
+                    <img id="prevSig2Img" class="cert-sig-img" alt="Signature">
+                    <div class="cert-sig-name" id="prevSig2Name">Dr. S. Rajakumaran</div>
+                    <div class="cert-sig-desig" id="prevSig2Title">STTP Coordinator</div>
+                    <div class="cert-sig-dept" id="prevSig2Org">CSBS, RIT</div>
+                  </div>
+                  <!-- Col 3 -->
+                  <div class="cert-sig-column" id="prevColSig3">
+                    <img id="prevSig3Img" class="cert-sig-img" alt="Signature">
+                    <div class="cert-sig-name" id="prevSig3Name">Dr. S. Rajakarunakaran</div>
+                    <div class="cert-sig-desig" id="prevSig3Title">Head of Department</div>
+                    <div class="cert-sig-dept" id="prevSig3Org">CSBS, RIT</div>
+                  </div>
+                  <!-- Col 4 -->
+                  <div class="cert-sig-column" id="prevColSig4">
+                    <img id="prevSig4Img" class="cert-sig-img" alt="Signature">
+                    <div class="cert-sig-name" id="prevSig4Name">Dr. L. Ganesan</div>
+                    <div class="cert-sig-desig" id="prevSig4Title">Principal</div>
+                    <div class="cert-sig-dept" id="prevSig4Org">RIT</div>
+                  </div>
+                  <!-- Col 5 -->
+                  <div class="cert-sig-column" id="prevColSig5">
+                    <img id="prevSig5Img" class="cert-sig-img" alt="Signature">
+                    <div class="cert-sig-name" id="prevSig5Name">Dr. R. Ramesh</div>
+                    <div class="cert-sig-desig" id="prevSig5Title">Director</div>
+                    <div class="cert-sig-dept" id="prevSig5Org">RIT</div>
+                  </div>
+                </div>
+
+                <!-- 5. Footer with Certificate ID & Real QR Code -->
+                <div class="cert-footer-wrap">
+                  <div style="width:32px;"></div>
+                  <div class="cert-footer-center">
+                    <div class="cert-footer-id">Certificate ID: <span id="prevCertIdNumber">RIT-STTP-2026-0001</span></div>
+                    <div class="cert-footer-scan-note">Scan the QR code to verify the certificate</div>
+                  </div>
+                  <div class="cert-footer-qr" id="prevQrThumbnail">
+                    <i class="fa-solid fa-qrcode" style="font-size:20px;color:#7e22ce;"></i>
                   </div>
                 </div>
 
@@ -3423,6 +3571,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="rit_logo_data.js"></script>
+<script src="certificate_assets.js"></script>
 <script src="certificate_generation.js"></script>
 <script src="admin_dashboard.js?v=2.3"></script>
 </body>
