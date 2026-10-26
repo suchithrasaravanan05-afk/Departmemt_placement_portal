@@ -391,10 +391,10 @@
 
 /* Certificate Visual Preview Card — A4 Landscape (1.414 : 1) */
 .cert-preview-frame {
-  background: #ffffff;
-  border: 2px solid #C59B27;
+  background: #ffffff url('../certificate_background.svg') center/100% 100% no-repeat;
+  border: 1px solid #D4AF37;
   border-radius: 6px;
-  box-shadow: 0 12px 36px rgba(59, 7, 100, 0.16);
+  box-shadow: 0 12px 36px rgba(59, 7, 100, 0.22);
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -406,94 +406,27 @@
   flex-direction: column;
 }
 
-/* Elegant Corner Decorative Ribbons (Purple & Gold Flowing Waves) */
-.cert-ribbon-tl {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 130px;
-  height: 130px;
-  pointer-events: none;
-  z-index: 2;
+/* Redundant manual ribbons hidden as SVG background provides rich vector artwork */
+.cert-ribbon-tl, .cert-ribbon-bl, .cert-ribbon-br, .cert-ribbon-tr, .cert-watermark-bg {
+  display: none !important;
 }
 
-.cert-ribbon-bl {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 130px;
-  height: 110px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.cert-ribbon-br {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 130px;
-  height: 110px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.cert-ribbon-tr {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 60px;
-  height: 60px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* Inner Gold Borders with Ornamental Corners */
+/* Inner Certificate Content Container */
 .cert-preview-inner {
   position: absolute;
-  inset: 12px;
-  border: 1.5px solid #C59B27;
+  inset: 6px;
+  border: none;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 14px 18px 10px;
+  padding: 16px 28px 12px;
   box-sizing: border-box;
-  background: #ffffff;
+  background: transparent;
   z-index: 3;
 }
 
-.cert-preview-inner::before {
-  content: '';
-  position: absolute;
-  inset: 3.5px;
-  border: 0.75px solid #D97706;
-  pointer-events: none;
-}
-
-/* 4 Corner Ornamental Filigree Diamonds */
-.cert-preview-corners {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: #C59B27;
-  transform: rotate(45deg);
-  z-index: 4;
-}
-
-.cert-preview-c-tl { top: -4px; left: -4px; }
-.cert-preview-c-tr { top: -4px; right: -4px; }
-.cert-preview-c-bl { bottom: -4px; left: -4px; }
-.cert-preview-c-br { bottom: -4px; right: -4px; }
-
-/* Subtle Campus Watermark */
-.cert-watermark-bg {
-  position: absolute;
-  inset: 0;
-  background-image: url('../login_background.png');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.055;
-  pointer-events: none;
-  z-index: 1;
+.cert-preview-inner::before, .cert-preview-corners {
+  display: none !important;
 }
 
 /* Header Grid */
@@ -568,46 +501,24 @@
 /* Title Section */
 .cert-title-banner {
   text-align: center;
-  margin-top: 4px;
+  margin-top: 10px;
   position: relative;
   z-index: 5;
 }
 
 .cert-main-title {
-  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: 17px;
+  font-family: 'Times New Roman', 'Playfair Display', Georgia, serif;
+  font-size: 15.5px;
   font-weight: 900;
-  color: #3B0764;
-  letter-spacing: 1.2px;
+  color: #FFFFFF;
+  letter-spacing: 2px;
   text-transform: uppercase;
   margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
 .cert-gold-diamond-line {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 3px auto 0;
-  max-width: 320px;
-}
-
-.cert-gold-diamond-line::before, .cert-gold-diamond-line::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #C59B27, #B45309);
-}
-
-.cert-gold-diamond-line::after {
-  background: linear-gradient(90deg, #B45309, #C59B27, transparent);
-}
-
-.cert-gold-diamond {
-  width: 5px;
-  height: 5px;
-  background: #C59B27;
-  transform: rotate(45deg);
+  display: none !important;
 }
 
 /* Body Content */
@@ -631,13 +542,13 @@
 }
 
 .cert-student-display-name {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Times New Roman', 'Playfair Display', Georgia, serif;
   font-style: italic;
   font-weight: 900;
-  font-size: 21px;
-  color: #0F172A;
+  font-size: 24px;
+  color: #1E1B4B;
   margin: 0;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
 }
 
 .cert-name-underline {
@@ -645,15 +556,15 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin: 2px auto 0;
-  max-width: 280px;
+  margin: 3px auto 0;
+  max-width: 320px;
 }
 
 .cert-name-underline::before, .cert-name-underline::after {
   content: '';
   flex: 1;
   height: 1px;
-  background: #C59B27;
+  background: #D4AF37;
 }
 
 .cert-wording-paragraph {
@@ -665,9 +576,11 @@
 }
 
 .cert-topic-bold {
+  font-family: 'Times New Roman', 'Playfair Display', Georgia, serif;
   font-weight: 800;
   font-style: italic;
-  color: #3B0764;
+  font-size: 13.5px;
+  color: #1E1B4B;
 }
 
 .cert-dates-row {

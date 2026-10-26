@@ -1001,18 +1001,23 @@
             const sigListEl = document.getElementById('verifiedSignatoriesList');
             if (sigListEl) {
               let sigHtml = '';
-              const count = parseInt(cert.signatory_count || (cert.signatory_4_name ? 5 : 3), 10);
+              const count = parseInt(cert.signatory_count || (cert.signatory_5_name ? 5 : 4), 10);
               const sigArr = [];
               if (count === 5) {
-                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakumaran', title: cert.signatory_2_title || 'STTP Coordinator', dept: cert.signatory_2_dept || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Head of Department', dept: cert.signatory_3_dept || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Principal', dept: cert.signatory_4_dept || 'RIT' });
-                sigArr.push({ name: cert.signatory_5_name || 'Dr. R. Ramesh', title: cert.signatory_5_title || 'Director', dept: cert.signatory_5_dept || 'RIT' });
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakumaran', title: cert.signatory_2_title || 'STTP Coordinator', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Head of Department', dept: cert.signatory_3_dept || cert.signatory_3_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Principal', dept: cert.signatory_4_dept || cert.signatory_4_org || 'RIT' });
+                sigArr.push({ name: cert.signatory_5_name || 'Dr. R. Ramesh', title: cert.signatory_5_title || 'Director', dept: cert.signatory_5_dept || cert.signatory_5_org || 'RIT' });
+              } else if (count === 3) {
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_2_title || 'Head of Department', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. L. Ganesan', title: cert.signatory_3_title || 'Principal', dept: cert.signatory_3_dept || cert.signatory_3_org || 'RIT' });
               } else {
-                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_2_title || 'Head of Department', dept: cert.signatory_2_dept || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_3_name || 'Dr. L. Ganesan', title: cert.signatory_3_title || 'Principal', dept: cert.signatory_3_dept || 'RIT' });
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakumaran', title: cert.signatory_2_title || 'STTP Coordinator', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Head of Department', dept: cert.signatory_3_dept || cert.signatory_3_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Principal', dept: cert.signatory_4_dept || cert.signatory_4_org || 'RIT' });
               }
               sigArr.forEach(s => {
                 sigHtml += `
@@ -1056,65 +1061,38 @@
     // High quality A4 landscape PDF rendering of the verified certificate
     async function downloadVerifiedCertificatePdf() {
       if (!currentCertData) return;
-      if (!window.jspdf || !window.jspdf.jsPDF) {
-        alert("PDF generator is loading. Please try again in a moment.");
-        return;
+      try {
+        const cert = currentCertData;
+        const certFullData = {
+          ...cert,
+          student_name: cert.student_name || 'STUDENT NAME',
+          event_name: cert.event_name || 'Emerging Blockchain Technologies',
+          event_subtitle: cert.event_subtitle || 'Architectures, Applications and Research Perspectives',
+          event_description: cert.event_description || 'In recognition of active participation in the Short-Term Training Programme (STTP) on',
+          organization_name: cert.organization_name || 'Department of Computer Science and Business Systems, Ramco Institute of Technology',
+          certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
+          verification_url: window.location.href,
+          signatory_count: cert.signatory_count ? Number(cert.signatory_count) : 4
+        };
+
+        let doc = null;
+        if (window.RIT_CERT_ASSETS && typeof window.RIT_CERT_ASSETS.createCertificatePdf === 'function') {
+          doc = await window.RIT_CERT_ASSETS.createCertificatePdf(certFullData);
+        } else if (typeof createCertificatePdf === 'function') {
+          doc = await createCertificatePdf(certFullData);
+        }
+
+        if (!doc) {
+          alert("PDF generator is loading. Please try again in a moment.");
+          return;
+        }
+
+        const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${(cert.certificate_number || cert.certificate_id || 'CERT').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+        doc.save(safeFilename);
+      } catch (err) {
+        console.error('Error generating verified certificate PDF:', err);
+        alert('Failed to generate certificate PDF: ' + (err.message || err));
       }
-
-      const cert = currentCertData;
-      const certFullData = {
-        student_name: cert.student_name || 'Student',
-        certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
-        certificate_title: cert.certificate_title || 'CERTIFICATE OF PARTICIPATION',
-        programme_title: cert.programme_title || 'Short-Term Training Programme (STTP)',
-        event_name: cert.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
-        department: cert.department || 'Department of Computer Science and Business Systems',
-        college_name: cert.college_name || 'Ramco Institute of Technology',
-        programme_dates: cert.programme_dates || '10 – 12 October 2026',
-        issue_date: cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '12 October 2026',
-        signatory_count: cert.signatory_count || (cert.signatory_4_name ? 5 : 3),
-        signatory_1_name: cert.signatory_1_name || 'Dr. K. Arulraj',
-        signatory_1_title: cert.signatory_1_title || 'Faculty Coordinator',
-        signatory_1_dept: cert.signatory_1_dept || 'CSBS, RIT',
-        signatory_1_sig: cert.signatory_1_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.arulraj),
-        signatory_2_name: cert.signatory_2_name || 'Dr. S. Rajakumaran',
-        signatory_2_title: cert.signatory_2_title || 'STTP Coordinator',
-        signatory_2_dept: cert.signatory_2_dept || 'CSBS, RIT',
-        signatory_2_sig: cert.signatory_2_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakumaran),
-        signatory_3_name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran',
-        signatory_3_title: cert.signatory_3_title || 'Head of Department',
-        signatory_3_dept: cert.signatory_3_dept || 'CSBS, RIT',
-        signatory_3_sig: cert.signatory_3_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakarunakaran),
-        signatory_4_name: cert.signatory_4_name || 'Dr. L. Ganesan',
-        signatory_4_title: cert.signatory_4_title || 'Principal',
-        signatory_4_dept: cert.signatory_4_dept || 'RIT',
-        signatory_4_sig: cert.signatory_4_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan),
-        signatory_5_name: cert.signatory_5_name || 'Dr. R. Ramesh',
-        signatory_5_title: cert.signatory_5_title || 'Director',
-        signatory_5_dept: cert.signatory_5_dept || 'RIT',
-        signatory_5_sig: cert.signatory_5_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramesh)
-      };
-
-      const canvas = document.createElement('canvas');
-      canvas.width = 2000;
-      canvas.height = 1414;
-
-      if (window.RIT_CERT_ASSETS && typeof window.RIT_CERT_ASSETS.drawCertificate === 'function') {
-        await window.RIT_CERT_ASSETS.drawCertificate(canvas, certFullData);
-      }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "a4"
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      doc.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
-
-      const safeFilename = `${(cert.student_name || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_')}_${cert.certificate_number || 'CERT'}.pdf`;
-      doc.save(safeFilename);
     }
 
     // Auto-verify if ID parameter is present in URL

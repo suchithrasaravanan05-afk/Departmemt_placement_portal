@@ -545,12 +545,11 @@ function applyCertificatePreset(presetKey) {
     if (document.getElementById('tplCertWording')) document.getElementById('tplCertWording').value = 'This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Short-Term Training Programme (STTP) on ‘Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives’, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.';
     if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-STTP-2026';
 
-    toggleSignatoryCount(5);
+    toggleSignatoryCount(4);
     setSigFields(1, 'Dr. K. Arulraj', 'Faculty Coordinator', 'CSBS, RIT');
     setSigFields(2, 'Dr. S. Rajakumaran', 'STTP Coordinator', 'CSBS, RIT');
     setSigFields(3, 'Dr. S. Rajakarunakaran', 'Head of Department', 'CSBS, RIT');
     setSigFields(4, 'Dr. L. Ganesan', 'Principal', 'RIT');
-    setSigFields(5, 'Dr. R. Ramesh', 'Director', 'RIT');
   } else if (presetKey === 'workshop_ai_2026') {
     if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF PARTICIPATION';
     if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'Workshop';
@@ -599,18 +598,31 @@ function toggleSignatoryCount(count) {
   const sel = document.getElementById('tplSigCount');
   if (sel) sel.value = String(c);
 
-  const card4 = document.getElementById('sigCard4');
-  const card5 = document.getElementById('sigCard5');
+  const card4 = document.getElementById('cardSig4') || document.getElementById('sigCard4');
+  const card5 = document.getElementById('cardSig5') || document.getElementById('sigCard5');
+  const prevCol4 = document.getElementById('prevColSig4');
+  const prevCol5 = document.getElementById('prevColSig5');
   const prevWrap = document.getElementById('prevSignatoriesWrap');
 
-  if (c === 5) {
+  if (c === 4) {
     if (card4) card4.style.display = 'block';
-    if (card5) card5.style.display = 'block';
-    if (prevWrap) prevWrap.className = 'cert-signatories-grid sig-count-5';
-  } else {
+    if (card5) card5.style.display = 'none';
+    if (prevCol4) prevCol4.style.display = 'block';
+    if (prevCol5) prevCol5.style.display = 'none';
+    if (prevWrap) prevWrap.className = 'cert-signatories-wrap sig-count-4';
+  } else if (c === 3) {
     if (card4) card4.style.display = 'none';
     if (card5) card5.style.display = 'none';
-    if (prevWrap) prevWrap.className = 'cert-signatories-grid sig-count-3';
+    if (prevCol4) prevCol4.style.display = 'none';
+    if (prevCol5) prevCol5.style.display = 'none';
+    if (prevWrap) prevWrap.className = 'cert-signatories-wrap sig-count-3';
+  } else {
+    // 5 signatories
+    if (card4) card4.style.display = 'block';
+    if (card5) card5.style.display = 'block';
+    if (prevCol4) prevCol4.style.display = 'block';
+    if (prevCol5) prevCol5.style.display = 'block';
+    if (prevWrap) prevWrap.className = 'cert-signatories-wrap sig-count-5';
   }
   updateLiveCertificatePreview();
 }
@@ -910,19 +922,16 @@ async function generateSingleCertificatePdfDoc(cert) {
     throw new Error('PDF generator library not loaded.');
   }
 
-  // 1. Prepare Certificate Data with Template Fallbacks
+  // 1. Prepare Certificate Data with Template Fallbacks (NO register number, NO dates, NO academic year)
   const certFullData = {
     student_name: cert.student_name || 'Student',
-    // DO NOT INCLUDE REGISTER NUMBER ANYWHERE ON CERTIFICATE
     certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
     certificate_title: cert.certificate_title || document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION',
     programme_title: cert.programme_title || document.getElementById('tplProgTitle')?.value?.trim() || 'Short-Term Training Programme (STTP)',
     event_name: cert.event_name || document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
     department: cert.department || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems',
     college_name: cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology',
-    programme_dates: cert.programme_dates || document.getElementById('tplProgDates')?.value?.trim() || '10 – 12 October 2026',
-    issue_date: cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : (document.getElementById('tplIssueDate')?.value || '12 October 2026'),
-    signatory_count: cert.signatory_count || parseInt(document.getElementById('tplSigCount')?.value || (cert.signatory_4_name ? '5' : '3'), 10),
+    signatory_count: cert.signatory_count || parseInt(document.getElementById('tplSigCount')?.value || '4', 10),
     signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. K. Arulraj',
     signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_1_dept: cert.signatory_1_dept || document.getElementById('tplSig1Dept')?.value?.trim() || 'CSBS, RIT',
@@ -945,37 +954,18 @@ async function generateSingleCertificatePdfDoc(cert) {
     signatory_5_sig: customUploadedSignatures[5] || cert.signatory_5_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramesh)
   };
 
-  // 2. Render to High-Resolution Canvas (2000 x 1414 @ A4 Landscape ratio)
-  const canvas = document.createElement('canvas');
-  canvas.width = 2000;
-  canvas.height = 1414;
-
-  if (window.RIT_CERT_ASSETS && typeof window.RIT_CERT_ASSETS.drawCertificate === 'function') {
-    await window.RIT_CERT_ASSETS.drawCertificate(canvas, certFullData);
-  } else {
-    // Fallback basic canvas rendering
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 2000, 1414);
-    ctx.fillStyle = '#1E1B4B';
-    ctx.font = 'bold 36px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('RAMCO INSTITUTE OF TECHNOLOGY', 1000, 120);
-    ctx.fillText(certFullData.certificate_title, 1000, 300);
-    ctx.font = 'bold italic 48px Georgia';
-    ctx.fillText(certFullData.student_name, 1000, 480);
+  // Generate real data-driven PDF with selectable text & vector styling
+  if (window.RIT_CERT_ASSETS && typeof window.RIT_CERT_ASSETS.createCertificatePdf === 'function') {
+    return await window.RIT_CERT_ASSETS.createCertificatePdf(certFullData);
   }
 
-  // 3. Insert into jsPDF A4 Landscape (297mm x 210mm)
+  // Fallback
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
-  doc.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  doc.setFont('times', 'bold');
+  doc.setFontSize(18);
+  doc.text('RAMCO INSTITUTE OF TECHNOLOGY', 148.5, 20, { align: 'center' });
+  doc.text(certFullData.student_name, 148.5, 80, { align: 'center' });
   return doc;
 }
 

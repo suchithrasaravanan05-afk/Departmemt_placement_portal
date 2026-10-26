@@ -34,7 +34,7 @@ const INITIAL_TEMPLATES = [
         programme_dates: "10 – 12 October 2026",
         issue_date: "12 October 2026",
         certificate_wording: "This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.",
-        signatory_count: 5,
+        signatory_count: 4,
         signatory_1_name: "Dr. K. Arulraj",
         signatory_1_title: "Faculty Coordinator",
         signatory_1_org: "CSBS, RIT",
@@ -2282,7 +2282,7 @@ async function issueBulkCertificates({
     event_date,
     category = "Placement Training",
     academic_year = "2026-27",
-    signatory_count = 5,
+    signatory_count = 4,
     signatory_1_name = "Dr. K. Arulraj",
     signatory_1_title = "Faculty Coordinator",
     signatory_1_org = "CSBS, RIT",
@@ -2319,7 +2319,7 @@ async function issueBulkCertificates({
     const effectiveEventName = event_name || eventTitle || "";
     const effectiveCertTitle = certificate_title || certificateTitle || "CERTIFICATE OF PARTICIPATION";
 
-    const sigCount = Number(signatory_count) || (signatory_5_name ? 5 : 3);
+    const sigCount = Number(signatory_count) || (signatory_5_name ? 5 : 4);
     const sig1Name = (signatories && signatories.signatory1 && signatories.signatory1.name) || signatory_1_name || "Dr. K. Arulraj";
     const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Faculty Coordinator";
     const sig1Org = (signatories && signatories.signatory1 && signatories.signatory1.org) || signatory_1_org || "CSBS, RIT";
@@ -2654,7 +2654,7 @@ async function getPublicCertificateDetails(certId) {
         signatory_5_title: matchedCert.signatory_5_title || "Director",
         signatory5_title: matchedCert.signatory_5_title || "Director",
         signatory_5_org: matchedCert.signatory_5_org || "RIT",
-        signatory_count: matchedCert.signatory_count || (matchedCert.signatory_5_name ? 5 : 3),
+        signatory_count: matchedCert.signatory_count || (matchedCert.signatory_5_name ? 5 : 4),
         programme_title: matchedCert.programme_title || "Short-Term Training Programme (STTP)",
         programmeTitle: matchedCert.programme_title || "Short-Term Training Programme (STTP)",
         programme_dates: matchedCert.programme_dates || "",

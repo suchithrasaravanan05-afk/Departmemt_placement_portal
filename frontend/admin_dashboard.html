@@ -2223,9 +2223,10 @@
                 </h5>
                 <div style="display:flex;align-items:center;gap:6px;">
                   <label style="font-size:11.5px;font-weight:700;color:#581C87;margin:0;">Layout:</label>
-                  <select id="tplSigCount" class="form-control form-control-sm" style="width:145px;padding:4px 8px;font-weight:700;" onchange="toggleSignatoryCount(this.value)">
-                    <option value="5" selected>5 Signatories (STTP)</option>
+                  <select id="tplSigCount" class="form-control form-control-sm" style="width:170px;padding:4px 8px;font-weight:700;" onchange="toggleSignatoryCount(this.value)">
+                    <option value="4" selected>4 Signatories (STTP - Default)</option>
                     <option value="3">3 Signatories (Standard)</option>
+                    <option value="5">5 Signatories (Executive)</option>
                   </select>
                 </div>
               </div>
@@ -2280,8 +2281,8 @@
                   </label>
                 </div>
 
-                <!-- Signatory 5 -->
-                <div class="cert-sig-config-card" id="cardSig5">
+                <!-- Signatory 5 (Hidden by default for 4-sig layout) -->
+                <div class="cert-sig-config-card" id="cardSig5" style="display:none;">
                   <h6>Signatory 5 (Director)</h6>
                   <input type="text" id="tplSig5Name" class="form-control form-control-sm" value="Dr. R. Ramesh" placeholder="Name" oninput="updateLiveCertificatePreview()">
                   <input type="text" id="tplSig5Title" class="form-control form-control-sm" value="Director" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
@@ -2410,8 +2411,8 @@
                   </div>
                 </div>
 
-                <!-- 4. Signatories Row (3 or 5 Signatories) -->
-                <div class="cert-signatories-wrap" id="prevSignatoriesWrap">
+                <!-- 4. Signatories Row (4 Signatories Default) -->
+                <div class="cert-signatories-wrap sig-count-4" id="prevSignatoriesWrap">
                   <!-- Col 1 -->
                   <div class="cert-sig-column" id="prevColSig1">
                     <img id="prevSig1Img" class="cert-sig-img" alt="Signature">
@@ -2438,10 +2439,10 @@
                     <img id="prevSig4Img" class="cert-sig-img" alt="Signature">
                     <div class="cert-sig-name" id="prevSig4Name">Dr. L. Ganesan</div>
                     <div class="cert-sig-desig" id="prevSig4Title">Principal</div>
-                    <div class="cert-sig-dept" id="prevSig4Org">RIT</div>
+                    <div class="cert-sig-dept" id="prevColSig4Org">RIT</div>
                   </div>
-                  <!-- Col 5 -->
-                  <div class="cert-sig-column" id="prevColSig5">
+                  <!-- Col 5 (Hidden by default for 4-sig layout) -->
+                  <div class="cert-sig-column" id="prevColSig5" style="display:none;">
                     <img id="prevSig5Img" class="cert-sig-img" alt="Signature">
                     <div class="cert-sig-name" id="prevSig5Name">Dr. R. Ramesh</div>
                     <div class="cert-sig-desig" id="prevSig5Title">Director</div>

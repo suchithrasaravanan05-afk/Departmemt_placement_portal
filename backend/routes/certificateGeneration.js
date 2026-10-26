@@ -291,7 +291,7 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             event_date,
             category: category || "Placement Training",
             academic_year: academic_year || "2026-27",
-            signatory_count: signatory_count || 5,
+            signatory_count: signatory_count ? Number(signatory_count) : 4,
             signatory_1_name: signatory_1_name || "Dr. K. Arulraj",
             signatory_1_title: signatory_1_title || "Faculty Coordinator",
             signatory_1_org: signatory_1_org || "CSBS, RIT",
