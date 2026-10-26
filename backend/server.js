@@ -59,10 +59,10 @@ try {
 const app = express();
 const PORT = process.env.PORT || 5500;
 
-// Enable CORS & JSON Body Parser
+// Enable CORS & JSON Body Parser (bounded 10mb limit for large certificate batches)
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Serve static uploaded files (resumes, photos)
 const uploadServePath = process.env.VERCEL

@@ -38,17 +38,17 @@ async function runPipelineVerification() {
     organization_name: 'Department of Computer Science and Business Systems, Ramco Institute of Technology',
     verification_url: 'https://rit-csbs-portal.vercel.app/verify-certificate.html?id=RIT-STTP-2026-0042',
     signatory_count: 4,
-    signatory_1_name: 'Dr. K. Arulraj',
+    signatory_1_name: 'Dr. M. Jeya Sundari',
     signatory_1_title: 'Faculty Coordinator',
     signatory_1_dept: 'CSBS, RIT',
-    signatory_2_name: 'Dr. S. Rajakumaran',
-    signatory_2_title: 'STTP Coordinator',
+    signatory_2_name: 'Dr. D. Kesavaraja',
+    signatory_2_title: 'Head of Department',
     signatory_2_dept: 'CSBS, RIT',
-    signatory_3_name: 'Dr. S. Rajakarunakaran',
-    signatory_3_title: 'Head of Department',
-    signatory_3_dept: 'CSBS, RIT',
+    signatory_3_name: 'Dr. S. Rajakumaran',
+    signatory_3_title: 'Principal',
+    signatory_3_dept: 'RIT',
     signatory_4_name: 'Dr. L. Ganesan',
-    signatory_4_title: 'Principal',
+    signatory_4_title: 'Director',
     signatory_4_dept: 'RIT'
   };
 
@@ -73,14 +73,14 @@ async function runPipelineVerification() {
   assert(stdPdfString.includes('SIVARANJANI S'), 'Vector text contains student name "SIVARANJANI S"');
   assert(stdPdfString.includes('Emerging Blockchain Technologies'), 'Vector text contains "Emerging Blockchain Technologies"');
   assert(stdPdfString.includes('Architectures, Applications and Research Perspectives'), 'Vector text contains subtitle');
-  assert(stdPdfString.includes('Dr. K. Arulraj'), 'Vector text contains Signatory 1: Dr. K. Arulraj');
+  assert(stdPdfString.includes('Dr. M. Jeya Sundari'), 'Vector text contains Signatory 1: Dr. M. Jeya Sundari');
   assert(stdPdfString.includes('Faculty Coordinator'), 'Vector text contains Title 1: Faculty Coordinator');
-  assert(stdPdfString.includes('Dr. S. Rajakumaran'), 'Vector text contains Signatory 2: Dr. S. Rajakumaran');
-  assert(stdPdfString.includes('STTP Coordinator'), 'Vector text contains Title 2: STTP Coordinator');
-  assert(stdPdfString.includes('Dr. S. Rajakarunakaran'), 'Vector text contains Signatory 3: Dr. S. Rajakarunakaran');
-  assert(stdPdfString.includes('Head of Department'), 'Vector text contains Title 3: Head of Department');
+  assert(stdPdfString.includes('Dr. D. Kesavaraja'), 'Vector text contains Signatory 2: Dr. D. Kesavaraja');
+  assert(stdPdfString.includes('Head of Department'), 'Vector text contains Title 2: Head of Department');
+  assert(stdPdfString.includes('Dr. S. Rajakumaran'), 'Vector text contains Signatory 3: Dr. S. Rajakumaran');
+  assert(stdPdfString.includes('Principal'), 'Vector text contains Title 3: Principal');
   assert(stdPdfString.includes('Dr. L. Ganesan'), 'Vector text contains Signatory 4: Dr. L. Ganesan');
-  assert(stdPdfString.includes('Principal'), 'Vector text contains Title 4: Principal');
+  assert(stdPdfString.includes('Director'), 'Vector text contains Title 4: Director');
   assert(stdPdfString.includes('Certificate ID: RIT-STTP-2026-0042'), 'Vector text contains Certificate ID');
   assert(stdPdfString.includes('SCAN TO VERIFY'), 'Vector text contains "SCAN TO VERIFY" caption');
 

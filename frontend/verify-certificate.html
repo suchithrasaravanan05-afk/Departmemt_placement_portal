@@ -791,19 +791,24 @@
             </div>
             <div class="signatories-list" id="verifiedSignatoriesList">
               <div class="signatory-item">
-                <div class="signatory-name" id="verifiedSig1Name">Dr. K. Arulraj</div>
+                <div class="signatory-name" id="verifiedSig1Name">Dr. M. Jeya Sundari</div>
                 <div class="signatory-role" id="verifiedSig1Title">Faculty Coordinator</div>
                 <div style="font-size:11px;color:#64748B;" id="verifiedSig1Dept">CSBS, RIT</div>
               </div>
               <div class="signatory-item">
-                <div class="signatory-name" id="verifiedSig2Name">Dr. S. Rajakumaran</div>
-                <div class="signatory-role" id="verifiedSig2Title">STTP Coordinator</div>
+                <div class="signatory-name" id="verifiedSig2Name">Dr. D. Kesavaraja</div>
+                <div class="signatory-role" id="verifiedSig2Title">Head of Department</div>
                 <div style="font-size:11px;color:#64748B;" id="verifiedSig2Dept">CSBS, RIT</div>
               </div>
               <div class="signatory-item">
-                <div class="signatory-name" id="verifiedSig3Name">Dr. S. Rajakarunakaran</div>
-                <div class="signatory-role" id="verifiedSig3Title">Head of Department</div>
-                <div style="font-size:11px;color:#64748B;" id="verifiedSig3Dept">CSBS, RIT</div>
+                <div class="signatory-name" id="verifiedSig3Name">Dr. S. Rajakumaran</div>
+                <div class="signatory-role" id="verifiedSig3Title">Principal</div>
+                <div style="font-size:11px;color:#64748B;" id="verifiedSig3Dept">RIT</div>
+              </div>
+              <div class="signatory-item">
+                <div class="signatory-name" id="verifiedSig4Name">Dr. L. Ganesan</div>
+                <div class="signatory-role" id="verifiedSig4Title">Director</div>
+                <div style="font-size:11px;color:#64748B;" id="verifiedSig4Dept">RIT</div>
               </div>
             </div>
           </div>
@@ -1014,10 +1019,10 @@
                 sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_2_title || 'Head of Department', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
                 sigArr.push({ name: cert.signatory_3_name || 'Dr. L. Ganesan', title: cert.signatory_3_title || 'Principal', dept: cert.signatory_3_dept || cert.signatory_3_org || 'RIT' });
               } else {
-                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakumaran', title: cert.signatory_2_title || 'STTP Coordinator', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Head of Department', dept: cert.signatory_3_dept || cert.signatory_3_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Principal', dept: cert.signatory_4_dept || cert.signatory_4_org || 'RIT' });
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. M. Jeya Sundari', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. D. Kesavaraja', title: cert.signatory_2_title || 'Head of Department', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakumaran', title: cert.signatory_3_title || 'Principal', dept: cert.signatory_3_dept || cert.signatory_3_org || 'RIT' });
+                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Director', dept: cert.signatory_4_dept || cert.signatory_4_org || 'RIT' });
               }
               sigArr.forEach(s => {
                 sigHtml += `

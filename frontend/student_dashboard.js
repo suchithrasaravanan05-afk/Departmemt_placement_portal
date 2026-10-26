@@ -1970,29 +1970,35 @@ async function openCertificateViewModal(cert) {
   if (el('certPreviewCode')) el('certPreviewCode').innerText = certNumber;
 
   // Set default 4 signatories
-  if (el('certModalSig1Name')) el('certModalSig1Name').innerText = cert.signatory_1_name || 'Dr. K. Arulraj';
+  if (el('certModalSig1Name')) el('certModalSig1Name').innerText = cert.signatory_1_name || 'Dr. M. Jeya Sundari';
   if (el('certModalSig1Title')) el('certModalSig1Title').innerText = cert.signatory_1_title || 'Faculty Coordinator';
   if (el('certModalSig1Org')) el('certModalSig1Org').innerText = cert.signatory_1_org || cert.signatory_1_dept || 'CSBS, RIT';
 
-  if (el('certModalSig2Name')) el('certModalSig2Name').innerText = cert.signatory_2_name || 'Dr. S. Rajakumaran';
-  if (el('certModalSig2Title')) el('certModalSig2Title').innerText = cert.signatory_2_title || 'STTP Coordinator';
+  if (el('certModalSig2Name')) el('certModalSig2Name').innerText = cert.signatory_2_name || 'Dr. D. Kesavaraja';
+  if (el('certModalSig2Title')) el('certModalSig2Title').innerText = cert.signatory_2_title || 'Head of Department';
   if (el('certModalSig2Org')) el('certModalSig2Org').innerText = cert.signatory_2_org || cert.signatory_2_dept || 'CSBS, RIT';
 
-  if (el('certModalSig3Name')) el('certModalSig3Name').innerText = cert.signatory_3_name || 'Dr. S. Rajakarunakaran';
-  if (el('certModalSig3Title')) el('certModalSig3Title').innerText = cert.signatory_3_title || 'Head of Department';
-  if (el('certModalSig3Org')) el('certModalSig3Org').innerText = cert.signatory_3_org || cert.signatory_3_dept || 'CSBS, RIT';
+  if (el('certModalSig3Name')) el('certModalSig3Name').innerText = cert.signatory_3_name || 'Dr. S. Rajakumaran';
+  if (el('certModalSig3Title')) el('certModalSig3Title').innerText = cert.signatory_3_title || 'Principal';
+  if (el('certModalSig3Org')) el('certModalSig3Org').innerText = cert.signatory_3_org || cert.signatory_3_dept || 'RIT';
 
   if (el('certModalSig4Name')) el('certModalSig4Name').innerText = cert.signatory_4_name || 'Dr. L. Ganesan';
-  if (el('certModalSig4Title')) el('certModalSig4Title').innerText = cert.signatory_4_title || 'Principal';
+  if (el('certModalSig4Title')) el('certModalSig4Title').innerText = cert.signatory_4_title || 'Director';
   if (el('certModalSig4Org')) el('certModalSig4Org').innerText = cert.signatory_4_org || cert.signatory_4_dept || 'RIT';
 
   // Load signature images if available
-  if (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES) {
-    if (el('certModalSig1Img')) el('certModalSig1Img').src = cert.signatory_1_sig || window.CERT_ASSETS.SIGNATURES.arulraj;
-    if (el('certModalSig2Img')) el('certModalSig2Img').src = cert.signatory_2_sig || window.CERT_ASSETS.SIGNATURES.rajakumaran;
-    if (el('certModalSig3Img')) el('certModalSig3Img').src = cert.signatory_3_sig || window.CERT_ASSETS.SIGNATURES.rajakarunakaran;
-    if (el('certModalSig4Img')) el('certModalSig4Img').src = cert.signatory_4_sig || window.CERT_ASSETS.SIGNATURES.ganesan;
-  }
+  const getSig = (ref, fallbackKey) => {
+    if (typeof window.getSignatoryAsset === 'function') {
+      const found = window.getSignatoryAsset(ref);
+      if (found) return found;
+    }
+    return (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES[fallbackKey]) || '';
+  };
+
+  if (el('certModalSig1Img')) el('certModalSig1Img').src = cert.signatory_1_sig || getSig(cert.signatory_1_name || 'faculty_coordinator', 'jeyasundari');
+  if (el('certModalSig2Img')) el('certModalSig2Img').src = cert.signatory_2_sig || getSig(cert.signatory_2_name || 'hod', 'kesavaraja');
+  if (el('certModalSig3Img')) el('certModalSig3Img').src = cert.signatory_3_sig || getSig(cert.signatory_3_name || 'principal', 'rajakumaran');
+  if (el('certModalSig4Img')) el('certModalSig4Img').src = cert.signatory_4_sig || getSig(cert.signatory_4_name || 'director', 'ganesan');
 
   // Generate QR code into certModalQrCode container
   const qrContainer = el('certModalQrCode');

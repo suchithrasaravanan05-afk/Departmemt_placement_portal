@@ -68,7 +68,7 @@ async function uploadToSupabase(fileBuffer, originalName, fieldName, userId) {
 }
 
 // Middleware to parse JSON or form data
-router.use(express.json());
+router.use(express.json({ limit: "10mb" }));
 
 // ==========================================
 // GET STUDENT PROFILE

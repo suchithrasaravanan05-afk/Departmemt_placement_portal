@@ -284,6 +284,9 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
         if (!Array.isArray(records) || records.length === 0) {
             return res.status(400).json({ success: false, message: "No student records provided for generation." });
         }
+        if (records.length > 500) {
+            return res.status(400).json({ success: false, message: "Batch exceeds maximum permitted limit of 500 records per operation. Please split into smaller batches." });
+        }
 
         const result = await feedbackCertificateStorage.issueBulkCertificates({
             batch_title: batch_title || `Batch - ${event_name || 'Event'}`,
@@ -292,20 +295,20 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             category: category || "Placement Training",
             academic_year: academic_year || "2026-27",
             signatory_count: signatory_count ? Number(signatory_count) : 4,
-            signatory_1_name: signatory_1_name || "Dr. K. Arulraj",
+            signatory_1_name: signatory_1_name || "Dr. M. Jeya Sundari",
             signatory_1_title: signatory_1_title || "Faculty Coordinator",
             signatory_1_org: signatory_1_org || "CSBS, RIT",
-            signatory_2_name: signatory_2_name || "Dr. S. Rajakumaran",
-            signatory_2_title: signatory_2_title || "STTP Coordinator",
+            signatory_2_name: signatory_2_name || "Dr. D. Kesavaraja",
+            signatory_2_title: signatory_2_title || "Head of Department",
             signatory_2_org: signatory_2_org || "CSBS, RIT",
-            signatory_3_name: signatory_3_name || "Dr. S. Rajakarunakaran",
-            signatory_3_title: signatory_3_title || "Head of Department",
-            signatory_3_org: signatory_3_org || "CSBS, RIT",
+            signatory_3_name: signatory_3_name || "Dr. S. Rajakumaran",
+            signatory_3_title: signatory_3_title || "Principal",
+            signatory_3_org: signatory_3_org || "RIT",
             signatory_4_name: signatory_4_name || "Dr. L. Ganesan",
-            signatory_4_title: signatory_4_title || "Principal",
+            signatory_4_title: signatory_4_title || "Director",
             signatory_4_org: signatory_4_org || "RIT",
             signatory_5_name: signatory_5_name || "Dr. R. Ramesh",
-            signatory_5_title: signatory_5_title || "Director",
+            signatory_5_title: signatory_5_title || "Advisor",
             signatory_5_org: signatory_5_org || "RIT",
             programme_title: programme_title || "Short-Term Training Programme (STTP)",
             programme_dates: programme_dates || "10 – 12 October 2026",

@@ -546,10 +546,10 @@ function applyCertificatePreset(presetKey) {
     if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-STTP-2026';
 
     toggleSignatoryCount(4);
-    setSigFields(1, 'Dr. K. Arulraj', 'Faculty Coordinator', 'CSBS, RIT');
-    setSigFields(2, 'Dr. S. Rajakumaran', 'STTP Coordinator', 'CSBS, RIT');
-    setSigFields(3, 'Dr. S. Rajakarunakaran', 'Head of Department', 'CSBS, RIT');
-    setSigFields(4, 'Dr. L. Ganesan', 'Principal', 'RIT');
+    setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(2, 'Dr. D. Kesavaraja', 'Head of Department', 'CSBS, RIT');
+    setSigFields(3, 'Dr. S. Rajakumaran', 'Principal', 'RIT');
+    setSigFields(4, 'Dr. L. Ganesan', 'Director', 'RIT');
   } else if (presetKey === 'workshop_ai_2026') {
     if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF PARTICIPATION';
     if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'Workshop';
@@ -750,13 +750,23 @@ function updateLiveCertificatePreview() {
     if (imgEl) {
       if (customUploadedSignatures[i]) {
         imgEl.src = customUploadedSignatures[i];
-      } else if (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES) {
-        const sigKeys = ['arulraj', 'rajakumaran', 'rajakarunakaran', 'ganesan', 'ramesh'];
-        const key = sigKeys[i - 1];
-        if (window.CERT_ASSETS.SIGNATURES[key]) {
-          imgEl.src = window.CERT_ASSETS.SIGNATURES[key];
+      } else {
+        const sigRoles = ['faculty_coordinator', 'hod', 'principal', 'director', 'ramesh'];
+        const role = sigRoles[i - 1];
+        const asset = (typeof getSignatoryAsset === 'function')
+          ? getSignatoryAsset(role)
+          : (window.CERT_ASSETS?.SIGNATURES?.[role] || `signature/${role}.png`);
+        if (asset) {
+          imgEl.src = asset;
         }
       }
+      imgEl.style.maxHeight = '52px';
+      imgEl.style.maxWidth = '140px';
+      imgEl.style.width = 'auto';
+      imgEl.style.height = 'auto';
+      imgEl.style.objectFit = 'contain';
+      imgEl.style.margin = '0 auto 4px auto';
+      imgEl.style.display = 'block';
     }
   }
 
@@ -843,28 +853,38 @@ async function proceedWithBatchGeneration() {
       certificate_wording: document.getElementById('tplCertWording')?.value?.trim() || '',
       id_prefix: document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026',
       signatory_count: sigCount,
-      signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. K. Arulraj',
+      signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
       signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
       signatory_1_dept: document.getElementById('tplSig1Dept')?.value?.trim() || 'CSBS, RIT',
-      signatory_1_sig: customUploadedSignatures[1] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.arulraj),
-      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. S. Rajakumaran',
-      signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'STTP Coordinator',
+      signatory_1_sig: customUploadedSignatures[1] || undefined,
+      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. D. Kesavaraja',
+      signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'Head of Department',
       signatory_2_dept: document.getElementById('tplSig2Dept')?.value?.trim() || 'CSBS, RIT',
-      signatory_2_sig: customUploadedSignatures[2] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakumaran),
-      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
-      signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Head of Department',
-      signatory_3_dept: document.getElementById('tplSig3Dept')?.value?.trim() || 'CSBS, RIT',
-      signatory_3_sig: customUploadedSignatures[3] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakarunakaran),
+      signatory_2_sig: customUploadedSignatures[2] || undefined,
+      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+      signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Principal',
+      signatory_3_dept: document.getElementById('tplSig3Dept')?.value?.trim() || 'RIT',
+      signatory_3_sig: customUploadedSignatures[3] || undefined,
       signatory_4_name: document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. L. Ganesan',
-      signatory_4_title: document.getElementById('tplSig4Title')?.value?.trim() || 'Principal',
+      signatory_4_title: document.getElementById('tplSig4Title')?.value?.trim() || 'Director',
       signatory_4_dept: document.getElementById('tplSig4Dept')?.value?.trim() || 'RIT',
-      signatory_4_sig: customUploadedSignatures[4] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan),
+      signatory_4_sig: customUploadedSignatures[4] || undefined,
       signatory_5_name: document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. R. Ramesh',
-      signatory_5_title: document.getElementById('tplSig5Title')?.value?.trim() || 'Director',
+      signatory_5_title: document.getElementById('tplSig5Title')?.value?.trim() || 'Advisor',
       signatory_5_dept: document.getElementById('tplSig5Dept')?.value?.trim() || 'RIT',
-      signatory_5_sig: customUploadedSignatures[5] || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramesh),
+      signatory_5_sig: customUploadedSignatures[5] || undefined,
       allow_duplicates: certGenState.allowDuplicates,
-      records: eligibleRecords
+      records: eligibleRecords.map(r => ({
+        student_name: r.student_name,
+        department: r.department,
+        event_name: r.event_name,
+        event_date: r.event_date,
+        certificate_type: r.certificate_type,
+        achievement: r.achievement,
+        register_number: r.register_number,
+        email: r.email,
+        phone: r.phone
+      }))
     };
 
     if (bar) bar.style.width = '45%';
@@ -932,24 +952,24 @@ async function generateSingleCertificatePdfDoc(cert) {
     department: cert.department || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems',
     college_name: cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology',
     signatory_count: cert.signatory_count || parseInt(document.getElementById('tplSigCount')?.value || '4', 10),
-    signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. K. Arulraj',
+    signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
     signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_1_dept: cert.signatory_1_dept || document.getElementById('tplSig1Dept')?.value?.trim() || 'CSBS, RIT',
-    signatory_1_sig: customUploadedSignatures[1] || cert.signatory_1_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.arulraj),
-    signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. S. Rajakumaran',
-    signatory_2_title: cert.signatory_2_title || document.getElementById('tplSig2Title')?.value?.trim() || 'STTP Coordinator',
+    signatory_1_sig: customUploadedSignatures[1] || cert.signatory_1_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('faculty_coordinator') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.faculty_coordinator)),
+    signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'Dr. D. Kesavaraja',
+    signatory_2_title: cert.signatory_2_title || document.getElementById('tplSig2Title')?.value?.trim() || 'Head of Department',
     signatory_2_dept: cert.signatory_2_dept || document.getElementById('tplSig2Dept')?.value?.trim() || 'CSBS, RIT',
-    signatory_2_sig: customUploadedSignatures[2] || cert.signatory_2_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakumaran),
-    signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
-    signatory_3_title: cert.signatory_3_title || document.getElementById('tplSig3Title')?.value?.trim() || 'Head of Department',
-    signatory_3_dept: cert.signatory_3_dept || document.getElementById('tplSig3Dept')?.value?.trim() || 'CSBS, RIT',
-    signatory_3_sig: customUploadedSignatures[3] || cert.signatory_3_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakarunakaran),
+    signatory_2_sig: customUploadedSignatures[2] || cert.signatory_2_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('hod') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.hod)),
+    signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+    signatory_3_title: cert.signatory_3_title || document.getElementById('tplSig3Title')?.value?.trim() || 'Principal',
+    signatory_3_dept: cert.signatory_3_dept || document.getElementById('tplSig3Dept')?.value?.trim() || 'RIT',
+    signatory_3_sig: customUploadedSignatures[3] || cert.signatory_3_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('principal') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.principal)),
     signatory_4_name: cert.signatory_4_name || document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. L. Ganesan',
-    signatory_4_title: cert.signatory_4_title || document.getElementById('tplSig4Title')?.value?.trim() || 'Principal',
+    signatory_4_title: cert.signatory_4_title || document.getElementById('tplSig4Title')?.value?.trim() || 'Director',
     signatory_4_dept: cert.signatory_4_dept || document.getElementById('tplSig4Dept')?.value?.trim() || 'RIT',
-    signatory_4_sig: customUploadedSignatures[4] || cert.signatory_4_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan),
+    signatory_4_sig: customUploadedSignatures[4] || cert.signatory_4_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('director') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.director)),
     signatory_5_name: cert.signatory_5_name || document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. R. Ramesh',
-    signatory_5_title: cert.signatory_5_title || document.getElementById('tplSig5Title')?.value?.trim() || 'Director',
+    signatory_5_title: cert.signatory_5_title || document.getElementById('tplSig5Title')?.value?.trim() || 'Advisor',
     signatory_5_dept: cert.signatory_5_dept || document.getElementById('tplSig5Dept')?.value?.trim() || 'RIT',
     signatory_5_sig: customUploadedSignatures[5] || cert.signatory_5_sig || (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramesh)
   };
