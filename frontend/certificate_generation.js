@@ -178,17 +178,22 @@ async function uploadAndParseCertificateSpreadsheet() {
     const defIssueDate = document.getElementById('cgDefIssueDate')?.value;
 
     const enriched = (data.records || []).map(r => {
+      r.participant_name = (r.participant_name || r.student_name || '').trim();
+      r.student_name = r.participant_name;
+      r.participant_type = r.participant_type || 'Student';
+      r.institution = r.institution || r.college_name || 'Ramco Institute of Technology';
+      r.department = r.department || defDept || 'Computer Science and Business Systems';
+      r.email = r.email || '';
+
       if (!r.event_name && defEventName) r.event_name = defEventName;
       if (!r.event_date && defEventDate) r.event_date = defEventDate;
       if ((!r.academic_year || r.academic_year === '2026-27') && defAcademicYear) r.academic_year = defAcademicYear;
-      if (!r.department && defDept) r.department = defDept;
       if (!r.participation_type && defPartType) r.participation_type = defPartType;
       if (!r.issue_date && defIssueDate) r.issue_date = defIssueDate;
 
-      // Re-evaluate validity after applying fallbacks
+      // Re-evaluate validity: Participant Name and Event Name are mandatory. Register Number is optional.
       const errors = [];
-      if (!r.student_name) errors.push('Student Name is mandatory');
-      if (!r.register_number) errors.push('Register Number is mandatory');
+      if (!r.participant_name) errors.push('Participant Name is mandatory');
       if (!r.event_name) errors.push('Event Name is mandatory');
       r.errors = errors;
       r.is_valid = errors.length === 0;
@@ -353,27 +358,34 @@ function renderCertGenTable() {
       notesHtml = '<span style="color:#059669;font-size:11.5px;"><i class="fa-solid fa-circle-check"></i> Passed all checks</span>';
     }
 
+    const pName = row.participant_name || row.student_name || '';
     html += `
       <tr class="${rowClass}">
         <td style="text-align:center;font-weight:700;color:#64748b;">${row.row_index || (actualIdx + 1)}</td>
         <td>${statusBadge}</td>
         <td>
-          <input type="text" class="certgen-table-input ${!row.student_name ? 'has-error' : ''}" value="${escapeHtml(row.student_name || '')}" placeholder="Student Name" onchange="handleCertGenCellChange(${actualIdx}, 'student_name', this.value)">
+          <input type="text" class="certgen-table-input ${!pName ? 'has-error' : ''}" value="${escapeHtml(pName)}" placeholder="Participant Name" onchange="handleCertGenCellChange(${actualIdx}, 'participant_name', this.value)">
         </td>
         <td>
-          <input type="text" class="certgen-table-input" value="${escapeHtml(row.department || 'Computer Science and Business Systems')}" onchange="handleCertGenCellChange(${actualIdx}, 'department', this.value)">
+          <select class="certgen-table-input" onchange="handleCertGenCellChange(${actualIdx}, 'participant_type', this.value)">
+            <option value="Student" ${row.participant_type === 'Student' ? 'selected' : ''}>Student</option>
+            <option value="Professor" ${row.participant_type === 'Professor' ? 'selected' : ''}>Professor</option>
+            <option value="Faculty" ${row.participant_type === 'Faculty' ? 'selected' : ''}>Faculty</option>
+            <option value="Research Scholar" ${row.participant_type === 'Research Scholar' ? 'selected' : ''}>Research Scholar</option>
+            <option value="Other" ${(!['Student','Professor','Faculty','Research Scholar'].includes(row.participant_type)) ? 'selected' : ''}>Other</option>
+          </select>
+        </td>
+        <td>
+          <input type="text" class="certgen-table-input" value="${escapeHtml(row.department || 'Computer Science and Business Systems')}" placeholder="Department" onchange="handleCertGenCellChange(${actualIdx}, 'department', this.value)">
+        </td>
+        <td>
+          <input type="text" class="certgen-table-input" value="${escapeHtml(row.institution || 'Ramco Institute of Technology')}" placeholder="Institution" onchange="handleCertGenCellChange(${actualIdx}, 'institution', this.value)">
         </td>
         <td>
           <input type="text" class="certgen-table-input ${!row.event_name ? 'has-error' : ''}" value="${escapeHtml(row.event_name || '')}" placeholder="Event Name" onchange="handleCertGenCellChange(${actualIdx}, 'event_name', this.value)">
         </td>
         <td>
           <input type="date" class="certgen-table-input" value="${escapeHtml(row.event_date || '')}" onchange="handleCertGenCellChange(${actualIdx}, 'event_date', this.value)">
-        </td>
-        <td>
-          <input type="text" class="certgen-table-input" value="${escapeHtml(row.participation_type || 'Participation')}" onchange="handleCertGenCellChange(${actualIdx}, 'participation_type', this.value)">
-        </td>
-        <td>
-          <input type="date" class="certgen-table-input" value="${escapeHtml(row.issue_date || '')}" onchange="handleCertGenCellChange(${actualIdx}, 'issue_date', this.value)">
         </td>
         <td>${notesHtml}</td>
         <td style="text-align:center;">
@@ -403,11 +415,15 @@ function renderCertGenTable() {
 function handleCertGenCellChange(idx, field, value) {
   if (!certGenState.records[idx]) return;
   certGenState.records[idx][field] = value.trim();
+  if (field === 'participant_name') {
+    certGenState.records[idx].student_name = value.trim();
+  }
 
   // Re-run validation for this row
   const r = certGenState.records[idx];
+  const pName = r.participant_name || r.student_name;
   const errors = [];
-  if (!r.student_name) errors.push('Student Name is mandatory');
+  if (!pName) errors.push('Participant Name is mandatory');
   if (!r.event_name) errors.push('Event Name is mandatory');
 
   r.errors = errors;
@@ -434,7 +450,10 @@ function addManualStudentRow() {
 
   certGenState.records.push({
     row_index: certGenState.records.length + 1,
+    participant_name: '',
     student_name: '',
+    participant_type: 'Student',
+    institution: 'Ramco Institute of Technology',
     register_number: '',
     department: defDept,
     academic_year: defAcademicYear,
@@ -445,7 +464,7 @@ function addManualStudentRow() {
     issue_date: defIssueDate,
     is_valid: false,
     is_duplicate: false,
-    errors: ['Student Name is mandatory'],
+    errors: ['Participant Name is mandatory'],
     warnings: []
   });
 
@@ -719,12 +738,12 @@ function updateLiveCertificatePreview() {
   const idPrefix = document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026-';
   const sigCount = parseInt(document.getElementById('tplSigCount')?.value || '6', 10);
 
-  // Sample student name (NO register number)
+  // Sample participant name (NO register number)
   const sample = (certGenState.records && certGenState.records.length > 0) ? certGenState.records[0] : null;
-  const studentName = (sample && sample.student_name) ? sample.student_name : 'Keerthana Mohan';
+  const participantName = (sample && (sample.participant_name || sample.student_name)) ? (sample.participant_name || sample.student_name) : 'Keerthana Mohan';
 
   if (document.getElementById('prevCertTitle')) document.getElementById('prevCertTitle').innerText = title;
-  if (document.getElementById('prevStudentName')) document.getElementById('prevStudentName').innerText = studentName;
+  if (document.getElementById('prevStudentName')) document.getElementById('prevStudentName').innerText = participantName;
   if (document.getElementById('prevProgTitle')) document.getElementById('prevProgTitle').innerText = progTitle;
   if (document.getElementById('prevEventTopic')) document.getElementById('prevEventTopic').innerText = `“${eventName}”`;
   if (document.getElementById('prevOrgDept')) document.getElementById('prevOrgDept').innerText = orgDept;
@@ -944,14 +963,19 @@ async function generateSingleCertificatePdfDoc(cert) {
   }
 
   // 1. Prepare Certificate Data with Template Fallbacks (NO register number, NO dates, NO academic year)
+  const participantName = cert.participant_name || cert.student_name || 'Participant';
   const certFullData = {
-    student_name: cert.student_name || 'Student',
+    participant_name: participantName,
+    student_name: participantName,
+    participant_type: cert.participant_type || 'Student',
+    institution: cert.institution || cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam',
+    college_name: cert.institution || cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam',
     certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
     certificate_title: cert.certificate_title || document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION',
     programme_title: cert.programme_title || document.getElementById('tplProgTitle')?.value?.trim() || 'One Week Short-Term Training Programme (STTP)',
     event_name: cert.event_name || document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
     department: cert.department || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems',
-    college_name: cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam',
+    programme_dates: cert.programme_dates || document.getElementById('tplProgDates')?.value?.trim() || 'October 12, 2026, to October 18, 2026',
     signatory_count: cert.signatory_count || parseInt(document.getElementById('tplSigCount')?.value || '6', 10),
     signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
     signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',

@@ -113,21 +113,30 @@ function normalizeHeaderName(header) {
 
 // Map spreadsheet row using flexible case-insensitive header aliases
 function mapSpreadsheetRow(rawRow, headerMap) {
-    const studentNameVal = rawRow[headerMap.student_name] || "";
+    const studentNameVal = rawRow[headerMap.participant_name] || rawRow[headerMap.student_name] || "";
     const regNoVal = rawRow[headerMap.register_number] || "";
+    const emailVal = rawRow[headerMap.email] || "";
+    const partTypeVal = rawRow[headerMap.participant_type] || rawRow[headerMap.participation_type] || "";
     const deptVal = rawRow[headerMap.department] || "";
+    const instVal = rawRow[headerMap.institution] || "";
     const yearVal = rawRow[headerMap.academic_year] || "";
     const eventNameVal = rawRow[headerMap.event_name] || "";
     const eventDateVal = rawRow[headerMap.event_date] || "";
-    const partTypeVal = rawRow[headerMap.participation_type] || "";
     const issueDateVal = rawRow[headerMap.issue_date] || "";
 
+    const nameSanitized = sanitizeCellValue(studentNameVal);
+    const eventSanitized = sanitizeCellValue(eventNameVal);
+
     return {
-        student_name: sanitizeCellValue(studentNameVal),
+        participant_name: nameSanitized,
+        student_name: nameSanitized,
         register_number: sanitizeCellValue(regNoVal),
-        department: sanitizeCellValue(deptVal) || "Computer Science and Business Systems",
+        email: sanitizeCellValue(emailVal),
+        participant_type: sanitizeCellValue(partTypeVal) || "Student",
+        institution: sanitizeCellValue(instVal) || "Ramco Institute of Technology, Rajapalayam",
+        department: sanitizeCellValue(deptVal) || "Department of Computer Science and Business Systems",
         academic_year: sanitizeCellValue(yearVal) || "2026-27",
-        event_name: sanitizeCellValue(eventNameVal),
+        event_name: eventSanitized,
         event_date: sanitizeCellValue(eventDateVal),
         participation_type: sanitizeCellValue(partTypeVal) || "Participation",
         achievement: sanitizeCellValue(partTypeVal) || "Participation",
@@ -152,8 +161,12 @@ function parseUploadedSpreadsheet(buffer) {
     // Determine header aliases from the first row keys
     const sampleKeys = Object.keys(rawData[0]);
     const headerMap = {
+        participant_name: null,
         student_name: null,
         register_number: null,
+        email: null,
+        participant_type: null,
+        institution: null,
         department: null,
         academic_year: null,
         event_name: null,
@@ -163,8 +176,12 @@ function parseUploadedSpreadsheet(buffer) {
     };
 
     const aliasRules = {
-        student_name: ["studentname", "student", "name", "fullname", "candidatename", "studentfullname"],
+        participant_name: ["participantname", "participant", "studentname", "student", "name", "fullname", "candidatename", "studentfullname", "attendee", "attendeename"],
+        student_name: ["studentname", "student", "participantname", "participant", "name", "fullname", "candidatename", "studentfullname"],
         register_number: ["registernumber", "registerno", "regno", "rollno", "rollnumber", "registrationnumber", "registrationno", "register"],
+        email: ["email", "emailaddress", "emailid", "mail", "mailid"],
+        participant_type: ["participanttype", "participantcategory", "category", "designation", "role", "type", "participationtype", "achievement"],
+        institution: ["institution", "institutionname", "college", "collegename", "organization", "org", "university"],
         department: ["department", "dept", "branch", "programme", "deptname", "discipline"],
         academic_year: ["academicyear", "year", "batch", "class", "studyyear"],
         event_name: ["eventname", "event", "title", "workshop", "seminar", "course", "training", "eventtitle"],
@@ -184,7 +201,7 @@ function parseUploadedSpreadsheet(buffer) {
     });
 
     // Fallbacks if not detected
-    if (!headerMap.student_name) headerMap.student_name = sampleKeys[0];
+    if (!headerMap.participant_name && !headerMap.student_name) headerMap.student_name = sampleKeys[0];
 
     const mapped = rawData.map(r => mapSpreadsheetRow(r, headerMap));
     return mapped;
@@ -435,7 +452,9 @@ router.get("/template-download", (req, res) => {
     try {
         const headers = [
             "Student Name",
+            "Participant Type",
             "Department",
+            "Institution",
             "Event Name",
             "Participation Type"
         ];
@@ -443,21 +462,27 @@ router.get("/template-download", (req, res) => {
         const sampleRows = [
             [
                 "SIVARANJANI S",
+                "Student",
                 "Computer Science and Business Systems",
+                "Ramco Institute of Technology, Rajapalayam",
                 "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
                 "Participation"
             ],
             [
                 "ARUN KUMAR M",
+                "Student",
                 "Computer Science and Business Systems",
+                "Ramco Institute of Technology, Rajapalayam",
                 "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
                 "Participation"
             ],
             [
-                "PRIYA DHARSHINI R",
-                "Computer Science and Business Systems",
+                "Dr. K. SURESH KUMAR",
+                "Professor",
+                "Computer Science and Engineering",
+                "Ramco Institute of Technology, Rajapalayam",
                 "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-                "Certificate of Merit"
+                "Participation"
             ]
         ];
 
@@ -466,14 +491,16 @@ router.get("/template-download", (req, res) => {
 
         // Column widths
         ws["!cols"] = [
-            { wch: 26 }, // Student Name
+            { wch: 28 }, // Student Name
+            { wch: 20 }, // Participant Type
             { wch: 38 }, // Department
+            { wch: 42 }, // Institution
             { wch: 45 }, // Event Name
             { wch: 25 }  // Participation Type
         ];
 
         const wb = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(wb, ws, "Students Template");
+        xlsx.utils.book_append_sheet(wb, ws, "Participants Template");
 
         const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
 

@@ -28,7 +28,9 @@
   --primary-subtle:     #FAF5FF;
   --primary-border:     #E9D5FF;
   --primary-glow:       rgba(126, 34, 206, 0.16);
-  --primary-shadow:     rgba(59, 7, 100, 0.08);
+  --primary-shadow:     rgba
+  
+  (59, 7, 100, 0.08);
 
   --secondary:          #6B5B7B; /* Muted purple-slate */
   --accent:             #7E22CE; /* Global action purple */

@@ -2132,11 +2132,22 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
         const warnings = [];
 
         const studentName = sanitizeCellValue(
+            row.participant_name || row['Participant Name'] || row.participantName || row.Participant_Name ||
             row.student_name || row['Student Name'] || row.studentName || row.Student_Name || row.name || row.Name || ""
         );
         const registerNumber = sanitizeCellValue(
             row.register_number || row['Register Number'] || row.registerNumber || row['Register No'] || row.reg_no || row['Reg No'] || row.Reg_No || ""
         ).toUpperCase();
+        const participantType = sanitizeCellValue(
+            row.participant_type || row['Participant Type'] || row.participantType || row.Participant_Type ||
+            row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || "Student"
+        );
+        const institution = sanitizeCellValue(
+            row.institution || row['Institution'] || row.institution_name || row['Institution Name'] || row.college || row.College || row['College Name'] || "Ramco Institute of Technology, Rajapalayam"
+        );
+        const email = sanitizeCellValue(
+            row.email || row.Email || row['Email'] || row['Email Address'] || ""
+        );
         const department = sanitizeCellValue(
             row.department || row.Department || row['Department'] || row.dept || row.Dept || "Computer Science and Business Systems"
         );
@@ -2150,7 +2161,7 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
             row.event_date || row['Event Date'] || row.eventDate || row.Event_Date || row.date || row.Date || (defaultOptions && defaultOptions.event_date) || ""
         );
         const participationType = sanitizeCellValue(
-            row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || row.Participation_Type || "Participation"
+            row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || row.Participation_Type || participantType || "Participation"
         );
         const rawIssueDate = sanitizeCellValue(
             row.issue_date || row['Certificate Issue Date'] || row.certificate_issue_date || row['Issue Date'] || row.issueDate || row.Certificate_Issue_Date || ""
@@ -2158,7 +2169,7 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
 
         // 1. Mandatory checks
         if (!studentName) {
-            errors.push("Student Name is mandatory");
+            errors.push("Participant Name is mandatory");
         }
         if (!eventName) {
             errors.push("Event Name is mandatory");
@@ -2202,7 +2213,7 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
                 isDuplicate = true;
                 duplicateType = 'file';
                 const priorRow = intraBatchMap.get(dupKey);
-                duplicateMessage = `Duplicate in file: Student already listed on Row ${priorRow} for this event`;
+                duplicateMessage = `Duplicate in file: Participant already listed on Row ${priorRow} for this event`;
                 warnings.push(duplicateMessage);
             } else {
                 intraBatchMap.set(dupKey, rowNum);
@@ -2231,8 +2242,14 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
         return {
             row_index: rowNum,
             rowNumber: rowNum,
+            participant_name: studentName,
+            participantName: studentName,
             student_name: studentName,
             studentName: studentName,
+            participant_type: participantType,
+            participantType: participantType,
+            institution: institution,
+            email: email,
             register_number: registerNumber,
             registerNumber: registerNumber,
             department: department,
@@ -2411,13 +2428,16 @@ async function issueBulkCertificates({
                 certificate_title: row.certificate_title || effectiveCertTitle,
                 certificate_type: row.participation_type || row.achievement || certificate_type || "Participation",
                 achievement: row.achievement || row.participation_type || "Participation",
-                college_name: "RAMCO INSTITUTE OF TECHNOLOGY",
+                college_name: row.institution || "RAMCO INSTITUTE OF TECHNOLOGY",
+                institution: row.institution || "Ramco Institute of Technology, Rajapalayam",
                 department: row.department || "Computer Science and Business Systems",
-                student_name: row.student_name,
+                participant_name: row.participant_name || row.student_name,
+                participant_type: row.participant_type || "Student",
+                student_name: row.participant_name || row.student_name,
                 register_number: regNo, // Stored internally for matching/duplicates, never printed on PDF or public verification
-                student_id: stuUser ? stuUser.id : regNo,
+                student_id: stuUser ? stuUser.id : (regNo || `PART-${i + 1}`),
                 student_year: (stuUser && stuUser.year) || 4,
-                student_email: (stuUser && stuUser.email) || "",
+                student_email: row.email || (stuUser && stuUser.email) || "",
                 event_name: row.event_name || effectiveEventName,
                 programme_title: row.programme_title || programme_title || "Short-Term Training Programme (STTP)",
                 programme_dates: row.programme_dates || programme_dates || "10 – 12 October 2026",
@@ -2636,6 +2656,10 @@ async function getPublicCertificateDetails(certId) {
         department: matchedCert.department || "Computer Science and Business Systems",
         student_name: matchedCert.student_name,
         studentName: matchedCert.student_name,
+        participant_name: matchedCert.participant_name || matchedCert.student_name,
+        participantName: matchedCert.participant_name || matchedCert.student_name,
+        participant_type: matchedCert.participant_type || "Student",
+        participantType: matchedCert.participant_type || "Student",
         event_name: matchedCert.event_name,
         eventName: matchedCert.event_name,
         event_date: matchedCert.event_date,

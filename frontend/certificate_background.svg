@@ -73,12 +73,23 @@
     <path d="M 2000,1064 Q 1910,834 1960,494 T 1920,74" fill="none" stroke="#E9D5FF" stroke-width="1.5" opacity="0.5"/>
   </g>
 
-  <!-- 4. Double-Line Purple Academic Border with Elegant Corner Details -->
+  <!-- 4. Double-Line Purple Academic Border with Restrained Gold Accents -->
   <!-- Outer Purple Line -->
   <rect x="44" y="32" width="1912" height="1350" fill="none" stroke="#581C87" stroke-width="3.2"/>
 
+  <!-- Middle Gold Accent Line -->
+  <rect x="52" y="40" width="1896" height="1334" fill="none" stroke="#C59B27" stroke-width="1.2" opacity="0.85"/>
+
   <!-- Inner Purple Line -->
   <rect x="60" y="48" width="1880" height="1318" fill="none" stroke="#581C87" stroke-width="1.8"/>
+
+  <!-- Gold Corner Accent Rosettes -->
+  <g id="goldCornerRosettes">
+    <polygon points="52,36 56,40 52,44 48,40" fill="#C59B27"/>
+    <polygon points="1948,36 1952,40 1948,44 1944,40" fill="#C59B27"/>
+    <polygon points="52,1370 56,1374 52,1378 48,1374" fill="#C59B27"/>
+    <polygon points="1948,1370 1952,1374 1948,1378 1944,1374" fill="#C59B27"/>
+  </g>
 
   <!-- Corner Stepped Boxes / Details -->
   <!-- Top-Left Corner Details -->

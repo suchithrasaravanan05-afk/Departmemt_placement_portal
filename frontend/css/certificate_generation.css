@@ -440,7 +440,7 @@
 }
 
 .cert-hdr-logo-left {
-  width: 52px;
+  width: 60px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -449,14 +449,15 @@
 }
 
 .cert-hdr-logo-left img {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
 }
 
 .cert-hdr-center-col {
   flex: 1;
   text-align: center;
+  padding: 0 4px;
 }
 
 .cert-college-title {
@@ -492,23 +493,22 @@
   color: #111827;
 }
 
-/* Approved CSBS Department Logo Centered Beneath Institutional Heading */
-.cert-csbs-center-logo {
+.cert-csbs-center-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
-.cert-csbs-center-logo img {
+.cert-csbs-center-logo {
   height: 22px;
   width: auto;
-  max-width: 135px;
+  max-width: 130px;
   object-fit: contain;
 }
 
-.cert-hdr-spacer-right {
-  width: 52px;
+.cert-hdr-logo-right-spacer {
+  width: 60px;
   flex-shrink: 0;
 }
 
@@ -663,9 +663,20 @@
 .cert-sig-role {
   font-family: 'Times New Roman', Georgia, serif;
   font-size: 6.5px;
-  color: #4B5563;
+  color: #581C87;
+  font-weight: bold;
   white-space: nowrap;
   margin-top: 1px;
+}
+
+/* Vertical Gold Separator between Signature Groups */
+.cert-sig-vsep {
+  width: 1px;
+  height: 36px;
+  background: #C59B27;
+  margin: 0 4px 6px;
+  flex-shrink: 0;
+  align-self: flex-end;
 }
 
 /* 6. Footer: Certificate ID & Dedicated QR Code at Bottom Right */
@@ -688,10 +699,53 @@
   text-align: center;
 }
 
-.cert-footer-id-text {
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+.cert-footer-pill-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cert-footer-pill {
+  background: #FFFFFF;
+  border: 1px solid #C59B27;
+  border-radius: 12px;
+  padding: 2px 14px;
+  font-family: 'Times New Roman', Georgia, serif;
   font-size: 7.2px;
-  color: #4B5563;
+  font-weight: bold;
+  color: #1A1A40;
+  box-shadow: 0 1px 3px rgba(197, 155, 39, 0.15);
+}
+
+.cert-footer-ornament-line {
+  display: flex;
+  align-items: center;
+  width: 55px;
+  position: relative;
+}
+
+.cert-ornament-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #C59B27;
+  flex-shrink: 0;
+}
+
+.cert-ornament-line-inner {
+  flex: 1;
+  height: 0.8px;
+  background: #C59B27;
+}
+
+.cert-ornament-diamond {
+  width: 3.5px;
+  height: 3.5px;
+  background: #C59B27;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  margin: 0 2px;
 }
 
 .cert-footer-qr-container {
