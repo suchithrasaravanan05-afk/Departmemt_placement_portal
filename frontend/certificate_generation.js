@@ -282,6 +282,7 @@ function renderCertGenTable() {
   const invalidCount = records.filter(r => !r.is_valid).length;
   const dupCount = records.filter(r => r.is_duplicate).length;
   const readyCount = records.filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate)).length;
+  updateCertEmailSettingsUI();
 
   // Update KPI counters
   if (document.getElementById('cgKpiTotal')) document.getElementById('cgKpiTotal').innerText = total;
@@ -642,14 +643,21 @@ function updateCertEmailSettingsUI() {
     document.getElementById('cgStatusTest').innerText = certEmailSettings.testMode ? 'Enabled' : 'Disabled';
   }
 
-  const readyCount = (certGenState.records && certGenState.records.length > 0)
-    ? certGenState.records.filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate)).length
-    : (certGenState.currentBatchCerts && certGenState.currentBatchCerts.length > 0
-      ? certGenState.currentBatchCerts.length
-      : 211);
+  const allowDup = Boolean(certGenState.allowDuplicates || document.getElementById('cgAllowDuplicatesCheckbox')?.checked);
+  let readyCount = 0;
+  if (certGenState.currentBatchCerts && certGenState.currentBatchCerts.length > 0) {
+    readyCount = certGenState.currentBatchCerts.length;
+  } else if (certGenState.records && certGenState.records.length > 0) {
+    readyCount = certGenState.records.filter(r => r.is_valid && (allowDup || !r.is_duplicate)).length;
+  }
+
   const plannedEl = document.getElementById('cgEmailPlannedCount');
   if (plannedEl) {
-    plannedEl.innerText = `${readyCount} participants`;
+    if (readyCount > 0) {
+      plannedEl.innerText = `${readyCount} participant${readyCount === 1 ? '' : 's'} ready`;
+    } else {
+      plannedEl.innerText = `0 participants (Awaiting roster upload)`;
+    }
   }
 }
 
@@ -686,8 +694,8 @@ function applyCertificatePreset(presetKey) {
     setFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems');
     setFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
     setFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026');
-    setFormParam(['tplIssueDate'], '2026-10-18');
-    setFormParam(['tplCertWording'], 'for active and enthusiastic participation in the One Week Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology, Rajapalayam from October 12, 2026, to October 18, 2026.');
+    setFormParam(['tplIssueDate'], 'October 18, 2026');
+    setFormParam(['tplCertWording'], 'for active participation in the One Week Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology, Rajapalayam from October 12, 2026, to October 18, 2026.');
     setFormParam(['tplIdPrefix'], 'RIT-STTP-2026-');
 
     toggleSignatoryCount(6);
@@ -967,7 +975,21 @@ async function proceedWithBatchGeneration() {
   if (pct) pct.innerText = '15%';
   if (statusText) statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validating credentials &amp; preparing database transactions...';
 
-  const eligibleRecords = (certGenState.records || []).filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate));
+  const cb = document.getElementById('cgAllowDuplicatesCheckbox');
+  const allowDup = Boolean(certGenState.allowDuplicates || (cb && cb.checked));
+  certGenState.allowDuplicates = allowDup;
+  let eligibleRecords = (certGenState.records || []).filter(r => r.is_valid && (allowDup || !r.is_duplicate));
+
+  if (eligibleRecords.length === 0 && certGenState.records && certGenState.records.length > 0) {
+    eligibleRecords = certGenState.records.filter(r => r.student_name && r.student_name.trim().length > 0);
+    certGenState.allowDuplicates = true;
+  }
+
+  if (eligibleRecords.length === 0) {
+    if (progressBox) progressBox.style.display = 'none';
+    showAdminAlert('No eligible participant records found. Please upload or add records in Step 2.');
+    return;
+  }
 
   try {
     const evName = getFormParam(['tplEventTopic', 'tplEventName'], eligibleRecords[0]?.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives');
@@ -1025,17 +1047,21 @@ async function proceedWithBatchGeneration() {
       signatory_6_dept: document.getElementById('tplSig6Org')?.value?.trim() || 'RIT',
       signatory_6_org: document.getElementById('tplSig6Org')?.value?.trim() || 'RIT',
       signatory_6_sig: customUploadedSignatures[6] || undefined,
-      allow_duplicates: certGenState.allowDuplicates,
+      allow_duplicates: Boolean(certGenState.allowDuplicates || allowDup),
       records: eligibleRecords.map(r => ({
-        student_name: r.student_name,
-        department: r.department,
-        event_name: r.event_name,
-        event_date: r.event_date,
-        certificate_type: r.certificate_type,
-        achievement: r.achievement,
-        register_number: r.register_number,
-        email: r.email,
-        phone: r.phone
+        student_name: r.student_name || r.participant_name || '',
+        participant_name: r.participant_name || r.student_name || '',
+        participant_type: r.participant_type || r.participants || 'Student',
+        institution: r.institution || r.college_name || instName,
+        college_name: r.college_name || r.institution || instName,
+        department: r.department || orgDept,
+        event_name: r.event_name || evName,
+        event_date: r.event_date || getFormParam(['tplIssueDate'], new Date().toISOString().split('T')[0]),
+        certificate_type: r.certificate_type || certType,
+        achievement: r.achievement || r.participation_type || 'Participation',
+        register_number: r.register_number || '',
+        email: r.email || r.mail_id || '',
+        phone: r.phone || ''
       }))
     };
 

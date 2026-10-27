@@ -347,18 +347,21 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.font = 'normal 20px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1F2937';
 
-  let collStr = (certData.college_name || 'Ramco Institute of Technology').replace(/,\s*Rajapalayam.*$/i, '').trim();
+  let collStr = (certData.college_name || certData.institution || 'Ramco Institute of Technology, Rajapalayam').trim().replace(/,\s*$/, '');
+  if (!collStr.toLowerCase().includes('rajapalayam')) {
+    collStr += ', Rajapalayam';
+  }
   let evName = (certData.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives').replace(/^["“”]/, '').replace(/["“”]$/, '').trim();
   let progTitle = certData.programme_title || 'One Week Short-Term Training Programme (STTP)';
   let deptStr = certData.department || 'Department of Computer Science and Business Systems';
   let datesStr = (certData.programme_dates || 'October 12, 2026, to October 18, 2026').replace(/\.$/, '') + '.';
 
-  ctx.fillText(`for active and enthusiastic participation in the ${progTitle} on`, width / 2, pY);
+  ctx.fillText(`for active participation in the ${progTitle} on`, width / 2, pY);
   ctx.font = 'bold 21px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
   ctx.fillText(`“${evName}”, organized`, width / 2, pY + lineSpacing);
-  ctx.fillText(`by the ${deptStr} at ${collStr},`, width / 2, pY + lineSpacing * 2);
-  ctx.fillText(`Rajapalayam from ${datesStr}`, width / 2, pY + lineSpacing * 3);
+  ctx.fillText(`by the ${deptStr} at ${collStr} from`, width / 2, pY + lineSpacing * 2);
+  ctx.fillText(`${datesStr}`, width / 2, pY + lineSpacing * 3);
 
   // 8. Signatures: Exactly Four Groups with Vertical Gold Separators
   const sigLineY = 928;
@@ -711,13 +714,13 @@ async function createCertificatePdf(certData = {}) {
   const dates = certData.programme_dates || certData.dates || 'October 12, 2026, to October 18, 2026';
 
   renderStyledLine([
-    { text: 'for active and enthusiastic participation in the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
+    { text: 'for active participation in the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
     { text: progTitle, font: 'times', style: 'bold', size: pSize, color: deepPurple },
     { text: 'on', font: 'times', style: 'normal', size: pSize, color: darkGrey }
   ], 114.0);
 
   renderStyledLine([
-    { text: '“' + eventTopic + '”,', font: 'times', style: 'bold', size: pSize, color: deepPurple },
+    { text: '“' + eventTopic.replace(/^["“”]/, '').replace(/["“”]$/, '').trim() + '”,', font: 'times', style: 'bold', size: pSize, color: deepPurple },
     { text: 'organized', font: 'times', style: 'normal', size: pSize, color: darkGrey }
   ], 121.2);
 

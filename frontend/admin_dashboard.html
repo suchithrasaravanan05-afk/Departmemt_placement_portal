@@ -2185,7 +2185,7 @@
 
             <div class="form-group" style="margin-bottom:12px;">
               <label>Programme / Event Category</label>
-              <input type="text" id="tplProgrammeTitle" class="form-control" value="Short-Term Training Programme (STTP)" oninput="updateLiveCertificatePreview()">
+              <input type="text" id="tplProgrammeTitle" class="form-control" value="One Week Short-Term Training Programme (STTP)" oninput="updateLiveCertificatePreview()">
             </div>
 
             <div class="form-group" style="margin-bottom:12px;">
@@ -2196,11 +2196,11 @@
             <div class="form-grid form-grid-2" style="margin-bottom:12px;">
               <div class="form-group">
                 <label>Programme Dates (Freeform / Range)</label>
-                <input type="text" id="tplProgrammeDates" class="form-control" value="10 – 12 October 2026" oninput="updateLiveCertificatePreview()">
+                <input type="text" id="tplProgrammeDates" class="form-control" value="October 12, 2026, to October 18, 2026" oninput="updateLiveCertificatePreview()">
               </div>
               <div class="form-group">
                 <label>Date of Issue</label>
-                <input type="text" id="tplIssueDate" class="form-control" value="12 October 2026" oninput="updateLiveCertificatePreview()">
+                <input type="text" id="tplIssueDate" class="form-control" value="October 18, 2026" oninput="updateLiveCertificatePreview()">
               </div>
             </div>
 
@@ -2382,7 +2382,7 @@
 
                 <!-- 4. Event Paragraph -->
                 <div class="cert-wording-paragraph" id="prevWordingParagraph">
-                  for active and enthusiastic participation in the <span class="cert-purple-bold" id="prevProgTitle">One Week Short-Term Training Programme (STTP)</span> on <span class="cert-purple-bold" id="prevEventTopic">“Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”</span>, organized by the <span class="cert-purple-bold" id="prevOrgDept">Department of Computer Science and Business Systems</span> at <span class="cert-purple-bold" id="prevInstitution">Ramco Institute of Technology, Rajapalayam</span> from <span class="cert-purple-bold" id="prevProgDates">October 12, 2026, to October 18, 2026</span>.
+                  for active participation in the <span class="cert-purple-bold" id="prevProgTitle">One Week Short-Term Training Programme (STTP)</span> on <span class="cert-purple-bold" id="prevEventTopic">“Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”</span>, organized by the <span class="cert-purple-bold" id="prevOrgDept">Department of Computer Science and Business Systems</span> at <span class="cert-purple-bold" id="prevInstitution">Ramco Institute of Technology, Rajapalayam</span> from <span class="cert-purple-bold" id="prevProgDates">October 12, 2026, to October 18, 2026</span>.
                 </div>
 
                 <!-- 5. 4 Visual Groups Signatures Section with Vertical Gold Separators -->
@@ -2581,7 +2581,7 @@
           <!-- Planned Batch Box -->
           <div class="cert-email-batch-box">
             <div class="cert-email-batch-label">Planned batch</div>
-            <div class="cert-email-batch-count" id="cgEmailPlannedCount">211 participants</div>
+            <div class="cert-email-batch-count" id="cgEmailPlannedCount">0 participants (Awaiting Roster)</div>
             <div class="cert-email-batch-sub">One personalized email per participant, with the matching certificate PDF attached.</div>
             <div class="cert-email-batch-statusline" id="cgEmailStatusSummary">
               <span>Manual: <strong id="cgStatusManual">Enabled</strong></span> &bull; 
@@ -2595,18 +2595,19 @@
                 <i class="fa-solid fa-paper-plane"></i>
                 <span id="btnSendCertsText">Send Certificates</span>
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEmailConfigModal()" style="color:#cbd5e1;border-color:#334155;background:#161b26;padding:10px 16px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+              <button type="button" class="cert-email-btn-secondary" onclick="openEmailConfigModal()">
                 <i class="fa-solid fa-gear"></i> SMTP Credentials
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="testEmailConnectionFromModal()" style="color:#cbd5e1;border-color:#334155;background:#161b26;padding:10px 16px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+              <button type="button" class="cert-email-btn-secondary" onclick="testEmailConnectionFromModal()">
                 <i class="fa-solid fa-plug"></i> Test Connection
               </button>
             </div>
           </div>
 
-          <!-- Important Note -->
+          <!-- Institutional Protection Note -->
           <div class="cert-email-note-box">
-            <strong>Important:</strong> The backend should enforce one active sending workflow per batch, record delivery status, and skip already-sent certificates unless an authorized administrator explicitly resends them.
+            <i class="fa-solid fa-shield-halved" style="color:#7C3AED;font-size:14px;"></i>
+            <span><strong>Delivery Protection Active:</strong> System automatically attaches high-resolution certificate PDFs, throttles delivery, and guards against duplicate sends.</span>
           </div>
         </div>
 

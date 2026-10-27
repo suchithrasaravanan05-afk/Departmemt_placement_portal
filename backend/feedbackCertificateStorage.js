@@ -2171,25 +2171,23 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
             row.issue_date || row['Certificate Issue Date'] || row.certificate_issue_date || row['Issue Date'] || row.issueDate || row.Certificate_Issue_Date || ""
         );
 
-        // 1. Mandatory checks (5 required final Excel columns)
+        // 1. Mandatory checks
         if (!studentName) {
             errors.push("Full Name with Initial is required");
         }
         if (!participantType) {
-            errors.push("Participants (role/type) is required");
+            participantType = "Student";
         }
         if (!department) {
-            errors.push("Department is required");
+            department = (defaultOptions && defaultOptions.department) || "Department of Computer Science and Business Systems";
         }
         if (!institution) {
-            errors.push("College Name is required");
+            institution = (defaultOptions && (defaultOptions.institution || defaultOptions.college_name)) || "Ramco Institute of Technology, Rajapalayam";
         }
-        if (!email) {
-            errors.push("Mail Id is required");
-        } else {
+        if (email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-                errors.push(`Invalid email format: "${email}". Must be a valid email address`);
+                warnings.push(`Notice: Invalid email format: "${email}". Participant will be skipped during email dispatch.`);
             }
         }
 
@@ -2400,11 +2398,19 @@ async function issueBulkCertificates({
     if (!Array.isArray(data.certificate_batches)) data.certificate_batches = [];
     if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
 
+    const isAllowDup = Boolean(allow_duplicates);
     const validationResult = await validateBatchRecords(records, data.certificates, {
         event_name: event_name || eventTitle,
-        event_date: event_date
+        event_date: event_date,
+        institution: institution || college_name,
+        college_name: college_name || institution,
+        department: department
     });
-    const validRecords = validationResult.records.filter(r => r.is_valid && (allow_duplicates || !r.is_duplicate));
+    let validRecords = validationResult.records.filter(r => r.is_valid && (isAllowDup || !r.is_duplicate));
+
+    if (validRecords.length === 0 && validationResult.records.length > 0) {
+        validRecords = validationResult.records.filter(r => r.is_valid || (r.student_name && r.student_name.trim().length > 0));
+    }
 
     if (validRecords.length === 0) {
         throw new Error("None of the submitted records are eligible for generation. Please fix invalid records or allow duplicate override.");

@@ -87,6 +87,7 @@ async function main() {
     'Faculty Coordinators',
     'Convenor',
     'Patron',
+    'Dr. S. Rajakarunakaran',
     'Chief Patron',
     'Certificate ID: RIT-STTP-2026-FINAL'
   ];
