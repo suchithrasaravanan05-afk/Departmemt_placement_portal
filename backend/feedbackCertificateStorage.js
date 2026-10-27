@@ -14,6 +14,8 @@ const DEFAULT_DATA = {
     certificates: [],
     notifications: [],
     deleted_event_ids: [],
+    deleted_certificate_numbers: [],
+    deleted_batch_ids: [],
     certificate_batches: [],
     certificate_audit_logs: [],
     certificate_templates: []
@@ -120,6 +122,8 @@ function readLocalData() {
             if (parsed && Array.isArray(parsed.certificates)) {
                 if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
                 if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
+                if (!Array.isArray(parsed.deleted_certificate_numbers)) parsed.deleted_certificate_numbers = [];
+                if (!Array.isArray(parsed.deleted_batch_ids)) parsed.deleted_batch_ids = [];
                 if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
                 if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
                 if (!Array.isArray(parsed.certificate_templates)) parsed.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
@@ -154,6 +158,8 @@ async function loadFromSupabaseStorage() {
             if (parsed && Array.isArray(parsed.certificates)) {
                 if (!Array.isArray(parsed.notifications)) parsed.notifications = [];
                 if (!Array.isArray(parsed.deleted_event_ids)) parsed.deleted_event_ids = [];
+                if (!Array.isArray(parsed.deleted_certificate_numbers)) parsed.deleted_certificate_numbers = [];
+                if (!Array.isArray(parsed.deleted_batch_ids)) parsed.deleted_batch_ids = [];
                 if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
                 if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
                 if (!Array.isArray(parsed.certificate_templates)) parsed.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
@@ -223,11 +229,21 @@ async function getAllData() {
     // Check Supabase Cloud Storage
     const cloudData = await loadFromSupabaseStorage();
 
-    // Collect all deleted IDs across sources to permanently prevent resurrected events
+    // Collect all deleted IDs across sources to permanently prevent resurrected events, certificates, and batches
     const deletedIdsSet = new Set([
         ...(base.deleted_event_ids || []),
         ...(cloudData?.deleted_event_ids || [])
     ].map(String));
+
+    const deletedCertNumbersSet = new Set([
+        ...(base.deleted_certificate_numbers || []),
+        ...(cloudData?.deleted_certificate_numbers || [])
+    ].map(s => String(s).trim().toUpperCase()));
+
+    const deletedBatchIdsSet = new Set([
+        ...(base.deleted_batch_ids || []),
+        ...(cloudData?.deleted_batch_ids || [])
+    ].map(s => String(s).trim()));
 
     if (cloudData && Array.isArray(cloudData.certificates)) {
         // Merge records (cloud + local) while respecting deletions
@@ -252,19 +268,33 @@ async function getAllData() {
         base = {
             event_feedbacks: Array.from(evMap.values()).filter(e => !deletedIdsSet.has(String(e.id))),
             feedback_submissions: Array.from(subMap.values()).filter(s => !deletedIdsSet.has(String(s.feedback_id))),
-            certificates: Array.from(certMap.values()).filter(c => !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id))),
+            certificates: Array.from(certMap.values()).filter(c => {
+                if (c.feedback_id && deletedIdsSet.has(String(c.feedback_id))) return false;
+                if (c.certificate_number && deletedCertNumbersSet.has(String(c.certificate_number).trim().toUpperCase())) return false;
+                if (c.batch_id && deletedBatchIdsSet.has(String(c.batch_id).trim())) return false;
+                return true;
+            }),
             notifications: Array.from(notifMap.values()).filter(n => !deletedIdsSet.has(String(n.event_id))),
             deleted_event_ids: Array.from(deletedIdsSet),
-            certificate_batches: Array.from(batchMap.values()),
+            deleted_certificate_numbers: Array.from(deletedCertNumbersSet),
+            deleted_batch_ids: Array.from(deletedBatchIdsSet),
+            certificate_batches: Array.from(batchMap.values()).filter(b => !deletedBatchIdsSet.has(String(b.id).trim())),
             certificate_audit_logs: Array.from(auditMap.values())
         };
     } else {
         base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));
         base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
-        base.certificates = (base.certificates || []).filter(c => !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id)));
+        base.certificates = (base.certificates || []).filter(c => {
+            if (c.feedback_id && deletedIdsSet.has(String(c.feedback_id))) return false;
+            if (c.certificate_number && deletedCertNumbersSet.has(String(c.certificate_number).trim().toUpperCase())) return false;
+            if (c.batch_id && deletedBatchIdsSet.has(String(c.batch_id).trim())) return false;
+            return true;
+        });
         base.notifications = (base.notifications || []).filter(n => !deletedIdsSet.has(String(n.event_id)));
         base.deleted_event_ids = Array.from(deletedIdsSet);
-        if (!Array.isArray(base.certificate_batches)) base.certificate_batches = [];
+        base.deleted_certificate_numbers = Array.from(deletedCertNumbersSet);
+        base.deleted_batch_ids = Array.from(deletedBatchIdsSet);
+        base.certificate_batches = (base.certificate_batches || []).filter(b => !deletedBatchIdsSet.has(String(b.id).trim()));
         if (!Array.isArray(base.certificate_audit_logs)) base.certificate_audit_logs = [];
     }
 
@@ -272,10 +302,16 @@ async function getAllData() {
     base = await syncFromSupabaseTables(base, deletedIdsSet);
 
     // Final scrub to guarantee no deleted items slipped in
+    base.certificates = (base.certificates || []).filter(c => {
+        if (c.feedback_id && deletedIdsSet.has(String(c.feedback_id))) return false;
+        if (c.certificate_number && deletedCertNumbersSet.has(String(c.certificate_number).trim().toUpperCase())) return false;
+        if (c.batch_id && deletedBatchIdsSet.has(String(c.batch_id).trim())) return false;
+        return true;
+    });
+    base.certificate_batches = (base.certificate_batches || []).filter(b => !deletedBatchIdsSet.has(String(b.id).trim()));
     if (deletedIdsSet.size > 0) {
         base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));
         base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
-        base.certificates = (base.certificates || []).filter(c => !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id)));
         base.notifications = (base.notifications || []).filter(n => !deletedIdsSet.has(String(n.event_id)));
     }
 
@@ -2846,6 +2882,269 @@ async function updateCertificateEmailStatus(certNumberOrId, status, errorMsg = n
     return cert;
 }
 
+// ============================================================
+// SAFE DELETION: CERTIFICATES & BATCHES WITH AUDIT LOGGING
+// ============================================================
+
+// Helper: Safely locate and delete any associated generated PDF files from disk or Supabase storage
+async function deleteAssociatedCertificateFiles(certNumbers = [], batchIds = []) {
+    const results = {
+        deletedFilesCount: 0,
+        failedFiles: []
+    };
+    const client = getClient();
+    const candidateDirs = [
+        path.join(__dirname, "uploads"),
+        path.join(__dirname, "uploads", "certificates"),
+        path.join(__dirname, "../uploads"),
+        path.join(__dirname, "../scratch")
+    ];
+
+    const patterns = new Set();
+    (certNumbers || []).forEach(num => {
+        if (!num) return;
+        const clean = String(num).trim();
+        patterns.add(clean);
+        patterns.add(clean.toLowerCase());
+    });
+    (batchIds || []).forEach(bId => {
+        if (!bId) return;
+        const clean = String(bId).trim();
+        patterns.add(clean);
+        patterns.add(clean.toLowerCase());
+    });
+
+    // 1. Local disk scan & removal
+    candidateDirs.forEach(dir => {
+        try {
+            if (!fs.existsSync(dir)) return;
+            const files = fs.readdirSync(dir);
+            files.forEach(file => {
+                if (!file.endsWith('.pdf')) return;
+                const matchesPattern = Array.from(patterns).some(pat => file.includes(pat));
+                if (matchesPattern) {
+                    try {
+                        const targetPath = path.join(dir, file);
+                        fs.unlinkSync(targetPath);
+                        results.deletedFilesCount++;
+                    } catch (e) {
+                        results.failedFiles.push({ file: path.join(dir, file), error: e.message });
+                    }
+                }
+            });
+        } catch (e) {}
+    });
+
+    // 2. Supabase Storage cleanup (if buckets exist)
+    if (client && client.storage) {
+        try {
+            const { data: buckets } = await client.storage.listBuckets();
+            const targetBuckets = (buckets || []).filter(b => b.name === STORAGE_BUCKET || b.name === "certificates");
+            for (const b of targetBuckets) {
+                const { data: fileList } = await client.storage.from(b.name).list();
+                if (Array.isArray(fileList)) {
+                    const toDelete = fileList
+                        .filter(f => f.name.endsWith('.pdf') && Array.from(patterns).some(pat => f.name.includes(pat)))
+                        .map(f => f.name);
+                    if (toDelete.length > 0) {
+                        const { error } = await client.storage.from(b.name).remove(toDelete);
+                        if (!error) {
+                            results.deletedFilesCount += toDelete.length;
+                        } else {
+                            results.failedFiles.push({ bucket: b.name, files: toDelete, error: error.message });
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("[deleteAssociatedCertificateFiles] Supabase storage notice:", e.message);
+        }
+    }
+
+    return results;
+}
+
+// Admin Action: Delete a selected test certificate batch
+async function deleteCertificateBatch({ batchId, confirmBatchId, actor = {} }) {
+    const cleanBatchId = String(batchId || "").trim();
+    const cleanConfirm = String(confirmBatchId || "").trim();
+
+    if (!cleanBatchId) {
+        throw new Error("Batch ID is required for deletion.");
+    }
+    if (cleanConfirm !== cleanBatchId) {
+        throw new Error(`Explicit confirmation failed: You entered "${cleanConfirm}", but the exact Batch ID is "${cleanBatchId}". Please confirm accurately to prevent accidental deletion.`);
+    }
+
+    const data = await getAllData();
+    const batchIndex = (data.certificate_batches || []).findIndex(b => String(b.id).trim() === cleanBatchId);
+    const existingBatch = batchIndex >= 0 ? data.certificate_batches[batchIndex] : null;
+
+    // Collect all certificates strictly belonging to this batch
+    const matchingCerts = (data.certificates || []).filter(c => String(c.batch_id || "").trim() === cleanBatchId);
+
+    if (!existingBatch && matchingCerts.length === 0) {
+        throw new Error(`Test batch "${cleanBatchId}" not found in institutional records.`);
+    }
+
+    const certNumbers = matchingCerts.map(c => c.certificate_number).filter(Boolean);
+
+    // 1. Delete associated stored PDF files
+    const fileCleanup = await deleteAssociatedCertificateFiles(certNumbers, [cleanBatchId]);
+
+    // 2. Remove from Supabase PostgreSQL tables if available
+    const client = getClient();
+    if (client) {
+        try {
+            await client.from("certificates").delete().eq("batch_id", cleanBatchId);
+        } catch (e) {}
+        try {
+            await client.from("certificate_batches").delete().eq("id", cleanBatchId);
+        } catch (e) {}
+    }
+
+    // 3. Filter master records
+    data.certificates = (data.certificates || []).filter(c => String(c.batch_id || "").trim() !== cleanBatchId);
+    if (batchIndex >= 0) {
+        data.certificate_batches.splice(batchIndex, 1);
+    }
+
+    // 4. Register tombstones to permanently prevent resurrecting
+    if (!Array.isArray(data.deleted_batch_ids)) data.deleted_batch_ids = [];
+    if (!data.deleted_batch_ids.includes(cleanBatchId)) {
+        data.deleted_batch_ids.push(cleanBatchId);
+    }
+
+    if (!Array.isArray(data.deleted_certificate_numbers)) data.deleted_certificate_numbers = [];
+    certNumbers.forEach(num => {
+        const up = String(num).trim().toUpperCase();
+        if (!data.deleted_certificate_numbers.includes(up)) {
+            data.deleted_certificate_numbers.push(up);
+        }
+    });
+
+    // 5. Audit Logging (strictly no secrets logged)
+    if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
+    const auditRecord = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        action: "BATCH_CERTIFICATE_DELETION",
+        batch_id: cleanBatchId,
+        actor_id: actor.id || 0,
+        actor_name: actor.full_name || actor.name || "Administrator",
+        actor_role: actor.role || actor.designation || "admin",
+        total_records_deleted: matchingCerts.length,
+        deleted_certificate_numbers: certNumbers,
+        created_at: new Date().toISOString(),
+        details: {
+            batch_title: existingBatch ? existingBatch.batch_title : cleanBatchId,
+            event_name: existingBatch ? existingBatch.event_name : "Department Event",
+            deleted_records_count: matchingCerts.length,
+            deleted_files_count: fileCleanup.deletedFilesCount,
+            failed_files: fileCleanup.failedFiles
+        }
+    };
+    data.certificate_audit_logs.unshift(auditRecord);
+
+    await commitData(data);
+
+    return {
+        success: true,
+        batch_id: cleanBatchId,
+        batch_title: existingBatch ? existingBatch.batch_title : cleanBatchId,
+        deleted_records_count: matchingCerts.length,
+        deleted_files_count: fileCleanup.deletedFilesCount,
+        failed_files: fileCleanup.failedFiles,
+        message: `Successfully deleted batch ${cleanBatchId} and ${matchingCerts.length} associated certificate record(s).`
+    };
+}
+
+// Admin Action: Delete an individual certificate record
+async function deleteSingleCertificateRecord({ certificateNumber, confirmCertificateNumber, actor = {} }) {
+    const cleanCertNum = String(certificateNumber || "").trim().toUpperCase();
+    const cleanConfirm = String(confirmCertificateNumber || "").trim().toUpperCase();
+
+    if (!cleanCertNum) {
+        throw new Error("Certificate Number is required for deletion.");
+    }
+    if (cleanConfirm !== cleanCertNum) {
+        throw new Error(`Explicit confirmation failed: You entered "${cleanConfirm}", but the exact Certificate ID is "${cleanCertNum}".`);
+    }
+
+    const data = await getAllData();
+    const certIndex = (data.certificates || []).findIndex(c => 
+        (c.certificate_number && String(c.certificate_number).trim().toUpperCase() === cleanCertNum) ||
+        String(c.id) === cleanCertNum
+    );
+
+    if (certIndex < 0) {
+        throw new Error(`Certificate record "${cleanCertNum}" not found in institutional records.`);
+    }
+
+    const targetCert = data.certificates[certIndex];
+    const parentBatchId = targetCert.batch_id || null;
+
+    // 1. Delete associated stored PDF file
+    const fileCleanup = await deleteAssociatedCertificateFiles([targetCert.certificate_number], []);
+
+    // 2. Remove from Supabase PostgreSQL tables if available
+    const client = getClient();
+    if (client) {
+        try {
+            await client.from("certificates").delete().eq("certificate_number", targetCert.certificate_number);
+        } catch (e) {}
+    }
+
+    // 3. Remove certificate from data
+    data.certificates.splice(certIndex, 1);
+
+    // 4. Update parent batch record count if applicable
+    if (parentBatchId) {
+        const parentBatch = (data.certificate_batches || []).find(b => String(b.id).trim() === String(parentBatchId).trim());
+        if (parentBatch && parentBatch.generated_count > 0) {
+            parentBatch.generated_count = Math.max(0, parentBatch.generated_count - 1);
+        }
+    }
+
+    // 5. Register tombstone
+    if (!Array.isArray(data.deleted_certificate_numbers)) data.deleted_certificate_numbers = [];
+    if (!data.deleted_certificate_numbers.includes(cleanCertNum)) {
+        data.deleted_certificate_numbers.push(cleanCertNum);
+    }
+
+    // 6. Audit Logging
+    if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
+    const auditRecord = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        action: "SINGLE_CERTIFICATE_DELETION",
+        certificate_number: cleanCertNum,
+        batch_id: parentBatchId,
+        student_name: targetCert.student_name,
+        actor_id: actor.id || 0,
+        actor_name: actor.full_name || actor.name || "Administrator",
+        actor_role: actor.role || actor.designation || "admin",
+        created_at: new Date().toISOString(),
+        details: {
+            student_name: targetCert.student_name,
+            event_name: targetCert.event_name,
+            deleted_files_count: fileCleanup.deletedFilesCount,
+            failed_files: fileCleanup.failedFiles
+        }
+    };
+    data.certificate_audit_logs.unshift(auditRecord);
+
+    await commitData(data);
+
+    return {
+        success: true,
+        certificate_number: cleanCertNum,
+        student_name: targetCert.student_name,
+        batch_id: parentBatchId,
+        deleted_files_count: fileCleanup.deletedFilesCount,
+        failed_files: fileCleanup.failedFiles,
+        message: `Successfully deleted certificate ${cleanCertNum} (${targetCert.student_name}).`
+    };
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
@@ -2882,5 +3181,8 @@ module.exports = {
     saveCertificateTemplate,
     deleteCertificateTemplate,
     updateCertificateEmailStatus,
+    deleteCertificateBatch,
+    deleteSingleCertificateRecord,
+    deleteAssociatedCertificateFiles,
     getAllData
 };

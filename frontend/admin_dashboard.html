@@ -2712,6 +2712,9 @@
             <select id="cgBatchSelector" class="form-control" style="width:280px;height:36px;font-size:12.5px;" onchange="handleCertGenBatchSelect()">
               <option value="all">All Issued Certificates (Master History)</option>
             </select>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteSelectedBatch" onclick="openDeleteBatchModal()" style="display:none;align-items:center;gap:6px;font-weight:700;height:36px;border-radius:6px;font-size:12px;padding:0 12px;" title="Permanently delete this test generation batch and associated PDF files">
+              <i class="fa-solid fa-trash-can"></i> Delete Batch
+            </button>
           </div>
 
           <div style="position:relative;width:240px;">
@@ -2795,6 +2798,98 @@
       </div>
     </section>
 
+  </div>
+
+  <!-- ========================================================
+       MODAL: PERMANENT TEST BATCH DELETION CONFIRMATION (ADMIN ONLY)
+       ======================================================== -->
+  <div id="certGenDeleteBatchModal" class="modal-backdrop hidden" onclick="_closeCgDeleteBatchModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:540px;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #fee2e2;background:#FEF2F2;color:#991B1B;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;color:#DC2626;"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:#991B1B;">Permanently Delete Test Generation Batch</h3>
+        </div>
+        <button type="button" onclick="closeDeleteBatchModal()" style="background:transparent;border:none;font-size:22px;color:#991B1B;cursor:pointer;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:22px 24px;">
+        <div style="background:#FFF1F2;border:1px solid #FECDD3;border-radius:12px;padding:14px 18px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+            <span style="color:#64748b;">Batch ID:</span>
+            <strong id="cgDeleteBatchModalBatchId" style="color:#991B1B;font-family:monospace;font-weight:800;">—</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+            <span style="color:#64748b;">Batch Title:</span>
+            <strong id="cgDeleteBatchModalTitle" style="color:#0f172a;">—</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+            <span style="color:#64748b;">Event Name:</span>
+            <strong id="cgDeleteBatchModalEvent" style="color:#0f172a;">—</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:#64748b;">Records to be Deleted:</span>
+            <strong id="cgDeleteBatchModalCount" style="color:#DC2626;font-weight:800;">0 records</strong>
+          </div>
+        </div>
+
+        <p style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:12px;">
+          ⚠️ <strong>This action is permanent and irreversible.</strong> All certificate records in this test batch and their associated PDF files will be purged from storage. Genuine participant records and other batches will remain completely untouched.
+        </p>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12.5px;font-weight:700;color:#0F172A;">
+            Please type <code id="cgDeleteBatchExpectedConfirm" style="color:#991B1B;background:#fee2e2;padding:2px 6px;border-radius:4px;user-select:all;">BATCH-ID</code> to confirm:
+          </label>
+          <input type="text" id="cgDeleteBatchConfirmInput" class="form-control" placeholder="Type Batch ID to unlock deletion" autocomplete="off" oninput="checkDeleteBatchConfirmMatch()" style="font-family:monospace;font-weight:700;">
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding:14px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeDeleteBatchModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDeleteBatch" onclick="submitDeleteSelectedBatch()" disabled style="display:inline-flex;align-items:center;gap:6px;background:#DC2626;color:#fff;border:none;opacity:0.6;cursor:not-allowed;">
+          <i class="fa-solid fa-trash-can"></i> Permanently Delete Batch
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: PERMANENT SINGLE RECORD DELETION CONFIRMATION (ADMIN ONLY)
+       ======================================================== -->
+  <div id="certGenDeleteSingleCertModal" class="modal-backdrop hidden" onclick="_closeCgDeleteSingleCertModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:500px;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #fee2e2;background:#FEF2F2;color:#991B1B;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fa-solid fa-trash-can" style="font-size:20px;color:#DC2626;"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:#991B1B;">Delete Certificate Record</h3>
+        </div>
+        <button type="button" onclick="closeDeleteSingleCertModal()" style="background:transparent;border:none;font-size:22px;color:#991B1B;cursor:pointer;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:22px 24px;">
+        <p style="font-size:13.5px;color:#475569;line-height:1.5;margin-bottom:14px;">
+          Are you sure you want to permanently delete certificate <strong id="cgDeleteSingleCertId" style="color:#DC2626;font-family:monospace;">—</strong> for student <strong id="cgDeleteSingleStudentName">—</strong>?
+        </p>
+        <p style="font-size:12.5px;color:#64748b;margin-bottom:14px;">
+          The record and any associated PDF files will be permanently purged. If anyone verifies this ID or scans its QR code, the portal will report <strong>"Certificate Not Found"</strong>.
+        </p>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12.5px;font-weight:700;color:#0F172A;">
+            Please type <code id="cgDeleteSingleExpectedConfirm" style="color:#991B1B;background:#fee2e2;padding:2px 6px;border-radius:4px;user-select:all;">CERT-ID</code> to confirm:
+          </label>
+          <input type="text" id="cgDeleteSingleConfirmInput" class="form-control" placeholder="Type Certificate ID to unlock deletion" autocomplete="off" oninput="checkDeleteSingleConfirmMatch()" style="font-family:monospace;font-weight:700;">
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding:14px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeDeleteSingleCertModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDeleteSingleCert" onclick="submitDeleteSingleCert()" disabled style="display:inline-flex;align-items:center;gap:6px;background:#DC2626;color:#fff;border:none;opacity:0.6;cursor:not-allowed;">
+          <i class="fa-solid fa-trash-can"></i> Delete Record
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ========================================================

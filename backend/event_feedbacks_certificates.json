@@ -3595,6 +3595,42 @@
   ],
   "certificate_audit_logs": [
     {
+      "id": 1793140612534,
+      "action": "BATCH_CERTIFICATE_DELETION",
+      "batch_id": "BATCH-MVR9MBMH-C60937",
+      "actor_id": 1,
+      "actor_name": "System Admin",
+      "actor_role": "admin",
+      "total_records_deleted": 1,
+      "deleted_certificate_numbers": [
+        "RIT-PURGE-TEST-0001"
+      ],
+      "created_at": "2026-10-27T22:36:51.581Z",
+      "details": {
+        "batch_title": "Automated Safe Deletion Verification Batch",
+        "event_name": "Test Temporary Event",
+        "deleted_records_count": 1,
+        "deleted_files_count": 1,
+        "failed_files": []
+      }
+    },
+    {
+      "id": 1793140608320,
+      "action": "BATCH_CERTIFICATE_ISSUANCE",
+      "batch_id": "BATCH-MVR9MBMH-C60937",
+      "actor_id": 1,
+      "actor_name": "System Admin",
+      "actor_role": "admin",
+      "total_issued": 1,
+      "created_at": "2026-10-27T22:36:47.752Z",
+      "details": {
+        "event_name": "Test Temporary Event",
+        "total_attempted": 1,
+        "generated": 1,
+        "failed": 0
+      }
+    },
+    {
       "id": 1793117367172,
       "certificate_number": "RIT-STTP-2026-0B27",
       "action": "REVOKED",
@@ -4563,5 +4599,11 @@
       "template_style": "rit_purple_gold",
       "id_prefix": "RIT-CSBS-2026-"
     }
+  ],
+  "deleted_certificate_numbers": [
+    "RIT-PURGE-TEST-0001"
+  ],
+  "deleted_batch_ids": [
+    "BATCH-MVR9MBMH-C60937"
   ]
 }

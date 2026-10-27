@@ -95,6 +95,37 @@ function requireFacultyOrCoordinatorWrite(req, res, next) {
     }
 }
 
+function requireStrictAdminRole(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ success: false, message: "Authorization token is required." });
+    }
+
+    try {
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded && decoded.placement_access === false) {
+            return res.status(403).json({
+                success: false,
+                message: "Access Denied: Your account does not have permission to access the Placement Portal."
+            });
+        }
+        req.user = decoded;
+
+        const effectiveRole = getEffectiveRole(req.user);
+        if (effectiveRole !== "admin" && effectiveRole !== "administrator") {
+            return res.status(403).json({
+                success: false,
+                message: "Permission Denied: Deleting certificate records and test batches is restricted strictly to Administrators."
+            });
+        }
+
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: "Session expired or invalid token. Please log in again." });
+    }
+}
+
 // Helper: Sanitize cell against CSV / Formula Injection
 function sanitizeCellValue(val) {
     if (val === null || val === undefined) return "";
@@ -422,6 +453,74 @@ router.get("/batch/:batchId/certificates", checkFacultyOrAdminPermission, async 
     } catch (e) {
         console.error("Get batch certificates error:", e);
         res.status(500).json({ success: false, message: "Failed to load batch certificates." });
+    }
+});
+
+// ============================================================
+// 6B. PERMANENTLY DELETE A TEST BATCH & ASSOCIATED FILES (ADMIN ONLY)
+// ============================================================
+router.delete("/batch/:batchId", requireStrictAdminRole, async (req, res) => {
+    try {
+        const batchId = req.params.batchId;
+        const confirmBatchId = req.body.confirm_batch_id || req.query.confirm_batch_id;
+
+        if (!confirmBatchId) {
+            return res.status(400).json({
+                success: false,
+                message: "Explicit confirmation required: Please provide confirm_batch_id matching the batch ID to proceed with deletion."
+            });
+        }
+
+        const result = await feedbackCertificateStorage.deleteCertificateBatch({
+            batchId,
+            confirmBatchId,
+            actor: req.user
+        });
+
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (e) {
+        console.error("Delete batch error:", e);
+        res.status(e.message && e.message.includes("not found") ? 404 : 400).json({
+            success: false,
+            message: e.message || "Failed to delete certificate batch."
+        });
+    }
+});
+
+// ============================================================
+// 6C. PERMANENTLY DELETE A SINGLE CERTIFICATE RECORD (ADMIN ONLY)
+// ============================================================
+router.delete("/record/:certNumber", requireStrictAdminRole, async (req, res) => {
+    try {
+        const certificateNumber = req.params.certNumber;
+        const confirmCertificateNumber = req.body.confirm_cert_number || req.query.confirm_cert_number;
+
+        if (!confirmCertificateNumber) {
+            return res.status(400).json({
+                success: false,
+                message: "Explicit confirmation required: Please provide confirm_cert_number matching the certificate ID."
+            });
+        }
+
+        const result = await feedbackCertificateStorage.deleteSingleCertificateRecord({
+            certificateNumber,
+            confirmCertificateNumber,
+            actor: req.user
+        });
+
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (e) {
+        console.error("Delete single certificate record error:", e);
+        res.status(e.message && e.message.includes("not found") ? 404 : 400).json({
+            success: false,
+            message: e.message || "Failed to delete certificate record."
+        });
     }
 });
 

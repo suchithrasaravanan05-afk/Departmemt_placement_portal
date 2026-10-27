@@ -1348,6 +1348,11 @@ function handleCertGenBatchSelect() {
   const sel = document.getElementById('cgBatchSelector');
   const batchId = sel ? sel.value : 'all';
 
+  const delBtn = document.getElementById('btnDeleteSelectedBatch');
+  if (delBtn) {
+    delBtn.style.display = (batchId && batchId !== 'all') ? 'inline-flex' : 'none';
+  }
+
   if (batchId === 'all') {
     certGenState.currentBatchCerts = certGenState.masterCertificates;
   } else {
@@ -1447,6 +1452,9 @@ function renderHistoryTable() {
               <i class="fa-solid fa-ban"></i>
             </button>
           ` : ''}
+          <button type="button" class="btn btn-sm btn-outline-danger" style="padding:4px 8px;font-size:11px;" onclick="openDeleteSingleCertModal('${escapeHtml(cert.certificate_number)}', '${escapeHtml(cert.student_name)}')" title="Permanently Delete Certificate Record">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
         </td>
       </tr>
     `;
@@ -1464,6 +1472,225 @@ function refreshCertGenBatchesList() {
 // 8. CERTIFICATE REVOCATION MODAL
 // ============================================================
 let activeRevokeCertId = null;
+
+// ============================================================
+// 8B. BATCH & SINGLE RECORD DELETION MODALS (ADMIN ONLY)
+// ============================================================
+let activeDeleteBatchId = null;
+let activeDeleteCertId = null;
+
+function openDeleteBatchModal() {
+  const sel = document.getElementById('cgBatchSelector');
+  const batchId = sel ? sel.value : null;
+  if (!batchId || batchId === 'all') {
+    showAdminAlert('Please select a specific generation batch from the dropdown to delete.', 'warning');
+    return;
+  }
+
+  activeDeleteBatchId = batchId;
+  const batchObj = (certGenState.batchesList || []).find(b => String(b.id) === String(batchId));
+  const certsInBatch = (certGenState.masterCertificates || []).filter(c => String(c.batch_id) === String(batchId));
+
+  const idEl = document.getElementById('cgDeleteBatchModalBatchId');
+  const titleEl = document.getElementById('cgDeleteBatchModalTitle');
+  const eventEl = document.getElementById('cgDeleteBatchModalEvent');
+  const countEl = document.getElementById('cgDeleteBatchModalCount');
+  const expEl = document.getElementById('cgDeleteBatchExpectedConfirm');
+  const inputEl = document.getElementById('cgDeleteBatchConfirmInput');
+  const btnEl = document.getElementById('btnConfirmDeleteBatch');
+
+  if (idEl) idEl.innerText = batchId;
+  if (titleEl) titleEl.innerText = batchObj?.batch_title || 'Batch';
+  if (eventEl) eventEl.innerText = batchObj?.event_name || 'Department Event';
+  if (countEl) countEl.innerText = `${certsInBatch.length} certificate record(s)`;
+  if (expEl) expEl.innerText = batchId;
+  if (inputEl) inputEl.value = '';
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.style.opacity = '0.6';
+    btnEl.style.cursor = 'not-allowed';
+  }
+
+  const modal = document.getElementById('certGenDeleteBatchModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeDeleteBatchModal() {
+  activeDeleteBatchId = null;
+  const modal = document.getElementById('certGenDeleteBatchModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function _closeCgDeleteBatchModal(e) {
+  if (e.target.id === 'certGenDeleteBatchModal') {
+    closeDeleteBatchModal();
+  }
+}
+
+function checkDeleteBatchConfirmMatch() {
+  const inputVal = (document.getElementById('cgDeleteBatchConfirmInput')?.value || '').trim();
+  const btn = document.getElementById('btnConfirmDeleteBatch');
+  if (!btn) return;
+  if (inputVal === activeDeleteBatchId) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
+async function submitDeleteSelectedBatch() {
+  if (!activeDeleteBatchId) return;
+  const confirmBatchId = (document.getElementById('cgDeleteBatchConfirmInput')?.value || '').trim();
+  if (confirmBatchId !== activeDeleteBatchId) {
+    alert('Confirmation failed: You must type the exact Batch ID to confirm deletion.');
+    return;
+  }
+
+  const btn = document.getElementById('btnConfirmDeleteBatch');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting Records & Files...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/batch/${encodeURIComponent(activeDeleteBatchId)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ confirm_batch_id: confirmBatchId })
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.message || 'Failed to delete certificate batch.');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Permanently Delete Batch';
+      }
+      return;
+    }
+
+    closeDeleteBatchModal();
+    showAdminAlert(`Batch ${activeDeleteBatchId} and ${data.deleted_records_count || 0} record(s) deleted permanently.`, 'success');
+
+    // Reset dropdown and refresh history
+    const sel = document.getElementById('cgBatchSelector');
+    if (sel) sel.value = 'all';
+    const delBtn = document.getElementById('btnDeleteSelectedBatch');
+    if (delBtn) delBtn.style.display = 'none';
+
+    await loadIssuedCertificatesHistoryTable();
+  } catch (err) {
+    console.error('Batch deletion error:', err);
+    alert('An unexpected error occurred while deleting the batch.');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Permanently Delete Batch';
+    }
+  }
+}
+
+function openDeleteSingleCertModal(certId, studentName) {
+  activeDeleteCertId = certId;
+  const idEl = document.getElementById('cgDeleteSingleCertId');
+  const nameEl = document.getElementById('cgDeleteSingleStudentName');
+  const expEl = document.getElementById('cgDeleteSingleExpectedConfirm');
+  const inputEl = document.getElementById('cgDeleteSingleConfirmInput');
+  const btnEl = document.getElementById('btnConfirmDeleteSingleCert');
+
+  if (idEl) idEl.innerText = certId;
+  if (nameEl) nameEl.innerText = studentName || 'Student';
+  if (expEl) expEl.innerText = certId;
+  if (inputEl) inputEl.value = '';
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.style.opacity = '0.6';
+    btnEl.style.cursor = 'not-allowed';
+  }
+
+  const modal = document.getElementById('certGenDeleteSingleCertModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeDeleteSingleCertModal() {
+  activeDeleteCertId = null;
+  const modal = document.getElementById('certGenDeleteSingleCertModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function _closeCgDeleteSingleCertModal(e) {
+  if (e.target.id === 'certGenDeleteSingleCertModal') {
+    closeDeleteSingleCertModal();
+  }
+}
+
+function checkDeleteSingleConfirmMatch() {
+  const inputVal = (document.getElementById('cgDeleteSingleConfirmInput')?.value || '').trim().toUpperCase();
+  const btn = document.getElementById('btnConfirmDeleteSingleCert');
+  if (!btn) return;
+  if (inputVal === String(activeDeleteCertId).trim().toUpperCase()) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
+async function submitDeleteSingleCert() {
+  if (!activeDeleteCertId) return;
+  const confirmCert = (document.getElementById('cgDeleteSingleConfirmInput')?.value || '').trim().toUpperCase();
+  if (confirmCert !== String(activeDeleteCertId).trim().toUpperCase()) {
+    alert('Confirmation failed: You must type the exact Certificate ID to confirm deletion.');
+    return;
+  }
+
+  const btn = document.getElementById('btnConfirmDeleteSingleCert');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/record/${encodeURIComponent(activeDeleteCertId)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ confirm_cert_number: confirmCert })
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.message || 'Failed to delete certificate record.');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Delete Record';
+      }
+      return;
+    }
+
+    closeDeleteSingleCertModal();
+    showAdminAlert(`Certificate ${activeDeleteCertId} deleted permanently.`, 'success');
+    await loadIssuedCertificatesHistoryTable();
+  } catch (err) {
+    console.error('Certificate deletion error:', err);
+    alert('An unexpected error occurred while deleting the certificate record.');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Delete Record';
+    }
+  }
+}
 
 function openCertGenRevokeModal(certId, studentName) {
   activeRevokeCertId = certId;
