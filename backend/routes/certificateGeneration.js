@@ -5,6 +5,7 @@ const xlsx = require("xlsx");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const feedbackCertificateStorage = require("../feedbackCertificateStorage");
+const emailService = require("../services/emailService");
 
 const JWT_SECRET = process.env.JWT_SECRET || "csbs_rit_placement_secret_key_2026";
 
@@ -130,11 +131,18 @@ function mapSpreadsheetRow(rawRow, headerMap) {
     return {
         participant_name: nameSanitized,
         student_name: nameSanitized,
-        register_number: sanitizeCellValue(regNoVal),
+        full_name_with_initial: nameSanitized,
+        fullNameWithInitial: nameSanitized,
+        participant_type: sanitizeCellValue(partTypeVal),
+        participants: sanitizeCellValue(partTypeVal),
+        institution: sanitizeCellValue(instVal),
+        college_name: sanitizeCellValue(instVal),
+        collegeName: sanitizeCellValue(instVal),
+        department: sanitizeCellValue(deptVal),
         email: sanitizeCellValue(emailVal),
-        participant_type: sanitizeCellValue(partTypeVal) || "Student",
-        institution: sanitizeCellValue(instVal) || "Ramco Institute of Technology, Rajapalayam",
-        department: sanitizeCellValue(deptVal) || "Department of Computer Science and Business Systems",
+        mail_id: sanitizeCellValue(emailVal),
+        mailId: sanitizeCellValue(emailVal),
+        register_number: sanitizeCellValue(regNoVal),
         academic_year: sanitizeCellValue(yearVal) || "2026-27",
         event_name: eventSanitized,
         event_date: sanitizeCellValue(eventDateVal),
@@ -176,17 +184,17 @@ function parseUploadedSpreadsheet(buffer) {
     };
 
     const aliasRules = {
-        participant_name: ["participantname", "participant", "studentname", "student", "name", "fullname", "candidatename", "studentfullname", "attendee", "attendeename"],
-        student_name: ["studentname", "student", "participantname", "participant", "name", "fullname", "candidatename", "studentfullname"],
-        register_number: ["registernumber", "registerno", "regno", "rollno", "rollnumber", "registrationnumber", "registrationno", "register"],
-        email: ["email", "emailaddress", "emailid", "mail", "mailid"],
-        participant_type: ["participanttype", "participantcategory", "category", "designation", "role", "type", "participationtype", "achievement"],
-        institution: ["institution", "institutionname", "college", "collegename", "organization", "org", "university"],
+        participant_name: ["fullnamewithinitial", "fullnamewithinitials", "fullname", "participantname", "participant", "studentname", "student", "name", "candidatename", "studentfullname", "attendee", "attendeename"],
+        student_name: ["fullnamewithinitial", "fullnamewithinitials", "fullname", "studentname", "student", "participantname", "participant", "name", "candidatename", "studentfullname"],
+        participant_type: ["participants", "participant", "participanttype", "participantcategory", "category", "designation", "role", "type", "participationtype", "achievement"],
         department: ["department", "dept", "branch", "programme", "deptname", "discipline"],
+        institution: ["collegename", "college", "institution", "institutionname", "organization", "org", "university"],
+        email: ["mailid", "mail", "email", "emailaddress", "emailid", "mailaddress"],
+        register_number: ["registernumber", "registerno", "regno", "rollno", "rollnumber", "registrationnumber", "registrationno", "register"],
         academic_year: ["academicyear", "year", "batch", "class", "studyyear"],
         event_name: ["eventname", "event", "title", "workshop", "seminar", "course", "training", "eventtitle"],
         event_date: ["eventdate", "date", "conducteddate", "heldon", "eventconducteddate"],
-        participation_type: ["participationtype", "achievement", "award", "category", "type", "certificatetype", "role", "position"],
+        participation_type: ["participationtype", "participants", "achievement", "award", "category", "type", "certificatetype", "role", "position"],
         issue_date: ["certificateissuedate", "issuedate", "dateofissue", "certissuedate"]
     };
 
@@ -292,6 +300,8 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             signatory_6_org,
             programme_title,
             programme_dates,
+            department,
+            institution,
             certificate_wording,
             template_style,
             id_prefix,
@@ -335,6 +345,9 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             signatory_6_org: signatory_6_org || "RIT",
             programme_title: programme_title || "One Week Short-Term Training Programme (STTP)",
             programme_dates: programme_dates || "October 12, 2026, to October 18, 2026",
+            department: department || "Department of Computer Science and Business Systems",
+            institution: institution || "Ramco Institute of Technology, Rajapalayam",
+            college_name: institution || "Ramco Institute of Technology, Rajapalayam",
             certificate_wording: certificate_wording || "",
             template_style: template_style || "rit_purple_gold",
             id_prefix: id_prefix || "RIT-STTP-2026-",
@@ -446,17 +459,16 @@ router.delete("/templates/:templateId", requireFacultyOrCoordinatorWrite, async 
 });
 
 // ============================================================
-// 8. DOWNLOAD EXCEL TEMPLATE (.XLSX)
+// 8. DOWNLOAD EXCEL TEMPLATE (.XLSX) - 5 REQUIRED COLUMNS
 // ============================================================
 router.get("/template-download", (req, res) => {
     try {
         const headers = [
-            "Student Name",
-            "Participant Type",
+            "Full Name with Initial",
+            "Participants",
             "Department",
-            "Institution",
-            "Event Name",
-            "Participation Type"
+            "College Name",
+            "Mail Id"
         ];
 
         const sampleRows = [
@@ -465,24 +477,21 @@ router.get("/template-download", (req, res) => {
                 "Student",
                 "Computer Science and Business Systems",
                 "Ramco Institute of Technology, Rajapalayam",
-                "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-                "Participation"
+                "sivaranjani.csbs@ritrjpm.ac.in"
             ],
             [
                 "ARUN KUMAR M",
                 "Student",
                 "Computer Science and Business Systems",
                 "Ramco Institute of Technology, Rajapalayam",
-                "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-                "Participation"
+                "arunkumar.csbs@ritrjpm.ac.in"
             ],
             [
                 "Dr. K. SURESH KUMAR",
                 "Professor",
                 "Computer Science and Engineering",
                 "Ramco Institute of Technology, Rajapalayam",
-                "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-                "Participation"
+                "sureshkumar@ritrjpm.ac.in"
             ]
         ];
 
@@ -491,12 +500,11 @@ router.get("/template-download", (req, res) => {
 
         // Column widths
         ws["!cols"] = [
-            { wch: 28 }, // Student Name
-            { wch: 20 }, // Participant Type
-            { wch: 38 }, // Department
-            { wch: 42 }, // Institution
-            { wch: 45 }, // Event Name
-            { wch: 25 }  // Participation Type
+            { wch: 30 }, // Full Name with Initial
+            { wch: 20 }, // Participants
+            { wch: 40 }, // Department
+            { wch: 45 }, // College Name
+            { wch: 35 }  // Mail Id
         ];
 
         const wb = xlsx.utils.book_new();
@@ -553,6 +561,250 @@ router.get("/verify-public/:certId", async (req, res) => {
     } catch (e) {
         console.error("Public verify error:", e);
         res.status(500).json({ success: false, message: "Internal server error during certificate verification." });
+    }
+});
+
+// ============================================================
+// 10. EMAIL SENDER CONFIGURATION & MANAGEMENT
+// ============================================================
+router.get("/email-config", checkFacultyOrAdminPermission, (req, res) => {
+    try {
+        const config = emailService.getEmailConfig();
+        res.json({
+            success: true,
+            config: {
+                sender_email: config.sender_email,
+                sender_name: config.sender_name,
+                reply_to: config.reply_to,
+                is_configured: config.is_configured
+            }
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message || "Failed to load email configuration." });
+    }
+});
+
+router.post("/email-config", requireFacultyOrCoordinatorWrite, (req, res) => {
+    try {
+        const { sender_email, app_password, sender_name, reply_to } = req.body;
+        const updated = emailService.saveEmailConfig({
+            sender_email,
+            app_password,
+            sender_name,
+            reply_to
+        });
+
+        res.json({
+            success: true,
+            message: "Email sender credentials updated successfully.",
+            config: {
+                sender_email: updated.sender_email,
+                sender_name: updated.sender_name,
+                reply_to: updated.reply_to,
+                is_configured: updated.is_configured
+            }
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message || "Failed to save email configuration." });
+    }
+});
+
+router.post("/verify-email-connection", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const result = await emailService.verifyConnection();
+        res.json(result);
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message || "Email connection check failed." });
+    }
+});
+
+// ============================================================
+// 11. SEND CERTIFICATE TO A SINGLE PARTICIPANT
+// ============================================================
+router.post("/send-certificate-email/:certId", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const certId = req.params.certId;
+        const { email_override } = req.body;
+        const data = await feedbackCertificateStorage.getAllData();
+        const cert = (data.certificates || []).find(c => 
+            String(c.certificate_number).toUpperCase() === String(certId).toUpperCase() || 
+            String(c.id) === String(certId)
+        );
+
+        if (!cert) {
+            return res.status(404).json({ success: false, message: `Certificate ${certId} not found.` });
+        }
+
+        const targetEmail = (email_override || cert.student_email || cert.email || "").trim();
+        if (!targetEmail) {
+            return res.status(400).json({ success: false, message: "No email address found for this participant. Please provide an email address." });
+        }
+
+        const sendResult = await emailService.sendSingleCertificateEmail(cert, targetEmail);
+        await feedbackCertificateStorage.updateCertificateEmailStatus(cert.certificate_number || cert.id, "sent");
+
+        res.json({
+            success: true,
+            message: `Certificate sent successfully to ${targetEmail}`,
+            result: sendResult
+        });
+    } catch (err) {
+        console.error("Send certificate email error:", err);
+        const certId = req.params.certId;
+        await feedbackCertificateStorage.updateCertificateEmailStatus(certId, "failed", err.message).catch(() => {});
+        res.status(500).json({ success: false, message: err.message || "Failed to send certificate email." });
+    }
+});
+
+// Track active batch email dispatch workflows to enforce one active process at a time
+const activeBatchEmailDispatches = new Set();
+
+// ============================================================
+// 12. BATCH EMAIL CERTIFICATE DISPATCH (UP TO 500 PARTICIPANTS)
+// Safe rate-limited queue (1.2s delay between participants)
+// ============================================================
+router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    const { batch_id, certificate_ids, throttle_ms, test_mode, test_email, resend_all } = req.body;
+    const batchLockKey = String(batch_id || (Array.isArray(certificate_ids) ? certificate_ids.join(',') : 'active_batch_dispatch'));
+
+    // Enforce one active sending workflow per batch
+    if (activeBatchEmailDispatches.has(batchLockKey)) {
+        return res.status(409).json({
+            success: false,
+            message: "A certificate email dispatch workflow is already running for this batch. The system strictly enforces one active workflow per batch."
+        });
+    }
+
+    activeBatchEmailDispatches.add(batchLockKey);
+
+    try {
+        const data = await feedbackCertificateStorage.getAllData();
+        let targetCerts = [];
+
+        if (batch_id) {
+            targetCerts = (data.certificates || []).filter(c => String(c.batch_id) === String(batch_id));
+        } else if (Array.isArray(certificate_ids) && certificate_ids.length > 0) {
+            const idSet = new Set(certificate_ids.map(id => String(id).toUpperCase()));
+            targetCerts = (data.certificates || []).filter(c => 
+                idSet.has(String(c.certificate_number).toUpperCase()) || 
+                idSet.has(String(c.id))
+            );
+        } else {
+            return res.status(400).json({ success: false, message: "Please specify batch_id or a list of certificate_ids to send." });
+        }
+
+        if (targetCerts.length === 0) {
+            return res.status(404).json({ success: false, message: "No matching certificate records found to send." });
+        }
+
+        // Check email configuration first
+        const config = emailService.getEmailConfig();
+        if (!config.is_configured) {
+            return res.status(400).json({
+                success: false,
+                message: "Sender email is not configured. Please enter your Gmail address and App Password in Email Settings."
+            });
+        }
+
+        const isTestMode = Boolean(test_mode);
+        const authorizedTestEmail = (test_email || config.sender_email || "").trim();
+
+        if (isTestMode && (!authorizedTestEmail || !authorizedTestEmail.includes("@"))) {
+            return res.status(400).json({
+                success: false,
+                message: "Test mode is active, but no valid authorized test email address was provided."
+            });
+        }
+
+        const delay = Math.max(800, Number(throttle_ms) || 1200);
+        let sentCount = 0;
+        let failedCount = 0;
+        let skippedCount = 0;
+        const results = [];
+
+        for (let i = 0; i < targetCerts.length; i++) {
+            const cert = targetCerts[i];
+            const recipientEmail = (cert.student_email || cert.email || "").trim();
+            const recipientName = cert.participant_name || cert.student_name || "Participant";
+            const certNumber = cert.certificate_number || String(cert.id);
+
+            // Skip already-sent certificates unless an authorized administrator explicitly resends them
+            if (!resend_all && !isTestMode && cert.email_status === "sent") {
+                skippedCount++;
+                results.push({
+                    certificate_number: certNumber,
+                    name: recipientName,
+                    email: recipientEmail,
+                    status: "skipped",
+                    reason: "Already delivered (skipped to avoid duplicate emails)"
+                });
+                continue;
+            }
+
+            if (!isTestMode && (!recipientEmail || !recipientEmail.includes("@"))) {
+                skippedCount++;
+                results.push({
+                    certificate_number: certNumber,
+                    name: recipientName,
+                    email: recipientEmail,
+                    status: "skipped",
+                    reason: "Missing or invalid email"
+                });
+                continue;
+            }
+
+            const targetEmail = isTestMode ? authorizedTestEmail : recipientEmail;
+
+            try {
+                await emailService.sendSingleCertificateEmail(cert, targetEmail, { isTestMode });
+                sentCount++;
+                if (!isTestMode) {
+                    await feedbackCertificateStorage.updateCertificateEmailStatus(certNumber, "sent");
+                }
+                results.push({
+                    certificate_number: certNumber,
+                    name: recipientName,
+                    email: targetEmail,
+                    status: isTestMode ? "sent_test_mode" : "sent"
+                });
+            } catch (sendErr) {
+                failedCount++;
+                console.error(`Failed to send email to ${targetEmail}:`, sendErr.message);
+                if (!isTestMode) {
+                    await feedbackCertificateStorage.updateCertificateEmailStatus(certNumber, "failed", sendErr.message);
+                }
+                results.push({
+                    certificate_number: certNumber,
+                    name: recipientName,
+                    email: targetEmail,
+                    status: "failed",
+                    error: sendErr.message
+                });
+            }
+
+            // Respectful throttle delay between emails if there are more
+            if (i < targetCerts.length - 1) {
+                await new Promise(r => setTimeout(r, delay));
+            }
+        }
+
+        res.json({
+            success: true,
+            message: isTestMode
+                ? `Test run complete: ${sentCount} test certificate email(s) dispatched to "${authorizedTestEmail}" (${failedCount} failed, ${skippedCount} skipped).`
+                : `Dispatched ${sentCount} of ${targetCerts.length} certificates via email (${failedCount} failed, ${skippedCount} skipped).`,
+            total: targetCerts.length,
+            sent: sentCount,
+            failed: failedCount,
+            skipped: skippedCount,
+            test_mode: isTestMode,
+            results: results
+        });
+    } catch (e) {
+        console.error("send-batch-emails error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to dispatch certificate emails." });
+    } finally {
+        activeBatchEmailDispatches.delete(batchLockKey);
     }
 });
 

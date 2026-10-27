@@ -50,6 +50,22 @@
       "destination": "/api"
     },
     {
+      "source": "/verify/(.*)",
+      "destination": "/frontend/verify-certificate.html"
+    },
+    {
+      "source": "/verify-certificate/(.*)",
+      "destination": "/frontend/verify-certificate.html"
+    },
+    {
+      "source": "/verify",
+      "destination": "/frontend/verify-certificate.html"
+    },
+    {
+      "source": "/verify-certificate",
+      "destination": "/frontend/verify-certificate.html"
+    },
+    {
       "source": "/",
       "destination": "/frontend/Form.html"
     },

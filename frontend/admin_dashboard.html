@@ -2211,7 +2211,7 @@
               </div>
               <div class="form-group">
                 <label>Institution Name</label>
-                <input type="text" id="tplInstName" class="form-control" value="Ramco Institute of Technology" readonly style="background:#f1f5f9;">
+                <input type="text" id="tplInstName" class="form-control" value="Ramco Institute of Technology, Rajapalayam" oninput="updateLiveCertificatePreview()">
               </div>
             </div>
 
@@ -2531,6 +2531,85 @@
           </button>
         </div>
 
+        <!-- ========================================================
+             CERTIFICATE EMAIL SETTINGS (Screenshot 1 Design)
+             ======================================================== -->
+        <div class="cert-email-panel" id="certEmailSettingsCard" style="max-width:760px;margin:24px auto;">
+          <div class="cert-email-panel-header">
+            <h4 class="cert-email-panel-title">
+              <i class="fa-solid fa-envelope-circle-check" style="color:#a855f7;"></i>
+              Certificate Email Settings
+            </h4>
+            <p class="cert-email-panel-subtitle">
+              Example configuration &mdash; both options are independently controlled.
+            </p>
+          </div>
+
+          <!-- 1. Manual Sending Switch -->
+          <div class="cert-email-toggle-row">
+            <div class="cert-email-toggle-info">
+              <div class="cert-email-toggle-label">Manual sending</div>
+              <p class="cert-email-toggle-desc">Admin reviews the batch, then clicks &ldquo;Send Certificates&rdquo;.</p>
+            </div>
+            <button type="button" class="cert-toggle-btn active" id="btnToggleManualSending" onclick="toggleCertEmailOption('manualSending')">ON</button>
+          </div>
+
+          <!-- 2. Automatic Sending Switch -->
+          <div class="cert-email-toggle-row">
+            <div class="cert-email-toggle-info">
+              <div class="cert-email-toggle-label">Automatic sending</div>
+              <p class="cert-email-toggle-desc">Send after successful certificate generation and validation.</p>
+            </div>
+            <button type="button" class="cert-toggle-btn" id="btnToggleAutomaticSending" onclick="toggleCertEmailOption('automaticSending')">OFF</button>
+          </div>
+
+          <!-- 3. Test Mode Switch -->
+          <div class="cert-email-toggle-row" style="border-bottom:none;">
+            <div class="cert-email-toggle-info">
+              <div class="cert-email-toggle-label">Test mode</div>
+              <p class="cert-email-toggle-desc">Send test emails to an authorized test address before contacting participants.</p>
+              
+              <!-- Authorized Test Address Input -->
+              <div class="cert-email-test-address-wrap" id="certEmailTestAddressWrap" style="display:flex;">
+                <label><i class="fa-solid fa-flask"></i> Authorized Test Address:</label>
+                <input type="email" id="cfgTestEmailAddress" value="rajakaleeswaranhari1976@gmail.com" placeholder="e.g. your_email@gmail.com" onchange="saveCertTestEmailAddress(this.value)">
+              </div>
+            </div>
+            <button type="button" class="cert-toggle-btn active" id="btnToggleTestMode" onclick="toggleCertEmailOption('testMode')">ON</button>
+          </div>
+
+          <!-- Planned Batch Box -->
+          <div class="cert-email-batch-box">
+            <div class="cert-email-batch-label">Planned batch</div>
+            <div class="cert-email-batch-count" id="cgEmailPlannedCount">211 participants</div>
+            <div class="cert-email-batch-sub">One personalized email per participant, with the matching certificate PDF attached.</div>
+            <div class="cert-email-batch-statusline" id="cgEmailStatusSummary">
+              <span>Manual: <strong id="cgStatusManual">Enabled</strong></span> &bull; 
+              <span>Automatic: <strong id="cgStatusAuto">Disabled</strong></span> &bull; 
+              <span>Test mode: <strong id="cgStatusTest">Enabled</strong></span>
+            </div>
+
+            <!-- Email Actions Bar -->
+            <div class="cert-email-actions-bar">
+              <button type="button" class="btn-send-certs-primary" id="btnExecuteSendCertificates" onclick="executeCertEmailWorkflow()">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span id="btnSendCertsText">Send Certificates</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEmailConfigModal()" style="color:#cbd5e1;border-color:#334155;background:#161b26;padding:10px 16px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-gear"></i> SMTP Credentials
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="testEmailConnectionFromModal()" style="color:#cbd5e1;border-color:#334155;background:#161b26;padding:10px 16px;border-radius:10px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-plug"></i> Test Connection
+              </button>
+            </div>
+          </div>
+
+          <!-- Important Note -->
+          <div class="cert-email-note-box">
+            <strong>Important:</strong> The backend should enforce one active sending workflow per batch, record delivery status, and skip already-sent certificates unless an authorized administrator explicitly resends them.
+          </div>
+        </div>
+
         <!-- Live Generation Progress Indicator -->
         <div id="certGenProgressBox" class="certgen-progress-wrap">
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:700;">
@@ -2560,12 +2639,35 @@
             </div>
           </div>
           <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-sm" onclick="downloadAllGeneratedCertificatesZip()" style="background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <i class="fa-solid fa-file-zipper"></i> Download All as ZIP Archive
+            <button type="button" class="btn btn-sm" id="btnSendBatchEmails" onclick="sendBatchCertificatesViaEmail()" style="background:#7e22ce;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:7px;cursor:pointer;box-shadow:0 4px 14px rgba(126,34,206,0.35);">
+              <i class="fa-solid fa-paper-plane"></i> 📧 Send Certificates via Email to Participants
             </button>
-            <button type="button" class="btn btn-sm" onclick="jumpToCertGenSection('cgSecHistory')" style="background:#fff;color:#065f46;border:1px solid #86efac;padding:8px 16px;border-radius:8px;font-weight:700;cursor:pointer;">
-              <i class="fa-solid fa-list"></i> View Generated Records Table
+            <button type="button" class="btn btn-sm" onclick="downloadAllGeneratedCertificatesZip()" style="background:#059669;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <i class="fa-solid fa-file-zipper"></i> Download All as ZIP
             </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEmailConfigModal()" style="padding:9px 14px;border-radius:8px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+              <i class="fa-solid fa-gear"></i> Email Settings
+            </button>
+            <button type="button" class="btn btn-sm" onclick="jumpToCertGenSection('cgSecHistory')" style="background:#fff;color:#065f46;border:1px solid #86efac;padding:9px 16px;border-radius:8px;font-weight:700;cursor:pointer;">
+              <i class="fa-solid fa-list"></i> View Table
+            </button>
+          </div>
+
+          <!-- Automated Email Dispatch Progress Indicator -->
+          <div id="certEmailProgressBox" class="certgen-progress-wrap" style="display:none;margin-top:16px;background:#f5f3ff;border:1.5px solid #ddd6fe;border-radius:12px;padding:16px 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:700;">
+              <span style="color:#4c1d95;" id="cgEmailStatusText">
+                <i class="fa-solid fa-paper-plane fa-bounce"></i> Preparing email queue...
+              </span>
+              <span id="cgEmailProgressPct" style="color:#7c3aed;font-size:15px;font-weight:800;">0%</span>
+            </div>
+            <div class="certgen-progress-track" style="background:#ede9fe;height:10px;border-radius:6px;margin:10px 0;overflow:hidden;">
+              <div id="certEmailProgressBar" class="certgen-progress-fill" style="background:linear-gradient(90deg, #7c3aed, #a855f7);height:100%;width:0%;transition:width 0.3s ease;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#6d28d9;">
+              <span id="cgEmailProgressCounts">Dispatched 0 of 0 emails</span>
+              <span id="cgEmailProgressDetails" style="font-weight:600;">Failed: 0 &bull; Skipped: 0</span>
+            </div>
           </div>
         </div>
       </div>
@@ -2586,6 +2688,9 @@
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" id="btnHistoryBatchEmail" onclick="sendSelectedBatchViaEmail()" style="background:#7e22ce;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 3px 10px rgba(126,34,206,0.25);">
+            <i class="fa-solid fa-paper-plane"></i> Email All in Batch
+          </button>
           <button type="button" class="btn btn-sm" id="btnDownloadBatchZipTop" onclick="downloadAllGeneratedCertificatesZip()" style="background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
             <i class="fa-solid fa-file-zipper"></i> Download All as ZIP
           </button>
@@ -2625,7 +2730,8 @@
                 <th style="min-width:180px;">Event Name</th>
                 <th style="min-width:110px;">Issue Date</th>
                 <th style="min-width:130px;">Verification Status</th>
-                <th style="min-width:210px;text-align:center;">Actions</th>
+                <th style="min-width:110px;">Email Status</th>
+                <th style="min-width:240px;text-align:center;">Actions</th>
               </tr>
             </thead>
             <tbody id="cgHistoryTableBody">
@@ -2769,6 +2875,44 @@
         <button type="button" class="btn btn-primary" onclick="proceedWithBatchGeneration()" style="display:inline-flex;align-items:center;gap:6px;">
           <i class="fa-solid fa-stamp"></i> Issue Certificates Now
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Settings Modal -->
+  <div id="modalEmailConfig" class="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;align-items:center;justify-content:center;">
+    <div class="modal-content" style="background:#fff;border-radius:14px;max-width:540px;width:92%;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.25);">
+      <div style="background:linear-gradient(135deg, #4c1d95, #6d28d9);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;">
+        <h4 style="margin:0;font-size:16px;font-weight:700;"><i class="fa-solid fa-envelope"></i> Email Sender Settings (Gmail SMTP)</h4>
+        <button type="button" onclick="closeEmailConfigModal()" style="background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;">&times;</button>
+      </div>
+      <div style="padding:22px;">
+        <div style="background:#f5f3ff;border-left:4px solid #7c3aed;padding:10px 14px;border-radius:4px;font-size:12.5px;color:#4c1d95;margin-bottom:16px;">
+          <strong>Gmail SMTP Configured:</strong> Emails will be delivered directly from your verified Gmail address with the official certificate PDF attached.
+        </div>
+        <div class="form-group mb-3">
+          <label style="font-size:12.5px;font-weight:700;color:#334155;">Sender Gmail Address</label>
+          <input type="email" id="cfgSenderEmail" class="form-control" placeholder="e.g. rajakaleeswaranhari1976@gmail.com" value="rajakaleeswaranhari1976@gmail.com">
+        </div>
+        <div class="form-group mb-3">
+          <label style="font-size:12.5px;font-weight:700;color:#334155;">Google App Password (16 Characters)</label>
+          <input type="password" id="cfgAppPassword" class="form-control" placeholder="16-character App Password" value="anjjctvazinmpjtv">
+          <small style="color:#64748b;font-size:11px;">Leave untouched if already working.</small>
+        </div>
+        <div class="form-group mb-3">
+          <label style="font-size:12.5px;font-weight:700;color:#334155;">Sender Display Name</label>
+          <input type="text" id="cfgSenderName" class="form-control" placeholder="RIT CSBS Placement & Training Cell" value="RIT CSBS Placement & Training Cell">
+        </div>
+        <div id="emailTestResult" style="display:none;margin-top:12px;padding:10px 14px;border-radius:6px;font-size:12px;"></div>
+      </div>
+      <div style="padding:14px 22px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="testEmailConnectionFromModal()" id="btnTestEmailConn">
+          <i class="fa-solid fa-plug"></i> Test Connection
+        </button>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-sm btn-secondary" onclick="closeEmailConfigModal()">Close</button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="saveEmailConfigFromModal()">Save Settings</button>
+        </div>
       </div>
     </div>
   </div>

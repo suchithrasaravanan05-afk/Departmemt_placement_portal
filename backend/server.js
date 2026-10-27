@@ -125,7 +125,13 @@ if (socialRoutes) app.use(["/api/social", "/social"], socialRoutes);
 if (facultyRoutes) app.use(["/api/faculty", "/faculty"], facultyRoutes);
 
 // Dedicated Public Certificate Verification API (No authentication required)
-app.get(["/api/public/verify-certificate/:certId", "/public/verify-certificate/:certId"], async (req, res) => {
+app.get([
+    "/api/public/verify-certificate/:certId",
+    "/public/verify-certificate/:certId",
+    "/api/public/verify/:certId",
+    "/public/verify/:certId",
+    "/api/verify/:certId"
+], async (req, res) => {
     if (!feedbackCertificateStorage) {
         return res.status(503).json({ success: false, message: "Certificate verification service temporarily unavailable." });
     }
@@ -184,14 +190,23 @@ app.get(["/faculty-registration", "/faculty-register"], (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/faculty-registration.html"));
 });
 
-// Public Standalone Certificate Verification Page
-app.get(["/verify-certificate", "/verify-certificate.html", "/verify"], (req, res) => {
+// Public Standalone Certificate Verification Page & /verify/:certId (No authentication required)
+app.get([
+    "/verify/:certId",
+    "/verify",
+    "/verify-certificate",
+    "/verify-certificate.html",
+    "/verify-certificate/:certId"
+], (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/verify-certificate.html"));
 });
 
-// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social, faculty, verify-certificate)
+// Fallback to frontend index/login page (excluding API, auth, admin, student, uploads, social, faculty, verify)
 app.get("*", (req, res) => {
-    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social") || req.path.startsWith("/faculty") || req.path.startsWith("/verify")) {
+    if (req.path.startsWith("/verify")) {
+        return res.sendFile(path.join(__dirname, "../frontend/verify-certificate.html"));
+    }
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/auth") || req.path.startsWith("/student") || req.path.startsWith("/admin") || req.path.startsWith("/social") || req.path.startsWith("/faculty")) {
         return res.status(404).json({ success: false, message: "Endpoint not found" });
     }
     res.sendFile(path.join(__dirname, "../frontend/Form.html"));

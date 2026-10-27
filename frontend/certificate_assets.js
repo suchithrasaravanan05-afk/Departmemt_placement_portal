@@ -449,7 +449,8 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
 
   // 9. QR Code at Bottom-Right
   const certId = certData.certificate_number || certData.certificate_id || 'RIT-STTP-2026-0001';
-  const qrTarget = certData.verification_url || ((typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://rit-csbs-portal.vercel.app') + '/verify-certificate.html?id=' + encodeURIComponent(certId);
+  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://rit-csbs-portal.vercel.app';
+  const qrTarget = certData.verification_url || `${originUrl}/verify/${encodeURIComponent(certId)}`;
   ritRenderQrCode(ctx, qrTarget, 1818, 1015, 128);
 
   // 10. Unique Certificate ID in Centered Rounded Pill with Flanking Gold Lines & Diamonds
@@ -551,7 +552,7 @@ async function createCertificatePdf(certData = {}) {
   const bgData = certData.background || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.BACKGROUND_IMAGE || window.CERT_ASSETS.BACKGROUND_SVG : null);
   if (bgData) {
     try {
-      doc.addImage(bgData, 'PNG', 0, 0, pageWidth, pageHeight);
+      doc.addImage(bgData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
     } catch (e) {
       console.warn('BG embed warning:', e);
     }
@@ -572,7 +573,7 @@ async function createCertificatePdf(certData = {}) {
   const ritLogo = certData.rit_logo || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.RIT_LOGO : null);
   if (ritLogo) {
     try {
-      doc.addImage(ritLogo, 'PNG', 18, 13.5, 28, 28);
+      doc.addImage(ritLogo, 'PNG', 18, 13.5, 28, 28, undefined, 'FAST');
     } catch (e) {
       console.warn('RIT logo embed warning:', e);
     }
@@ -610,7 +611,7 @@ async function createCertificatePdf(certData = {}) {
       const csbsH = csbsW / 4.251;
       const csbsX = (pageWidth - csbsW) / 2;
       const csbsY = 41.5;
-      doc.addImage(csbsLogo, 'PNG', csbsX, csbsY, csbsW, csbsH);
+      doc.addImage(csbsLogo, 'PNG', csbsX, csbsY, csbsW, csbsH, undefined, 'FAST');
     } catch (e) {
       console.warn('CSBS logo embed warning:', e);
     }
@@ -703,7 +704,10 @@ async function createCertificatePdf(certData = {}) {
   const progTitle = certData.programme_title || 'One Week Short-Term Training Programme (STTP)';
   const eventTopic = certData.event_name || certData.topic || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives';
   const orgDept = certData.department || 'Department of Computer Science and Business Systems';
-  const orgInst = certData.college_name || certData.institution || 'Ramco Institute of Technology,';
+  let cleanInst = (certData.college_name || certData.institution || 'Ramco Institute of Technology, Rajapalayam').trim().replace(/,\s*$/, '');
+  if (!cleanInst.toLowerCase().includes('rajapalayam')) {
+    cleanInst += ', Rajapalayam';
+  }
   const dates = certData.programme_dates || certData.dates || 'October 12, 2026, to October 18, 2026';
 
   renderStyledLine([
@@ -721,11 +725,11 @@ async function createCertificatePdf(certData = {}) {
     { text: 'by the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
     { text: orgDept, font: 'times', style: 'bold', size: pSize, color: deepPurple },
     { text: 'at', font: 'times', style: 'normal', size: pSize, color: darkGrey },
-    { text: orgInst.endsWith(',') ? orgInst : (orgInst + ','), font: 'times', style: 'bold', size: pSize, color: deepPurple }
+    { text: cleanInst, font: 'times', style: 'bold', size: pSize, color: deepPurple },
+    { text: 'from', font: 'times', style: 'normal', size: pSize, color: darkGrey }
   ], 128.4);
 
   renderStyledLine([
-    { text: 'Rajapalayam from', font: 'times', style: 'normal', size: pSize, color: darkGrey },
     { text: dates + (dates.endsWith('.') ? '' : '.'), font: 'times', style: 'bold', size: pSize, color: deepPurple }
   ], 135.6);
 
@@ -814,7 +818,8 @@ async function createCertificatePdf(certData = {}) {
 
   // 9. Dedicated QR Code in Bottom Right Area
   const certId = certData.certificate_number || certData.certificate_id || 'RIT-STTP-2026-0BDF';
-  const qrTarget = certData.verification_url || ((typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://rit-csbs-portal.vercel.app') + '/verify-certificate.html?id=' + encodeURIComponent(certId);
+  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://rit-csbs-portal.vercel.app';
+  const qrTarget = certData.verification_url || `${originUrl}/verify/${encodeURIComponent(certId)}`;
 
   const qrX = 260;
   const qrY = 152;

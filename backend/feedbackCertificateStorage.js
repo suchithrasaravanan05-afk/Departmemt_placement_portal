@@ -2132,6 +2132,7 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
         const warnings = [];
 
         const studentName = sanitizeCellValue(
+            row.full_name_with_initial || row['Full Name with Initial'] || row['Full Name with Initials'] || row.fullNameWithInitial || row.fullname_with_initial ||
             row.participant_name || row['Participant Name'] || row.participantName || row.Participant_Name ||
             row.student_name || row['Student Name'] || row.studentName || row.Student_Name || row.name || row.Name || ""
         );
@@ -2139,23 +2140,26 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
             row.register_number || row['Register Number'] || row.registerNumber || row['Register No'] || row.reg_no || row['Reg No'] || row.Reg_No || ""
         ).toUpperCase();
         const participantType = sanitizeCellValue(
+            row.participants || row['Participants'] || row.participant || row['Participant'] ||
             row.participant_type || row['Participant Type'] || row.participantType || row.Participant_Type ||
-            row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || "Student"
+            row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || ""
         );
         const institution = sanitizeCellValue(
-            row.institution || row['Institution'] || row.institution_name || row['Institution Name'] || row.college || row.College || row['College Name'] || "Ramco Institute of Technology, Rajapalayam"
+            row.college_name || row['College Name'] || row.collegename || row.college || row.College ||
+            row.institution || row['Institution'] || row.institution_name || row['Institution Name'] || ""
         );
         const email = sanitizeCellValue(
-            row.email || row.Email || row['Email'] || row['Email Address'] || ""
+            row.mail_id || row['Mail Id'] || row['Mail ID'] || row['Mail id'] || row.mailId || row.mail || row.Mail ||
+            row.email || row.Email || row['Email'] || row['Email Address'] || row['Email Id'] || ""
         );
         const department = sanitizeCellValue(
-            row.department || row.Department || row['Department'] || row.dept || row.Dept || "Computer Science and Business Systems"
+            row.department || row.Department || row['Department'] || row.dept || row.Dept || ""
         );
         const academicYear = sanitizeCellValue(
             row.academic_year || row['Academic Year'] || row.academicYear || row.Academic_Year || "2026-27"
         );
         const eventName = sanitizeCellValue(
-            row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || (defaultOptions && defaultOptions.event_name) || ""
+            row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || (defaultOptions && defaultOptions.event_name) || "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives"
         );
         const rawEventDate = sanitizeCellValue(
             row.event_date || row['Event Date'] || row.eventDate || row.Event_Date || row.date || row.Date || (defaultOptions && defaultOptions.event_date) || ""
@@ -2167,12 +2171,26 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
             row.issue_date || row['Certificate Issue Date'] || row.certificate_issue_date || row['Issue Date'] || row.issueDate || row.Certificate_Issue_Date || ""
         );
 
-        // 1. Mandatory checks
+        // 1. Mandatory checks (5 required final Excel columns)
         if (!studentName) {
-            errors.push("Participant Name is mandatory");
+            errors.push("Full Name with Initial is required");
         }
-        if (!eventName) {
-            errors.push("Event Name is mandatory");
+        if (!participantType) {
+            errors.push("Participants (role/type) is required");
+        }
+        if (!department) {
+            errors.push("Department is required");
+        }
+        if (!institution) {
+            errors.push("College Name is required");
+        }
+        if (!email) {
+            errors.push("Mail Id is required");
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errors.push(`Invalid email format: "${email}". Must be a valid email address`);
+            }
         }
 
         // 2. Date checks
@@ -2246,10 +2264,17 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
             participantName: studentName,
             student_name: studentName,
             studentName: studentName,
+            full_name_with_initial: studentName,
+            fullNameWithInitial: studentName,
             participant_type: participantType,
             participantType: participantType,
+            participants: participantType,
             institution: institution,
+            college_name: institution,
+            collegeName: institution,
             email: email,
+            mail_id: email,
+            mailId: email,
             register_number: registerNumber,
             registerNumber: registerNumber,
             department: department,
@@ -2323,6 +2348,9 @@ async function issueBulkCertificates({
     signatory_6_org = "RIT",
     programme_title = "One Week Short-Term Training Programme (STTP)",
     programme_dates = "October 12, 2026, to October 18, 2026",
+    department = "Department of Computer Science and Business Systems",
+    institution = "Ramco Institute of Technology, Rajapalayam",
+    college_name = "Ramco Institute of Technology, Rajapalayam",
     certificate_wording = "",
     template_style = "rit_purple_gold",
     id_prefix = "RIT-STTP-2026-",
@@ -2428,9 +2456,9 @@ async function issueBulkCertificates({
                 certificate_title: row.certificate_title || effectiveCertTitle,
                 certificate_type: row.participation_type || row.achievement || certificate_type || "Participation",
                 achievement: row.achievement || row.participation_type || "Participation",
-                college_name: row.institution || "RAMCO INSTITUTE OF TECHNOLOGY",
-                institution: row.institution || "Ramco Institute of Technology, Rajapalayam",
-                department: row.department || "Computer Science and Business Systems",
+                college_name: row.college_name || row.institution || college_name || institution || "Ramco Institute of Technology, Rajapalayam",
+                institution: row.institution || row.college_name || institution || college_name || "Ramco Institute of Technology, Rajapalayam",
+                department: row.department || department || "Department of Computer Science and Business Systems",
                 participant_name: row.participant_name || row.student_name,
                 participant_type: row.participant_type || "Student",
                 student_name: row.participant_name || row.student_name,
@@ -2705,8 +2733,9 @@ async function getPublicCertificateDetails(certId) {
         programmeDates: matchedCert.programme_dates || "",
         certificate_wording: matchedCert.certificate_wording || "",
         template_style: matchedCert.template_style || "rit_purple_gold",
-        status: isRevoked ? "Revoked" : (matchedCert.status || "Digitally Verified"),
-        verification_status: isRevoked ? "REVOKED" : "VERIFIED",
+        status: isRevoked ? "Revoked" : "VALID",
+        verification_status: isRevoked ? "REVOKED" : "VALID",
+        is_valid: !isRevoked,
         revoked_at: matchedCert.revoked_at || null,
         revokedAt: matchedCert.revoked_at || null,
         revocation_reason: matchedCert.revocation_reason || null,
@@ -2725,7 +2754,7 @@ async function getPublicCertificateDetails(certId) {
 
     return {
         found: true,
-        status: "VERIFIED",
+        status: "VALID",
         message: "Verified Institutional Certificate",
         certificate: publicInfo
     };
@@ -2791,6 +2820,26 @@ async function deleteCertificateTemplate(templateId) {
     return true;
 }
 
+async function updateCertificateEmailStatus(certNumberOrId, status, errorMsg = null) {
+    const data = await getAllData();
+    const strId = String(certNumberOrId || "").trim().toUpperCase();
+    const cert = (data.certificates || []).find(c => 
+        (c.certificate_number && String(c.certificate_number).toUpperCase() === strId) || 
+        String(c.id) === strId
+    );
+    if (!cert) return null;
+
+    cert.email_status = status; // 'sent', 'failed', 'pending'
+    if (status === 'sent') {
+        cert.email_sent_at = new Date().toISOString();
+        cert.email_error = null;
+    } else if (status === 'failed') {
+        cert.email_error = errorMsg || 'Delivery failed';
+    }
+    await commitData(data);
+    return cert;
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
@@ -2826,5 +2875,6 @@ module.exports = {
     getCertificateTemplates,
     saveCertificateTemplate,
     deleteCertificateTemplate,
+    updateCertificateEmailStatus,
     getAllData
 };

@@ -20,6 +20,7 @@ const certGenState = {
 function initCertificateGenerationTab() {
   updateCertGenRoleNotice();
   setCertGenDefaultDates();
+  initCertEmailSettings();
   applyCertificatePreset('sttp_blockchain_2026');
   loadIssuedCertificatesHistoryTable();
 }
@@ -547,6 +548,127 @@ function confirmBatchAndProceedToTemplate() {
 // ============================================================
 const customUploadedSignatures = {};
 
+// Helper utilities to get and set form parameters across field name variations
+function getFormParam(ids, fallback = '') {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && el.value !== undefined && String(el.value).trim() !== '') {
+      return String(el.value).trim();
+    }
+  }
+  return fallback;
+}
+
+function setFormParam(ids, val) {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+}
+
+// ============================================================
+// CERTIFICATE EMAIL SETTINGS
+// ============================================================
+const certEmailSettings = {
+  manualSending: true,
+  automaticSending: false,
+  testMode: true,
+  testEmail: 'rajakaleeswaranhari1976@gmail.com'
+};
+
+function initCertEmailSettings() {
+  try {
+    const saved = localStorage.getItem('rit_cert_email_settings');
+    if (saved) {
+      Object.assign(certEmailSettings, JSON.parse(saved));
+    }
+  } catch (e) {}
+  updateCertEmailSettingsUI();
+}
+
+function saveCertEmailSettings() {
+  try {
+    localStorage.setItem('rit_cert_email_settings', JSON.stringify(certEmailSettings));
+  } catch (e) {}
+  updateCertEmailSettingsUI();
+}
+
+function toggleCertEmailOption(key) {
+  if (key in certEmailSettings) {
+    certEmailSettings[key] = !certEmailSettings[key];
+    saveCertEmailSettings();
+  }
+}
+
+function saveCertTestEmailAddress(email) {
+  certEmailSettings.testEmail = (email || '').trim();
+  saveCertEmailSettings();
+}
+
+function updateCertEmailSettingsUI() {
+  const btnManual = document.getElementById('btnToggleManualSending');
+  const btnAuto = document.getElementById('btnToggleAutomaticSending');
+  const btnTest = document.getElementById('btnToggleTestMode');
+
+  if (btnManual) {
+    btnManual.className = `cert-toggle-btn ${certEmailSettings.manualSending ? 'active' : ''}`;
+    btnManual.innerText = certEmailSettings.manualSending ? 'ON' : 'OFF';
+  }
+  if (btnAuto) {
+    btnAuto.className = `cert-toggle-btn ${certEmailSettings.automaticSending ? 'active' : ''}`;
+    btnAuto.innerText = certEmailSettings.automaticSending ? 'ON' : 'OFF';
+  }
+  if (btnTest) {
+    btnTest.className = `cert-toggle-btn ${certEmailSettings.testMode ? 'active' : ''}`;
+    btnTest.innerText = certEmailSettings.testMode ? 'ON' : 'OFF';
+  }
+
+  const testWrap = document.getElementById('certEmailTestAddressWrap');
+  if (testWrap) {
+    testWrap.style.display = certEmailSettings.testMode ? 'flex' : 'none';
+  }
+  const testInput = document.getElementById('cfgTestEmailAddress');
+  if (testInput && certEmailSettings.testEmail) {
+    testInput.value = certEmailSettings.testEmail;
+  }
+
+  if (document.getElementById('cgStatusManual')) {
+    document.getElementById('cgStatusManual').innerText = certEmailSettings.manualSending ? 'Enabled' : 'Disabled';
+  }
+  if (document.getElementById('cgStatusAuto')) {
+    document.getElementById('cgStatusAuto').innerText = certEmailSettings.automaticSending ? 'Enabled' : 'Disabled';
+  }
+  if (document.getElementById('cgStatusTest')) {
+    document.getElementById('cgStatusTest').innerText = certEmailSettings.testMode ? 'Enabled' : 'Disabled';
+  }
+
+  const readyCount = (certGenState.records && certGenState.records.length > 0)
+    ? certGenState.records.filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate)).length
+    : (certGenState.currentBatchCerts && certGenState.currentBatchCerts.length > 0
+      ? certGenState.currentBatchCerts.length
+      : 211);
+  const plannedEl = document.getElementById('cgEmailPlannedCount');
+  if (plannedEl) {
+    plannedEl.innerText = `${readyCount} participants`;
+  }
+}
+
+async function executeCertEmailWorkflow() {
+  const readyCount = (certGenState.records && certGenState.records.length > 0)
+    ? certGenState.records.filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate)).length
+    : (certGenState.currentBatchCerts && certGenState.currentBatchCerts.length > 0
+      ? certGenState.currentBatchCerts.length
+      : 0);
+
+  if (!certGenState.currentBatchId && readyCount === 0) {
+    showAdminAlert('Please generate or select a certificate batch first before sending emails.', 'info');
+    jumpToCertGenSection('cgSecGenerate');
+    return;
+  }
+
+  await sendBatchCertificatesViaEmail(certGenState.currentBatchId);
+}
+
 function applyCertificatePreset(presetKey) {
   document.querySelectorAll('.cert-preset-btn').forEach(b => b.classList.remove('active'));
   const activeBtn = document.getElementById(
@@ -557,16 +679,16 @@ function applyCertificatePreset(presetKey) {
   if (activeBtn) activeBtn.classList.add('active');
 
   if (presetKey === 'sttp_blockchain' || presetKey === 'sttp_blockchain_2026') {
-    if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF PARTICIPATION';
-    if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'STTP';
-    if (document.getElementById('tplProgTitle')) document.getElementById('tplProgTitle').value = 'One Week Short-Term Training Programme (STTP)';
-    if (document.getElementById('tplEventName')) document.getElementById('tplEventName').value = 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives';
-    if (document.getElementById('tplOrgDept')) document.getElementById('tplOrgDept').value = 'Department of Computer Science and Business Systems';
-    if (document.getElementById('tplInstitution')) document.getElementById('tplInstitution').value = 'Ramco Institute of Technology, Rajapalayam';
-    if (document.getElementById('tplProgDates')) document.getElementById('tplProgDates').value = 'October 12, 2026, to October 18, 2026';
-    if (document.getElementById('tplIssueDate')) document.getElementById('tplIssueDate').value = '2026-10-18';
-    if (document.getElementById('tplCertWording')) document.getElementById('tplCertWording').value = 'for active and enthusiastic participation in the One Week Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology, Rajapalayam from October 12, 2026, to October 18, 2026.';
-    if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-STTP-2026-';
+    setFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
+    setFormParam(['tplCertType'], 'STTP');
+    setFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Short-Term Training Programme (STTP)');
+    setFormParam(['tplEventTopic', 'tplEventName'], 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives');
+    setFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems');
+    setFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
+    setFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026');
+    setFormParam(['tplIssueDate'], '2026-10-18');
+    setFormParam(['tplCertWording'], 'for active and enthusiastic participation in the One Week Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology, Rajapalayam from October 12, 2026, to October 18, 2026.');
+    setFormParam(['tplIdPrefix'], 'RIT-STTP-2026-');
 
     toggleSignatoryCount(6);
     setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
@@ -576,16 +698,16 @@ function applyCertificatePreset(presetKey) {
     setSigFields(5, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
     setSigFields(6, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
   } else if (presetKey === 'workshop_fullstack' || presetKey === 'workshop_ai_2026') {
-    if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF PARTICIPATION';
-    if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'Workshop';
-    if (document.getElementById('tplProgTitle')) document.getElementById('tplProgTitle').value = 'Two-Day National Workshop';
-    if (document.getElementById('tplEventName')) document.getElementById('tplEventName').value = 'Generative AI and Enterprise Large Language Model Deployments';
-    if (document.getElementById('tplOrgDept')) document.getElementById('tplOrgDept').value = 'Department of Computer Science and Business Systems';
-    if (document.getElementById('tplInstitution')) document.getElementById('tplInstitution').value = 'Ramco Institute of Technology, Rajapalayam';
-    if (document.getElementById('tplProgDates')) document.getElementById('tplProgDates').value = '18 – 19 September 2026';
-    if (document.getElementById('tplIssueDate')) document.getElementById('tplIssueDate').value = '2026-09-19';
-    if (document.getElementById('tplCertWording')) document.getElementById('tplCertWording').value = 'for active participation in the Two-Day National Workshop on “Generative AI and Enterprise Large Language Model Deployments”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology.';
-    if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-GENAI-2026-';
+    setFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
+    setFormParam(['tplCertType'], 'Workshop');
+    setFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'Two-Day National Workshop');
+    setFormParam(['tplEventTopic', 'tplEventName'], 'Generative AI and Enterprise Large Language Model Deployments');
+    setFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems');
+    setFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
+    setFormParam(['tplProgrammeDates', 'tplProgDates'], '18 – 19 September 2026');
+    setFormParam(['tplIssueDate'], '2026-09-19');
+    setFormParam(['tplCertWording'], 'for active participation in the Two-Day National Workshop on “Generative AI and Enterprise Large Language Model Deployments”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology.');
+    setFormParam(['tplIdPrefix'], 'RIT-GENAI-2026-');
 
     toggleSignatoryCount(4);
     setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
@@ -593,16 +715,16 @@ function applyCertificatePreset(presetKey) {
     setSigFields(3, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
     setSigFields(4, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
   } else if (presetKey === 'merit_excellence' || presetKey === 'symposium_merit_2026') {
-    if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF MERIT';
-    if (document.getElementById('tplCertType')) document.getElementById('tplCertType').value = 'Merit';
-    if (document.getElementById('tplProgTitle')) document.getElementById('tplProgTitle').value = 'National Level Technical Symposium – TECHKRITI 2026';
-    if (document.getElementById('tplEventName')) document.getElementById('tplEventName').value = 'Smart Contract Auditing & Web3 Decentralized Hackathon';
-    if (document.getElementById('tplOrgDept')) document.getElementById('tplOrgDept').value = 'Department of Computer Science and Business Systems';
-    if (document.getElementById('tplInstitution')) document.getElementById('tplInstitution').value = 'Ramco Institute of Technology, Rajapalayam';
-    if (document.getElementById('tplProgDates')) document.getElementById('tplProgDates').value = '28 August 2026';
-    if (document.getElementById('tplIssueDate')) document.getElementById('tplIssueDate').value = '2026-08-28';
-    if (document.getElementById('tplCertWording')) document.getElementById('tplCertWording').value = 'for securing 1st Place and demonstrating exemplary technical competence in the National Level Technical Symposium on “Smart Contract Auditing & Web3 Decentralized Hackathon”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology.';
-    if (document.getElementById('tplIdPrefix')) document.getElementById('tplIdPrefix').value = 'RIT-MERIT-2026-';
+    setFormParam(['tplCertTitle'], 'CERTIFICATE OF MERIT');
+    setFormParam(['tplCertType'], 'Merit');
+    setFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'National Level Technical Symposium – TECHKRITI 2026');
+    setFormParam(['tplEventTopic', 'tplEventName'], 'Smart Contract Auditing & Web3 Decentralized Hackathon');
+    setFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems');
+    setFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
+    setFormParam(['tplProgrammeDates', 'tplProgDates'], '28 August 2026');
+    setFormParam(['tplIssueDate'], '2026-08-28');
+    setFormParam(['tplCertWording'], 'for securing 1st Place and demonstrating exemplary technical competence in the National Level Technical Symposium on “Smart Contract Auditing & Web3 Decentralized Hackathon”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology.');
+    setFormParam(['tplIdPrefix'], 'RIT-MERIT-2026-');
 
     toggleSignatoryCount(4);
     setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
@@ -848,20 +970,30 @@ async function proceedWithBatchGeneration() {
   const eligibleRecords = (certGenState.records || []).filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate));
 
   try {
-    const evName = document.getElementById('tplEventName')?.value?.trim() || eligibleRecords[0]?.event_name || 'STTP Blockchain Technologies';
-    const sigCount = parseInt(document.getElementById('tplSigCount')?.value || '5', 10);
+    const evName = getFormParam(['tplEventTopic', 'tplEventName'], eligibleRecords[0]?.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives');
+    const sigCount = parseInt(getFormParam(['tplSigCount'], '6'), 10);
+    const progTitle = getFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Short-Term Training Programme (STTP)');
+    const progDates = getFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026');
+    const orgDept = getFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems');
+    const instName = getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
+    const certTitle = getFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
+    const certType = getFormParam(['tplCertType'], 'STTP');
+    const idPrefix = getFormParam(['tplIdPrefix'], 'RIT-STTP-2026-');
 
     const payload = {
       batch_title: `Batch - ${evName} (${new Date().toLocaleDateString('en-GB')})`,
       event_name: evName,
-      event_date: document.getElementById('tplIssueDate')?.value || eligibleRecords[0]?.event_date || new Date().toISOString().split('T')[0],
+      event_date: getFormParam(['tplIssueDate'], eligibleRecords[0]?.event_date || new Date().toISOString().split('T')[0]),
       academic_year: eligibleRecords[0]?.academic_year || '2026-27',
-      certificate_title: document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION',
-      certificate_type: document.getElementById('tplCertType')?.value?.trim() || 'STTP',
-      programme_title: document.getElementById('tplProgTitle')?.value?.trim() || 'Short-Term Training Programme (STTP)',
-      programme_dates: document.getElementById('tplProgDates')?.value?.trim() || '10 – 12 October 2026',
-      certificate_wording: document.getElementById('tplCertWording')?.value?.trim() || '',
-      id_prefix: document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026',
+      certificate_title: certTitle,
+      certificate_type: certType,
+      programme_title: progTitle,
+      programme_dates: progDates,
+      department: orgDept,
+      institution: instName,
+      college_name: instName,
+      certificate_wording: getFormParam(['tplCertWording'], ''),
+      id_prefix: idPrefix,
       signatory_count: sigCount,
       signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
       signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
@@ -946,7 +1078,14 @@ async function proceedWithBatchGeneration() {
 
     // Reload Section 5 table
     loadIssuedCertificatesHistoryTable();
+    updateCertEmailSettingsUI();
     successAlert?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Automatic email dispatch if enabled
+    if (certEmailSettings.automaticSending) {
+      showAdminAlert(`Automatic certificate emailing is enabled! Starting email dispatch for batch ${data.batch_id}...`, 'info');
+      sendBatchCertificatesViaEmail(data.batch_id);
+    }
 
   } catch (err) {
     console.error('Batch generation error:', err);
@@ -1241,6 +1380,13 @@ function renderHistoryTable() {
     const certJson = JSON.stringify(cert).replace(/"/g, '&quot;');
     const isDate = cert.issue_date ? new Date(cert.issue_date).toLocaleDateString('en-GB') : '—';
 
+    let emailBadge = '<span class="badge" style="background:#f8fafc;color:#64748b;border:1px solid #cbd5e1;font-size:11px;padding:3px 8px;"><i class="fa-solid fa-clock"></i> Pending</span>';
+    if (cert.email_status === 'sent') {
+      emailBadge = `<span class="badge" style="background:#ecfdf5;color:#059669;border:1px solid #86efac;font-size:11px;padding:3px 8px;" title="Sent on ${cert.email_sent_at ? new Date(cert.email_sent_at).toLocaleString() : ''}"><i class="fa-solid fa-check-double"></i> Sent</span>`;
+    } else if (cert.email_status === 'failed') {
+      emailBadge = `<span class="badge" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;font-size:11px;padding:3px 8px;" title="${escapeHtml(cert.email_error || 'Delivery failed')}"><i class="fa-solid fa-triangle-exclamation"></i> Failed</span>`;
+    }
+
     html += `
       <tr>
         <td style="text-align:center;font-weight:700;color:#64748b;">${idx + 1}</td>
@@ -1249,11 +1395,18 @@ function renderHistoryTable() {
             ${escapeHtml(cert.certificate_number)}
           </span>
         </td>
-        <td><strong>${escapeHtml(cert.student_name || 'Student')}</strong></td>
+        <td>
+          <strong>${escapeHtml(cert.student_name || 'Student')}</strong>
+          ${cert.student_email || cert.email ? `<div style="font-size:11px;color:#64748b;">${escapeHtml(cert.student_email || cert.email)}</div>` : ''}
+        </td>
         <td>${escapeHtml(cert.event_name || 'Department Event')}</td>
         <td>${isDate}</td>
         <td>${statusBadge}</td>
+        <td>${emailBadge}</td>
         <td style="text-align:center;white-space:nowrap;">
+          <button type="button" class="btn btn-sm" style="background:#7e22ce;color:#fff;border:none;padding:4px 8px;font-size:11px;" onclick="sendSingleCertificateEmailPrompt('${escapeHtml(cert.certificate_number)}', '${escapeHtml(cert.student_email || cert.email || '')}', '${escapeHtml(cert.student_name)}')" title="Send Certificate via Email">
+            <i class="fa-solid fa-paper-plane"></i> Email
+          </button>
           <button type="button" class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="downloadSingleCertificatePdf(${certJson})" title="Download PDF">
             <i class="fa-solid fa-file-pdf"></i> PDF
           </button>
@@ -1419,5 +1572,278 @@ async function executeQuickCertificateVerification(event) {
     console.error('Quick verify error:', err);
   } finally {
     if (btn) btn.disabled = false;
+  }
+}
+
+// ============================================================
+// 10. AUTOMATED CERTIFICATE EMAIL DISPATCH & SETTINGS
+// ============================================================
+
+// Open Email Configuration Modal
+function openEmailConfigModal() {
+  const modal = document.getElementById('modalEmailConfig');
+  if (modal) {
+    modal.style.display = 'flex';
+    loadEmailConfigIntoModal();
+  }
+}
+
+// Close Email Configuration Modal
+function closeEmailConfigModal() {
+  const modal = document.getElementById('modalEmailConfig');
+  if (modal) modal.style.display = 'none';
+  const resultDiv = document.getElementById('emailTestResult');
+  if (resultDiv) resultDiv.style.display = 'none';
+}
+
+// Fetch and populate current email config into modal
+async function loadEmailConfigIntoModal() {
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/email-config`, {
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    if (data.success && data.config) {
+      if (document.getElementById('cfgSenderEmail')) {
+        document.getElementById('cfgSenderEmail').value = data.config.sender_email || 'rajakaleeswaranhari1976@gmail.com';
+      }
+      if (document.getElementById('cfgSenderName')) {
+        document.getElementById('cfgSenderName').value = data.config.sender_name || 'RIT CSBS Placement & Training Cell';
+      }
+    }
+  } catch (e) {
+    console.error('Error loading email config:', e);
+  }
+}
+
+// Save email settings from modal
+async function saveEmailConfigFromModal() {
+  const senderEmail = document.getElementById('cfgSenderEmail')?.value?.trim();
+  const appPassword = document.getElementById('cfgAppPassword')?.value?.trim();
+  const senderName = document.getElementById('cfgSenderName')?.value?.trim();
+
+  if (!senderEmail || !senderEmail.includes('@')) {
+    alert('Please enter a valid Gmail address.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/email-config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({
+        sender_email: senderEmail,
+        app_password: appPassword,
+        sender_name: senderName
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert('Email settings saved successfully!', 'success');
+      closeEmailConfigModal();
+    } else {
+      alert(data.message || 'Failed to save email settings.');
+    }
+  } catch (e) {
+    alert('Failed to connect to server.');
+  }
+}
+
+// Test connection from modal
+async function testEmailConnectionFromModal() {
+  const btn = document.getElementById('btnTestEmailConn');
+  const resultDiv = document.getElementById('emailTestResult');
+  if (btn) btn.disabled = true;
+  if (resultDiv) {
+    resultDiv.style.display = 'block';
+    resultDiv.style.background = '#f1f5f9';
+    resultDiv.style.color = '#475569';
+    resultDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Testing Gmail SMTP authentication...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/verify-email-connection`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${currentAdminToken}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (resultDiv) {
+        resultDiv.style.background = '#ecfdf5';
+        resultDiv.style.color = '#065f46';
+        resultDiv.style.border = '1px solid #86efac';
+        resultDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(data.message)}`;
+      }
+    } else {
+      if (resultDiv) {
+        resultDiv.style.background = '#fef2f2';
+        resultDiv.style.color = '#991b1b';
+        resultDiv.style.border = '1px solid #fca5a5';
+        resultDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(data.message)}`;
+      }
+    }
+  } catch (e) {
+    if (resultDiv) {
+      resultDiv.style.background = '#fef2f2';
+      resultDiv.style.color = '#991b1b';
+      resultDiv.innerHTML = 'Network error testing email connection.';
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// Send batch certificates via email (e.g. all participants in batch or roster)
+async function sendBatchCertificatesViaEmail(targetBatchId = null) {
+  let batchId = targetBatchId || certGenState.currentBatchId;
+
+  // If no current batch is selected, try to find the latest batch from batchesList
+  if (!batchId && Array.isArray(certGenState.batchesList) && certGenState.batchesList.length > 0) {
+    batchId = certGenState.batchesList[0].batch_id || certGenState.batchesList[0].id;
+  }
+
+  const batchCerts = batchId 
+    ? (certGenState.masterCertificates || []).filter(c => String(c.batch_id) === String(batchId))
+    : (certGenState.currentBatchCerts || []);
+
+  const total = batchCerts.length > 0 ? batchCerts.length : (certGenState.records ? certGenState.records.filter(r => r.is_valid).length : 0);
+  if (total === 0 && !batchId) {
+    showAdminAlert('No certificates or active batch found to email. Please generate a batch first.');
+    return;
+  }
+
+  const isTest = Boolean(certEmailSettings.testMode);
+  const testEmail = (certEmailSettings.testEmail || '').trim();
+
+  if (isTest && (!testEmail || !testEmail.includes('@'))) {
+    showAdminAlert('Test Mode is active, but no valid test email address is configured. Please provide a valid test email address in Email Settings.', 'warning');
+    const input = document.getElementById('cfgTestEmailAddress');
+    if (input) input.focus();
+    return;
+  }
+
+  const confirmMsg = isTest
+    ? `⚠️ Test Mode is ENABLED.\n\nAll certificate emails (${total || 'batch'} participants) will be safely routed to your authorized test address:\n${testEmail}\n\nActual participants will NOT be contacted.\n\nProceed with test email dispatch?`
+    : `Are you sure you want to automatically email official certificate PDFs to all ${total} participants?\n\nSender: rajakaleeswaranhari1976@gmail.com\nAttachment: High-Resolution Print-Ready PDF`;
+
+  if (!confirm(confirmMsg)) return;
+
+  const progressBox = document.getElementById('certEmailProgressBox');
+  const bar = document.getElementById('certEmailProgressBar');
+  const pct = document.getElementById('cgEmailProgressPct');
+  const counts = document.getElementById('cgEmailProgressCounts');
+  const details = document.getElementById('cgEmailProgressDetails');
+  const statusText = document.getElementById('cgEmailStatusText');
+  const sendBtn = document.getElementById('btnSendBatchEmails');
+  const execBtn = document.getElementById('btnExecuteSendCertificates');
+
+  if (progressBox) progressBox.style.display = 'block';
+  if (bar) bar.style.width = '10%';
+  if (pct) pct.innerText = '10%';
+  if (counts) counts.innerText = isTest ? `Preparing test email dispatch to ${testEmail}...` : `Preparing email queue for ${total} participants...`;
+  if (statusText) statusText.innerHTML = isTest 
+    ? `<i class="fa-solid fa-flask fa-bounce"></i> Generating test PDFs &amp; routing to ${escapeHtml(testEmail)}...`
+    : '<i class="fa-solid fa-paper-plane fa-bounce"></i> Generating PDFs &amp; dispatching emails via Gmail SMTP...';
+  if (sendBtn) sendBtn.disabled = true;
+  if (execBtn) execBtn.disabled = true;
+
+  try {
+    const authHeaders = (typeof getAdminAuthHeaders === 'function') 
+      ? getAdminAuthHeaders() 
+      : { Authorization: `Bearer ${window.currentAdminToken || ''}` };
+
+    const endpoint = (typeof API_BASE !== 'undefined' && API_BASE)
+      ? `${API_BASE}/admin/certificate-generation/send-batch-emails`
+      : '/api/certificates/generate/send-batch-emails';
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders
+      },
+      body: JSON.stringify({
+        batch_id: batchId,
+        test_mode: isTest,
+        test_email: testEmail,
+        throttle_ms: 1200
+      })
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      if (statusText) statusText.innerHTML = `<span style="color:#dc2626;"><i class="fa-solid fa-xmark"></i> Dispatch Failed: ${escapeHtml(data.message)}</span>`;
+      alert(data.message || 'Batch email dispatch failed.');
+      return;
+    }
+
+    if (bar) bar.style.width = '100%';
+    if (pct) pct.innerText = '100%';
+    if (counts) counts.innerText = isTest
+      ? `Test Run Complete: Dispatched ${data.sent} test certificate email(s) to ${testEmail}!`
+      : `Successfully delivered ${data.sent} of ${data.total} certificate emails!`;
+    if (details) details.innerText = `Failed: ${data.failed} • Skipped: ${data.skipped} (Test Mode: ${isTest ? 'Active' : 'Off'})`;
+    if (statusText) statusText.innerHTML = `<span style="color:#059669;font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${isTest ? 'Test Dispatch Successful!' : 'Email Dispatch Complete!'}</span>`;
+
+    showAdminAlert(data.message || `Dispatched ${data.sent} certificate emails successfully!`, 'success');
+    loadIssuedCertificatesHistoryTable();
+
+  } catch (err) {
+    console.error('Batch email dispatch error:', err);
+    if (statusText) statusText.innerHTML = '<span style="color:#dc2626;">Network error during email dispatch.</span>';
+    showAdminAlert('Network or server error during email dispatch.');
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    if (execBtn) execBtn.disabled = false;
+  }
+}
+
+// Send selected batch from Section 5 History
+function sendSelectedBatchViaEmail() {
+  const sel = document.getElementById('cgBatchSelector');
+  const batchId = sel ? sel.value : 'all';
+
+  if (batchId === 'all') {
+    const confirmAll = confirm('This will email ALL issued certificates in the master database. Do you wish to proceed?');
+    if (!confirmAll) return;
+    sendBatchCertificatesViaEmail(null);
+  } else {
+    sendBatchCertificatesViaEmail(batchId);
+  }
+}
+
+// Send individual certificate to a single participant
+async function sendSingleCertificateEmailPrompt(certNumber, currentEmail, studentName) {
+  const email = prompt(`Send Certificate (${certNumber}) to ${studentName}:\nConfirm or edit email address:`, currentEmail);
+  if (!email || !email.includes('@')) {
+    if (email !== null) alert('Please enter a valid recipient email address.');
+    return;
+  }
+
+  showAdminAlert(`Sending certificate to ${email}...`, 'info');
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/send-certificate-email/${encodeURIComponent(certNumber)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentAdminToken}`
+      },
+      body: JSON.stringify({ email_override: email })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showAdminAlert(`Certificate PDF successfully emailed to ${email}!`, 'success');
+      loadIssuedCertificatesHistoryTable();
+    } else {
+      alert(data.message || 'Failed to send certificate email.');
+    }
+  } catch (err) {
+    console.error('Send single email error:', err);
+    alert('Failed to send certificate email due to network/server error.');
   }
 }

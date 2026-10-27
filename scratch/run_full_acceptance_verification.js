@@ -60,7 +60,7 @@ async function main() {
 
   if (code && code.data) {
     console.log('  ✅ Optical QR decode SUCCESS! Target URL:', code.data);
-    if (code.data.includes('https://rit-csbs-portal.vercel.app/verify-certificate.html?id=RIT-STTP-2026-FINAL')) {
+    if (code.data.includes('/verify/RIT-STTP-2026-FINAL') || code.data.includes('id=RIT-STTP-2026-FINAL')) {
       console.log('  ✅ Verification URL format is verified and accurate.');
     } else {
       throw new Error('Unexpected QR URL: ' + code.data);
