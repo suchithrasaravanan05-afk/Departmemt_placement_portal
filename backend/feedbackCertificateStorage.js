@@ -2131,43 +2131,43 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
         const errors = [];
         const warnings = [];
 
-        const studentName = sanitizeCellValue(
+        let studentName = sanitizeCellValue(
             row.full_name_with_initial || row['Full Name with Initial'] || row['Full Name with Initials'] || row.fullNameWithInitial || row.fullname_with_initial ||
             row.participant_name || row['Participant Name'] || row.participantName || row.Participant_Name ||
             row.student_name || row['Student Name'] || row.studentName || row.Student_Name || row.name || row.Name || ""
         );
-        const registerNumber = sanitizeCellValue(
+        let registerNumber = sanitizeCellValue(
             row.register_number || row['Register Number'] || row.registerNumber || row['Register No'] || row.reg_no || row['Reg No'] || row.Reg_No || ""
         ).toUpperCase();
-        const participantType = sanitizeCellValue(
+        let participantType = sanitizeCellValue(
             row.participants || row['Participants'] || row.participant || row['Participant'] ||
             row.participant_type || row['Participant Type'] || row.participantType || row.Participant_Type ||
             row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || ""
         );
-        const institution = sanitizeCellValue(
+        let institution = sanitizeCellValue(
             row.college_name || row['College Name'] || row.collegename || row.college || row.College ||
             row.institution || row['Institution'] || row.institution_name || row['Institution Name'] || ""
         );
-        const email = sanitizeCellValue(
+        let email = sanitizeCellValue(
             row.mail_id || row['Mail Id'] || row['Mail ID'] || row['Mail id'] || row.mailId || row.mail || row.Mail ||
             row.email || row.Email || row['Email'] || row['Email Address'] || row['Email Id'] || ""
         );
-        const department = sanitizeCellValue(
+        let department = sanitizeCellValue(
             row.department || row.Department || row['Department'] || row.dept || row.Dept || ""
         );
-        const academicYear = sanitizeCellValue(
+        let academicYear = sanitizeCellValue(
             row.academic_year || row['Academic Year'] || row.academicYear || row.Academic_Year || "2026-27"
         );
-        const eventName = sanitizeCellValue(
+        let eventName = sanitizeCellValue(
             row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || (defaultOptions && defaultOptions.event_name) || "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives"
         );
-        const rawEventDate = sanitizeCellValue(
+        let rawEventDate = sanitizeCellValue(
             row.event_date || row['Event Date'] || row.eventDate || row.Event_Date || row.date || row.Date || (defaultOptions && defaultOptions.event_date) || ""
         );
-        const participationType = sanitizeCellValue(
+        let participationType = sanitizeCellValue(
             row.participation_type || row['Participation Type'] || row.participationType || row.achievement || row.Achievement || row.Participation_Type || participantType || "Participation"
         );
-        const rawIssueDate = sanitizeCellValue(
+        let rawIssueDate = sanitizeCellValue(
             row.issue_date || row['Certificate Issue Date'] || row.certificate_issue_date || row['Issue Date'] || row.issueDate || row.Certificate_Issue_Date || ""
         );
 
