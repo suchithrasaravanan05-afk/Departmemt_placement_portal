@@ -391,9 +391,9 @@
 
 /* Certificate Visual Preview Card — A4 Landscape (1.414 : 1) */
 .cert-preview-frame {
-  background: #ffffff url('../certificate_background.svg') center/100% 100% no-repeat;
-  border: 1px solid #D4AF37;
-  border-radius: 6px;
+  background: #FAF8FF url('../certificate_background.png') center/100% 100% no-repeat;
+  border: none;
+  border-radius: 4px;
   box-shadow: 0 12px 36px rgba(59, 7, 100, 0.22);
   position: relative;
   overflow: hidden;
@@ -406,7 +406,7 @@
   flex-direction: column;
 }
 
-/* Redundant manual ribbons hidden as SVG background provides rich vector artwork */
+/* Redundant manual ribbons and watermarks hidden as background provides rich authentic artwork */
 .cert-ribbon-tl, .cert-ribbon-bl, .cert-ribbon-br, .cert-ribbon-tr, .cert-watermark-bg {
   display: none !important;
 }
@@ -414,12 +414,12 @@
 /* Inner Certificate Content Container */
 .cert-preview-inner {
   position: absolute;
-  inset: 6px;
+  inset: 0;
   border: none;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 16px 28px 12px;
+  padding: 13px 26px 10px;
   box-sizing: border-box;
   background: transparent;
   z-index: 3;
@@ -429,217 +429,246 @@
   display: none !important;
 }
 
-/* Header Grid */
-.cert-hdr-grid {
-  display: grid;
-  grid-template-columns: 56px 1fr 56px;
-  align-items: center;
-  gap: 10px;
+/* 1. Header with Left RIT Crest & Centered Institutional Hierarchy */
+.cert-hdr-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   position: relative;
   z-index: 5;
+  margin-bottom: 2px;
 }
 
-.cert-hdr-logo-left, .cert-hdr-logo-right {
+.cert-hdr-logo-left {
+  width: 52px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: 2px;
 }
 
-.cert-hdr-logo-left img, .cert-hdr-logo-right img {
-  width: 52px;
-  height: 52px;
+.cert-hdr-logo-left img {
+  width: 48px;
+  height: 48px;
   object-fit: contain;
 }
 
-.cert-hdr-titles {
+.cert-hdr-center-col {
+  flex: 1;
   text-align: center;
 }
 
 .cert-college-title {
-  font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, sans-serif;
-  font-size: 15.5px;
-  font-weight: 900;
-  color: #1E1B4B;
-  letter-spacing: 0.6px;
-  line-height: 1.2;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 15px;
+  font-weight: bold;
+  color: #1A1A40;
+  letter-spacing: 0.5px;
+  line-height: 1.15;
   margin: 0;
   text-transform: uppercase;
 }
 
 .cert-autonomous-tag {
-  font-size: 8.5px;
-  font-weight: 800;
-  color: #1E1B4B;
-  letter-spacing: 0.4px;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 7.8px;
+  color: #B91C1C;
   margin-top: 1px;
 }
 
 .cert-accreditation-line {
+  font-family: 'Times New Roman', Georgia, serif;
   font-size: 6.8px;
-  color: #334155;
-  line-height: 1.25;
-  margin-top: 1px;
+  line-height: 1.22;
 }
 
-.cert-department-banner {
-  font-size: 9.5px;
-  font-weight: 900;
-  color: #1E1B4B;
-  letter-spacing: 0.4px;
+.cert-accreditation-line.red {
+  color: #B91C1C;
+}
+
+.cert-accreditation-line.dark {
+  font-weight: bold;
+  color: #111827;
+}
+
+/* Approved CSBS Department Logo Centered Beneath Institutional Heading */
+.cert-csbs-center-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-top: 2px;
-  text-transform: uppercase;
 }
 
-.cert-slogan-tag {
-  font-size: 6.5px;
-  color: #475569;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-top: 1px;
+.cert-csbs-center-logo img {
+  height: 22px;
+  width: auto;
+  max-width: 135px;
+  object-fit: contain;
 }
 
-/* Title Section */
-.cert-title-banner {
+.cert-hdr-spacer-right {
+  width: 52px;
+  flex-shrink: 0;
+}
+
+/* 2. Certificate Title Section */
+.cert-title-section {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 2px;
   position: relative;
   z-index: 5;
 }
 
 .cert-main-title {
-  font-family: 'Times New Roman', 'Playfair Display', Georgia, serif;
-  font-size: 15.5px;
-  font-weight: 900;
-  color: #FFFFFF;
-  letter-spacing: 2px;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 16px;
+  font-weight: bold;
+  color: #581C87;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   margin: 0;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-.cert-gold-diamond-line {
-  display: none !important;
+/* Purple Floral Arabesque Divider */
+.cert-arabesque-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2px 0;
 }
 
-/* Body Content */
-.cert-body-center {
+/* 3. Recipient Section */
+.cert-recipient-section {
   text-align: center;
   position: relative;
   z-index: 5;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 
 .cert-preamble-text {
   font-family: 'Playfair Display', Georgia, serif;
   font-style: italic;
-  font-size: 10.5px;
-  color: #475569;
-  margin-bottom: 2px;
+  font-size: 9.5px;
+  color: #374151;
+  margin-bottom: 1px;
 }
 
 .cert-student-name-box {
-  margin: 2px 0 3px;
+  margin: 1px 0;
 }
 
 .cert-student-display-name {
-  font-family: 'Times New Roman', 'Playfair Display', Georgia, serif;
+  font-family: 'Times New Roman', Georgia, serif;
   font-style: italic;
-  font-weight: 900;
-  font-size: 24px;
-  color: #1E1B4B;
+  font-weight: bold;
+  font-size: 21px;
+  color: #3B0764;
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
-.cert-name-underline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin: 3px auto 0;
-  max-width: 320px;
-}
-
-.cert-name-underline::before, .cert-name-underline::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #D4AF37;
-}
-
+/* 4. Event Paragraph */
 .cert-wording-paragraph {
-  font-size: 8.5px;
-  color: #334155;
-  line-height: 1.45;
-  max-width: 90%;
-  margin: 0 auto;
-}
-
-.cert-topic-bold {
-  font-family: 'Times New Roman', 'Playfair Display', Georgia, serif;
-  font-weight: 800;
-  font-style: italic;
-  font-size: 13.5px;
-  color: #1E1B4B;
-}
-
-.cert-dates-row {
+  font-family: 'Times New Roman', Georgia, serif;
   font-size: 8px;
-  font-weight: 700;
-  color: #1E1B4B;
-  margin-top: 4px;
+  color: #1F2937;
+  line-height: 1.38;
+  max-width: 92%;
+  margin: 2px auto 0;
+  text-align: center;
+  position: relative;
+  z-index: 5;
 }
 
-/* Signatures Flexbox / Grid */
-.cert-signatories-wrap {
+.cert-purple-bold {
+  color: #581C87;
+  font-weight: bold;
+}
+
+/* 5. Signatures: 4 Visual Groups Across Common Baseline */
+.cert-signatories-grid-4groups {
   display: flex;
-  justify-content: space-around;
   align-items: flex-end;
-  margin-top: 4px;
+  justify-content: space-between;
+  margin-top: 6px;
   position: relative;
   z-index: 5;
   padding: 0 4px;
+  gap: 8px;
 }
 
-.cert-sig-column {
-  flex: 1;
+.cert-sig-group-coordinators {
+  flex: 2.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cert-sig-subgrid-3 {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.cert-sig-group-label {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 6.8px;
+  color: #374151;
   text-align: center;
-  position: relative;
-  padding: 0 6px;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.cert-sig-group-single {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cert-sig-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .cert-sig-img {
-  height: 28px;
-  max-width: 80px;
+  height: 24px;
+  max-width: 65px;
   object-fit: contain;
-  margin: 0 auto 2px;
+  margin-bottom: 2px;
   display: block;
 }
 
+.cert-sig-line {
+  width: 75%;
+  height: 0.8px;
+  background: #6B21A8;
+  margin: 1px auto 2px;
+}
+
 .cert-sig-name {
-  font-size: 7.5px;
-  font-weight: 800;
-  color: #1E1B4B;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 7px;
+  font-weight: bold;
+  color: #1F2937;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.cert-sig-desig {
+.cert-sig-role {
+  font-family: 'Times New Roman', Georgia, serif;
   font-size: 6.5px;
-  color: #475569;
+  color: #4B5563;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-top: 1px;
 }
 
-.cert-sig-dept {
-  font-size: 6px;
-  color: #64748B;
-  white-space: nowrap;
-}
-
-/* Footer Verification Bar */
+/* 6. Footer: Certificate ID & Dedicated QR Code at Bottom Right */
 .cert-footer-wrap {
   display: flex;
   justify-content: space-between;
@@ -647,43 +676,57 @@
   margin-top: 4px;
   position: relative;
   z-index: 5;
-  padding-top: 3px;
-  border-top: 0.5px solid #F1F5F9;
+}
+
+.cert-footer-spacer {
+  width: 50px;
+  flex-shrink: 0;
 }
 
 .cert-footer-center {
-  text-align: center;
   flex: 1;
+  text-align: center;
 }
 
-.cert-footer-id {
-  font-size: 7.5px;
-  font-weight: 800;
-  color: #3B0764;
-  font-family: monospace;
+.cert-footer-id-text {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 7.2px;
+  color: #4B5563;
 }
 
-.cert-footer-scan-note {
-  font-size: 6.2px;
-  color: #64748B;
+.cert-footer-qr-container {
+  width: 50px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.cert-footer-qr {
+.cert-qr-thumbnail {
   width: 32px;
   height: 32px;
   background: #ffffff;
   padding: 1px;
-  border: 1px solid #E2E8F0;
+  border: 0.5px solid #E9D5FF;
   border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.cert-footer-qr img {
+.cert-qr-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.cert-qr-verify-label {
+  font-size: 5px;
+  font-weight: bold;
+  color: #581C87;
+  letter-spacing: 0.3px;
+  margin-top: 1px;
+  text-align: center;
 }
 
 /* Template Presets Bar */

@@ -1,0 +1,115 @@
+import re
+
+svg_content = """<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1414" width="2000" height="1414">
+  <defs>
+    <!-- Pale Lavender Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5EEFD" stop-opacity="0.95"/>
+      <stop offset="20%" stop-color="#FAF5FF" stop-opacity="0.98"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1.0"/>
+      <stop offset="80%" stop-color="#FAF5FF" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="#F5EEFD" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <!-- Subtle Wave Gradients -->
+    <linearGradient id="waveGradLeft1" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#C084FC" stop-opacity="0.45"/>
+      <stop offset="50%" stop-color="#DDD6FE" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="waveGradLeft2" x1="0%" y1="20%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#C4B5FD" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="waveGradLeft3" x1="0%" y1="40%" x2="90%" y2="60%">
+      <stop offset="0%" stop-color="#9333EA" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="#E9D5FF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="waveGradRight1" x1="100%" y1="100%" x2="0%" y2="20%">
+      <stop offset="0%" stop-color="#C084FC" stop-opacity="0.45"/>
+      <stop offset="50%" stop-color="#DDD6FE" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="waveGradRight2" x1="100%" y1="80%" x2="20%" y2="0%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#C4B5FD" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="waveGradRight3" x1="100%" y1="60%" x2="10%" y2="40%">
+      <stop offset="0%" stop-color="#9333EA" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="#E9D5FF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Base Pristine Pale Lavender Background -->
+  <rect x="0" y="0" width="2000" height="1414" fill="url(#bgGrad)"/>
+
+  <!-- 2. Subtle Flowing Lavender Wave Patterns (Left Margin) -->
+  <g id="leftWaves">
+    <path d="M 0,0 C 80,180 180,320 140,540 C 100,740 30,900 120,1100 C 180,1240 120,1350 0,1414 Z" fill="url(#waveGradLeft1)"/>
+    <path d="M 0,100 C 120,240 160,450 90,680 C 30,860 110,1050 70,1280 C 40,1360 20,1400 0,1414 Z" fill="url(#waveGradLeft2)"/>
+    <path d="M 0,250 C 70,380 110,560 60,780 C 10,980 90,1160 30,1380 L 0,1414 Z" fill="url(#waveGradLeft3)"/>
+    <!-- Fine delicate wave accent curves -->
+    <path d="M 0,80 Q 140,300 80,620 T 130,1150 Q 80,1300 0,1390" fill="none" stroke="#C084FC" stroke-width="1.2" opacity="0.4"/>
+    <path d="M 0,180 Q 110,420 50,750 T 100,1220" fill="none" stroke="#A855F7" stroke-width="1.0" opacity="0.3"/>
+    <path d="M 0,350 Q 90,580 40,920 T 80,1340" fill="none" stroke="#E9D5FF" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- 3. Subtle Flowing Lavender Wave Patterns (Right Margin) -->
+  <g id="rightWaves">
+    <path d="M 2000,1414 C 1920,1234 1820,1094 1860,874 C 1900,674 1970,514 1880,314 C 1820,174 1880,64 2000,0 Z" fill="url(#waveGradRight1)"/>
+    <path d="M 2000,1314 C 1880,1174 1840,964 1910,734 C 1970,554 1890,364 1930,134 C 1960,54 1980,14 2000,0 Z" fill="url(#waveGradRight2)"/>
+    <path d="M 2000,1164 C 1930,1034 1890,854 1940,634 C 1990,434 1910,254 1970,34 L 2000,0 Z" fill="url(#waveGradRight3)"/>
+    <!-- Fine delicate wave accent curves -->
+    <path d="M 2000,1334 Q 1860,1114 1920,794 T 1870,264 Q 1920,114 2000,24" fill="none" stroke="#C084FC" stroke-width="1.2" opacity="0.4"/>
+    <path d="M 2000,1234 Q 1890,994 1950,664 T 1900,194" fill="none" stroke="#A855F7" stroke-width="1.0" opacity="0.3"/>
+    <path d="M 2000,1064 Q 1910,834 1960,494 T 1920,74" fill="none" stroke="#E9D5FF" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- 4. Double-Line Purple Academic Border with Elegant Corner Details -->
+  <!-- Outer Purple Line -->
+  <rect x="44" y="32" width="1912" height="1350" fill="none" stroke="#581C87" stroke-width="3.2"/>
+
+  <!-- Inner Purple Line -->
+  <rect x="60" y="48" width="1880" height="1318" fill="none" stroke="#581C87" stroke-width="1.8"/>
+
+  <!-- Corner Stepped Boxes / Details -->
+  <!-- Top-Left Corner Details -->
+  <g id="cornerTL">
+    <rect x="44" y="32" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="60" y="48" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
+  </g>
+
+  <!-- Top-Right Corner Details -->
+  <g id="cornerTR">
+    <rect x="1922" y="32" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="1922" y="48" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
+  </g>
+
+  <!-- Bottom-Left Corner Details -->
+  <g id="cornerBL">
+    <rect x="44" y="1348" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="60" y="1348" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
+  </g>
+
+  <!-- Bottom-Right Corner Details -->
+  <g id="cornerBR">
+    <rect x="1922" y="1348" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="1922" y="1348" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
+  </g>
+</svg>
+"""
+
+with open('frontend/certificate_background.svg', 'w', encoding='utf-8') as f:
+    f.write(svg_content)
+
+print('Successfully created frontend/certificate_background.svg')

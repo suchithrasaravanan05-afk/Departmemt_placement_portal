@@ -27,29 +27,32 @@ const INITIAL_TEMPLATES = [
         template_title: "STTP — Emerging Blockchain Technologies (Reference Standard)",
         certificate_title: "CERTIFICATE OF PARTICIPATION",
         certificate_type: "Participation",
-        programme_title: "Short-Term Training Programme (STTP)",
+        programme_title: "One Week Short-Term Training Programme (STTP)",
         event_name: "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives",
-        department: "Department of Computer Science and Business Systems (CSBS)",
-        college_name: "Ramco Institute of Technology",
-        programme_dates: "10 – 12 October 2026",
-        issue_date: "12 October 2026",
-        certificate_wording: "This certificate is proudly presented to [STUDENT NAME] in recognition of active participation in the Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems, Ramco Institute of Technology.",
-        signatory_count: 4,
+        department: "Department of Computer Science and Business Systems",
+        college_name: "Ramco Institute of Technology, Rajapalayam",
+        programme_dates: "October 12, 2026, to October 18, 2026",
+        issue_date: "18 October 2026",
+        certificate_wording: "for active and enthusiastic participation in the One Week Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology, Rajapalayam from October 12, 2026, to October 18, 2026.",
+        signatory_count: 6,
         signatory_1_name: "Dr. M. Jeya Sundari",
         signatory_1_title: "Faculty Coordinator",
         signatory_1_org: "CSBS, RIT",
-        signatory_2_name: "Dr. D. Kesavaraja",
-        signatory_2_title: "Head of Department",
+        signatory_2_name: "M. Rekha",
+        signatory_2_title: "Faculty Coordinator",
         signatory_2_org: "CSBS, RIT",
-        signatory_3_name: "Dr. S. Rajakumaran",
-        signatory_3_title: "Principal",
-        signatory_3_org: "RIT",
-        signatory_4_name: "Dr. L. Ganesan",
-        signatory_4_title: "Director",
-        signatory_4_org: "RIT",
-        signatory_5_name: "Dr. R. Ramesh",
-        signatory_5_title: "Advisor",
+        signatory_3_name: "M. Ramakrishnan",
+        signatory_3_title: "Faculty Coordinator",
+        signatory_3_org: "CSBS, RIT",
+        signatory_4_name: "Dr. D. Kesavaraja",
+        signatory_4_title: "Convenor",
+        signatory_4_org: "CSBS, RIT",
+        signatory_5_name: "Dr. S. Rajakumaran",
+        signatory_5_title: "Patron",
         signatory_5_org: "RIT",
+        signatory_6_name: "Dr. L. Ganesan",
+        signatory_6_title: "Chief Patron",
+        signatory_6_org: "RIT",
         template_style: "rit_purple_gold",
         id_prefix: "RIT-STTP-2026-"
     },
@@ -2282,24 +2285,27 @@ async function issueBulkCertificates({
     event_date,
     category = "Placement Training",
     academic_year = "2026-27",
-    signatory_count = 4,
+    signatory_count = 6,
     signatory_1_name = "Dr. M. Jeya Sundari",
     signatory_1_title = "Faculty Coordinator",
     signatory_1_org = "CSBS, RIT",
-    signatory_2_name = "Dr. D. Kesavaraja",
-    signatory_2_title = "Head of Department",
+    signatory_2_name = "M. Rekha",
+    signatory_2_title = "Faculty Coordinator",
     signatory_2_org = "CSBS, RIT",
-    signatory_3_name = "Dr. S. Rajakumaran",
-    signatory_3_title = "Principal",
-    signatory_3_org = "RIT",
-    signatory_4_name = "Dr. L. Ganesan",
-    signatory_4_title = "Director",
-    signatory_4_org = "RIT",
-    signatory_5_name = "Dr. R. Ramesh",
-    signatory_5_title = "Advisor",
+    signatory_3_name = "M. Ramakrishnan",
+    signatory_3_title = "Faculty Coordinator",
+    signatory_3_org = "CSBS, RIT",
+    signatory_4_name = "Dr. D. Kesavaraja",
+    signatory_4_title = "Convenor",
+    signatory_4_org = "CSBS, RIT",
+    signatory_5_name = "Dr. S. Rajakumaran",
+    signatory_5_title = "Patron",
     signatory_5_org = "RIT",
-    programme_title = "Short-Term Training Programme (STTP)",
-    programme_dates = "10 – 12 October 2026",
+    signatory_6_name = "Dr. L. Ganesan",
+    signatory_6_title = "Chief Patron",
+    signatory_6_org = "RIT",
+    programme_title = "One Week Short-Term Training Programme (STTP)",
+    programme_dates = "October 12, 2026, to October 18, 2026",
     certificate_wording = "",
     template_style = "rit_purple_gold",
     id_prefix = "RIT-STTP-2026-",
@@ -2319,26 +2325,30 @@ async function issueBulkCertificates({
     const effectiveEventName = event_name || eventTitle || "";
     const effectiveCertTitle = certificate_title || certificateTitle || "CERTIFICATE OF PARTICIPATION";
 
-    const sigCount = Number(signatory_count) || (signatory_5_name ? 5 : 4);
+    const sigCount = Number(signatory_count) || (signatory_6_name ? 6 : (signatory_5_name ? 5 : 4));
     const sig1Name = (signatories && signatories.signatory1 && signatories.signatory1.name) || signatory_1_name || "Dr. M. Jeya Sundari";
     const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Faculty Coordinator";
     const sig1Org = (signatories && signatories.signatory1 && signatories.signatory1.org) || signatory_1_org || "CSBS, RIT";
 
-    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Dr. D. Kesavaraja";
-    const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "Head of Department";
+    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "M. Rekha";
+    const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "Faculty Coordinator";
     const sig2Org = (signatories && signatories.signatory2 && signatories.signatory2.org) || signatory_2_org || "CSBS, RIT";
 
-    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "Dr. S. Rajakumaran";
-    const sig3Title = (signatories && signatories.signatory3 && signatories.signatory3.title) || signatory_3_title || "Principal";
-    const sig3Org = (signatories && signatories.signatory3 && signatories.signatory3.org) || signatory_3_org || "RIT";
+    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "M. Ramakrishnan";
+    const sig3Title = (signatories && signatories.signatory3 && signatories.signatory3.title) || signatory_3_title || "Faculty Coordinator";
+    const sig3Org = (signatories && signatories.signatory3 && signatories.signatory3.org) || signatory_3_org || "CSBS, RIT";
 
-    const sig4Name = (signatories && signatories.signatory4 && signatories.signatory4.name) || signatory_4_name || "Dr. L. Ganesan";
-    const sig4Title = (signatories && signatories.signatory4 && signatories.signatory4.title) || signatory_4_title || "Director";
-    const sig4Org = (signatories && signatories.signatory4 && signatories.signatory4.org) || signatory_4_org || "RIT";
+    const sig4Name = (signatories && signatories.signatory4 && signatories.signatory4.name) || signatory_4_name || "Dr. D. Kesavaraja";
+    const sig4Title = (signatories && signatories.signatory4 && signatories.signatory4.title) || signatory_4_title || "Convenor";
+    const sig4Org = (signatories && signatories.signatory4 && signatories.signatory4.org) || signatory_4_org || "CSBS, RIT";
 
-    const sig5Name = (signatories && signatories.signatory5 && signatories.signatory5.name) || signatory_5_name || "Dr. R. Ramesh";
-    const sig5Title = (signatories && signatories.signatory5 && signatories.signatory5.title) || signatory_5_title || "Advisor";
+    const sig5Name = (signatories && signatories.signatory5 && signatories.signatory5.name) || signatory_5_name || "Dr. S. Rajakumaran";
+    const sig5Title = (signatories && signatories.signatory5 && signatories.signatory5.title) || signatory_5_title || "Patron";
     const sig5Org = (signatories && signatories.signatory5 && signatories.signatory5.org) || signatory_5_org || "RIT";
+
+    const sig6Name = (signatories && signatories.signatory6 && signatories.signatory6.name) || signatory_6_name || "Dr. L. Ganesan";
+    const sig6Title = (signatories && signatories.signatory6 && signatories.signatory6.title) || signatory_6_title || "Chief Patron";
+    const sig6Org = (signatories && signatories.signatory6 && signatories.signatory6.org) || signatory_6_org || "RIT";
 
     const data = await getAllData();
     if (!Array.isArray(data.certificates)) data.certificates = [];
@@ -2447,6 +2457,11 @@ async function issueBulkCertificates({
                 signatory_5_title: sig5Title,
                 signatory5_title: sig5Title,
                 signatory_5_org: sig5Org,
+                signatory_6_name: sig6Name,
+                signatory6_name: sig6Name,
+                signatory_6_title: sig6Title,
+                signatory6_title: sig6Title,
+                signatory_6_org: sig6Org,
                 status: "Digitally Verified",
                 verification_status: "VERIFIED",
                 revoked_at: null,
@@ -2649,12 +2664,17 @@ async function getPublicCertificateDetails(certId) {
         signatory_4_title: matchedCert.signatory_4_title || "Principal",
         signatory4_title: matchedCert.signatory_4_title || "Principal",
         signatory_4_org: matchedCert.signatory_4_org || "RIT",
-        signatory_5_name: matchedCert.signatory_5_name || "Dr. R. Ramesh",
-        signatory5_name: matchedCert.signatory_5_name || "Dr. R. Ramesh",
-        signatory_5_title: matchedCert.signatory_5_title || "Director",
-        signatory5_title: matchedCert.signatory_5_title || "Director",
+        signatory_5_name: matchedCert.signatory_5_name || "Dr. S. Rajakumaran",
+        signatory5_name: matchedCert.signatory_5_name || "Dr. S. Rajakumaran",
+        signatory_5_title: matchedCert.signatory_5_title || "Patron",
+        signatory5_title: matchedCert.signatory_5_title || "Patron",
         signatory_5_org: matchedCert.signatory_5_org || "RIT",
-        signatory_count: matchedCert.signatory_count || (matchedCert.signatory_5_name ? 5 : 4),
+        signatory_6_name: matchedCert.signatory_6_name || "Dr. L. Ganesan",
+        signatory6_name: matchedCert.signatory_6_name || "Dr. L. Ganesan",
+        signatory_6_title: matchedCert.signatory_6_title || "Chief Patron",
+        signatory6_title: matchedCert.signatory_6_title || "Chief Patron",
+        signatory_6_org: matchedCert.signatory_6_org || "RIT",
+        signatory_count: matchedCert.signatory_count || (matchedCert.signatory_6_name ? 6 : (matchedCert.signatory_5_name ? 5 : 4)),
         programme_title: matchedCert.programme_title || "Short-Term Training Programme (STTP)",
         programmeTitle: matchedCert.programme_title || "Short-Term Training Programme (STTP)",
         programme_dates: matchedCert.programme_dates || "",

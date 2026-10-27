@@ -893,108 +893,136 @@
     <!-- Certificate Visual Canvas Preview -->
     <div style="padding:20px;overflow-y:auto;flex:1;background:#0f172a;display:flex;justify-content:center;">
       <div class="cert-preview-frame" id="liveCertPreviewCard" style="max-width:820px;width:100%;">
-        <!-- Watermark / Background SVG -->
-        <div class="cert-watermark-bg"></div>
-
         <div class="cert-preview-inner">
-          <div class="cert-preview-corners cert-preview-c-tl"></div>
-          <div class="cert-preview-corners cert-preview-c-tr"></div>
-          <div class="cert-preview-corners cert-preview-c-bl"></div>
-          <div class="cert-preview-corners cert-preview-c-br"></div>
-
-          <!-- 1. Header with Left Crest, Institutional Hierarchy & Right Badge -->
-          <div class="cert-hdr-grid">
+          <!-- 1. Header with Left RIT Crest & Centered Institutional Hierarchy -->
+          <div class="cert-hdr-top">
             <div class="cert-hdr-logo-left">
               <img id="certModalLogoLeft" src="rit_logo.png" alt="RIT Crest" onerror="this.style.display='none'">
             </div>
-            <div class="cert-hdr-titles">
+            <div class="cert-hdr-center-col">
               <h2 class="cert-college-title">RAMCO INSTITUTE OF TECHNOLOGY</h2>
-              <div class="cert-autonomous-tag">(AN AUTONOMOUS INSTITUTION)</div>
-              <div class="cert-accreditation-line">Approved by AICTE, New Delhi &amp; Affiliated to Anna University</div>
-              <div class="cert-accreditation-line">NAAC Accredited with 'A+' Grade &amp; An ISO 9001: 2015 Certified Institution</div>
-              <div class="cert-accreditation-line">NBA Accredited UG Programmes: CSE, EEE, ECE, MECH and CIVIL</div>
-              <div class="cert-accreditation-line">Rajapalayam - 626117, Tamil Nadu, India</div>
-            </div>
-            <div class="cert-hdr-logo-right">
-              <div style="text-align:center;">
-                <img id="certModalLogoRight" src="csbs_logo_clean.png" alt="CSBS Logo" style="width:48px;height:48px;object-fit:contain;" onerror="this.src='csbs_logo.png'">
-                <div class="cert-department-banner" style="font-size:7px;margin-top:2px;">DEPARTMENT OF CSBS</div>
-                <div class="cert-slogan-tag" style="font-size:5.5px;">Learn | Innovate | Grow</div>
+              <div class="cert-autonomous-tag">(An autonomous Institution)</div>
+              <div class="cert-accreditation-line red">Approved by AICTE,New Delhi &amp;Affiliated to Anna University</div>
+              <div class="cert-accreditation-line dark">NAAC Accredited with 'A+' Grade &amp; An ISO 9001: 2015 Certified Institution</div>
+              <div class="cert-accreditation-line red">NBA Accredited UG Programs: CSE,EEE, and MECH.</div>
+              <!-- Approved CSBS department logo placed upper-center beneath institutional heading -->
+              <div class="cert-csbs-center-logo">
+                <img id="certModalLogoCenter" src="csbs_logo_clean.png" alt="CSBS Logo" onerror="this.src='csbs_logo.png'">
               </div>
             </div>
+            <div class="cert-hdr-spacer-right"></div>
           </div>
 
-          <!-- 2. Large Centered Certificate Title -->
-          <div class="cert-title-banner">
+          <!-- 2. Large Purple Certificate Title with Ornamental Floral Arabesque Divider -->
+          <div class="cert-title-section">
             <h3 class="cert-main-title" id="certPreviewTitle">CERTIFICATE OF PARTICIPATION</h3>
-            <div class="cert-gold-diamond-line">
-              <div class="cert-gold-diamond"></div>
+            <div class="cert-arabesque-divider">
+              <svg viewBox="0 0 160 14" width="130" height="11">
+                <path d="M 10 7 L 65 7 M 95 7 L 150 7" stroke="#7E22CE" stroke-width="0.8" stroke-linecap="round"/>
+                <circle cx="20" cy="7" r="1.5" fill="#7E22CE"/>
+                <circle cx="140" cy="7" r="1.5" fill="#7E22CE"/>
+                <path d="M 80 2 L 85 7 L 80 12 L 75 7 Z" fill="#6B21A8"/>
+                <circle cx="73" cy="7" r="1.8" fill="#7E22CE"/>
+                <circle cx="87" cy="7" r="1.8" fill="#7E22CE"/>
+                <circle cx="80" cy="7" r="1.5" fill="#FFFFFF"/>
+                <path d="M 75 4 C 71 3, 67 6, 68 8 C 69 9, 72 8, 73 7" fill="none" stroke="#7E22CE" stroke-width="0.7"/>
+                <path d="M 85 4 C 89 3, 93 6, 92 8 C 91 9, 88 8, 87 7" fill="none" stroke="#7E22CE" stroke-width="0.7"/>
+              </svg>
             </div>
           </div>
 
-          <!-- 3. Body Content -->
-          <div class="cert-body-center">
-            <div class="cert-preamble-text">This certificate is proudly presented to</div>
+          <!-- 3. Recipient Section -->
+          <div class="cert-recipient-section">
+            <div class="cert-preamble-text">This certificate is presented to</div>
             <div class="cert-student-name-box">
               <h2 class="cert-student-display-name" id="certPreviewStudentName">Student Name</h2>
-              <div class="cert-name-underline">
-                <div class="cert-gold-diamond" style="width:4px;height:4px;"></div>
+            </div>
+            <div class="cert-arabesque-divider" style="margin-top:1px;">
+              <svg viewBox="0 0 160 14" width="130" height="11">
+                <path d="M 10 7 L 65 7 M 95 7 L 150 7" stroke="#7E22CE" stroke-width="0.8" stroke-linecap="round"/>
+                <circle cx="20" cy="7" r="1.5" fill="#7E22CE"/>
+                <circle cx="140" cy="7" r="1.5" fill="#7E22CE"/>
+                <path d="M 80 2 L 85 7 L 80 12 L 75 7 Z" fill="#6B21A8"/>
+                <circle cx="73" cy="7" r="1.8" fill="#7E22CE"/>
+                <circle cx="87" cy="7" r="1.8" fill="#7E22CE"/>
+                <circle cx="80" cy="7" r="1.5" fill="#FFFFFF"/>
+                <path d="M 75 4 C 71 3, 67 6, 68 8 C 69 9, 72 8, 73 7" fill="none" stroke="#7E22CE" stroke-width="0.7"/>
+                <path d="M 85 4 C 89 3, 93 6, 92 8 C 91 9, 88 8, 87 7" fill="none" stroke="#7E22CE" stroke-width="0.7"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 4. Event Paragraph -->
+          <div class="cert-wording-paragraph">
+            for active and enthusiastic participation in the <span class="cert-purple-bold" id="certPreviewProgrammeType">One Week Short-Term Training Programme (STTP)</span> on <span class="cert-purple-bold" id="certPreviewEventName">“Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”</span>, organized by the <span class="cert-purple-bold">Department of Computer Science and Business Systems</span> at <span class="cert-purple-bold">Ramco Institute of Technology, Rajapalayam</span> from <span class="cert-purple-bold">October 12, 2026, to October 18, 2026</span>.
+          </div>
+
+          <!-- 5. 4 Visual Groups Signatures Section -->
+          <div class="cert-signatories-grid-4groups" id="certModalSignatoriesWrap">
+            <!-- Group 1: Faculty Coordinators (3 side by side with common bottom label) -->
+            <div class="cert-sig-group-coordinators">
+              <div class="cert-sig-subgrid-3">
+                <div class="cert-sig-item">
+                  <img id="certModalSig1Img" class="cert-sig-img" alt="Signature">
+                  <div class="cert-sig-line"></div>
+                  <div class="cert-sig-name" id="certModalSig1Name">Dr. M. Jeya Sundari</div>
+                </div>
+                <div class="cert-sig-item">
+                  <img id="certModalSig2Img" class="cert-sig-img" alt="Signature">
+                  <div class="cert-sig-line"></div>
+                  <div class="cert-sig-name" id="certModalSig2Name">M. Rekha</div>
+                </div>
+                <div class="cert-sig-item">
+                  <img id="certModalSig3Img" class="cert-sig-img" alt="Signature">
+                  <div class="cert-sig-line"></div>
+                  <div class="cert-sig-name" id="certModalSig3Name">M. Ramakrishnan</div>
+                </div>
+              </div>
+              <div class="cert-sig-group-label">Faculty Coordinators</div>
+            </div>
+
+            <!-- Group 2: Convenor -->
+            <div class="cert-sig-group-single">
+              <div class="cert-sig-item">
+                <img id="certModalSig4Img" class="cert-sig-img" alt="Signature">
+                <div class="cert-sig-line"></div>
+                <div class="cert-sig-name" id="certModalSig4Name">Dr. D. Kesavaraja</div>
+                <div class="cert-sig-role" id="certModalSig4Title">Convenor</div>
               </div>
             </div>
-            <div class="cert-wording-paragraph">
-              In recognition of active participation in the <span id="certPreviewProgrammeType">Short-Term Training Programme (STTP)</span> on
-              <div class="cert-topic-bold" id="certPreviewEventName" style="margin:2px 0;">“Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”</div>
-              organized by the Department of Computer Science and Business Systems,
-              Ramco Institute of Technology.
+
+            <!-- Group 3: Patron -->
+            <div class="cert-sig-group-single">
+              <div class="cert-sig-item">
+                <img id="certModalSig5Img" class="cert-sig-img" alt="Signature">
+                <div class="cert-sig-line"></div>
+                <div class="cert-sig-name" id="certModalSig5Name">Dr. S. Rajakumaran</div>
+                <div class="cert-sig-role" id="certModalSig5Title">Patron</div>
+              </div>
+            </div>
+
+            <!-- Group 4: Chief Patron -->
+            <div class="cert-sig-group-single">
+              <div class="cert-sig-item">
+                <img id="certModalSig6Img" class="cert-sig-img" alt="Signature">
+                <div class="cert-sig-line"></div>
+                <div class="cert-sig-name" id="certModalSig6Name">Dr. L. Ganesan</div>
+                <div class="cert-sig-role" id="certModalSig6Title">Chief Patron</div>
+              </div>
             </div>
           </div>
 
-          <!-- 4. Signatories Row (4 Signatories Default) -->
-          <div class="cert-signatories-wrap sig-count-4" id="certModalSignatoriesWrap">
-            <!-- Col 1 -->
-            <div class="cert-sig-column">
-              <img id="certModalSig1Img" class="cert-sig-img" alt="Signature">
-              <div class="cert-sig-name" id="certModalSig1Name">Dr. M. Jeya Sundari</div>
-              <div class="cert-sig-desig" id="certModalSig1Title">Faculty Coordinator</div>
-              <div class="cert-sig-dept" id="certModalSig1Org">CSBS, RIT</div>
-            </div>
-            <!-- Col 2 -->
-            <div class="cert-sig-column">
-              <img id="certModalSig2Img" class="cert-sig-img" alt="Signature">
-              <div class="cert-sig-name" id="certModalSig2Name">Dr. D. Kesavaraja</div>
-              <div class="cert-sig-desig" id="certModalSig2Title">Head of Department</div>
-              <div class="cert-sig-dept" id="certModalSig2Org">CSBS, RIT</div>
-            </div>
-            <!-- Col 3 -->
-            <div class="cert-sig-column">
-              <img id="certModalSig3Img" class="cert-sig-img" alt="Signature">
-              <div class="cert-sig-name" id="certModalSig3Name">Dr. S. Rajakumaran</div>
-              <div class="cert-sig-desig" id="certModalSig3Title">Principal</div>
-              <div class="cert-sig-dept" id="certModalSig3Org">RIT</div>
-            </div>
-            <!-- Col 4 -->
-            <div class="cert-sig-column">
-              <img id="certModalSig4Img" class="cert-sig-img" alt="Signature">
-              <div class="cert-sig-name" id="certModalSig4Name">Dr. L. Ganesan</div>
-              <div class="cert-sig-desig" id="certModalSig4Title">Director</div>
-              <div class="cert-sig-dept" id="certModalSig4Org">RIT</div>
-            </div>
-          </div>
-
-          <!-- 5. Footer: Certificate ID & QR Code -->
+          <!-- 6. Footer: Certificate ID & Dedicated QR Code at Bottom Right -->
           <div class="cert-footer-wrap">
-            <div class="cert-footer-left">
-              <!-- Empty spacer to balance QR code -->
+            <div class="cert-footer-spacer"></div>
+            <div class="cert-footer-center">
+              <span class="cert-footer-id-text">Certificate ID: <strong id="certPreviewCode">RIT-STTP-2026-0001</strong></span>
             </div>
-            <div class="cert-id-tag" id="certPreviewCodeWrap">
-              <div class="cert-gold-diamond-line" style="margin-bottom:2px;">
-                <div class="cert-gold-diamond" style="width:3px;height:3px;"></div>
+            <div class="cert-footer-qr-container">
+              <div id="certModalQrCode" class="cert-qr-thumbnail">
+                <i class="fa-solid fa-qrcode" style="font-size:18px;color:#7e22ce;"></i>
               </div>
-              Certificate ID: <strong id="certPreviewCode">RIT-CSBS-CERT-2026-XXXX</strong>
-            </div>
-            <div class="cert-qr-container">
-              <div id="certModalQrCode" style="display:inline-block;background:#fff;padding:2px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.15);"></div>
-              <div class="cert-qr-caption">SCAN TO VERIFY</div>
+              <div class="cert-qr-verify-label">SCAN TO VERIFY</div>
             </div>
           </div>
         </div>

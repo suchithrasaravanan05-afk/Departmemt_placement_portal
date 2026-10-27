@@ -1,406 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1414" width="2000" height="1414">
   <defs>
-    <!-- Gradients -->
-    <linearGradient id="outerPurple" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1E0538"/>
-      <stop offset="25%" stop-color="#2D0B4E"/>
-      <stop offset="50%" stop-color="#3B0764"/>
-      <stop offset="75%" stop-color="#2D0B4E"/>
-      <stop offset="100%" stop-color="#170326"/>
+    <!-- Pale Lavender Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5EEFD" stop-opacity="0.95"/>
+      <stop offset="20%" stop-color="#FAF5FF" stop-opacity="0.98"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1.0"/>
+      <stop offset="80%" stop-color="#FAF5FF" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="#F5EEFD" stop-opacity="0.95"/>
     </linearGradient>
 
-    <linearGradient id="goldLinear" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#C5A059"/>
-      <stop offset="25%" stop-color="#F5D77F"/>
-      <stop offset="50%" stop-color="#D4AF37"/>
-      <stop offset="75%" stop-color="#F9E29B"/>
-      <stop offset="100%" stop-color="#A67C1E"/>
+    <!-- Subtle Wave Gradients -->
+    <linearGradient id="waveGradLeft1" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#C084FC" stop-opacity="0.45"/>
+      <stop offset="50%" stop-color="#DDD6FE" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
 
-    <linearGradient id="goldH" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#B8860B"/>
-      <stop offset="20%" stop-color="#D4AF37"/>
-      <stop offset="50%" stop-color="#FFF2A1"/>
-      <stop offset="80%" stop-color="#D4AF37"/>
-      <stop offset="100%" stop-color="#996515"/>
+    <linearGradient id="waveGradLeft2" x1="0%" y1="20%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#C4B5FD" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
 
-    <linearGradient id="bannerPurple" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#230438"/>
-      <stop offset="50%" stop-color="#350654"/>
-      <stop offset="100%" stop-color="#1A022B"/>
+    <linearGradient id="waveGradLeft3" x1="0%" y1="40%" x2="90%" y2="60%">
+      <stop offset="0%" stop-color="#9333EA" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="#E9D5FF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
 
-    <!-- Cube Gradients -->
-    <linearGradient id="cubeTop" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4C1D95"/>
-      <stop offset="100%" stop-color="#6D28D9"/>
-    </linearGradient>
-    <linearGradient id="cubeLeft" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#2E1065"/>
-      <stop offset="100%" stop-color="#3B0764"/>
-    </linearGradient>
-    <linearGradient id="cubeRight" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1E0741"/>
-      <stop offset="100%" stop-color="#280547"/>
+    <linearGradient id="waveGradRight1" x1="100%" y1="100%" x2="0%" y2="20%">
+      <stop offset="0%" stop-color="#C084FC" stop-opacity="0.45"/>
+      <stop offset="50%" stop-color="#DDD6FE" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
 
-    <radialGradient id="cubeGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.9"/>
-      <stop offset="50%" stop-color="#6366F1" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#3B0764" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="waveGradRight2" x1="100%" y1="80%" x2="20%" y2="0%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#C4B5FD" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
 
-    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#38BDF8" stop-opacity="1"/>
-      <stop offset="40%" stop-color="#818CF8" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#818CF8" stop-opacity="0"/>
-    </radialGradient>
-
-    <radialGradient id="nodeGlowPurple" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#F43F5E" stop-opacity="1"/>
-      <stop offset="50%" stop-color="#C084FC" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#A855F7" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- Filters -->
-    <filter id="goldShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.4"/>
-    </filter>
-    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
+    <linearGradient id="waveGradRight3" x1="100%" y1="60%" x2="10%" y2="40%">
+      <stop offset="0%" stop-color="#9333EA" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="#E9D5FF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
   </defs>
 
-  <!-- 1. Background Layers -->
-  <!-- Outer deep purple base -->
-  <rect x="0" y="0" width="2000" height="1414" fill="url(#outerPurple)"/>
+  <!-- 1. Base Pristine Pale Lavender Background -->
+  <rect x="0" y="0" width="2000" height="1414" fill="url(#bgGrad)"/>
 
-  <!-- Outer gold perimeter border -->
-  <rect x="18" y="18" width="1964" height="1378" rx="8" fill="none" stroke="url(#goldLinear)" stroke-width="3"/>
-  <rect x="25" y="25" width="1950" height="1364" rx="6" fill="none" stroke="#6B21A8" stroke-width="1.5" stroke-opacity="0.6"/>
-
-  <!-- Central pristine ivory/white canvas area -->
-  <!-- Shaped with soft arched / framed borders leaving purple margins -->
-  <path d="
-    M 80 80
-    C 160 50, width-160 50, 1920 80
-    C 1950 180, 1950 1234, 1920 1334
-    C 1840 1364, 160 1364, 80 1334
-    C 50 1234, 50 180, 80 80 Z"
-    fill="#FCFCF9"/>
-  <!-- Pure central clean card -->
-  <rect x="52" y="42" width="1896" height="1330" rx="16" fill="#FFFFFF" fill-opacity="0.96"/>
-
-  <!-- Inner Double Gold Frame -->
-  <rect x="62" y="52" width="1876" height="1310" rx="12" fill="none" stroke="url(#goldLinear)" stroke-width="3.5" filter="url(#goldShadow)"/>
-  <rect x="74" y="64" width="1852" height="1286" rx="8" fill="none" stroke="url(#goldLinear)" stroke-width="1.5"/>
-
-  <!-- Corner Ornamental Brackets / Ribbons -->
-  <!-- Top-Left -->
-  <g transform="translate(62, 52)">
-    <path d="M 0 0 L 85 0 C 60 15, 20 50, 0 85 Z" fill="#2E0854"/>
-    <path d="M 0 0 L 70 0 C 50 12, 16 42, 0 70 Z" fill="url(#goldLinear)"/>
-    <path d="M 0 0 L 50 0 C 35 10, 12 32, 0 50 Z" fill="#3B0764"/>
-    <circle cx="28" cy="28" r="4.5" fill="url(#goldLinear)"/>
-    <path d="M 28 14 L 31 25 L 42 28 L 31 31 L 28 42 L 25 31 L 14 28 L 25 25 Z" fill="url(#goldLinear)"/>
+  <!-- 2. Subtle Flowing Lavender Wave Patterns (Left Margin) -->
+  <g id="leftWaves">
+    <path d="M 0,0 C 80,180 180,320 140,540 C 100,740 30,900 120,1100 C 180,1240 120,1350 0,1414 Z" fill="url(#waveGradLeft1)"/>
+    <path d="M 0,100 C 120,240 160,450 90,680 C 30,860 110,1050 70,1280 C 40,1360 20,1400 0,1414 Z" fill="url(#waveGradLeft2)"/>
+    <path d="M 0,250 C 70,380 110,560 60,780 C 10,980 90,1160 30,1380 L 0,1414 Z" fill="url(#waveGradLeft3)"/>
+    <!-- Fine delicate wave accent curves -->
+    <path d="M 0,80 Q 140,300 80,620 T 130,1150 Q 80,1300 0,1390" fill="none" stroke="#C084FC" stroke-width="1.2" opacity="0.4"/>
+    <path d="M 0,180 Q 110,420 50,750 T 100,1220" fill="none" stroke="#A855F7" stroke-width="1.0" opacity="0.3"/>
+    <path d="M 0,350 Q 90,580 40,920 T 80,1340" fill="none" stroke="#E9D5FF" stroke-width="1.5" opacity="0.5"/>
   </g>
 
-  <!-- Top-Right -->
-  <g transform="translate(1938, 52) scale(-1, 1)">
-    <path d="M 0 0 L 85 0 C 60 15, 20 50, 0 85 Z" fill="#2E0854"/>
-    <path d="M 0 0 L 70 0 C 50 12, 16 42, 0 70 Z" fill="url(#goldLinear)"/>
-    <path d="M 0 0 L 50 0 C 35 10, 12 32, 0 50 Z" fill="#3B0764"/>
-    <circle cx="28" cy="28" r="4.5" fill="url(#goldLinear)"/>
-    <path d="M 28 14 L 31 25 L 42 28 L 31 31 L 28 42 L 25 31 L 14 28 L 25 25 Z" fill="url(#goldLinear)"/>
+  <!-- 3. Subtle Flowing Lavender Wave Patterns (Right Margin) -->
+  <g id="rightWaves">
+    <path d="M 2000,1414 C 1920,1234 1820,1094 1860,874 C 1900,674 1970,514 1880,314 C 1820,174 1880,64 2000,0 Z" fill="url(#waveGradRight1)"/>
+    <path d="M 2000,1314 C 1880,1174 1840,964 1910,734 C 1970,554 1890,364 1930,134 C 1960,54 1980,14 2000,0 Z" fill="url(#waveGradRight2)"/>
+    <path d="M 2000,1164 C 1930,1034 1890,854 1940,634 C 1990,434 1910,254 1970,34 L 2000,0 Z" fill="url(#waveGradRight3)"/>
+    <!-- Fine delicate wave accent curves -->
+    <path d="M 2000,1334 Q 1860,1114 1920,794 T 1870,264 Q 1920,114 2000,24" fill="none" stroke="#C084FC" stroke-width="1.2" opacity="0.4"/>
+    <path d="M 2000,1234 Q 1890,994 1950,664 T 1900,194" fill="none" stroke="#A855F7" stroke-width="1.0" opacity="0.3"/>
+    <path d="M 2000,1064 Q 1910,834 1960,494 T 1920,74" fill="none" stroke="#E9D5FF" stroke-width="1.5" opacity="0.5"/>
   </g>
 
-  <!-- Bottom-Left -->
-  <g transform="translate(62, 1362) scale(1, -1)">
-    <path d="M 0 0 L 85 0 C 60 15, 20 50, 0 85 Z" fill="#2E0854"/>
-    <path d="M 0 0 L 70 0 C 50 12, 16 42, 0 70 Z" fill="url(#goldLinear)"/>
-    <path d="M 0 0 L 50 0 C 35 10, 12 32, 0 50 Z" fill="#3B0764"/>
-    <circle cx="28" cy="28" r="4.5" fill="url(#goldLinear)"/>
-    <path d="M 28 14 L 31 25 L 42 28 L 31 31 L 28 42 L 25 31 L 14 28 L 25 25 Z" fill="url(#goldLinear)"/>
+  <!-- 4. Double-Line Purple Academic Border with Elegant Corner Details -->
+  <!-- Outer Purple Line -->
+  <rect x="44" y="32" width="1912" height="1350" fill="none" stroke="#581C87" stroke-width="3.2"/>
+
+  <!-- Inner Purple Line -->
+  <rect x="60" y="48" width="1880" height="1318" fill="none" stroke="#581C87" stroke-width="1.8"/>
+
+  <!-- Corner Stepped Boxes / Details -->
+  <!-- Top-Left Corner Details -->
+  <g id="cornerTL">
+    <rect x="44" y="32" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="60" y="48" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
   </g>
 
-  <!-- Bottom-Right -->
-  <g transform="translate(1938, 1362) scale(-1, -1)">
-    <path d="M 0 0 L 85 0 C 60 15, 20 50, 0 85 Z" fill="#2E0854"/>
-    <path d="M 0 0 L 70 0 C 50 12, 16 42, 0 70 Z" fill="url(#goldLinear)"/>
-    <path d="M 0 0 L 50 0 C 35 10, 12 32, 0 50 Z" fill="#3B0764"/>
-    <circle cx="28" cy="28" r="4.5" fill="url(#goldLinear)"/>
-    <path d="M 28 14 L 31 25 L 42 28 L 31 31 L 28 42 L 25 31 L 14 28 L 25 25 Z" fill="url(#goldLinear)"/>
+  <!-- Top-Right Corner Details -->
+  <g id="cornerTR">
+    <rect x="1922" y="32" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="1922" y="48" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
   </g>
 
-  <!-- Corner Flourish Brackets (Antique Gold Filigree inside double borders) -->
-  <g stroke="url(#goldLinear)" stroke-width="2" fill="none" opacity="0.85">
-    <!-- TL corner bracket -->
-    <path d="M 85 105 C 105 105, 105 85, 125 85"/>
-    <path d="M 105 85 C 105 105, 85 105, 85 125"/>
-    <!-- TR corner bracket -->
-    <path d="M 1915 105 C 1895 105, 1895 85, 1875 85"/>
-    <path d="M 1895 85 C 1895 105, 1915 105, 1915 125"/>
-    <!-- BL corner bracket -->
-    <path d="M 85 1309 C 105 1309, 105 1329, 125 1329"/>
-    <path d="M 105 1329 C 105 1309, 85 1309, 85 1289"/>
-    <!-- BR corner bracket -->
-    <path d="M 1915 1309 C 1895 1309, 1895 1329, 1875 1329"/>
-    <path d="M 1895 1329 C 1895 1309, 1915 1309, 1915 1289"/>
+  <!-- Bottom-Left Corner Details -->
+  <g id="cornerBL">
+    <rect x="44" y="1348" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="60" y="1348" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
   </g>
 
-  <!-- 2. BLOCKCHAIN THEME GRAPHICS (LEFT & RIGHT OUTER EDGES) -->
-  <!-- Left Side Constellation & 3D Glowing Cubes -->
-  <g id="leftBlockchainGraphics">
-    <!-- Connecting network lines -->
-    <g stroke="#9333EA" stroke-width="1.2" stroke-opacity="0.35" stroke-dasharray="3,3">
-      <line x1="85" y1="320" x2="160" y2="450"/>
-      <line x1="160" y1="450" x2="280" y2="460"/>
-      <line x1="280" y1="460" x2="140" y2="580"/>
-      <line x1="160" y1="450" x2="140" y2="580"/>
-      <line x1="140" y1="580" x2="220" y2="680"/>
-      <line x1="140" y1="580" x2="80" y2="720"/>
-      <line x1="80" y1="720" x2="130" y2="880"/>
-      <line x1="220" y1="680" x2="130" y2="880"/>
-      <line x1="130" y1="880" x2="260" y2="920"/>
-      <line x1="280" y1="460" x2="350" y2="520"/>
-      <line x1="220" y1="680" x2="320" y2="740"/>
-    </g>
-    <!-- Solid accent lines -->
-    <g stroke="#38BDF8" stroke-width="1.4" stroke-opacity="0.45">
-      <line x1="160" y1="450" x2="220" y2="680"/>
-      <line x1="140" y1="580" x2="260" y2="920"/>
-      <line x1="85" y1="320" x2="280" y2="460"/>
-    </g>
-
-    <!-- Network Nodes -->
-    <circle cx="85" cy="320" r="5" fill="#C084FC" filter="url(#neonGlow)"/>
-    <circle cx="280" cy="460" r="8" fill="#38BDF8" filter="url(#neonGlow)"/>
-    <circle cx="280" cy="460" r="4" fill="#FFFFFF"/>
-    <circle cx="350" cy="520" r="4" fill="#A855F7"/>
-    <circle cx="220" cy="680" r="6" fill="#F43F5E" filter="url(#neonGlow)"/>
-    <circle cx="220" cy="680" r="3" fill="#FFFFFF"/>
-    <circle cx="320" cy="740" r="4.5" fill="#38BDF8"/>
-    <circle cx="260" cy="920" r="6" fill="#C084FC" filter="url(#neonGlow)"/>
-
-    <!-- Large 3D Glowing Cube (Left, Center Y: 450) -->
-    <!-- Position: (160, 450), Radius: 65 -->
-    <g transform="translate(160, 450)">
-      <!-- Back glow halo -->
-      <circle cx="0" cy="0" r="85" fill="url(#cubeGlow)"/>
-      <!-- Top Face -->
-      <path d="M 0 -60 L 52 -30 L 0 0 L -52 -30 Z" fill="url(#cubeTop)" stroke="#38BDF8" stroke-width="2"/>
-      <!-- Left Face -->
-      <path d="M -52 -30 L 0 0 L 0 60 L -52 30 Z" fill="url(#cubeLeft)" stroke="#818CF8" stroke-width="2"/>
-      <!-- Right Face -->
-      <path d="M 0 0 L 52 -30 L 52 30 L 0 60 Z" fill="url(#cubeRight)" stroke="#C084FC" stroke-width="2"/>
-      <!-- Glowing Core Center -->
-      <circle cx="0" cy="0" r="14" fill="#00E5FF" filter="url(#neonGlow)" opacity="0.9"/>
-      <circle cx="0" cy="0" r="7" fill="#FFFFFF"/>
-      <!-- Corner Vertices -->
-      <circle cx="0" cy="-60" r="3.5" fill="#38BDF8"/>
-      <circle cx="52" cy="-30" r="3.5" fill="#38BDF8"/>
-      <circle cx="-52" cy="-30" r="3.5" fill="#38BDF8"/>
-      <circle cx="52" cy="30" r="3.5" fill="#818CF8"/>
-      <circle cx="-52" cy="30" r="3.5" fill="#818CF8"/>
-      <circle cx="0" cy="60" r="3.5" fill="#C084FC"/>
-    </g>
-
-    <!-- Medium 3D Glowing Cube (Left, Lower Y: 600) -->
-    <!-- Position: (130, 600), Radius: 50 -->
-    <g transform="translate(130, 600)">
-      <circle cx="0" cy="0" r="65" fill="url(#cubeGlow)"/>
-      <path d="M 0 -45 L 39 -22.5 L 0 0 L -39 -22.5 Z" fill="url(#cubeTop)" stroke="#F43F5E" stroke-width="1.8"/>
-      <path d="M -39 -22.5 L 0 0 L 0 45 L -39 22.5 Z" fill="url(#cubeLeft)" stroke="#C084FC" stroke-width="1.8"/>
-      <path d="M 0 0 L 39 -22.5 L 39 22.5 L 0 45 Z" fill="url(#cubeRight)" stroke="#818CF8" stroke-width="1.8"/>
-      <circle cx="0" cy="0" r="10" fill="#E879F9" filter="url(#neonGlow)" opacity="0.9"/>
-      <circle cx="0" cy="0" r="4.5" fill="#FFFFFF"/>
-    </g>
-
-    <!-- Small Floating Cube (Left, Y: 730) -->
-    <g transform="translate(80, 730)">
-      <circle cx="0" cy="0" r="40" fill="url(#cubeGlow)"/>
-      <path d="M 0 -26 L 22.5 -13 L 0 0 L -22.5 -13 Z" fill="url(#cubeTop)" stroke="#38BDF8" stroke-width="1.5"/>
-      <path d="M -22.5 -13 L 0 0 L 0 26 L -22.5 13 Z" fill="url(#cubeLeft)" stroke="#818CF8" stroke-width="1.5"/>
-      <path d="M 0 0 L 22.5 -13 L 22.5 13 L 0 26 Z" fill="url(#cubeRight)" stroke="#C084FC" stroke-width="1.5"/>
-      <circle cx="0" cy="0" r="6" fill="#38BDF8" filter="url(#neonGlow)"/>
-    </g>
-  </g>
-
-  <!-- Right Side Constellation & 3D Glowing Cubes -->
-  <g id="rightBlockchainGraphics">
-    <!-- Connecting network lines -->
-    <g stroke="#9333EA" stroke-width="1.2" stroke-opacity="0.35" stroke-dasharray="3,3">
-      <line x1="1915" y1="320" x2="1840" y2="450"/>
-      <line x1="1840" y1="450" x2="1720" y2="460"/>
-      <line x1="1720" y1="460" x2="1860" y2="580"/>
-      <line x1="1840" y1="450" x2="1860" y2="580"/>
-      <line x1="1860" y1="580" x2="1780" y2="680"/>
-      <line x1="1860" y1="580" x2="1920" y2="720"/>
-      <line x1="1920" y1="720" x2="1870" y2="880"/>
-      <line x1="1780" y1="680" x2="1870" y2="880"/>
-      <line x1="1870" y1="880" x2="1740" y2="920"/>
-      <line x1="1720" y1="460" x2="1650" y2="520"/>
-      <line x1="1780" y1="680" x2="1680" y2="740"/>
-    </g>
-    <!-- Solid accent lines -->
-    <g stroke="#38BDF8" stroke-width="1.4" stroke-opacity="0.45">
-      <line x1="1840" y1="450" x2="1780" y2="680"/>
-      <line x1="1860" y1="580" x2="1740" y2="920"/>
-      <line x1="1915" y1="320" x2="1720" y2="460"/>
-    </g>
-
-    <!-- Network Nodes -->
-    <circle cx="1915" cy="320" r="5" fill="#C084FC" filter="url(#neonGlow)"/>
-    <circle cx="1720" cy="460" r="8" fill="#38BDF8" filter="url(#neonGlow)"/>
-    <circle cx="1720" cy="460" r="4" fill="#FFFFFF"/>
-    <circle cx="1650" cy="520" r="4" fill="#A855F7"/>
-    <circle cx="1780" cy="680" r="6" fill="#F43F5E" filter="url(#neonGlow)"/>
-    <circle cx="1780" cy="680" r="3" fill="#FFFFFF"/>
-    <circle cx="1680" cy="740" r="4.5" fill="#38BDF8"/>
-    <circle cx="1740" cy="920" r="6" fill="#C084FC" filter="url(#neonGlow)"/>
-
-    <!-- Large 3D Glowing Cube (Right, Center Y: 490) -->
-    <g transform="translate(1850, 490)">
-      <circle cx="0" cy="0" r="85" fill="url(#cubeGlow)"/>
-      <path d="M 0 -60 L 52 -30 L 0 0 L -52 -30 Z" fill="url(#cubeTop)" stroke="#38BDF8" stroke-width="2"/>
-      <path d="M -52 -30 L 0 0 L 0 60 L -52 30 Z" fill="url(#cubeLeft)" stroke="#818CF8" stroke-width="2"/>
-      <path d="M 0 0 L 52 -30 L 52 30 L 0 60 Z" fill="url(#cubeRight)" stroke="#C084FC" stroke-width="2"/>
-      <circle cx="0" cy="0" r="14" fill="#00E5FF" filter="url(#neonGlow)" opacity="0.9"/>
-      <circle cx="0" cy="0" r="7" fill="#FFFFFF"/>
-      <circle cx="0" cy="-60" r="3.5" fill="#38BDF8"/>
-      <circle cx="52" cy="-30" r="3.5" fill="#38BDF8"/>
-      <circle cx="-52" cy="-30" r="3.5" fill="#38BDF8"/>
-      <circle cx="52" cy="30" r="3.5" fill="#818CF8"/>
-      <circle cx="-52" cy="30" r="3.5" fill="#818CF8"/>
-      <circle cx="0" cy="60" r="3.5" fill="#C084FC"/>
-    </g>
-
-    <!-- Medium 3D Glowing Cube (Right, Upper Y: 350) -->
-    <g transform="translate(1730, 350)">
-      <circle cx="0" cy="0" r="55" fill="url(#cubeGlow)"/>
-      <path d="M 0 -36 L 31 -18 L 0 0 L -31 -18 Z" fill="url(#cubeTop)" stroke="#F43F5E" stroke-width="1.8"/>
-      <path d="M -31 -18 L 0 0 L 0 36 L -31 18 Z" fill="url(#cubeLeft)" stroke="#C084FC" stroke-width="1.8"/>
-      <path d="M 0 0 L 31 -18 L 31 18 L 0 36 Z" fill="url(#cubeRight)" stroke="#818CF8" stroke-width="1.8"/>
-      <circle cx="0" cy="0" r="8" fill="#E879F9" filter="url(#neonGlow)" opacity="0.9"/>
-      <circle cx="0" cy="0" r="3.5" fill="#FFFFFF"/>
-    </g>
-
-    <!-- Medium 3D Glowing Cube (Right, Lower Y: 680) -->
-    <g transform="translate(1890, 680)">
-      <circle cx="0" cy="0" r="60" fill="url(#cubeGlow)"/>
-      <path d="M 0 -42 L 36 -21 L 0 0 L -36 -21 Z" fill="url(#cubeTop)" stroke="#38BDF8" stroke-width="1.8"/>
-      <path d="M -36 -21 L 0 0 L 0 42 L -36 21 Z" fill="url(#cubeLeft)" stroke="#818CF8" stroke-width="1.8"/>
-      <path d="M 0 0 L 36 -21 L 36 21 L 0 42 Z" fill="url(#cubeRight)" stroke="#C084FC" stroke-width="1.8"/>
-      <circle cx="0" cy="0" r="9" fill="#00E5FF" filter="url(#neonGlow)"/>
-      <circle cx="0" cy="0" r="4" fill="#FFFFFF"/>
-    </g>
-  </g>
-
-  <!-- 3. HEADER ARCHITECTURAL DIVIDERS -->
-  <!-- Left Header Vertical Gold Divider -->
-  <g transform="translate(480, 80)">
-    <line x1="0" y1="0" x2="0" y2="150" stroke="url(#goldLinear)" stroke-width="2.5"/>
-    <line x1="4" y1="15" x2="4" y2="135" stroke="url(#goldLinear)" stroke-width="1" opacity="0.7"/>
-    <path d="M 0 -6 L 4 0 L 0 6 L -4 0 Z" fill="url(#goldLinear)"/>
-    <path d="M 0 144 L 4 150 L 0 156 L -4 150 Z" fill="url(#goldLinear)"/>
-  </g>
-
-  <!-- Right Header Vertical Gold Divider -->
-  <g transform="translate(1520, 80)">
-    <line x1="0" y1="0" x2="0" y2="150" stroke="url(#goldLinear)" stroke-width="2.5"/>
-    <line x1="-4" y1="15" x2="-4" y2="135" stroke="url(#goldLinear)" stroke-width="1" opacity="0.7"/>
-    <path d="M 0 -6 L 4 0 L 0 6 L -4 0 Z" fill="url(#goldLinear)"/>
-    <path d="M 0 144 L 4 150 L 0 156 L -4 150 Z" fill="url(#goldLinear)"/>
-  </g>
-
-  <!-- 4. ORNAMENTAL TITLE BANNER (PURPLE & GOLD) -->
-  <!-- Center: X = 1000, Y = 280, Width: 1180, Height: 90 -->
-  <g transform="translate(1000, 280)" filter="url(#goldShadow)">
-    <!-- Outer Gold Scalloped Plaque Border -->
-    <path d="
-      M -570 0
-      L -550 -44
-      L -520 -44
-      Q -500 -40 -480 -44
-      L 480 -44
-      Q 500 -40 520 -44
-      L 550 -44
-      L 570 0
-      L 550 44
-      L 520 44
-      Q 500 40 480 44
-      L -480 44
-      Q -500 40 -520 44
-      L -550 44
-      Z"
-      fill="url(#goldH)" stroke="#78350F" stroke-width="1.5"/>
-
-    <!-- Inner Purple Plaque Body -->
-    <path d="
-      M -562 0
-      L -544 -38
-      L 544 -38
-      L 562 0
-      L 544 38
-      L -544 38
-      Z"
-      fill="url(#bannerPurple)"/>
-
-    <!-- Inner Fine Gold Inset Line -->
-    <path d="
-      M -554 0
-      L -538 -32
-      L 538 -32
-      L 554 0
-      L 538 32
-      L -538 32
-      Z"
-      fill="none" stroke="url(#goldLinear)" stroke-width="1.8"/>
-
-    <!-- Top Center Ornamental Crest Flourish -->
-    <g transform="translate(0, -44)">
-      <path d="M -30 0 C -15 -14, 0 -22, 0 -22 C 0 -22, 15 -14, 30 0 Z" fill="url(#goldLinear)"/>
-      <circle cx="0" cy="-14" r="5" fill="#FFF2A1"/>
-      <path d="M 0 -22 L 3 -16 L 8 -16 L 4 -12 L 6 -6 L 0 -10 L -6 -6 L -4 -12 L -8 -16 L -3 -16 Z" fill="#996515"/>
-    </g>
-
-    <!-- Bottom Center Ornamental Drop Flourish -->
-    <g transform="translate(0, 44) scale(1, -1)">
-      <path d="M -30 0 C -15 -14, 0 -22, 0 -22 C 0 -22, 15 -14, 30 0 Z" fill="url(#goldLinear)"/>
-      <circle cx="0" cy="-14" r="4" fill="#FFF2A1"/>
-    </g>
-  </g>
-
-  <!-- 5. STUDENT NAME UNDERLINE GOLD ACCENT & DIAMOND -->
-  <!-- Centered at X = 1000, Y = 580 -->
-  <g transform="translate(1000, 580)">
-    <line x1="-320" y1="0" x2="-25" y2="0" stroke="url(#goldLinear)" stroke-width="2"/>
-    <line x1="25" y1="0" x2="320" y2="0" stroke="url(#goldLinear)" stroke-width="2"/>
-    <!-- Diamond Cluster Center -->
-    <path d="M 0 -9 L 9 0 L 0 9 L -9 0 Z" fill="url(#goldLinear)"/>
-    <circle cx="0" cy="0" r="3.5" fill="#2E0854"/>
-    <circle cx="-16" cy="0" r="2.5" fill="url(#goldLinear)"/>
-    <circle cx="16" cy="0" r="2.5" fill="url(#goldLinear)"/>
-  </g>
-
-  <!-- 6. SIGNATURE HORIZONTAL BASELINE GUIDES (FOR 4 EQUAL SIGNATORIES) -->
-  <!-- Centers: cx1 = 430, cx2 = 810, cx3 = 1190, cx4 = 1570 at Y = 1120 -->
-  <g stroke="url(#goldLinear)" stroke-width="1.8" opacity="0.85">
-    <line x1="330" y1="1120" x2="530" y2="1120"/>
-    <line x1="710" y1="1120" x2="910" y2="1120"/>
-    <line x1="1090" y1="1120" x2="1290" y2="1120"/>
-    <line x1="1470" y1="1120" x2="1670" y2="1120"/>
-  </g>
-
-  <!-- 7. FOOTER CERTIFICATE ID ORNAMENTAL LINES -->
-  <!-- Centered at X = 1000, Y = 1290 -->
-  <g transform="translate(1000, 1290)">
-    <line x1="-280" y1="0" x2="-140" y2="0" stroke="url(#goldLinear)" stroke-width="1.5"/>
-    <path d="M -140 -5 L -135 0 L -140 5 L -145 0 Z" fill="url(#goldLinear)"/>
-    <line x1="140" y1="0" x2="280" y2="0" stroke="url(#goldLinear)" stroke-width="1.5"/>
-    <path d="M 140 -5 L 145 0 L 140 5 L 135 0 Z" fill="url(#goldLinear)"/>
+  <!-- Bottom-Right Corner Details -->
+  <g id="cornerBR">
+    <rect x="1922" y="1348" width="34" height="34" fill="none" stroke="#581C87" stroke-width="2.2"/>
+    <rect x="1922" y="1348" width="18" height="18" fill="none" stroke="#581C87" stroke-width="1.6"/>
   </g>
 </svg>
