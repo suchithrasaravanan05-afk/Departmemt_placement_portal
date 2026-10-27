@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "test": "node scratch/test_auth_suite.js && node scratch/test_http_endpoints.js && node scratch/test_cert_generator.js",
+    "test": "node scratch/run_full_acceptance_verification.js",
     "vercel-build": "node -e \"const fs=require('fs'); try{fs.rmSync('backend/node_modules',{recursive:true,force:true});console.log('✅ Purged backend/node_modules');}catch(e){console.warn(e);}\""
   },
   "dependencies": {

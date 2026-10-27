@@ -754,7 +754,7 @@ function updateLiveCertificatePreview() {
   if (document.getElementById('prevCertId')) document.getElementById('prevCertId').innerText = sampleCertId;
 
   // Signatories 1 to 6
-  const defaultSigRoles = ['faculty_coordinator', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakumaran', 'ganesan'];
+  const defaultSigRoles = ['jeyasundari', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
   for (let i = 1; i <= 6; i++) {
     const name = document.getElementById(`tplSig${i}Name`)?.value?.trim() || '';
     const titleVal = document.getElementById(`tplSig${i}Title`)?.value?.trim() || '';
@@ -980,27 +980,27 @@ async function generateSingleCertificatePdfDoc(cert) {
     signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
     signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_1_dept: cert.signatory_1_dept || cert.signatory_1_org || document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
-    signatory_1_sig: customUploadedSignatures[1] || cert.signatory_1_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('faculty_coordinator') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.faculty_coordinator)),
+    signatory_1_sig: customUploadedSignatures[1] || cert.signatory_1_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_1_name || 'jeyasundari') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && (window.CERT_ASSETS.SIGNATURES.jeyasundari || window.CERT_ASSETS.SIGNATURES.faculty_coordinator))),
     signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'M. Rekha',
     signatory_2_title: cert.signatory_2_title || document.getElementById('tplSig2Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_2_dept: cert.signatory_2_dept || cert.signatory_2_org || document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
-    signatory_2_sig: customUploadedSignatures[2] || cert.signatory_2_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('rekha') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rekha)),
+    signatory_2_sig: customUploadedSignatures[2] || cert.signatory_2_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_2_name || 'rekha') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rekha)),
     signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'M. Ramakrishnan',
     signatory_3_title: cert.signatory_3_title || document.getElementById('tplSig3Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_3_dept: cert.signatory_3_dept || cert.signatory_3_org || document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
-    signatory_3_sig: customUploadedSignatures[3] || cert.signatory_3_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('ramakrishnan') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramakrishnan)),
+    signatory_3_sig: customUploadedSignatures[3] || cert.signatory_3_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_3_name || 'ramakrishnan') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramakrishnan)),
     signatory_4_name: cert.signatory_4_name || document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. D. Kesavaraja',
     signatory_4_title: cert.signatory_4_title || document.getElementById('tplSig4Title')?.value?.trim() || 'Convenor',
     signatory_4_dept: cert.signatory_4_dept || cert.signatory_4_org || document.getElementById('tplSig4Org')?.value?.trim() || 'CSBS, RIT',
-    signatory_4_sig: customUploadedSignatures[4] || cert.signatory_4_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('kesavaraja') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.kesavaraja)),
-    signatory_5_name: cert.signatory_5_name || document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+    signatory_4_sig: customUploadedSignatures[4] || cert.signatory_4_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_4_name || 'kesavaraja') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.kesavaraja)),
+    signatory_5_name: cert.signatory_5_name || document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
     signatory_5_title: cert.signatory_5_title || document.getElementById('tplSig5Title')?.value?.trim() || 'Patron',
     signatory_5_dept: cert.signatory_5_dept || cert.signatory_5_org || document.getElementById('tplSig5Org')?.value?.trim() || 'RIT',
-    signatory_5_sig: customUploadedSignatures[5] || cert.signatory_5_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('rajakumaran') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rajakumaran)),
+    signatory_5_sig: customUploadedSignatures[5] || cert.signatory_5_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_5_name || 'rajakarunakaran') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && (window.CERT_ASSETS.SIGNATURES.rajakarunakaran || window.CERT_ASSETS.SIGNATURES.rajakumaran))),
     signatory_6_name: cert.signatory_6_name || document.getElementById('tplSig6Name')?.value?.trim() || 'Dr. L. Ganesan',
     signatory_6_title: cert.signatory_6_title || document.getElementById('tplSig6Title')?.value?.trim() || 'Chief Patron',
     signatory_6_dept: cert.signatory_6_dept || cert.signatory_6_org || document.getElementById('tplSig6Org')?.value?.trim() || 'RIT',
-    signatory_6_sig: customUploadedSignatures[6] || cert.signatory_6_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset('ganesan') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan))
+    signatory_6_sig: customUploadedSignatures[6] || cert.signatory_6_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_6_name || 'ganesan') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ganesan))
   };
 
   // Generate real data-driven PDF with selectable text & vector styling
