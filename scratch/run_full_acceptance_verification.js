@@ -23,7 +23,7 @@ async function main() {
     signatory_2_name: 'M. Rekha',
     signatory_3_name: 'M. Ramakrishnan',
     signatory_4_name: 'Dr. D. Kesavaraja',
-    signatory_5_name: 'Dr. S. Rajakumaran',
+    signatory_5_name: 'Dr. S. Rajakarunakaran',
     signatory_6_name: 'Dr. L. Ganesan'
   });
 

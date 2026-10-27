@@ -1986,7 +1986,7 @@ async function openCertificateViewModal(cert) {
   if (el('certModalSig4Title')) el('certModalSig4Title').innerText = cert.signatory_4_title || 'Convenor';
   if (el('certModalSig4Org')) el('certModalSig4Org').innerText = cert.signatory_4_org || cert.signatory_4_dept || 'CSBS, RIT';
 
-  if (el('certModalSig5Name')) el('certModalSig5Name').innerText = cert.signatory_5_name || 'Dr. S. Rajakumaran';
+  if (el('certModalSig5Name')) el('certModalSig5Name').innerText = cert.signatory_5_name || 'Dr. S. Rajakarunakaran';
   if (el('certModalSig5Title')) el('certModalSig5Title').innerText = cert.signatory_5_title || 'Patron';
   if (el('certModalSig5Org')) el('certModalSig5Org').innerText = cert.signatory_5_org || cert.signatory_5_dept || 'RIT';
 
@@ -2007,7 +2007,7 @@ async function openCertificateViewModal(cert) {
   if (el('certModalSig2Img')) el('certModalSig2Img').src = cert.signatory_2_sig || getSig(cert.signatory_2_name || 'faculty_coordinator_2', 'rekha');
   if (el('certModalSig3Img')) el('certModalSig3Img').src = cert.signatory_3_sig || getSig(cert.signatory_3_name || 'faculty_coordinator_3', 'ramakrishnan');
   if (el('certModalSig4Img')) el('certModalSig4Img').src = cert.signatory_4_sig || getSig(cert.signatory_4_name || 'convenor', 'kesavaraja');
-  if (el('certModalSig5Img')) el('certModalSig5Img').src = cert.signatory_5_sig || getSig(cert.signatory_5_name || 'patron', 'rajakumaran');
+  if (el('certModalSig5Img')) el('certModalSig5Img').src = cert.signatory_5_sig || getSig(cert.signatory_5_name || 'patron', 'rajakarunakaran');
   if (el('certModalSig6Img')) el('certModalSig6Img').src = cert.signatory_6_sig || getSig(cert.signatory_6_name || 'chief_patron', 'ganesan');
 
   // Generate QR code into certModalQrCode container

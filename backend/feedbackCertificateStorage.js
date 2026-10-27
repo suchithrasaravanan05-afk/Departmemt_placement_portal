@@ -47,7 +47,7 @@ const INITIAL_TEMPLATES = [
         signatory_4_name: "Dr. D. Kesavaraja",
         signatory_4_title: "Convenor",
         signatory_4_org: "CSBS, RIT",
-        signatory_5_name: "Dr. S. Rajakumaran",
+        signatory_5_name: "Dr. S. Rajakarunakaran",
         signatory_5_title: "Patron",
         signatory_5_org: "RIT",
         signatory_6_name: "Dr. L. Ganesan",
@@ -2315,7 +2315,7 @@ async function issueBulkCertificates({
     signatory_4_name = "Dr. D. Kesavaraja",
     signatory_4_title = "Convenor",
     signatory_4_org = "CSBS, RIT",
-    signatory_5_name = "Dr. S. Rajakumaran",
+    signatory_5_name = "Dr. S. Rajakarunakaran",
     signatory_5_title = "Patron",
     signatory_5_org = "RIT",
     signatory_6_name = "Dr. L. Ganesan",
@@ -2359,7 +2359,7 @@ async function issueBulkCertificates({
     const sig4Title = (signatories && signatories.signatory4 && signatories.signatory4.title) || signatory_4_title || "Convenor";
     const sig4Org = (signatories && signatories.signatory4 && signatories.signatory4.org) || signatory_4_org || "CSBS, RIT";
 
-    const sig5Name = (signatories && signatories.signatory5 && signatories.signatory5.name) || signatory_5_name || "Dr. S. Rajakumaran";
+    const sig5Name = (signatories && signatories.signatory5 && signatories.signatory5.name) || signatory_5_name || "Dr. S. Rajakarunakaran";
     const sig5Title = (signatories && signatories.signatory5 && signatories.signatory5.title) || signatory_5_title || "Patron";
     const sig5Org = (signatories && signatories.signatory5 && signatories.signatory5.org) || signatory_5_org || "RIT";
 
@@ -2673,8 +2673,8 @@ async function getPublicCertificateDetails(certId) {
         signatory_1_title: matchedCert.signatory_1_title || "Faculty Coordinator",
         signatory1_title: matchedCert.signatory_1_title || "Faculty Coordinator",
         signatory_1_org: matchedCert.signatory_1_org || "CSBS, RIT",
-        signatory_2_name: matchedCert.signatory_2_name || "Dr. S. Rajakumaran",
-        signatory2_name: matchedCert.signatory_2_name || "Dr. S. Rajakumaran",
+        signatory_2_name: matchedCert.signatory_2_name || "Dr. S. Rajakarunakaran",
+        signatory2_name: matchedCert.signatory_2_name || "Dr. S. Rajakarunakaran",
         signatory_2_title: matchedCert.signatory_2_title || "STTP Coordinator",
         signatory2_title: matchedCert.signatory_2_title || "STTP Coordinator",
         signatory_2_org: matchedCert.signatory_2_org || "CSBS, RIT",
@@ -2688,8 +2688,8 @@ async function getPublicCertificateDetails(certId) {
         signatory_4_title: matchedCert.signatory_4_title || "Principal",
         signatory4_title: matchedCert.signatory_4_title || "Principal",
         signatory_4_org: matchedCert.signatory_4_org || "RIT",
-        signatory_5_name: matchedCert.signatory_5_name || "Dr. S. Rajakumaran",
-        signatory5_name: matchedCert.signatory_5_name || "Dr. S. Rajakumaran",
+        signatory_5_name: matchedCert.signatory_5_name || "Dr. S. Rajakarunakaran",
+        signatory5_name: matchedCert.signatory_5_name || "Dr. S. Rajakarunakaran",
         signatory_5_title: matchedCert.signatory_5_title || "Patron",
         signatory5_title: matchedCert.signatory_5_title || "Patron",
         signatory_5_org: matchedCert.signatory_5_org || "RIT",

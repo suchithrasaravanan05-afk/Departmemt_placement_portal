@@ -327,7 +327,7 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             signatory_4_name: signatory_4_name || "Dr. D. Kesavaraja",
             signatory_4_title: signatory_4_title || "Convenor",
             signatory_4_org: signatory_4_org || "CSBS, RIT",
-            signatory_5_name: signatory_5_name || "Dr. S. Rajakumaran",
+            signatory_5_name: signatory_5_name || "Dr. S. Rajakarunakaran",
             signatory_5_title: signatory_5_title || "Patron",
             signatory_5_org: signatory_5_org || "RIT",
             signatory_6_name: signatory_6_name || "Dr. L. Ganesan",

@@ -803,7 +803,7 @@ async function createCertificatePdf(certData = {}) {
 
   // Group 3: Patron
   const cxPatron = 192;
-  renderSigBlock(certData.signatory_5_sig || certData.signatory_5_name || 'rajakarunakaran', cxPatron, certData.signatory_5_name || 'Dr. S. Rajakumaran', 'Patron');
+  renderSigBlock(certData.signatory_5_sig || certData.signatory_5_name || 'rajakarunakaran', cxPatron, certData.signatory_5_name || 'Dr. S. Rajakarunakaran', 'Patron');
 
   // Separator 3
   drawVerticalSep(217);

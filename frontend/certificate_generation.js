@@ -573,7 +573,7 @@ function applyCertificatePreset(presetKey) {
     setSigFields(2, 'M. Rekha', 'Faculty Coordinator', 'CSBS, RIT');
     setSigFields(3, 'M. Ramakrishnan', 'Faculty Coordinator', 'CSBS, RIT');
     setSigFields(4, 'Dr. D. Kesavaraja', 'Convenor', 'CSBS, RIT');
-    setSigFields(5, 'Dr. S. Rajakumaran', 'Patron', 'RIT');
+    setSigFields(5, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
     setSigFields(6, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
   } else if (presetKey === 'workshop_fullstack' || presetKey === 'workshop_ai_2026') {
     if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF PARTICIPATION';
@@ -590,7 +590,7 @@ function applyCertificatePreset(presetKey) {
     toggleSignatoryCount(4);
     setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
     setSigFields(2, 'Dr. D. Kesavaraja', 'Convenor', 'CSBS, RIT');
-    setSigFields(3, 'Dr. S. Rajakumaran', 'Patron', 'RIT');
+    setSigFields(3, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
     setSigFields(4, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
   } else if (presetKey === 'merit_excellence' || presetKey === 'symposium_merit_2026') {
     if (document.getElementById('tplCertTitle')) document.getElementById('tplCertTitle').value = 'CERTIFICATE OF MERIT';
@@ -607,7 +607,7 @@ function applyCertificatePreset(presetKey) {
     toggleSignatoryCount(4);
     setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
     setSigFields(2, 'Dr. D. Kesavaraja', 'Convenor', 'CSBS, RIT');
-    setSigFields(3, 'Dr. S. Rajakumaran', 'Patron', 'RIT');
+    setSigFields(3, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
     setSigFields(4, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
   }
 
@@ -699,7 +699,7 @@ async function saveCurrentTemplateAsPreset() {
     signatory_4_name: document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. D. Kesavaraja',
     signatory_4_title: document.getElementById('tplSig4Title')?.value?.trim() || 'Convenor',
     signatory_4_dept: document.getElementById('tplSig4Org')?.value?.trim() || 'CSBS, RIT',
-    signatory_5_name: document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+    signatory_5_name: document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
     signatory_5_title: document.getElementById('tplSig5Title')?.value?.trim() || 'Patron',
     signatory_5_dept: document.getElementById('tplSig5Org')?.value?.trim() || 'RIT',
     signatory_6_name: document.getElementById('tplSig6Name')?.value?.trim() || 'Dr. L. Ganesan',
@@ -883,7 +883,7 @@ async function proceedWithBatchGeneration() {
       signatory_4_dept: document.getElementById('tplSig4Org')?.value?.trim() || 'CSBS, RIT',
       signatory_4_org: document.getElementById('tplSig4Org')?.value?.trim() || 'CSBS, RIT',
       signatory_4_sig: customUploadedSignatures[4] || undefined,
-      signatory_5_name: document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. S. Rajakumaran',
+      signatory_5_name: document.getElementById('tplSig5Name')?.value?.trim() || 'Dr. S. Rajakarunakaran',
       signatory_5_title: document.getElementById('tplSig5Title')?.value?.trim() || 'Patron',
       signatory_5_dept: document.getElementById('tplSig5Org')?.value?.trim() || 'RIT',
       signatory_5_org: document.getElementById('tplSig5Org')?.value?.trim() || 'RIT',

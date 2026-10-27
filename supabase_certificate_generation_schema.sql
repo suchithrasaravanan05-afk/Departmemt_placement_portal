@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.certificates (
     signatory_1_name TEXT DEFAULT 'Dr. K. Arulraj',
     signatory_1_title TEXT DEFAULT 'Faculty Coordinator',
     signatory_1_org TEXT DEFAULT 'CSBS, RIT',
-    signatory_2_name TEXT DEFAULT 'Dr. S. Rajakumaran',
+    signatory_2_name TEXT DEFAULT 'Dr. S. Rajakarunakaran',
     signatory_2_title TEXT DEFAULT 'STTP Coordinator',
     signatory_2_org TEXT DEFAULT 'CSBS, RIT',
     signatory_3_name TEXT DEFAULT 'Dr. S. Rajakarunakaran',

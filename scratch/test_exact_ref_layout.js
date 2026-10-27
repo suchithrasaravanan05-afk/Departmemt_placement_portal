@@ -238,7 +238,7 @@ async function testLayout() {
   renderSig('kesavaraja', 143, 'Dr. D. Kesavaraja', 'Convenor');
 
   drawVerticalSep(168);
-  renderSig('rajakarunakaran', 192, 'Dr. S. Rajakumaran', 'Patron');
+  renderSig('rajakarunakaran', 192, 'Dr. S. Rajakarunakaran', 'Patron');
 
   drawVerticalSep(217);
   renderSig('ganesan', 241, 'Dr. L. Ganesan', 'Chief Patron');
