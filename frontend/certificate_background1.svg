@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794" role="img" aria-label="Purple and gold A4 landscape certificate background">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4eaff"/>
+      <stop offset="0.28" stop-color="#fffefe"/>
+      <stop offset="0.72" stop-color="#fff"/>
+      <stop offset="1" stop-color="#f6edff"/>
+    </linearGradient>
+    <linearGradient id="purpleLine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6a16b5"/>
+      <stop offset="0.5" stop-color="#9c3be0"/>
+      <stop offset="1" stop-color="#4b087f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b97a13"/>
+      <stop offset="0.45" stop-color="#f6d77a"/>
+      <stop offset="1" stop-color="#b9811c"/>
+    </linearGradient>
+    <linearGradient id="lavenderWash" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d8b6ff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#eee0ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="bottomWash" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#c89bfa" stop-opacity=".52"/>
+      <stop offset="1" stop-color="#f4eaff" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="fineDots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r=".7" fill="#8e52c7" opacity=".13"/>
+    </pattern>
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+  </defs>
+
+  <!-- Paper base and subtle print-safe texture -->
+  <rect width="1123" height="794" fill="url(#paper)"/>
+  <rect x="0" y="0" width="1123" height="794" fill="url(#fineDots)" opacity=".22"/>
+
+  <!-- Soft lavender corner washes, intentionally kept away from the central text area -->
+  <path d="M0 0H440C315 56 250 112 175 207C111 288 61 331 0 357Z" fill="url(#lavenderWash)"/>
+  <path d="M0 0C140 32 195 93 249 163C169 143 103 192 0 304Z" fill="#e8d5ff" opacity=".30"/>
+  <path d="M1123 794H685C805 734 883 679 954 590C1019 508 1072 465 1123 438Z" fill="url(#bottomWash)"/>
+  <path d="M1123 794C988 757 927 707 875 640C959 663 1034 614 1123 500Z" fill="#e5d0ff" opacity=".26"/>
+  <ellipse cx="75" cy="70" rx="155" ry="108" fill="#cda5f6" opacity=".14" filter="url(#softBlur)"/>
+  <ellipse cx="1060" cy="733" rx="160" ry="100" fill="#cda5f6" opacity=".14" filter="url(#softBlur)"/>
+
+  <!-- Fine flowing corner ribbons -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M-22 177C74 118 116 62 221 23" stroke="#a66be0" stroke-width="2" opacity=".25"/>
+    <path d="M-22 202C73 141 129 88 245 37" stroke="#c7a0f0" stroke-width="1.5" opacity=".42"/>
+    <path d="M-25 229C69 172 146 116 270 53" stroke="#d5baf5" stroke-width="1.2" opacity=".52"/>
+    <path d="M1146 615C1051 672 1007 728 900 770" stroke="#a66be0" stroke-width="2" opacity=".25"/>
+    <path d="M1146 590C1050 650 994 705 878 757" stroke="#c7a0f0" stroke-width="1.5" opacity=".42"/>
+    <path d="M1148 562C1051 620 976 677 854 741" stroke="#d5baf5" stroke-width="1.2" opacity=".52"/>
+    <path d="M17 506C43 572 44 622 14 691" stroke="#b98be8" stroke-width="1.2" opacity=".22"/>
+    <path d="M1106 101C1080 167 1080 217 1110 286" stroke="#b98be8" stroke-width="1.2" opacity=".22"/>
+  </g>
+
+  <!-- Outer double frame -->
+  <rect x="12" y="12" width="1099" height="770" rx="1" fill="none" stroke="url(#purpleLine)" stroke-width="3"/>
+  <rect x="25" y="25" width="1073" height="744" rx="1" fill="none" stroke="#7b2bc0" stroke-width="1.5"/>
+  <rect x="33" y="33" width="1057" height="728" rx="1" fill="none" stroke="url(#gold)" stroke-width="1.4"/>
+  <rect x="41" y="41" width="1041" height="712" rx="1" fill="none" stroke="#8f4ac5" stroke-width=".8" opacity=".65"/>
+
+  <!-- Art-deco stepped corner details -->
+  <g fill="none" stroke-linejoin="miter">
+    <path d="M22 72V22H72 M30 80V30H80 M38 88V38H88" stroke="#6f20b3" stroke-width="2.4"/>
+    <path d="M26 66V26H66" stroke="url(#gold)" stroke-width="1.5"/>
+    <path d="M1051 22H1101V72 M1043 30H1093V80 M1035 38H1085V88" stroke="#6f20b3" stroke-width="2.4"/>
+    <path d="M1057 26H1097V66" stroke="url(#gold)" stroke-width="1.5"/>
+    <path d="M22 722V772H72 M30 714V764H80 M38 706V756H88" stroke="#6f20b3" stroke-width="2.4"/>
+    <path d="M26 728V768H66" stroke="url(#gold)" stroke-width="1.5"/>
+    <path d="M1051 772H1101V722 M1043 764H1093V714 M1035 756H1085V706" stroke="#6f20b3" stroke-width="2.4"/>
+    <path d="M1057 768H1097V728" stroke="url(#gold)" stroke-width="1.5"/>
+  </g>
+
+  <!-- Tiny gold corner accents -->
+  <g fill="url(#gold)">
+    <path d="M95 32l5 5-5 5-5-5z"/><path d="M1028 32l5 5-5 5-5-5z"/>
+    <path d="M95 752l5 5-5 5-5-5z"/><path d="M1028 752l5 5-5 5-5-5z"/>
+  </g>
+
+  <!-- Keep central area open for dynamic certificate content. No text, logos, signatures or QR are baked in. -->
+</svg>
