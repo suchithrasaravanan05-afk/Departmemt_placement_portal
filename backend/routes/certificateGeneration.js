@@ -683,10 +683,10 @@ router.get("/email-config", checkFacultyOrAdminPermission, (req, res) => {
     }
 });
 
-router.post("/email-config", requireFacultyOrCoordinatorWrite, (req, res) => {
+router.post("/email-config", requireFacultyOrCoordinatorWrite, async (req, res) => {
     try {
         const { sender_email, app_password, sender_name, reply_to } = req.body;
-        const updated = emailService.saveEmailConfig({
+        const updated = await emailService.saveEmailConfig({
             sender_email,
             app_password,
             sender_name,

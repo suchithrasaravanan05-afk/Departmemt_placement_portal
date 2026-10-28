@@ -2,44 +2,140 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
 const { createCertificatePdf } = require(path.join(__dirname, "../../frontend/certificate_assets.js"));
+const feedbackCertificateStorage = require("../feedbackCertificateStorage");
 
 const CONFIG_PATH = path.join(__dirname, "../email_config.json");
+const TMP_CONFIG_PATH = "/tmp/email_config.json";
 
-// Load stored email configuration or fallback to process.env
+// Default verified institutional credentials
+const DEFAULT_EMAIL_CONFIG = {
+    sender_email: "rajakaleeswaranhari1976@gmail.com",
+    app_password: "anjjctvazinmpjtv",
+    sender_name: "RIT CSBS Placement & Training Cell",
+    reply_to: "rajakaleeswaranhari1976@gmail.com"
+};
+
+let cachedConfig = null;
+let cachedTransporter = null;
+
+// Load stored email configuration with resilient multi-tier fallback
 function getEmailConfig() {
     let stored = {};
+
+    // 1. Check in-memory cache
+    if (cachedConfig && cachedConfig.sender_email && cachedConfig.app_password) {
+        return { ...cachedConfig, is_configured: true };
+    }
+
+    // 2. Check local CONFIG_PATH (backend/email_config.json)
     if (fs.existsSync(CONFIG_PATH)) {
         try {
             stored = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
         } catch (e) {
-            console.error("Failed to parse email_config.json:", e);
+            console.error("Failed to parse email_config.json:", e.message);
         }
     }
 
-    const senderEmail = (stored.sender_email || process.env.EMAIL_USER || "").trim();
-    const appPassword = (stored.app_password || process.env.EMAIL_PASS || "").trim().replace(/\s+/g, "");
-    const senderName = stored.sender_name || "RIT CSBS Department Placement Cell";
-    const replyTo = stored.reply_to || senderEmail;
+    // 3. Check /tmp/email_config.json (writable on Vercel serverless lambdas)
+    if ((!stored.sender_email || !stored.app_password) && fs.existsSync(TMP_CONFIG_PATH)) {
+        try {
+            const tmpData = JSON.parse(fs.readFileSync(TMP_CONFIG_PATH, "utf8"));
+            stored = { ...stored, ...tmpData };
+        } catch (e) {
+            // ignore
+        }
+    }
 
-    return {
+    // 4. Check feedbackCertificateStorage (persistent Supabase storage in cloud)
+    if ((!stored.sender_email || !stored.app_password) && typeof feedbackCertificateStorage.getAllDataSync === "function") {
+        try {
+            const dbData = feedbackCertificateStorage.getAllDataSync();
+            if (dbData && dbData.email_config) {
+                stored = { ...stored, ...dbData.email_config };
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    // 5. Check environment variables
+    const senderEmail = (
+        stored.sender_email || 
+        process.env.EMAIL_USER || 
+        process.env.GMAIL_USER || 
+        DEFAULT_EMAIL_CONFIG.sender_email
+    ).trim();
+
+    const appPassword = (
+        stored.app_password || 
+        process.env.EMAIL_PASS || 
+        process.env.GMAIL_PASS || 
+        process.env.GMAIL_APP_PASSWORD || 
+        DEFAULT_EMAIL_CONFIG.app_password
+    ).trim().replace(/\s+/g, "");
+
+    const senderName = (
+        stored.sender_name || 
+        process.env.EMAIL_NAME || 
+        DEFAULT_EMAIL_CONFIG.sender_name
+    ).trim();
+
+    const replyTo = (
+        stored.reply_to || 
+        stored.sender_email || 
+        senderEmail
+    ).trim();
+
+    cachedConfig = {
         sender_email: senderEmail,
         app_password: appPassword,
         sender_name: senderName,
         reply_to: replyTo,
         is_configured: Boolean(senderEmail && appPassword)
     };
+
+    return cachedConfig;
 }
 
-// Save email configuration
-function saveEmailConfig(config) {
+// Save email configuration with multi-target persistence
+async function saveEmailConfig(config = {}) {
     const current = getEmailConfig();
     const updated = {
         sender_email: (config.sender_email !== undefined ? config.sender_email : current.sender_email).trim(),
-        app_password: (config.app_password !== undefined ? config.app_password : current.app_password).trim(),
-        sender_name: config.sender_name || current.sender_name || "RIT CSBS Department Placement Cell",
-        reply_to: config.reply_to || config.sender_email || current.reply_to
+        app_password: (config.app_password !== undefined ? config.app_password : current.app_password).trim().replace(/\s+/g, ""),
+        sender_name: (config.sender_name || current.sender_name || DEFAULT_EMAIL_CONFIG.sender_name).trim(),
+        reply_to: (config.reply_to || config.sender_email || current.reply_to).trim()
     };
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(updated, null, 2), "utf8");
+
+    cachedConfig = {
+        ...updated,
+        is_configured: Boolean(updated.sender_email && updated.app_password)
+    };
+    cachedTransporter = null;
+
+    // 1. Try writing to local CONFIG_PATH (works locally; read-only on Vercel)
+    try {
+        fs.writeFileSync(CONFIG_PATH, JSON.stringify(updated, null, 2), "utf8");
+    } catch (e) {
+        console.warn("[emailService] Could not write to CONFIG_PATH (read-only filesystem on Vercel):", e.message);
+    }
+
+    // 2. Write to /tmp/email_config.json (always writable in Vercel lambda execution environment)
+    try {
+        fs.writeFileSync(TMP_CONFIG_PATH, JSON.stringify(updated, null, 2), "utf8");
+    } catch (e) {
+        console.warn("[emailService] Could not write to /tmp/email_config.json:", e.message);
+    }
+
+    // 3. Persist to Supabase Cloud Storage
+    try {
+        if (typeof feedbackCertificateStorage.saveStoredEmailConfig === "function") {
+            await feedbackCertificateStorage.saveStoredEmailConfig(updated);
+        }
+    } catch (e) {
+        console.warn("[emailService] Could not persist email config to Supabase storage:", e.message);
+    }
+
     return getEmailConfig();
 }
 
@@ -73,6 +169,7 @@ async function verifyConnection() {
         return { success: false, message: err.message || "Failed to authenticate with Gmail SMTP." };
     }
 }
+
 
 // Generate Certificate PDF Buffer
 async function generateCertificatePdfBuffer(certData) {

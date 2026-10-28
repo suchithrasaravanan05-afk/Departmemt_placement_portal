@@ -2,7 +2,6 @@ node_modules/
 .env
 .env.*
 backend/.env
-backend/email_config.json
 *.sqlite
 .DS_Store
 

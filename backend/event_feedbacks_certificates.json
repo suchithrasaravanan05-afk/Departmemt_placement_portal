@@ -4605,5 +4605,12 @@
   ],
   "deleted_batch_ids": [
     "BATCH-MVR9MBMH-C60937"
-  ]
+  ],
+  "email_config": {
+    "sender_email": "rajakaleeswaranhari1976@gmail.com",
+    "app_password": "anjjctvazinmpjtv",
+    "sender_name": "RIT CSBS Placement & Training Cell",
+    "reply_to": "rajakaleeswaranhari1976@gmail.com",
+    "updated_at": "2026-10-28T00:24:17.671Z"
+  }
 }

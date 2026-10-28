@@ -18,7 +18,13 @@ const DEFAULT_DATA = {
     deleted_batch_ids: [],
     certificate_batches: [],
     certificate_audit_logs: [],
-    certificate_templates: []
+    certificate_templates: [],
+    email_config: {
+        sender_email: "rajakaleeswaranhari1976@gmail.com",
+        app_password: "anjjctvazinmpjtv",
+        sender_name: "RIT CSBS Placement & Training Cell",
+        reply_to: "rajakaleeswaranhari1976@gmail.com"
+    }
 };
 
 // Initial verified RIT STTP & Workshop templates
@@ -2882,6 +2888,29 @@ async function updateCertificateEmailStatus(certNumberOrId, status, errorMsg = n
     return cert;
 }
 
+async function getStoredEmailConfig() {
+    const data = await getAllData();
+    return data.email_config || null;
+}
+
+async function saveStoredEmailConfig(config) {
+    const data = await getAllData();
+    data.email_config = {
+        sender_email: (config.sender_email || "").trim(),
+        app_password: (config.app_password || "").trim().replace(/\s+/g, ""),
+        sender_name: config.sender_name || "RIT CSBS Department Placement Cell",
+        reply_to: config.reply_to || config.sender_email || "",
+        updated_at: new Date().toISOString()
+    };
+    await commitData(data);
+    return data.email_config;
+}
+
+function getAllDataSync() {
+    if (inMemoryData) return inMemoryData;
+    return readLocalData();
+}
+
 // ============================================================
 // SAFE DELETION: CERTIFICATES & BATCHES WITH AUDIT LOGGING
 // ============================================================
@@ -3184,5 +3213,8 @@ module.exports = {
     deleteCertificateBatch,
     deleteSingleCertificateRecord,
     deleteAssociatedCertificateFiles,
-    getAllData
+    getAllData,
+    getAllDataSync,
+    getStoredEmailConfig,
+    saveStoredEmailConfig
 };

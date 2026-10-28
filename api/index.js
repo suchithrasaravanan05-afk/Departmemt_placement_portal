@@ -22,6 +22,9 @@ function initializeApp() {
         try { require("@supabase/supabase-js"); } catch (e) {}
         try { require("jsonwebtoken"); } catch (e) {}
         try { require("bcryptjs"); } catch (e) {}
+        try { require("nodemailer"); } catch (e) {}
+        try { require("qrcode"); } catch (e) {}
+        try { require("jspdf"); } catch (e) {}
 
         app = require("../backend/server");
         initError = null;
