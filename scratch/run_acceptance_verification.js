@@ -14,7 +14,7 @@ async function runAcceptanceVerification() {
   console.log('[STEP 1] Generating standard reference certificate PDF...');
   const certDataStandard = {
     student_name: 'Keerthana Mohan',
-    certificate_number: 'RIT-STTP-2026-0001',
+    certificate_number: 'RITCB 01 0001',
     certificate_title: 'CERTIFICATE OF PARTICIPATION',
     programme_title: 'One Week Short-Term Training Programme (STTP)',
     event_name: 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
@@ -24,10 +24,10 @@ async function runAcceptanceVerification() {
     signatory_1_name: 'Dr. M. Jeya Sundari',
     signatory_1_title: 'Faculty Coordinator',
     signatory_1_dept: 'CSBS, RIT',
-    signatory_2_name: 'M. Rekha',
+    signatory_2_name: 'Ms. M. Rekha',
     signatory_2_title: 'Faculty Coordinator',
     signatory_2_dept: 'CSBS, RIT',
-    signatory_3_name: 'M. Ramakrishnan',
+    signatory_3_name: 'Mr. M. Rama Krishnan',
     signatory_3_title: 'Faculty Coordinator',
     signatory_3_dept: 'CSBS, RIT',
     signatory_4_name: 'Dr. D. Kesavaraja',
@@ -51,7 +51,7 @@ async function runAcceptanceVerification() {
   console.log('\n[STEP 2] Generating long name & long description certificate PDF...');
   const certDataLong = {
     student_name: 'Keerthana Mohan Ramachandran Subramanian',
-    certificate_number: 'RIT-STTP-2026-0002',
+    certificate_number: 'RITCB 01 0002',
     certificate_title: 'CERTIFICATE OF PARTICIPATION',
     programme_title: 'One Week Short-Term Training Programme (STTP)',
     event_name: 'Emerging Blockchain Technologies – Architectures, Applications, Smart Contracts, Consensus Protocols and Research Perspectives',
@@ -60,9 +60,9 @@ async function runAcceptanceVerification() {
     signatory_count: 6,
     signatory_1_name: 'Dr. M. Jeya Sundari',
     signatory_1_title: 'Faculty Coordinator',
-    signatory_2_name: 'M. Rekha',
+    signatory_2_name: 'Ms. M. Rekha',
     signatory_2_title: 'Faculty Coordinator',
-    signatory_3_name: 'M. Ramakrishnan',
+    signatory_3_name: 'Mr. M. Rama Krishnan',
     signatory_3_title: 'Faculty Coordinator',
     signatory_4_name: 'Dr. D. Kesavaraja',
     signatory_4_title: 'Convenor',

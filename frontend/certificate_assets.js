@@ -281,7 +281,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   const ritLogoSrc = certData.rit_logo || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.RIT_LOGO : null) || 'rit_logo.png';
   const ritImg = await ritLoadImage(ritLogoSrc);
   if (ritImg) {
-    ctx.drawImage(ritImg, 114, 94, 168, 168);
+    ctx.drawImage(ritImg, 121, 91, 195, 195);
   }
 
   // 3. Centered Institutional Heading
@@ -293,65 +293,62 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     }
   }
   ctx.textAlign = 'center';
-  ctx.font = 'bold 36px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 44px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1A1A40';
-  ctx.fillText(canvasCollegeHeading, width / 2, 118);
+  ctx.fillText(canvasCollegeHeading, width / 2, 135);
 
-  ctx.font = 'normal 19px "Times New Roman", Georgia, serif';
+  ctx.font = 'normal 24px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#B91C1C';
-  ctx.fillText('(An Autonomous Institution)', width / 2, 148);
+  ctx.fillText(certData.autonomous_text || '(An Autonomous Institution)', width / 2, 172);
 
-  ctx.font = 'normal 16px "Times New Roman", Georgia, serif';
-  ctx.fillText('Approved by AICTE, New Delhi & Affiliated to Anna University', width / 2, 174);
+  ctx.font = 'normal 21px "Times New Roman", Georgia, serif';
+  ctx.fillText(certData.approval_text || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai', width / 2, 203);
 
-  ctx.font = 'bold 16px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 21px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#111827';
-  ctx.fillText("NAAC Accredited with 'A+' Grade & An ISO 9001: 2015 Certified Institution", width / 2, 199);
+  ctx.fillText(certData.naac_text || "NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution", width / 2, 235);
 
-  ctx.font = 'normal 16px "Times New Roman", Georgia, serif';
+  ctx.font = 'normal 21px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#B91C1C';
-  ctx.fillText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.', width / 2, 224);
+  ctx.fillText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.', width / 2, 267);
 
   // 4. CSBS Department Logo Centered Beneath Institutional Heading
   const csbsLogoSrc = certData.csbs_logo || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.CSBS_LOGO : null) || 'certificate_logo/csbs_logo_clean.png';
   const csbsImg = await ritLoadImage(csbsLogoSrc);
   if (csbsImg) {
-    const csbsW = 323;
+    const csbsW = 430;
     const csbsH = Math.round(csbsW / 4.251);
     const csbsX = (width - csbsW) / 2;
-    const csbsY = 241;
+    const csbsY = 289;
     ctx.drawImage(csbsImg, csbsX, csbsY, csbsW, csbsH);
   }
 
   // 5. Certificate Heading
-  ctx.font = 'bold 44px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 68px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
-  ctx.fillText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION', width / 2, 367);
+  ctx.fillText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION', width / 2, 467);
 
   // Ornamental floral divider with gold & purple diamonds
-  drawCanvasArabesque(ctx, width / 2, 394, 250);
+  drawCanvasArabesque(ctx, width / 2, 510, 800);
 
   // 6. Recipient Section
-  ctx.font = 'normal 23px "Times New Roman", Georgia, serif';
+  ctx.font = 'normal 31px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1F2937';
-  ctx.fillText(certData.preamble || 'This certificate is presented to', width / 2, 444);
+  ctx.fillText(certData.preamble || 'This is to certify that', width / 2, 568);
 
   // Recipient Participant Name with auto-scaling
   const participantName = certData.participant_name || certData.student_name || 'Keerthana Mohan';
-  let nameFontSize = 56;
-  if (participantName.length > 28) nameFontSize = 46;
-  if (participantName.length > 38) nameFontSize = 36;
+  let nameFontSize = 90;
+  if (participantName.length > 26) nameFontSize = 72;
+  if (participantName.length > 36) nameFontSize = 56;
   ctx.font = `bold italic ${nameFontSize}px "Times New Roman", Georgia, serif`;
   ctx.fillStyle = '#3B0764';
-  ctx.fillText(participantName, width / 2, 518);
-
-  // Ornamental floral divider below recipient name
-  drawCanvasArabesque(ctx, width / 2, 548, 250);
+  ctx.fillText(participantName, width / 2, 662);
 
   // 7. Event Description Paragraph
-  const pY = 598;
-  const lineSpacing = 35;
-  ctx.font = 'normal 20px "Times New Roman", Georgia, serif';
+  const pY = 764;
+  const lineSpacing = 54;
+  ctx.font = 'normal 28px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1F2937';
 
   let collStr = (certData.college_name || certData.institution || 'Ramco Institute of Technology, Rajapalayam').trim().replace(/,\s*$/, '');
@@ -374,25 +371,25 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   let datesStr = (certData.programme_dates || 'October 12, 2026, to October 18, 2026').replace(/\.$/, '') + '.';
 
   ctx.fillText(`for active participation in the ${progTitle} on`, width / 2, pY);
-  ctx.font = 'bold 21px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 29px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
   ctx.fillText(`“${evName}”, organized`, width / 2, pY + lineSpacing);
   ctx.fillText(`by the ${deptStr} at ${collStr} from`, width / 2, pY + lineSpacing * 2);
   ctx.fillText(`${datesStr}`, width / 2, pY + lineSpacing * 3);
 
   // 8. Signatures: Exactly Four Groups with Vertical Gold Separators
-  const sigLineY = 928;
+  const sigLineY = 1152;
   const purple = '#581C87';
   const gold = '#C59B27';
 
-  const sigCenters = [215, 444, 673, 963, 1293, 1623];
+  const sigCenters = [242, 471, 700, 990, 1266, 1529];
   const sigConfigs = [
-    { name: certData.signatory_1_name || 'Dr. M. Jeya Sundari', key: 'jeyasundari' },
-    { name: certData.signatory_2_name || 'Ms. M. Rekha', key: 'rekha' },
-    { name: certData.signatory_3_name || 'Mr. M. Rama Krishnan', key: 'ramakrishnan' },
-    { name: certData.signatory_4_name || 'Dr. D. Kesavaraja', role: 'Convenor', key: 'kesavaraja' },
-    { name: certData.signatory_5_name || 'Dr. S. Rajakarunakaran', role: 'Patron', key: 'rajakarunakaran' },
-    { name: certData.signatory_6_name || 'Dr. L. Ganesan', role: 'Chief Patron', key: 'ganesan' }
+    { name: certData.signatory_1_name || 'Dr. M. Jeya Sundari', key: 'jeyasundari', maxW: 188, maxH: 114, lineHalf: 94 },
+    { name: certData.signatory_2_name || 'Ms. M. Rekha', key: 'rekha', maxW: 202, maxH: 114, lineHalf: 94 },
+    { name: certData.signatory_3_name || 'Mr. M. Rama Krishnan', key: 'ramakrishnan', maxW: 228, maxH: 94, lineHalf: 108 },
+    { name: certData.signatory_4_name || 'Dr. D. Kesavaraja', role: 'Convenor', key: 'kesavaraja', maxW: 215, maxH: 101, lineHalf: 101 },
+    { name: certData.signatory_5_name || 'Dr. S. Rajakarunakaran', role: 'Patron', key: 'rajakarunakaran', maxW: 228, maxH: 94, lineHalf: 114 },
+    { name: certData.signatory_6_name || 'Dr. L. Ganesan', role: 'Chief Patron', key: 'ganesan', maxW: 175, maxH: 114, lineHalf: 94 }
   ];
 
   for (let i = 0; i < 6; i++) {
@@ -401,8 +398,8 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     const sigSrc = getSignatoryAsset(certData[`signatory_${i + 1}_sig`] || item.key);
     const sigImg = await ritLoadImage(sigSrc);
     if (sigImg) {
-      const maxW = 175;
-      const maxH = 80;
+      const maxW = item.maxW;
+      const maxH = item.maxH;
       let w = maxW;
       let h = maxH;
       if (sigImg.width && sigImg.height) {
@@ -413,79 +410,74 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
           w = maxH * aspect;
         }
       }
-      ctx.drawImage(sigImg, cx - w / 2, sigLineY - h - 6, w, h);
+      ctx.drawImage(sigImg, cx - w / 2, sigLineY - h - 10, w, h);
     }
 
     // Baseline Line
     ctx.strokeStyle = purple;
-    ctx.lineWidth = 2.4;
+    ctx.lineWidth = 3.0;
     ctx.beginPath();
-    ctx.moveTo(cx - 88, sigLineY);
-    ctx.lineTo(cx + 88, sigLineY);
+    ctx.moveTo(cx - item.lineHalf, sigLineY);
+    ctx.lineTo(cx + item.lineHalf, sigLineY);
     ctx.stroke();
 
     // Name
-    ctx.font = 'bold 18px "Times New Roman", Georgia, serif';
+    ctx.font = 'bold 24px "Times New Roman", Georgia, serif';
     ctx.fillStyle = '#111827';
     ctx.textAlign = 'center';
-    ctx.fillText(item.name, cx, sigLineY + 30);
+    ctx.fillText(item.name, cx, sigLineY + 37);
+
+    // Optional Role
+    if (item.role) {
+      ctx.font = 'bold 24px "Times New Roman", Georgia, serif';
+      ctx.fillStyle = '#4A154B';
+      ctx.fillText(item.role, cx, sigLineY + 77);
+    }
   }
 
   // Vertical Gold Separators
   function drawCanvasVerticalSep(x) {
     ctx.strokeStyle = gold;
-    ctx.lineWidth = 2.4;
+    ctx.lineWidth = 3.0;
     ctx.beginPath();
-    ctx.moveTo(x, 888);
-    ctx.lineTo(x, 1002);
+    ctx.moveTo(x, 1078);
+    ctx.lineTo(x, 1226);
     ctx.stroke();
   }
 
-  // Group 1 label: "Faculty Coordinator(s)" (centered beneath the 3 coordinators)
-  ctx.font = 'bold 20px "Times New Roman", Georgia, serif';
+  // Group 1 label: "Faculty Coordinator(s)" (centered beneath coordinators)
+  ctx.font = 'bold 24px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
-  ctx.fillText('Faculty Coordinator(s)', 444, sigLineY + 80);
+  ctx.fillText('Faculty Coordinator(s)', 471, sigLineY + 80);
 
   // Separator 1
-  drawCanvasVerticalSep(801);
-
-  // Group 2 label: "Convenor"
-  ctx.fillText('Convenor', 963, sigLineY + 64);
+  drawCanvasVerticalSep(852);
 
   // Separator 2
-  drawCanvasVerticalSep(1131);
-
-  // Group 3 label: "Patron"
-  ctx.fillText('Patron', 1293, sigLineY + 64);
+  drawCanvasVerticalSep(1128);
 
   // Separator 3
-  drawCanvasVerticalSep(1461);
-
-  // Group 4 label: "Chief Patron"
-  ctx.fillText('Chief Patron', 1623, sigLineY + 64);
-
-  // Separator 4
-  drawCanvasVerticalSep(1784);
+  drawCanvasVerticalSep(1418);
 
   // 9. Dedicated QR Code at Bottom-Right (Plain Text Certificate ID only, no URLs)
   const certId = certData.certificate_number || certData.certificate_id || 'RITCB 01 0001';
   const qrTarget = certId;
-  const qrX = 1818;
-  const qrY = 960;
-  const qrSize = 160;
+  const qrX = 1690;
+  const qrY = 1030;
+  const qrSize = 168;
 
   // Clean white card behind QR and ID
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 55);
+  ctx.fillRect(qrX - 13, qrY - 13, qrSize + 26, qrSize + 64);
 
   // Render QR
   ritRenderQrCode(ctx, qrTarget, qrX, qrY, qrSize);
 
   // Place Certificate ID directly underneath the QR code
-  ctx.font = 'bold 20px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 19px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#111827';
   ctx.textAlign = 'center';
-  ctx.fillText(certId, qrX + qrSize / 2, qrY + qrSize + 30);
+  ctx.fillText(certId, qrX + qrSize / 2, qrY + qrSize + 34);
 
   return canvas;
 }
@@ -539,14 +531,13 @@ async function createCertificatePdf(certData = {}) {
   const ritLogo = certData.rit_logo || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.RIT_LOGO : null);
   if (ritLogo) {
     try {
-      doc.addImage(ritLogo, 'PNG', 18, 13.5, 28, 28, undefined, 'FAST');
+      doc.addImage(ritLogo, 'PNG', 18, 13.5, 29, 29, undefined, 'FAST');
     } catch (e) {
       console.warn('RIT logo embed warning:', e);
     }
   }
 
   // 3. Centered Institutional Heading Area
-  // Top institutional letterhead MUST always be RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM (never a department name)
   let collegeHeading = 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM';
   if (certData.college_name && !certData.college_name.toLowerCase().includes('department') && !certData.college_name.toLowerCase().includes('csbs')) {
     collegeHeading = sanitizePdfText(certData.college_name).toUpperCase();
@@ -556,43 +547,42 @@ async function createCertificatePdf(certData = {}) {
   }
 
   doc.setFont('times', 'bold');
-  let headingSize = 18.0;
+  let headingSize = 20.0;
   doc.setFontSize(headingSize);
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2]);
 
-  // Guaranteed safe margin: keep at least 6mm clearance from RIT logo on the left (logo right edge is at x=46, so text start must be >= 52)
-  while (doc.getTextWidth(collegeHeading) > 190 && headingSize > 12) {
+  while (doc.getTextWidth(collegeHeading) > 192 && headingSize > 12) {
     headingSize -= 0.5;
     doc.setFontSize(headingSize);
   }
-  doc.text(collegeHeading, pageWidth / 2, 19.5, { align: 'center' });
+  doc.text(collegeHeading, pageWidth / 2, 20.0, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(10.5);
+  doc.setTextColor(maroon[0], maroon[1], maroon[2]);
+  doc.text(sanitizePdfText(certData.autonomous_text || '(An Autonomous Institution)'), pageWidth / 2, 25.5, { align: 'center' });
+
+  doc.setFontSize(9.5);
+  doc.text(sanitizePdfText(certData.approval_text || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai'), pageWidth / 2, 30.2, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(17, 24, 39);
+  doc.text(sanitizePdfText(certData.naac_text || "NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution"), pageWidth / 2, 35.0, { align: 'center' });
 
   doc.setFont('times', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(maroon[0], maroon[1], maroon[2]);
-  doc.text(sanitizePdfText(certData.autonomous_text || '(An Autonomous Institution)'), pageWidth / 2, 25.0, { align: 'center' });
-
-  doc.setFontSize(8.2);
-  doc.text(sanitizePdfText(certData.approval_text || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai'), pageWidth / 2, 29.5, { align: 'center' });
-
-  doc.setFont('times', 'bold');
-  doc.setFontSize(8.2);
-  doc.setTextColor(17, 24, 39);
-  doc.text(sanitizePdfText(certData.naac_text || "NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution"), pageWidth / 2, 34.0, { align: 'center' });
-
-  doc.setFont('times', 'normal');
-  doc.setFontSize(8.2);
-  doc.setTextColor(maroon[0], maroon[1], maroon[2]);
-  doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.'), pageWidth / 2, 38.5, { align: 'center' });
+  doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.'), pageWidth / 2, 39.8, { align: 'center' });
 
   // 4. CSBS Department Logo Centered Beneath Institutional Heading
   const csbsLogo = certData.csbs_logo || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.CSBS_LOGO : null);
   if (csbsLogo) {
     try {
-      const csbsW = 60;
+      const csbsW = 64;
       const csbsH = csbsW / 4.251;
       const csbsX = (pageWidth - csbsW) / 2;
-      const csbsY = 41.5;
+      const csbsY = 43.0;
       doc.addImage(csbsLogo, 'PNG', csbsX, csbsY, csbsW, csbsH, undefined, 'FAST');
     } catch (e) {
       console.warn('CSBS logo embed warning:', e);
@@ -601,63 +591,61 @@ async function createCertificatePdf(certData = {}) {
 
   // 5. Certificate Title
   doc.setFont('times', 'bold');
-  doc.setFontSize(24.0);
+  doc.setFontSize(31.0);
   doc.setTextColor(74, 21, 75);
-  doc.text(sanitizePdfText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION').toUpperCase(), pageWidth / 2, 67.5, { align: 'center' });
+  doc.text(sanitizePdfText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION').toUpperCase(), pageWidth / 2, 69.5, { align: 'center' });
 
-  // Vector Ornamental Arabesque Divider matching exact reference:
-  function drawArabesque(cx, cy, width = 90) {
+  // Vector Ornamental Arabesque Divider
+  function drawArabesque(cx, cy, width = 120) {
     const half = width / 2;
     doc.setDrawColor(gold[0], gold[1], gold[2]);
-    doc.setLineWidth(0.4);
+    doc.setLineWidth(0.45);
 
     // Left line with end dot
-    doc.line(cx - half + 4, cy, cx - 14, cy);
+    doc.line(cx - half + 4, cy, cx - 16, cy);
     doc.setFillColor(gold[0], gold[1], gold[2]);
-    doc.circle(cx - half + 3, cy, 0.6, 'F');
+    doc.circle(cx - half + 3, cy, 0.7, 'F');
 
     // Right line with end dot
-    doc.line(cx + 14, cy, cx + half - 4, cy);
-    doc.circle(cx + half - 3, cy, 0.6, 'F');
+    doc.line(cx + 16, cy, cx + half - 4, cy);
+    doc.circle(cx + half - 3, cy, 0.7, 'F');
 
     function drawDiamond(x, y, rx, ry, col) {
       doc.setFillColor(col[0], col[1], col[2]);
       doc.lines([[rx, ry], [-rx, ry], [-rx, -ry], [rx, -ry]], x - rx, y, [1, 1], 'F', true);
     }
     // Outer small gold diamonds
-    drawDiamond(cx - 10, cy, 1.4, 1.4, gold);
-    drawDiamond(cx + 10, cy, 1.4, 1.4, gold);
+    drawDiamond(cx - 12, cy, 1.5, 1.5, gold);
+    drawDiamond(cx + 12, cy, 1.5, 1.5, gold);
 
     // Flanking purple diamonds
-    drawDiamond(cx - 5.2, cy, 2.0, 2.0, purple);
-    drawDiamond(cx + 5.2, cy, 2.0, 2.0, purple);
+    drawDiamond(cx - 6, cy, 2.2, 2.2, purple);
+    drawDiamond(cx + 6, cy, 2.2, 2.2, purple);
 
     // Center large gold diamond & inner purple diamond
-    drawDiamond(cx, cy, 3.2, 3.2, gold);
-    drawDiamond(cx, cy, 1.8, 1.8, purple);
+    drawDiamond(cx, cy, 3.5, 3.5, gold);
+    drawDiamond(cx, cy, 2.0, 2.0, purple);
   }
 
-  drawArabesque(pageWidth / 2, 73.5, 90);
+  drawArabesque(pageWidth / 2, 75.8, 120);
 
   // 6. Recipient Section
   doc.setFont('times', 'normal');
-  doc.setFontSize(12.0);
+  doc.setFontSize(14.0);
   doc.setTextColor(31, 41, 55);
-  doc.text(sanitizePdfText(certData.preamble || 'This is to certify that'), pageWidth / 2, 82.5, { align: 'center' });
+  doc.text(sanitizePdfText(certData.preamble || 'This is to certify that'), pageWidth / 2, 84.5, { align: 'center' });
 
   const participantName = sanitizePdfText(certData.participant_name || certData.student_name || 'Participant Name');
   doc.setFont('times', 'bolditalic');
-  let nameSize = 32;
-  if (participantName.length > 26) nameSize = 26;
-  if (participantName.length > 36) nameSize = 21;
+  let nameSize = 40;
+  if (participantName.length > 26) nameSize = 32;
+  if (participantName.length > 36) nameSize = 25;
   doc.setFontSize(nameSize);
   doc.setTextColor(deepPurple[0], deepPurple[1], deepPurple[2]);
-  doc.text(participantName, pageWidth / 2, 96.5, { align: 'center' });
-
-  // Note: Divider directly underneath participant name is removed per specification
+  doc.text(participantName, pageWidth / 2, 98.5, { align: 'center' });
 
   // 7. Event Description Paragraph
-  function renderStyledLine(segments, y, spaceGap = 1.8) {
+  function renderStyledLine(segments, y, spaceGap = 1.9) {
     const computed = segments.map(seg => {
       doc.setFont(seg.font, seg.style);
       doc.setFontSize(seg.size);
@@ -682,18 +670,18 @@ async function createCertificatePdf(certData = {}) {
     }
   }
 
-  const pSize = 11.2;
+  const pSize = 12.8;
   const customWording = (certData.certificate_wording || '').trim();
 
   if (customWording && !customWording.includes('Emerging Blockchain Technologies')) {
     // Custom administrator wording
-    const wrappedLines = doc.splitTextToSize(customWording, 220);
-    let startY = 112.0;
+    const wrappedLines = doc.splitTextToSize(customWording, 230);
+    let startY = 113.0;
     doc.setFont('times', 'normal');
     doc.setFontSize(pSize);
     doc.setTextColor(darkGrey[0], darkGrey[1], darkGrey[2]);
     wrappedLines.forEach((ln, idx) => {
-      doc.text(ln, pageWidth / 2, startY + (idx * 6.5), { align: 'center' });
+      doc.text(ln, pageWidth / 2, startY + (idx * 7.2), { align: 'center' });
     });
   } else {
     // Exact requested programme description with harmonious line wrapping
@@ -701,32 +689,30 @@ async function createCertificatePdf(certData = {}) {
       { text: 'for active participation in the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: 'One Week Online Short-Term Training Programme (STTP)', font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'on', font: 'times', style: 'normal', size: pSize, color: darkGrey }
-    ], 111.0);
+    ], 113.5);
 
     renderStyledLine([
       { text: '‘Emerging Blockchain Technologies’,', font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'organized by', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: 'Department of Computer Science and Business Systems (CSBS)', font: 'times', style: 'bold', size: pSize, color: deepPurple }
-    ], 118.0);
+    ], 121.5);
 
     renderStyledLine([
       { text: 'at', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: 'Ramco Institute of Technology, Rajapalayam', font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'from', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: 'October 12, 2026, to October 18, 2026.', font: 'times', style: 'bold', size: pSize, color: deepPurple }
-    ], 125.0);
+    ], 129.5);
   }
 
-  // 8. Signatures Section in 4 Balanced Groups
-  const sigLineY = 166.0;
+  // 8. Signatures: 6 Signatories in 4 Groups with Vertical Gold Separators
+  const sigLineY = 171.0;
 
-  function renderSigBlock(sigSrc, cx, name, title) {
+  function renderSigBlock(sigSrc, cx, name, title, maxW = 34, maxH = 17, lineHalf = 15) {
     const asset = getSignatoryAsset(sigSrc);
     if (asset) {
       try {
         const props = doc.getImageProperties(asset);
-        const maxW = 28;
-        const maxH = 14;
         let w = maxW;
         let h = maxH;
         if (props && props.width && props.height) {
@@ -745,67 +731,71 @@ async function createCertificatePdf(certData = {}) {
 
     // Baseline Line
     doc.setDrawColor(purple[0], purple[1], purple[2]);
-    doc.setLineWidth(0.4);
-    doc.line(cx - 14, sigLineY, cx + 14, sigLineY);
+    doc.setLineWidth(0.45);
+    doc.line(cx - lineHalf, sigLineY, cx + lineHalf, sigLineY);
 
     // Name
     doc.setFont('times', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(10.5);
     doc.setTextColor(17, 24, 39);
-    doc.text(sanitizePdfText(name), cx, sigLineY + 5.0, { align: 'center' });
+    doc.text(sanitizePdfText(name), cx, sigLineY + 5.5, { align: 'center' });
 
     // Optional individual title
     if (title) {
       doc.setFont('times', 'bold');
-      doc.setFontSize(9.0);
+      doc.setFontSize(10.5);
       doc.setTextColor(74, 21, 75);
-      doc.text(sanitizePdfText(title), cx, sigLineY + 10.5, { align: 'center' });
+      doc.text(sanitizePdfText(title), cx, sigLineY + 11.5, { align: 'center' });
     }
   }
 
   function drawVerticalSep(x) {
     doc.setDrawColor(gold[0], gold[1], gold[2]);
-    doc.setLineWidth(0.4);
-    doc.line(x, sigLineY - 10, x, sigLineY + 10);
+    doc.setLineWidth(0.45);
+    doc.line(x, sigLineY - 11, x, sigLineY + 11);
   }
 
-  // Group 1: Faculty Coordinator(s) (3 blocks)
-  renderSigBlock(certData.signatory_1_sig || certData.signatory_1_name || 'jeyasundari', 30, certData.signatory_1_name || 'Dr. M. Jeya Sundari');
-  renderSigBlock(certData.signatory_2_sig || certData.signatory_2_name || 'rekha', 64, certData.signatory_2_name || 'Ms. M. Rekha');
-  renderSigBlock(certData.signatory_3_sig || certData.signatory_3_name || 'ramakrishnan', 98, certData.signatory_3_name || 'Mr. M. Rama Krishnan');
+  // Group 1: Faculty Coordinator(s) (3 signatories)
+  // Signatory 1: Dr. M. Jeya Sundari
+  renderSigBlock(certData.signatory_1_sig || certData.signatory_1_name || 'jeyasundari', 36, certData.signatory_1_name || 'Dr. M. Jeya Sundari', null, 28, 17, 14);
+  // Signatory 2: Ms. M. Rekha
+  renderSigBlock(certData.signatory_2_sig || certData.signatory_2_name || 'rekha', 70, certData.signatory_2_name || 'Ms. M. Rekha', null, 30, 17, 14);
+  // Signatory 3: Mr. M. Rama Krishnan
+  renderSigBlock(certData.signatory_3_sig || certData.signatory_3_name || 'ramakrishnan', 104, certData.signatory_3_name || 'Mr. M. Rama Krishnan', null, 34, 14, 16);
 
+  // Group 1 Label
   doc.setFont('times', 'bold');
-  doc.setFontSize(9.5);
+  doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
-  doc.text('Faculty Coordinator(s)', 64, sigLineY + 12.5, { align: 'center' });
+  doc.text('Faculty Coordinator(s)', 70, sigLineY + 12.0, { align: 'center' });
 
   // Separator 1
-  drawVerticalSep(119);
+  drawVerticalSep(126.5);
 
-  // Group 2: Convenor
-  const cxConvenor = 143;
-  renderSigBlock(certData.signatory_4_sig || certData.signatory_4_name || 'kesavaraja', cxConvenor, certData.signatory_4_name || 'Dr. D. Kesavaraja', certData.signatory_4_title || 'Convenor');
+  // Group 2: Convenor (Dr. D. Kesavaraja)
+  const cxConvenor = 147;
+  renderSigBlock(certData.signatory_4_sig || certData.signatory_4_name || 'kesavaraja', cxConvenor, certData.signatory_4_name || 'Dr. D. Kesavaraja', certData.signatory_4_title || 'Convenor', 32, 15, 15);
 
   // Separator 2
-  drawVerticalSep(168);
+  drawVerticalSep(167.5);
 
-  // Group 3: Patron
-  const cxPatron = 192;
-  renderSigBlock(certData.signatory_5_sig || certData.signatory_5_name || 'rajakarunakaran', cxPatron, certData.signatory_5_name || 'Dr. S. Rajakarunakaran', certData.signatory_5_title || 'Patron');
+  // Group 3: Patron (Dr. S. Rajakarunakaran)
+  const cxPatron = 188;
+  renderSigBlock(certData.signatory_5_sig || certData.signatory_5_name || 'rajakarunakaran', cxPatron, certData.signatory_5_name || 'Dr. S. Rajakarunakaran', certData.signatory_5_title || 'Patron', 34, 14, 17);
 
   // Separator 3
-  drawVerticalSep(217);
+  drawVerticalSep(210.5);
 
-  // Group 4: Chief Patron
-  const cxChiefPatron = 241;
-  renderSigBlock(certData.signatory_6_sig || certData.signatory_6_name || 'ganesan', cxChiefPatron, certData.signatory_6_name || 'Dr. L. Ganesan', certData.signatory_6_title || 'Chief Patron');
+  // Group 4: Chief Patron (Dr. L. Ganesan)
+  const cxChiefPatron = 227;
+  renderSigBlock(certData.signatory_6_sig || certData.signatory_6_name || 'ganesan', cxChiefPatron, certData.signatory_6_name || 'Dr. L. Ganesan', certData.signatory_6_title || 'Chief Patron', 26, 17, 14);
 
   // 9. Dedicated QR Code in Bottom Right Area (plain text ID only, under QR keep ID)
   const certId = certData.certificate_number || certData.certificate_id || 'RITCB 01 0001';
   const qrTarget = certId; // Plain text certificate ID only — no URLs, redirects, or routes
 
-  const qrX = 258;
-  const qrY = 152;
+  const qrX = 251;
+  const qrY = 153;
   const qrSize = 25;
 
   let qrDataUrl = null;
@@ -823,13 +813,13 @@ async function createCertificatePdf(certData = {}) {
 
   if (qrDataUrl) {
     doc.setFillColor(255, 255, 255);
-    doc.rect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 8, 'F');
+    doc.rect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 9.5, 'F');
     doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
     doc.setFont('times', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(8.5);
     doc.setTextColor(17, 24, 39);
     // Display Certificate ID cleanly under the QR code
-    doc.text(certId, qrX + qrSize / 2, qrY + qrSize + 4.5, { align: 'center' });
+    doc.text(certId, qrX + qrSize / 2, qrY + qrSize + 5.0, { align: 'center' });
   }
 
   // NOTE: Bottom center pill capsule and ornamental lines have been removed per specification.

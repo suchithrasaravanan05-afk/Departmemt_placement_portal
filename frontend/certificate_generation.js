@@ -922,14 +922,14 @@ function updateLiveCertificatePreview() {
     }
   }
 
-  // QR preview
-  const verifyTarget = `${window.location.origin}/verify-certificate.html?id=${encodeURIComponent(sampleCertId)}`;
+  // QR preview — Plain text certificate ID only, strictly no URLs
+  const plainCertId = sampleCertId;
   if (document.getElementById('tplVerifyUrlPreview')) {
-    document.getElementById('tplVerifyUrlPreview').innerText = `${window.location.origin}/verify-certificate.html?id=${idPrefix}-XXXXXXXX`;
+    document.getElementById('tplVerifyUrlPreview').innerText = plainCertId;
   }
 
   if (window.QRCode && window.QRCode.toDataURL) {
-    window.QRCode.toDataURL(verifyTarget, { width: 64, margin: 0 })
+    window.QRCode.toDataURL(plainCertId, { width: 96, margin: 0 })
       .then(url => {
         const qrEl = document.getElementById('prevQrThumbnail');
         if (qrEl) qrEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:contain;" alt="QR">`;

@@ -2014,15 +2014,15 @@ async function openCertificateViewModal(cert) {
   const qrContainer = el('certModalQrCode');
   if (qrContainer) {
     qrContainer.innerHTML = '';
-    const verifyUrl = cert.verification_url || ((typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app') + '/verify-certificate.html?id=' + encodeURIComponent(certNumber);
+    const qrPayload = certNumber; // Plain text certificate ID only — no URLs
     if (typeof QRCode !== 'undefined') {
       try {
         if (typeof QRCode.toCanvas === 'function') {
           const qrCanvas = document.createElement('canvas');
-          await QRCode.toCanvas(qrCanvas, verifyUrl, { width: 48, margin: 1 });
+          await QRCode.toCanvas(qrCanvas, qrPayload, { width: 48, margin: 1 });
           qrContainer.appendChild(qrCanvas);
         } else if (typeof QRCode === 'function') {
-          new QRCode(qrContainer, { text: verifyUrl, width: 48, height: 48, margin: 1 });
+          new QRCode(qrContainer, { text: qrPayload, width: 48, height: 48, margin: 1 });
         }
       } catch (e) {
         console.warn('Student modal QR render warning:', e);

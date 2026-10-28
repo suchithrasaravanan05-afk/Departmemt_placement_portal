@@ -462,7 +462,7 @@
 
 .cert-college-title {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: bold;
   color: #1A1A40;
   letter-spacing: 0.5px;
@@ -473,15 +473,15 @@
 
 .cert-autonomous-tag {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 7.8px;
+  font-size: 9.2px;
   color: #B91C1C;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 .cert-accreditation-line {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 6.8px;
-  line-height: 1.22;
+  font-size: 8px;
+  line-height: 1.25;
 }
 
 .cert-accreditation-line.red {
@@ -497,13 +497,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 3px;
+  margin-top: 4px;
 }
 
 .cert-csbs-center-logo {
-  height: 22px;
+  height: 25px;
   width: auto;
-  max-width: 130px;
+  max-width: 140px;
   object-fit: contain;
 }
 
@@ -515,17 +515,17 @@
 /* 2. Certificate Title Section */
 .cert-title-section {
   text-align: center;
-  margin-top: 2px;
+  margin-top: 4px;
   position: relative;
   z-index: 5;
 }
 
 .cert-main-title {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: bold;
-  color: #581C87;
-  letter-spacing: 1.5px;
+  color: #4A154B;
+  letter-spacing: 2px;
   text-transform: uppercase;
   margin: 0;
 }
@@ -535,7 +535,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 2px 0;
+  margin: 3px 0;
 }
 
 /* 3. Recipient Section */
@@ -543,46 +543,46 @@
   text-align: center;
   position: relative;
   z-index: 5;
-  margin: 1px 0;
+  margin: 2px 0;
 }
 
 .cert-preamble-text {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-size: 9.5px;
-  color: #374151;
-  margin-bottom: 1px;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-style: normal;
+  font-size: 11.5px;
+  color: #1F2937;
+  margin-bottom: 2px;
 }
 
 .cert-student-name-box {
-  margin: 1px 0;
+  margin: 2px 0;
 }
 
 .cert-student-display-name {
   font-family: 'Times New Roman', Georgia, serif;
   font-style: italic;
   font-weight: bold;
-  font-size: 21px;
+  font-size: 27px;
   color: #3B0764;
   margin: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 /* 4. Event Paragraph */
 .cert-wording-paragraph {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 8px;
+  font-size: 10px;
   color: #1F2937;
-  line-height: 1.38;
-  max-width: 92%;
-  margin: 2px auto 0;
+  line-height: 1.42;
+  max-width: 95%;
+  margin: 3px auto 0;
   text-align: center;
   position: relative;
   z-index: 5;
 }
 
 .cert-purple-bold {
-  color: #581C87;
+  color: #4A154B;
   font-weight: bold;
 }
 
@@ -591,15 +591,15 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 8px;
   position: relative;
   z-index: 5;
   padding: 0 4px;
-  gap: 8px;
+  gap: 6px;
 }
 
 .cert-sig-group-coordinators {
-  flex: 2.2;
+  flex: 2.3;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -614,11 +614,11 @@
 
 .cert-sig-group-label {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 6.8px;
-  color: #374151;
+  font-size: 8.5px;
+  color: #4A154B;
   text-align: center;
-  margin-top: 3px;
-  font-weight: 500;
+  margin-top: 4px;
+  font-weight: bold;
 }
 
 .cert-sig-group-single {
@@ -638,43 +638,43 @@
 }
 
 .cert-sig-img {
-  height: 24px;
-  max-width: 65px;
+  height: 30px;
+  max-width: 75px;
   object-fit: contain;
   margin-bottom: 2px;
   display: block;
 }
 
 .cert-sig-line {
-  width: 75%;
-  height: 0.8px;
-  background: #6B21A8;
-  margin: 1px auto 2px;
+  width: 80%;
+  height: 1px;
+  background: #581C87;
+  margin: 1px auto 3px;
 }
 
 .cert-sig-name {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: bold;
-  color: #1F2937;
+  color: #111827;
   white-space: nowrap;
 }
 
 .cert-sig-role {
   font-family: 'Times New Roman', Georgia, serif;
-  font-size: 6.5px;
-  color: #581C87;
+  font-size: 8.2px;
+  color: #4A154B;
   font-weight: bold;
   white-space: nowrap;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 /* Vertical Gold Separator between Signature Groups */
 .cert-sig-vsep {
   width: 1px;
-  height: 36px;
+  height: 40px;
   background: #C59B27;
-  margin: 0 4px 6px;
+  margin: 0 3px 5px;
   flex-shrink: 0;
   align-self: flex-end;
 }
@@ -699,57 +699,14 @@
   text-align: center;
 }
 
-.cert-footer-pill-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.cert-footer-pill {
-  background: #FFFFFF;
-  border: 1px solid #C59B27;
-  border-radius: 12px;
-  padding: 2px 14px;
-  font-family: 'Times New Roman', Georgia, serif;
-  font-size: 7.2px;
-  font-weight: bold;
-  color: #1A1A40;
-  box-shadow: 0 1px 3px rgba(197, 155, 39, 0.15);
-}
-
+.cert-footer-pill-wrap,
+.cert-footer-pill,
 .cert-footer-ornament-line {
-  display: flex;
-  align-items: center;
-  width: 55px;
-  position: relative;
-}
-
-.cert-ornament-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #C59B27;
-  flex-shrink: 0;
-}
-
-.cert-ornament-line-inner {
-  flex: 1;
-  height: 0.8px;
-  background: #C59B27;
-}
-
-.cert-ornament-diamond {
-  width: 3.5px;
-  height: 3.5px;
-  background: #C59B27;
-  transform: rotate(45deg);
-  flex-shrink: 0;
-  margin: 0 2px;
+  display: none !important;
 }
 
 .cert-footer-qr-container {
-  width: 50px;
+  width: 54px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -757,8 +714,8 @@
 }
 
 .cert-qr-thumbnail {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: #ffffff;
   padding: 1px;
   border: 0.5px solid #E9D5FF;
@@ -774,10 +731,19 @@
   object-fit: contain;
 }
 
-.cert-qr-verify-label {
-  font-size: 5px;
+.cert-qr-id-text {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 7.5px;
   font-weight: bold;
-  color: #581C87;
+  color: #111827;
+  text-align: center;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.cert-qr-verify-label {
+  display: none !important;
+}
   letter-spacing: 0.3px;
   margin-top: 1px;
   text-align: center;
