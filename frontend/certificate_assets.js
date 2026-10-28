@@ -324,7 +324,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   }
 
   // 5. Certificate Heading
-  ctx.font = 'bold 68px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 72px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
   ctx.fillText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION', width / 2, 467);
 
@@ -332,27 +332,27 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   drawCanvasArabesque(ctx, width / 2, 510, 800);
 
   // 6. Recipient Section
-  ctx.font = 'normal 31px "Times New Roman", Georgia, serif';
+  ctx.font = 'normal 32px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1F2937';
   ctx.fillText(certData.preamble || 'This is to certify that', width / 2, 568);
 
   // Recipient Participant Name with auto-scaling
-  const participantName = certData.participant_name || certData.student_name || 'Keerthana Mohan';
-  let nameFontSize = 90;
-  if (participantName.length > 26) nameFontSize = 72;
-  if (participantName.length > 36) nameFontSize = 56;
+  const participantName = certData.participant_name || certData.student_name || 'Mr./Ms. PARTICIPANT NAME';
+  let nameFontSize = 92;
+  if (participantName.length > 26) nameFontSize = 74;
+  if (participantName.length > 36) nameFontSize = 58;
   ctx.font = `bold italic ${nameFontSize}px "Times New Roman", Georgia, serif`;
   ctx.fillStyle = '#3B0764';
-  ctx.fillText(participantName, width / 2, 662);
+  ctx.fillText(participantName, width / 2, 664);
 
-  // 7. Event Description Paragraph
-  const pY = 764;
-  const lineSpacing = 54;
-  ctx.font = 'normal 28px "Times New Roman", Georgia, serif';
+  // 7. Event Description Paragraph (4 Balanced Lines Matching Reference Design)
+  const pY = 756;
+  const lineSpacing = 48;
+  ctx.font = 'normal 29px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1F2937';
 
   let collStr = (certData.college_name || certData.institution || 'Ramco Institute of Technology, Rajapalayam').trim().replace(/,\s*$/, '');
-  let deptStr = (certData.department || 'Department of Computer Science and Business Systems').trim();
+  let deptStr = (certData.department || 'Department of Computer Science and Business Systems (CSBS)').trim();
 
   // Auto-detect and fix inverted Department / College Name
   if (deptStr.toLowerCase().includes('institute') || deptStr.toLowerCase().includes('ramco') || deptStr.toLowerCase().includes('technology')) {
@@ -366,15 +366,22 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   if (!collStr.toLowerCase().includes('rajapalayam') && (collStr.toLowerCase().includes('ramco') || collStr.toLowerCase().includes('rit'))) {
     collStr += ', Rajapalayam';
   }
-  let evName = (certData.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives').replace(/^["“”]/, '').replace(/["“”]$/, '').trim();
-  let progTitle = certData.programme_title || 'One Week Short-Term Training Programme (STTP)';
+  let evName = (certData.event_name || 'Emerging Blockchain Technologies').replace(/^["“”]/, '').replace(/["“”]$/, '').trim();
+  let progTitle = certData.programme_title || 'One Week Online Short-Term Training Programme (STTP)';
   let datesStr = (certData.programme_dates || 'October 12, 2026, to October 18, 2026').replace(/\.$/, '') + '.';
 
+  // Line 1
   ctx.fillText(`for active participation in the ${progTitle} on`, width / 2, pY);
+
+  // Line 2
   ctx.font = 'bold 29px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
-  ctx.fillText(`“${evName}”, organized`, width / 2, pY + lineSpacing);
-  ctx.fillText(`by the ${deptStr} at ${collStr} from`, width / 2, pY + lineSpacing * 2);
+  ctx.fillText(`“${evName}”, organized by the Department of Computer Science and`, width / 2, pY + lineSpacing);
+
+  // Line 3
+  ctx.fillText(`Business Systems (CSBS) at ${collStr} from`, width / 2, pY + lineSpacing * 2);
+
+  // Line 4
   ctx.fillText(`${datesStr}`, width / 2, pY + lineSpacing * 3);
 
   // 8. Signatures: Exactly Four Groups with Vertical Gold Separators
@@ -422,16 +429,16 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     ctx.stroke();
 
     // Name
-    ctx.font = 'bold 24px "Times New Roman", Georgia, serif';
+    ctx.font = 'bold 25px "Times New Roman", Georgia, serif';
     ctx.fillStyle = '#111827';
     ctx.textAlign = 'center';
-    ctx.fillText(item.name, cx, sigLineY + 37);
+    ctx.fillText(item.name, cx, sigLineY + 38);
 
     // Optional Role
     if (item.role) {
-      ctx.font = 'bold 24px "Times New Roman", Georgia, serif';
+      ctx.font = 'bold 25px "Times New Roman", Georgia, serif';
       ctx.fillStyle = '#4A154B';
-      ctx.fillText(item.role, cx, sigLineY + 77);
+      ctx.fillText(item.role, cx, sigLineY + 78);
     }
   }
 
@@ -446,7 +453,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   }
 
   // Group 1 label: "Faculty Coordinator(s)" (centered beneath coordinators)
-  ctx.font = 'bold 24px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 25px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
   ctx.fillText('Faculty Coordinator(s)', 471, sigLineY + 80);
 
@@ -474,7 +481,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ritRenderQrCode(ctx, qrTarget, qrX, qrY, qrSize);
 
   // Place Certificate ID directly underneath the QR code
-  ctx.font = 'bold 19px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 20px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#111827';
   ctx.textAlign = 'center';
   ctx.fillText(certId, qrX + qrSize / 2, qrY + qrSize + 34);
@@ -547,7 +554,7 @@ async function createCertificatePdf(certData = {}) {
   }
 
   doc.setFont('times', 'bold');
-  let headingSize = 20.0;
+  let headingSize = 20.5;
   doc.setFontSize(headingSize);
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2]);
 
@@ -558,20 +565,20 @@ async function createCertificatePdf(certData = {}) {
   doc.text(collegeHeading, pageWidth / 2, 20.0, { align: 'center' });
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(10.5);
+  doc.setFontSize(11.0);
   doc.setTextColor(maroon[0], maroon[1], maroon[2]);
   doc.text(sanitizePdfText(certData.autonomous_text || '(An Autonomous Institution)'), pageWidth / 2, 25.5, { align: 'center' });
 
-  doc.setFontSize(9.5);
+  doc.setFontSize(10.0);
   doc.text(sanitizePdfText(certData.approval_text || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai'), pageWidth / 2, 30.2, { align: 'center' });
 
   doc.setFont('times', 'bold');
-  doc.setFontSize(9.5);
+  doc.setFontSize(10.0);
   doc.setTextColor(17, 24, 39);
   doc.text(sanitizePdfText(certData.naac_text || "NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution"), pageWidth / 2, 35.0, { align: 'center' });
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(10.0);
   doc.setTextColor(maroon[0], maroon[1], maroon[2]);
   doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.'), pageWidth / 2, 39.8, { align: 'center' });
 
@@ -591,7 +598,7 @@ async function createCertificatePdf(certData = {}) {
 
   // 5. Certificate Title
   doc.setFont('times', 'bold');
-  doc.setFontSize(31.0);
+  doc.setFontSize(32.0);
   doc.setTextColor(74, 21, 75);
   doc.text(sanitizePdfText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION').toUpperCase(), pageWidth / 2, 69.5, { align: 'center' });
 
@@ -631,20 +638,20 @@ async function createCertificatePdf(certData = {}) {
 
   // 6. Recipient Section
   doc.setFont('times', 'normal');
-  doc.setFontSize(14.0);
+  doc.setFontSize(14.5);
   doc.setTextColor(31, 41, 55);
   doc.text(sanitizePdfText(certData.preamble || 'This is to certify that'), pageWidth / 2, 84.5, { align: 'center' });
 
-  const participantName = sanitizePdfText(certData.participant_name || certData.student_name || 'Participant Name');
+  const participantName = sanitizePdfText(certData.participant_name || certData.student_name || 'Mr./Ms. PARTICIPANT NAME');
   doc.setFont('times', 'bolditalic');
-  let nameSize = 40;
-  if (participantName.length > 26) nameSize = 32;
-  if (participantName.length > 36) nameSize = 25;
+  let nameSize = 41.0;
+  if (participantName.length > 26) nameSize = 33.0;
+  if (participantName.length > 36) nameSize = 26.0;
   doc.setFontSize(nameSize);
   doc.setTextColor(deepPurple[0], deepPurple[1], deepPurple[2]);
   doc.text(participantName, pageWidth / 2, 98.5, { align: 'center' });
 
-  // 7. Event Description Paragraph
+  // 7. Event Description Paragraph (4 Balanced Lines Matching Reference Design)
   function renderStyledLine(segments, y, spaceGap = 1.9) {
     const computed = segments.map(seg => {
       doc.setFont(seg.font, seg.style);
@@ -670,39 +677,43 @@ async function createCertificatePdf(certData = {}) {
     }
   }
 
-  const pSize = 12.8;
+  const pSize = 13.2;
   const customWording = (certData.certificate_wording || '').trim();
 
   if (customWording && !customWording.includes('Emerging Blockchain Technologies')) {
     // Custom administrator wording
-    const wrappedLines = doc.splitTextToSize(customWording, 230);
-    let startY = 113.0;
+    const wrappedLines = doc.splitTextToSize(customWording, 235);
+    let startY = 112.5;
     doc.setFont('times', 'normal');
     doc.setFontSize(pSize);
     doc.setTextColor(darkGrey[0], darkGrey[1], darkGrey[2]);
     wrappedLines.forEach((ln, idx) => {
-      doc.text(ln, pageWidth / 2, startY + (idx * 7.2), { align: 'center' });
+      doc.text(ln, pageWidth / 2, startY + (idx * 6.8), { align: 'center' });
     });
   } else {
-    // Exact requested programme description with harmonious line wrapping
+    // Exact requested programme description in 4 balanced lines matching reference image
     renderStyledLine([
       { text: 'for active participation in the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: 'One Week Online Short-Term Training Programme (STTP)', font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'on', font: 'times', style: 'normal', size: pSize, color: darkGrey }
-    ], 113.5);
+    ], 112.5);
 
     renderStyledLine([
-      { text: '‘Emerging Blockchain Technologies’,', font: 'times', style: 'bold', size: pSize, color: deepPurple },
-      { text: 'organized by', font: 'times', style: 'normal', size: pSize, color: darkGrey },
-      { text: 'Department of Computer Science and Business Systems (CSBS)', font: 'times', style: 'bold', size: pSize, color: deepPurple }
-    ], 121.5);
+      { text: '“Emerging Blockchain Technologies”,', font: 'times', style: 'bold', size: pSize, color: deepPurple },
+      { text: 'organized by the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
+      { text: 'Department of Computer Science and', font: 'times', style: 'bold', size: pSize, color: deepPurple }
+    ], 119.5);
 
     renderStyledLine([
+      { text: 'Business Systems (CSBS)', font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'at', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: 'Ramco Institute of Technology, Rajapalayam', font: 'times', style: 'bold', size: pSize, color: deepPurple },
-      { text: 'from', font: 'times', style: 'normal', size: pSize, color: darkGrey },
+      { text: 'from', font: 'times', style: 'normal', size: pSize, color: darkGrey }
+    ], 126.5);
+
+    renderStyledLine([
       { text: 'October 12, 2026, to October 18, 2026.', font: 'times', style: 'bold', size: pSize, color: deepPurple }
-    ], 129.5);
+    ], 133.5);
   }
 
   // 8. Signatures: 6 Signatories in 4 Groups with Vertical Gold Separators
@@ -736,14 +747,14 @@ async function createCertificatePdf(certData = {}) {
 
     // Name
     doc.setFont('times', 'bold');
-    doc.setFontSize(10.5);
+    doc.setFontSize(11.0);
     doc.setTextColor(17, 24, 39);
     doc.text(sanitizePdfText(name), cx, sigLineY + 5.5, { align: 'center' });
 
     // Optional individual title
     if (title) {
       doc.setFont('times', 'bold');
-      doc.setFontSize(10.5);
+      doc.setFontSize(11.0);
       doc.setTextColor(74, 21, 75);
       doc.text(sanitizePdfText(title), cx, sigLineY + 11.5, { align: 'center' });
     }
@@ -765,7 +776,7 @@ async function createCertificatePdf(certData = {}) {
 
   // Group 1 Label
   doc.setFont('times', 'bold');
-  doc.setFontSize(10.5);
+  doc.setFontSize(11.0);
   doc.setTextColor(74, 21, 75);
   doc.text('Faculty Coordinator(s)', 70, sigLineY + 12.0, { align: 'center' });
 
@@ -816,7 +827,7 @@ async function createCertificatePdf(certData = {}) {
     doc.rect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 9.5, 'F');
     doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
     doc.setFont('times', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(9.0);
     doc.setTextColor(17, 24, 39);
     // Display Certificate ID cleanly under the QR code
     doc.text(certId, qrX + qrSize / 2, qrY + qrSize + 5.0, { align: 'center' });
