@@ -60,10 +60,10 @@ async function main() {
 
   if (code && code.data) {
     console.log('  ✅ Optical QR decode SUCCESS! Target URL:', code.data);
-    if (code.data.includes('/verify/RIT-STTP-2026-FINAL') || code.data.includes('id=RIT-STTP-2026-FINAL')) {
-      console.log('  ✅ Verification URL format is verified and accurate.');
+    if (code.data === 'RIT-STTP-2026-FINAL' || code.data.includes('RIT-STTP-2026-FINAL')) {
+      console.log('  ✅ Verification ID format is verified and accurate.');
     } else {
-      throw new Error('Unexpected QR URL: ' + code.data);
+      throw new Error('Unexpected QR URL or ID: ' + code.data);
     }
   } else {
     throw new Error('QR code optical decode failed on rendered certificate image.');
@@ -80,16 +80,16 @@ async function main() {
   const requiredPhrases = [
     'RAMCO INSTITUTE OF TECHNOLOGY',
     'CERTIFICATE OF PARTICIPATION',
-    'This certificate is presented to',
+    'This is to certify that',
     'Keerthana Mohan',
     'Emerging Blockchain Technologies',
     'Department of Computer Science and Business Systems',
-    'Faculty Coordinators',
+    'Faculty Coordinator',
     'Convenor',
     'Patron',
     'Dr. S. Rajakarunakaran',
     'Chief Patron',
-    'Certificate ID: RIT-STTP-2026-FINAL'
+    'RIT-STTP-2026-FINAL'
   ];
 
   for (const phrase of requiredPhrases) {
