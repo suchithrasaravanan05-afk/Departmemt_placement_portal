@@ -132,7 +132,7 @@ function getSignatoryAsset(keyOrObj) {
       let diskFile = null;
       if (str.includes('jeya') || str.includes('sundari') || str.includes('faculty_coordinator')) diskFile = 'jeyasundari.png';
       else if (str.includes('rekha')) diskFile = 'rekha.png';
-      else if (str.includes('ramakrishnan')) diskFile = 'ramakrishnan.png';
+      else if (str.includes('ramakrishnan') || str.includes('rama')) diskFile = 'ramakrishnan.png';
       else if (str.includes('kesavaraja') || str.includes('convenor')) diskFile = 'kesavaraja.png';
       else if (str.includes('rajakarunakaran') || str.includes('rajakumaran') || str.includes('patron')) diskFile = 'rajakarunakaran.png';
       else if (str.includes('ganesan') || str.includes('chief')) diskFile = 'ganesan.png';
@@ -167,7 +167,7 @@ function getSignatoryAsset(keyOrObj) {
   if (str.includes('rekha')) {
     return sigMap.rekha || 'signature/rekha.png';
   }
-  if (str.includes('ramakrishnan')) {
+  if (str.includes('ramakrishnan') || str.includes('rama')) {
     return sigMap.ramakrishnan || 'signature/ramakrishnan.png';
   }
   if (str.includes('kesavaraja') || str.includes('convenor')) {

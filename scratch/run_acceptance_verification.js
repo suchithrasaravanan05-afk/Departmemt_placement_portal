@@ -33,7 +33,7 @@ async function runAcceptanceVerification() {
     signatory_4_name: 'Dr. D. Kesavaraja',
     signatory_4_title: 'Convenor',
     signatory_4_dept: 'CSBS, RIT',
-    signatory_5_name: 'Dr. S. Rajakumaran',
+    signatory_5_name: 'Dr. S. Rajakarunakaran',
     signatory_5_title: 'Patron',
     signatory_5_dept: 'RIT',
     signatory_6_name: 'Dr. L. Ganesan',
@@ -66,7 +66,7 @@ async function runAcceptanceVerification() {
     signatory_3_title: 'Faculty Coordinator',
     signatory_4_name: 'Dr. D. Kesavaraja',
     signatory_4_title: 'Convenor',
-    signatory_5_name: 'Dr. S. Rajakumaran',
+    signatory_5_name: 'Dr. S. Rajakarunakaran',
     signatory_5_title: 'Patron',
     signatory_6_name: 'Dr. L. Ganesan',
     signatory_6_title: 'Chief Patron'
