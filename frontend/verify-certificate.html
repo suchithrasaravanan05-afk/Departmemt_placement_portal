@@ -1100,12 +1100,24 @@
       }
     }
 
-    // Auto-verify if ID parameter is present in URL
+    // Auto-verify if ID parameter is present in URL query or pathname
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const certId = urlParams.get('id') || urlParams.get('certId') || urlParams.get('certificate_number');
+      let certId = urlParams.get('id') || urlParams.get('certId') || urlParams.get('certificate_number') || urlParams.get('cert');
+
+      if (!certId) {
+        // Support REST clean URL paths: /verify/:certId or /verify-certificate/:certId
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const verifyIdx = pathParts.findIndex(p => p === 'verify' || p === 'verify-certificate');
+        if (verifyIdx >= 0 && pathParts[verifyIdx + 1]) {
+          certId = decodeURIComponent(pathParts[verifyIdx + 1]);
+        }
+      }
+
       if (certId) {
-        document.getElementById('certIdInput').value = certId;
+        certId = certId.trim();
+        const input = document.getElementById('certIdInput');
+        if (input) input.value = certId;
         verifyCertificateId(certId);
       }
     });

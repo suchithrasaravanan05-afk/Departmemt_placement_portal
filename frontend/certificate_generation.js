@@ -2034,7 +2034,8 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
         batch_id: batchId,
         test_mode: isTest,
         test_email: testEmail,
-        throttle_ms: 1200
+        throttle_ms: 1200,
+        portal_url: window.location.origin
       })
     });
 
@@ -2097,7 +2098,10 @@ async function sendSingleCertificateEmailPrompt(certNumber, currentEmail, studen
         'Content-Type': 'application/json',
         Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
-      body: JSON.stringify({ email_override: email })
+      body: JSON.stringify({ 
+        email_override: email,
+        portal_url: window.location.origin
+      })
     });
 
     const data = await res.json();

@@ -469,8 +469,10 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
 
   // 9. QR Code at Bottom-Right
   const certId = certData.certificate_number || certData.certificate_id || 'RIT-STTP-2026-0001';
-  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://rit-csbs-portal.vercel.app';
-  const qrTarget = certData.verification_url || `${originUrl}/verify/${encodeURIComponent(certId)}`;
+  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin) 
+    ? window.location.origin 
+    : (certData.portal_url || (typeof process !== 'undefined' && process.env && (process.env.PUBLIC_PORTAL_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''))) || 'https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app');
+  const qrTarget = certData.verification_url || `${originUrl}/verify-certificate.html?id=${encodeURIComponent(certId)}`;
   ritRenderQrCode(ctx, qrTarget, 1818, 1015, 128);
 
   // 10. Unique Certificate ID in Centered Rounded Pill with Flanking Gold Lines & Diamonds
@@ -864,8 +866,10 @@ async function createCertificatePdf(certData = {}) {
 
   // 9. Dedicated QR Code in Bottom Right Area
   const certId = certData.certificate_number || certData.certificate_id || 'RIT-STTP-2026-0BDF';
-  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://rit-csbs-portal.vercel.app';
-  const qrTarget = certData.verification_url || `${originUrl}/verify/${encodeURIComponent(certId)}`;
+  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin) 
+    ? window.location.origin 
+    : (certData.portal_url || (typeof process !== 'undefined' && process.env && (process.env.PUBLIC_PORTAL_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''))) || 'https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app');
+  const qrTarget = certData.verification_url || `${originUrl}/verify-certificate.html?id=${encodeURIComponent(certId)}`;
 
   const qrX = 260;
   const qrY = 152;

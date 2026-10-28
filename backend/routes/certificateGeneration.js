@@ -717,6 +717,29 @@ router.post("/verify-email-connection", requireFacultyOrCoordinatorWrite, async 
     }
 });
 
+function resolveRequestPortalUrl(req) {
+    const fromBody = req.body && req.body.portal_url;
+    if (fromBody && typeof fromBody === "string" && fromBody.trim().length > 0) {
+        return fromBody.trim().replace(/\/+$/, "");
+    }
+    const forwardedHost = req.headers["x-forwarded-host"];
+    const forwardedProto = req.headers["x-forwarded-proto"] || "https";
+    if (forwardedHost) {
+        return `${forwardedProto}://${forwardedHost}`.replace(/\/+$/, "");
+    }
+    const host = req.get("host");
+    if (host) {
+        return `${req.protocol}://${host}`.replace(/\/+$/, "");
+    }
+    if (process.env.PUBLIC_PORTAL_URL) {
+        return process.env.PUBLIC_PORTAL_URL.trim().replace(/\/+$/, "");
+    }
+    if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`.replace(/\/+$/, "");
+    }
+    return "https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app";
+}
+
 // ============================================================
 // 11. SEND CERTIFICATE TO A SINGLE PARTICIPANT
 // ============================================================
@@ -724,6 +747,7 @@ router.post("/send-certificate-email/:certId", requireFacultyOrCoordinatorWrite,
     try {
         const certId = req.params.certId;
         const { email_override } = req.body;
+        const portalUrl = resolveRequestPortalUrl(req);
         const data = await feedbackCertificateStorage.getAllData();
         const cert = (data.certificates || []).find(c => 
             String(c.certificate_number).toUpperCase() === String(certId).toUpperCase() || 
@@ -739,7 +763,7 @@ router.post("/send-certificate-email/:certId", requireFacultyOrCoordinatorWrite,
             return res.status(400).json({ success: false, message: "No email address found for this participant. Please provide an email address." });
         }
 
-        const sendResult = await emailService.sendSingleCertificateEmail(cert, targetEmail);
+        const sendResult = await emailService.sendSingleCertificateEmail(cert, targetEmail, { portalUrl });
         await feedbackCertificateStorage.updateCertificateEmailStatus(cert.certificate_number || cert.id, "sent");
 
         res.json({
@@ -764,6 +788,7 @@ const activeBatchEmailDispatches = new Set();
 // ============================================================
 router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, res) => {
     const { batch_id, certificate_ids, throttle_ms, test_mode, test_email, resend_all } = req.body;
+    const portalUrl = resolveRequestPortalUrl(req);
     const batchLockKey = String(batch_id || (Array.isArray(certificate_ids) ? certificate_ids.join(',') : 'active_batch_dispatch'));
 
     // Enforce one active sending workflow per batch
@@ -855,7 +880,7 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
             const targetEmail = isTestMode ? authorizedTestEmail : recipientEmail;
 
             try {
-                await emailService.sendSingleCertificateEmail(cert, targetEmail, { isTestMode });
+                await emailService.sendSingleCertificateEmail(cert, targetEmail, { isTestMode, portalUrl });
                 sentCount++;
                 if (!isTestMode) {
                     await feedbackCertificateStorage.updateCertificateEmailStatus(certNumber, "sent");

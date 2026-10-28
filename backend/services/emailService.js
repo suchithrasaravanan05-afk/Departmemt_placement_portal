@@ -179,13 +179,29 @@ async function generateCertificatePdfBuffer(certData) {
 }
 
 // Build branded HTML email body
-function buildCertificateEmailHtml(certData) {
+function buildCertificateEmailHtml(certData, portalUrl = null) {
     const recipientName = certData.participant_name || certData.student_name || "Participant";
     const certNumber = certData.certificate_number || "RIT-CERT";
     const eventName = certData.event_name || "Department Event";
     const progTitle = certData.programme_title || "Training Programme";
     const progDates = certData.programme_dates || "";
-    const verifyUrl = `https://rit-csbs-portal.vercel.app/verify/${encodeURIComponent(certNumber)}`;
+
+    // Resolve portal verification URL dynamically:
+    let baseOrigin = (
+        portalUrl || 
+        certData.portal_url || 
+        certData.verification_url ||
+        process.env.PUBLIC_PORTAL_URL || 
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") || 
+        "https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app"
+    ).trim().replace(/\/+$/, "");
+
+    if (!baseOrigin.startsWith("http://") && !baseOrigin.startsWith("https://")) {
+        baseOrigin = `https://${baseOrigin}`;
+    }
+
+    // Direct link to verify page with ID query parameter (matches verified screenshot)
+    const verifyUrl = `${baseOrigin}/verify-certificate.html?id=${encodeURIComponent(certNumber)}`;
 
     return `
 <!DOCTYPE html>
@@ -325,8 +341,18 @@ async function sendSingleCertificateEmail(certData, recipientEmailOverride = nul
     const recipientName = certData.participant_name || certData.student_name || "Participant";
     const certNumber = certData.certificate_number || "RIT-CERT";
     const eventName = certData.event_name || "Department Event";
+    const portalUrl = (options && options.portalUrl) || certData.portal_url || null;
 
-    // Generate the certificate PDF
+    if (portalUrl) {
+        certData.portal_url = portalUrl;
+        let baseOrigin = portalUrl.trim().replace(/\/+$/, "");
+        if (!baseOrigin.startsWith("http://") && !baseOrigin.startsWith("https://")) {
+            baseOrigin = `https://${baseOrigin}`;
+        }
+        certData.verification_url = `${baseOrigin}/verify-certificate.html?id=${encodeURIComponent(certNumber)}`;
+    }
+
+    // Generate the certificate PDF with the matching verification URL
     const pdfBuffer = await generateCertificatePdfBuffer(certData);
 
     // Sanitize participant name for PDF filename (spaces -> underscores, strip invalid characters)
@@ -336,7 +362,7 @@ async function sendSingleCertificateEmail(certData, recipientEmailOverride = nul
 
     const isTest = Boolean(options && options.isTestMode);
     const subjectPrefix = isTest ? "[TEST MODE] " : "";
-    let emailHtml = buildCertificateEmailHtml(certData);
+    let emailHtml = buildCertificateEmailHtml(certData, portalUrl);
 
     if (isTest) {
         const testNotice = `
