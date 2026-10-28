@@ -65,6 +65,7 @@ function getYearLabels() {
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
   currentAdminToken = localStorage.getItem('token');
+  window.currentAdminToken = currentAdminToken;
   currentAdminUser  = safeParseUser();
 
   const role = (currentAdminUser?.role || '').toLowerCase();

@@ -1,7 +1,19 @@
 // ============================================================
-// CERTIFICATE GENERATION & QR VERIFICATION CLIENT MODULE
-// RAMCO INSTITUTE OF TECHNOLOGY — CSBS DEPARTMENT
+// AUTHENTICATION HELPER
 // ============================================================
+function getEffectiveAdminToken() {
+  if (typeof currentAdminToken !== 'undefined' && currentAdminToken) return currentAdminToken;
+  if (typeof window !== 'undefined' && window.currentAdminToken) return window.currentAdminToken;
+  if (typeof localStorage !== 'undefined') {
+    return localStorage.getItem('token') || localStorage.getItem('adminToken') || '';
+  }
+  return '';
+}
+
+function getAdminAuthHeaders() {
+  const token = getEffectiveAdminToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 const certGenState = {
   records: [],              // Currently loaded/extracted records
@@ -159,7 +171,7 @@ async function uploadAndParseCertificateSpreadsheet() {
     const res = await fetch(`${API_BASE}/admin/certificate-generation/validate`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: formData
     });
@@ -483,7 +495,7 @@ async function revalidateAllTableRecords() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify({ records: certGenState.records })
     });
@@ -842,7 +854,7 @@ async function saveCurrentTemplateAsPreset() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify(payload)
     });
@@ -1073,7 +1085,7 @@ async function proceedWithBatchGeneration() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify(payload)
     });
@@ -1133,14 +1145,14 @@ async function generateSingleCertificatePdfDoc(cert) {
     participant_name: participantName,
     student_name: participantName,
     participant_type: cert.participant_type || 'Student',
-    institution: cert.institution || cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam',
-    college_name: cert.institution || cert.college_name || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam',
+    institution: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
+    college_name: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
     certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
-    certificate_title: cert.certificate_title || document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION',
-    programme_title: cert.programme_title || document.getElementById('tplProgTitle')?.value?.trim() || 'One Week Short-Term Training Programme (STTP)',
-    event_name: cert.event_name || document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives',
-    department: cert.department || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems',
-    programme_dates: cert.programme_dates || document.getElementById('tplProgDates')?.value?.trim() || 'October 12, 2026, to October 18, 2026',
+    certificate_title: cert.certificate_title || (typeof getFormParam === 'function' ? getFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION') : (document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION')),
+    programme_title: cert.programme_title || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Short-Term Training Programme (STTP)') : (document.getElementById('tplProgrammeTitle')?.value?.trim() || document.getElementById('tplProgTitle')?.value?.trim() || 'One Week Short-Term Training Programme (STTP)')),
+    event_name: cert.event_name || (typeof getFormParam === 'function' ? getFormParam(['tplEventTopic', 'tplEventName'], 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives') : (document.getElementById('tplEventTopic')?.value?.trim() || document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives')),
+    department: cert.department || (typeof getFormParam === 'function' ? getFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems') : (document.getElementById('tplDeptName')?.value?.trim() || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems')),
+    programme_dates: cert.programme_dates || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026') : (document.getElementById('tplProgrammeDates')?.value?.trim() || document.getElementById('tplProgDates')?.value?.trim() || 'October 12, 2026, to October 18, 2026')),
     signatory_count: cert.signatory_count || parseInt(document.getElementById('tplSigCount')?.value || '6', 10),
     signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
     signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
@@ -1300,7 +1312,7 @@ async function loadIssuedCertificatesHistoryTable() {
   try {
     // 1. Fetch batches
     const bRes = await fetch(`${API_BASE}/admin/certificate-generation/batches`, {
-      headers: { Authorization: `Bearer ${currentAdminToken}` }
+      headers: { Authorization: `Bearer ${getEffectiveAdminToken()}` }
     });
     const bData = await bRes.json();
     if (bData.success && Array.isArray(bData.batches)) {
@@ -1310,7 +1322,7 @@ async function loadIssuedCertificatesHistoryTable() {
 
     // 2. Fetch all certificates
     const cRes = await fetch(`${API_BASE}/admin/all-certificates`, {
-      headers: { Authorization: `Bearer ${currentAdminToken}` }
+      headers: { Authorization: `Bearer ${getEffectiveAdminToken()}` }
     });
     const cData = await cRes.json();
     if (cData.success && Array.isArray(cData.certificates)) {
@@ -1561,7 +1573,7 @@ async function submitDeleteSelectedBatch() {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify({ confirm_batch_id: confirmBatchId })
     });
@@ -1664,7 +1676,7 @@ async function submitDeleteSingleCert() {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify({ confirm_cert_number: confirmCert })
     });
@@ -1734,7 +1746,7 @@ async function submitCertificateRevocation() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify({ reason })
     });
@@ -1853,7 +1865,7 @@ function closeEmailConfigModal() {
 async function loadEmailConfigIntoModal() {
   try {
     const res = await fetch(`${API_BASE}/admin/certificate-generation/email-config`, {
-      headers: { Authorization: `Bearer ${currentAdminToken}` }
+      headers: { Authorization: `Bearer ${getEffectiveAdminToken()}` }
     });
     const data = await res.json();
     if (data.success && data.config) {
@@ -1885,7 +1897,7 @@ async function saveEmailConfigFromModal() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify({
         sender_email: senderEmail,
@@ -1920,7 +1932,7 @@ async function testEmailConnectionFromModal() {
   try {
     const res = await fetch(`${API_BASE}/admin/certificate-generation/verify-email-connection`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${currentAdminToken}` }
+      headers: { Authorization: `Bearer ${getEffectiveAdminToken()}` }
     });
     const data = await res.json();
     if (data.success) {
@@ -2006,7 +2018,7 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
   try {
     const authHeaders = (typeof getAdminAuthHeaders === 'function') 
       ? getAdminAuthHeaders() 
-      : { Authorization: `Bearer ${window.currentAdminToken || ''}` };
+      : { Authorization: `Bearer ${getEffectiveAdminToken()}` };
 
     const endpoint = (typeof API_BASE !== 'undefined' && API_BASE)
       ? `${API_BASE}/admin/certificate-generation/send-batch-emails`
@@ -2083,7 +2095,7 @@ async function sendSingleCertificateEmailPrompt(certNumber, currentEmail, studen
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentAdminToken}`
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
       },
       body: JSON.stringify({ email_override: email })
     });

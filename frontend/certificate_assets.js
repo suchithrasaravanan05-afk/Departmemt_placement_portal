@@ -285,10 +285,17 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   }
 
   // 3. Centered Institutional Heading
+  let canvasCollegeHeading = 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM';
+  if (certData.college_name && !certData.college_name.toLowerCase().includes('department') && !certData.college_name.toLowerCase().includes('csbs')) {
+    canvasCollegeHeading = certData.college_name.toUpperCase();
+    if (!canvasCollegeHeading.includes('RAJAPALAYAM') && (canvasCollegeHeading.includes('RAMCO') || canvasCollegeHeading.includes('RIT'))) {
+      canvasCollegeHeading += ', RAJAPALAYAM';
+    }
+  }
   ctx.textAlign = 'center';
   ctx.font = 'bold 36px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1A1A40';
-  ctx.fillText('RAMCO INSTITUTE OF TECHNOLOGY', width / 2, 118);
+  ctx.fillText(canvasCollegeHeading, width / 2, 118);
 
   ctx.font = 'normal 19px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#B91C1C';
@@ -348,12 +355,22 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.fillStyle = '#1F2937';
 
   let collStr = (certData.college_name || certData.institution || 'Ramco Institute of Technology, Rajapalayam').trim().replace(/,\s*$/, '');
-  if (!collStr.toLowerCase().includes('rajapalayam')) {
+  let deptStr = (certData.department || 'Department of Computer Science and Business Systems').trim();
+
+  // Auto-detect and fix inverted Department / College Name
+  if (deptStr.toLowerCase().includes('institute') || deptStr.toLowerCase().includes('ramco') || deptStr.toLowerCase().includes('technology')) {
+    if (collStr.toLowerCase().includes('department') || collStr.toLowerCase().includes('csbs') || collStr.toLowerCase().includes('computer science')) {
+      const tmp = deptStr;
+      deptStr = collStr;
+      collStr = tmp;
+    }
+  }
+
+  if (!collStr.toLowerCase().includes('rajapalayam') && (collStr.toLowerCase().includes('ramco') || collStr.toLowerCase().includes('rit'))) {
     collStr += ', Rajapalayam';
   }
   let evName = (certData.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives').replace(/^["“”]/, '').replace(/["“”]$/, '').trim();
   let progTitle = certData.programme_title || 'One Week Short-Term Training Programme (STTP)';
-  let deptStr = certData.department || 'Department of Computer Science and Business Systems';
   let datesStr = (certData.programme_dates || 'October 12, 2026, to October 18, 2026').replace(/\.$/, '') + '.';
 
   ctx.fillText(`for active participation in the ${progTitle} on`, width / 2, pY);
@@ -583,10 +600,26 @@ async function createCertificatePdf(certData = {}) {
   }
 
   // 3. Centered Institutional Heading Area
+  // Top institutional letterhead MUST always be RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM (never a department name)
+  let collegeHeading = 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM';
+  if (certData.college_name && !certData.college_name.toLowerCase().includes('department') && !certData.college_name.toLowerCase().includes('csbs')) {
+    collegeHeading = sanitizePdfText(certData.college_name).toUpperCase();
+    if (!collegeHeading.includes('RAJAPALAYAM') && (collegeHeading.includes('RAMCO') || collegeHeading.includes('RIT'))) {
+      collegeHeading += ', RAJAPALAYAM';
+    }
+  }
+
   doc.setFont('times', 'bold');
-  doc.setFontSize(18.5);
+  let headingSize = 18.0;
+  doc.setFontSize(headingSize);
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2]);
-  doc.text(sanitizePdfText(certData.college_name || 'RAMCO INSTITUTE OF TECHNOLOGY').toUpperCase(), pageWidth / 2, 19.5, { align: 'center' });
+
+  // Guaranteed safe margin: keep at least 6mm clearance from RIT logo on the left (logo right edge is at x=46, so text start must be >= 52)
+  while (doc.getTextWidth(collegeHeading) > 190 && headingSize > 12) {
+    headingSize -= 0.5;
+    doc.setFontSize(headingSize);
+  }
+  doc.text(collegeHeading, pageWidth / 2, 19.5, { align: 'center' });
 
   doc.setFont('times', 'normal');
   doc.setFontSize(9.5);
@@ -706,9 +739,19 @@ async function createCertificatePdf(certData = {}) {
   const pSize = 11.5;
   const progTitle = certData.programme_title || 'One Week Short-Term Training Programme (STTP)';
   const eventTopic = certData.event_name || certData.topic || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives';
-  const orgDept = certData.department || 'Department of Computer Science and Business Systems';
+  let orgDept = (certData.department || 'Department of Computer Science and Business Systems').trim();
   let cleanInst = (certData.college_name || certData.institution || 'Ramco Institute of Technology, Rajapalayam').trim().replace(/,\s*$/, '');
-  if (!cleanInst.toLowerCase().includes('rajapalayam')) {
+
+  // Detect and fix inverted department / institution
+  if (orgDept.toLowerCase().includes('institute') || orgDept.toLowerCase().includes('ramco') || orgDept.toLowerCase().includes('technology')) {
+    if (cleanInst.toLowerCase().includes('department') || cleanInst.toLowerCase().includes('csbs') || cleanInst.toLowerCase().includes('computer science')) {
+      const temp = orgDept;
+      orgDept = cleanInst;
+      cleanInst = temp;
+    }
+  }
+
+  if (!cleanInst.toLowerCase().includes('rajapalayam') && (cleanInst.toLowerCase().includes('ramco') || cleanInst.toLowerCase().includes('rit'))) {
     cleanInst += ', Rajapalayam';
   }
   const dates = certData.programme_dates || certData.dates || 'October 12, 2026, to October 18, 2026';
