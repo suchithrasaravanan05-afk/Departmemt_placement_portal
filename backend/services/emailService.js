@@ -58,9 +58,11 @@ function getEmailConfig() {
         }
     }
 
-    // 5. Check environment variables
+    // 5. Check environment variables (supporting SMTP_*, EMAIL_*, and GMAIL_*)
     const senderEmail = (
         stored.sender_email || 
+        process.env.SMTP_USER || 
+        process.env.SMTP_FROM || 
         process.env.EMAIL_USER || 
         process.env.GMAIL_USER || 
         DEFAULT_EMAIL_CONFIG.sender_email
@@ -68,6 +70,7 @@ function getEmailConfig() {
 
     const appPassword = (
         stored.app_password || 
+        process.env.SMTP_PASS || 
         process.env.EMAIL_PASS || 
         process.env.GMAIL_PASS || 
         process.env.GMAIL_APP_PASSWORD || 
@@ -77,20 +80,37 @@ function getEmailConfig() {
     const senderName = (
         stored.sender_name || 
         process.env.EMAIL_NAME || 
+        process.env.SMTP_NAME || 
         DEFAULT_EMAIL_CONFIG.sender_name
     ).trim();
 
     const replyTo = (
         stored.reply_to || 
         stored.sender_email || 
+        process.env.SMTP_FROM || 
         senderEmail
     ).trim();
+
+    const smtpHost = (
+        stored.smtp_host || 
+        process.env.SMTP_HOST || 
+        "smtp.gmail.com"
+    ).trim();
+
+    const smtpPort = parseInt(
+        stored.smtp_port || 
+        process.env.SMTP_PORT || 
+        "465", 
+        10
+    );
 
     cachedConfig = {
         sender_email: senderEmail,
         app_password: appPassword,
         sender_name: senderName,
         reply_to: replyTo,
+        smtp_host: smtpHost,
+        smtp_port: smtpPort,
         is_configured: Boolean(senderEmail && appPassword)
     };
 
@@ -143,9 +163,22 @@ async function saveEmailConfig(config = {}) {
 function getTransporter() {
     const config = getEmailConfig();
     if (!config.is_configured) {
-        throw new Error("Email sender is not configured. Please provide Sender Gmail and App Password in Email Settings.");
+        throw new Error("Email sender is not configured. Please provide Sender Gmail/SMTP user and App Password in Email Settings or environment variables.");
     }
 
+    if (config.smtp_host && config.smtp_host !== "smtp.gmail.com") {
+        return nodemailer.createTransport({
+            host: config.smtp_host,
+            port: config.smtp_port || 587,
+            secure: (config.smtp_port === 465),
+            auth: {
+                user: config.sender_email,
+                pass: config.app_password
+            }
+        });
+    }
+
+    // Default to Gmail service
     return nodemailer.createTransport({
         service: "gmail",
         auth: {
