@@ -20,8 +20,8 @@ async function main() {
     college_name: 'Ramco Institute of Technology, Rajapalayam',
     programme_dates: 'October 12, 2026, to October 18, 2026',
     signatory_1_name: 'Dr. M. Jeya Sundari',
-    signatory_2_name: 'M. Rekha',
-    signatory_3_name: 'M. Ramakrishnan',
+    signatory_2_name: 'Ms. M. Rekha',
+    signatory_3_name: 'Mr. M. Rama Krishnan',
     signatory_4_name: 'Dr. D. Kesavaraja',
     signatory_5_name: 'Dr. S. Rajakarunakaran',
     signatory_6_name: 'Dr. L. Ganesan'
@@ -85,10 +85,15 @@ async function main() {
     'Emerging Blockchain Technologies',
     'Department of Computer Science and Business Systems',
     'Faculty Coordinator',
+    'Dr. M. Jeya Sundari',
+    'Ms. M. Rekha',
+    'Mr. M. Rama Krishnan',
     'Convenor',
+    'Dr. D. Kesavaraja',
     'Patron',
     'Dr. S. Rajakarunakaran',
     'Chief Patron',
+    'Dr. L. Ganesan',
     'RIT-STTP-2026-FINAL'
   ];
 

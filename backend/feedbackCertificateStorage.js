@@ -46,10 +46,10 @@ const INITIAL_TEMPLATES = [
         signatory_1_name: "Dr. M. Jeya Sundari",
         signatory_1_title: "Faculty Coordinator",
         signatory_1_org: "CSBS, RIT",
-        signatory_2_name: "M. Rekha",
+        signatory_2_name: "Ms. M. Rekha",
         signatory_2_title: "Faculty Coordinator",
         signatory_2_org: "CSBS, RIT",
-        signatory_3_name: "M. Ramakrishnan",
+        signatory_3_name: "Mr. M. Rama Krishnan",
         signatory_3_title: "Faculty Coordinator",
         signatory_3_org: "CSBS, RIT",
         signatory_4_name: "Dr. D. Kesavaraja",
@@ -2371,10 +2371,10 @@ async function issueBulkCertificates({
     signatory_1_name = "Dr. M. Jeya Sundari",
     signatory_1_title = "Faculty Coordinator",
     signatory_1_org = "CSBS, RIT",
-    signatory_2_name = "M. Rekha",
+    signatory_2_name = "Ms. M. Rekha",
     signatory_2_title = "Faculty Coordinator",
     signatory_2_org = "CSBS, RIT",
-    signatory_3_name = "M. Ramakrishnan",
+    signatory_3_name = "Mr. M. Rama Krishnan",
     signatory_3_title = "Faculty Coordinator",
     signatory_3_org = "CSBS, RIT",
     signatory_4_name = "Dr. D. Kesavaraja",
@@ -2415,11 +2415,11 @@ async function issueBulkCertificates({
     const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Faculty Coordinator";
     const sig1Org = (signatories && signatories.signatory1 && signatories.signatory1.org) || signatory_1_org || "CSBS, RIT";
 
-    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "M. Rekha";
+    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Ms. M. Rekha";
     const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "Faculty Coordinator";
     const sig2Org = (signatories && signatories.signatory2 && signatories.signatory2.org) || signatory_2_org || "CSBS, RIT";
 
-    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "M. Ramakrishnan";
+    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "Mr. M. Rama Krishnan";
     const sig3Title = (signatories && signatories.signatory3 && signatories.signatory3.title) || signatory_3_title || "Faculty Coordinator";
     const sig3Org = (signatories && signatories.signatory3 && signatories.signatory3.org) || signatory_3_org || "CSBS, RIT";
 
@@ -2832,6 +2832,48 @@ async function getCertificateTemplates() {
     if (!Array.isArray(data.certificate_templates) || data.certificate_templates.length === 0) {
         data.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
         await commitData(data);
+    } else {
+        // Safe migration: Update staff names in existing templates without overwriting unrelated admin customizations
+        let changed = false;
+        data.certificate_templates.forEach(tpl => {
+            if (tpl.signatory_2_name === "M. Rekha") {
+                tpl.signatory_2_name = "Ms. M. Rekha";
+                changed = true;
+            }
+            if (tpl.signatory_3_name === "M. Ramakrishnan" || tpl.signatory_3_name === "M. Rama Krishnan") {
+                tpl.signatory_3_name = "Mr. M. Rama Krishnan";
+                changed = true;
+            }
+            if (tpl.signatory_5_name === "Dr. S. Rajakumaran") {
+                tpl.signatory_5_name = "Dr. S. Rajakarunakaran";
+                changed = true;
+            }
+            if (tpl.id === "tpl_sttp_blockchain_2026" && (tpl.signatory_1_name === "Dr. K. Arulraj" || !tpl.signatory_6_name)) {
+                tpl.signatory_count = 6;
+                tpl.signatory_1_name = "Dr. M. Jeya Sundari";
+                tpl.signatory_1_title = "Faculty Coordinator";
+                tpl.signatory_1_org = "CSBS, RIT";
+                tpl.signatory_2_name = "Ms. M. Rekha";
+                tpl.signatory_2_title = "Faculty Coordinator";
+                tpl.signatory_2_org = "CSBS, RIT";
+                tpl.signatory_3_name = "Mr. M. Rama Krishnan";
+                tpl.signatory_3_title = "Faculty Coordinator";
+                tpl.signatory_3_org = "CSBS, RIT";
+                tpl.signatory_4_name = "Dr. D. Kesavaraja";
+                tpl.signatory_4_title = "Convenor";
+                tpl.signatory_4_org = "CSBS, RIT";
+                tpl.signatory_5_name = "Dr. S. Rajakarunakaran";
+                tpl.signatory_5_title = "Patron";
+                tpl.signatory_5_org = "RIT";
+                tpl.signatory_6_name = "Dr. L. Ganesan";
+                tpl.signatory_6_title = "Chief Patron";
+                tpl.signatory_6_org = "RIT";
+                changed = true;
+            }
+        });
+        if (changed) {
+            await commitData(data);
+        }
     }
     return data.certificate_templates;
 }

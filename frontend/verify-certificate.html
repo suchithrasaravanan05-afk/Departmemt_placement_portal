@@ -1006,23 +1006,30 @@
             const sigListEl = document.getElementById('verifiedSignatoriesList');
             if (sigListEl) {
               let sigHtml = '';
-              const count = parseInt(cert.signatory_count || (cert.signatory_5_name ? 5 : 4), 10);
+              const count = parseInt(cert.signatory_count || (cert.signatory_6_name ? 6 : (cert.signatory_5_name ? 5 : 4)), 10);
               const sigArr = [];
-              if (count === 5) {
-                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_2_title || 'STTP Coordinator', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Head of Department', dept: cert.signatory_3_dept || cert.signatory_3_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Principal', dept: cert.signatory_4_dept || cert.signatory_4_org || 'RIT' });
-                sigArr.push({ name: cert.signatory_5_name || 'Dr. R. Ramesh', title: cert.signatory_5_title || 'Director', dept: cert.signatory_5_dept || cert.signatory_5_org || 'RIT' });
+              if (count === 6) {
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. M. Jeya Sundari', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Ms. M. Rekha', title: cert.signatory_2_title || 'Faculty Coordinator', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Mr. M. Rama Krishnan', title: cert.signatory_3_title || 'Faculty Coordinator', dept: cert.signatory_3_dept || cert.signatory_3_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_4_name || 'Dr. D. Kesavaraja', title: cert.signatory_4_title || 'Convenor', dept: cert.signatory_4_dept || cert.signatory_4_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_5_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_5_title || 'Patron', dept: cert.signatory_5_dept || cert.signatory_5_org || 'RIT' });
+                sigArr.push({ name: cert.signatory_6_name || 'Dr. L. Ganesan', title: cert.signatory_6_title || 'Chief Patron', dept: cert.signatory_6_dept || cert.signatory_6_org || 'RIT' });
+              } else if (count === 5) {
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. M. Jeya Sundari', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Ms. M. Rekha', title: cert.signatory_2_title || 'Faculty Coordinator', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Mr. M. Rama Krishnan', title: cert.signatory_3_title || 'Faculty Coordinator', dept: cert.signatory_3_dept || cert.signatory_3_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_4_name || 'Dr. D. Kesavaraja', title: cert.signatory_4_title || 'Convenor', dept: cert.signatory_4_dept || cert.signatory_4_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_5_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_5_title || 'Patron', dept: cert.signatory_5_dept || cert.signatory_5_org || 'RIT' });
               } else if (count === 3) {
-                sigArr.push({ name: cert.signatory_1_name || 'Dr. K. Arulraj', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_2_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_2_title || 'Head of Department', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_3_name || 'Dr. L. Ganesan', title: cert.signatory_3_title || 'Principal', dept: cert.signatory_3_dept || cert.signatory_3_org || 'RIT' });
+                sigArr.push({ name: cert.signatory_1_name || 'Dr. M. Jeya Sundari', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. D. Kesavaraja', title: cert.signatory_2_title || 'Convenor', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Patron', dept: cert.signatory_3_dept || cert.signatory_3_org || 'RIT' });
               } else {
                 sigArr.push({ name: cert.signatory_1_name || 'Dr. M. Jeya Sundari', title: cert.signatory_1_title || 'Faculty Coordinator', dept: cert.signatory_1_dept || cert.signatory_1_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_2_name || 'Dr. D. Kesavaraja', title: cert.signatory_2_title || 'Head of Department', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
-                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Principal', dept: cert.signatory_3_dept || cert.signatory_3_org || 'RIT' });
-                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Director', dept: cert.signatory_4_dept || cert.signatory_4_org || 'RIT' });
+                sigArr.push({ name: cert.signatory_2_name || 'Dr. D. Kesavaraja', title: cert.signatory_2_title || 'Convenor', dept: cert.signatory_2_dept || cert.signatory_2_org || 'CSBS, RIT' });
+                sigArr.push({ name: cert.signatory_3_name || 'Dr. S. Rajakarunakaran', title: cert.signatory_3_title || 'Patron', dept: cert.signatory_3_dept || cert.signatory_3_org || 'RIT' });
+                sigArr.push({ name: cert.signatory_4_name || 'Dr. L. Ganesan', title: cert.signatory_4_title || 'Chief Patron', dept: cert.signatory_4_dept || cert.signatory_4_org || 'RIT' });
               }
               sigArr.forEach(s => {
                 sigHtml += `

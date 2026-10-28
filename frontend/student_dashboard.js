@@ -1974,11 +1974,11 @@ async function openCertificateViewModal(cert) {
   if (el('certModalSig1Title')) el('certModalSig1Title').innerText = cert.signatory_1_title || 'Faculty Coordinator';
   if (el('certModalSig1Org')) el('certModalSig1Org').innerText = cert.signatory_1_org || cert.signatory_1_dept || 'CSBS, RIT';
 
-  if (el('certModalSig2Name')) el('certModalSig2Name').innerText = cert.signatory_2_name || 'M. Rekha';
+  if (el('certModalSig2Name')) el('certModalSig2Name').innerText = cert.signatory_2_name || 'Ms. M. Rekha';
   if (el('certModalSig2Title')) el('certModalSig2Title').innerText = cert.signatory_2_title || 'Faculty Coordinator';
   if (el('certModalSig2Org')) el('certModalSig2Org').innerText = cert.signatory_2_org || cert.signatory_2_dept || 'CSBS, RIT';
 
-  if (el('certModalSig3Name')) el('certModalSig3Name').innerText = cert.signatory_3_name || 'M. Ramakrishnan';
+  if (el('certModalSig3Name')) el('certModalSig3Name').innerText = cert.signatory_3_name || 'Mr. M. Rama Krishnan';
   if (el('certModalSig3Title')) el('certModalSig3Title').innerText = cert.signatory_3_title || 'Faculty Coordinator';
   if (el('certModalSig3Org')) el('certModalSig3Org').innerText = cert.signatory_3_org || cert.signatory_3_dept || 'CSBS, RIT';
 

@@ -712,8 +712,8 @@ function applyCertificatePreset(presetKey) {
 
     toggleSignatoryCount(6);
     setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
-    setSigFields(2, 'M. Rekha', 'Faculty Coordinator', 'CSBS, RIT');
-    setSigFields(3, 'M. Ramakrishnan', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(2, 'Ms. M. Rekha', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(3, 'Mr. M. Rama Krishnan', 'Faculty Coordinator', 'CSBS, RIT');
     setSigFields(4, 'Dr. D. Kesavaraja', 'Convenor', 'CSBS, RIT');
     setSigFields(5, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
     setSigFields(6, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
@@ -832,10 +832,10 @@ async function saveCurrentTemplateAsPreset() {
     signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
     signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_1_dept: document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
-    signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'M. Rekha',
+    signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Ms. M. Rekha',
     signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_2_dept: document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
-    signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'M. Ramakrishnan',
+    signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Mr. M. Rama Krishnan',
     signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_3_dept: document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
     signatory_4_name: document.getElementById('tplSig4Name')?.value?.trim() || 'Dr. D. Kesavaraja',
@@ -1034,12 +1034,12 @@ async function proceedWithBatchGeneration() {
       signatory_1_dept: document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
       signatory_1_org: document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
       signatory_1_sig: customUploadedSignatures[1] || undefined,
-      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'M. Rekha',
+      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Ms. M. Rekha',
       signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'Faculty Coordinator',
       signatory_2_dept: document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
       signatory_2_org: document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
       signatory_2_sig: customUploadedSignatures[2] || undefined,
-      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'M. Ramakrishnan',
+      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Mr. M. Rama Krishnan',
       signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Faculty Coordinator',
       signatory_3_dept: document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
       signatory_3_org: document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
@@ -1158,11 +1158,11 @@ async function generateSingleCertificatePdfDoc(cert) {
     signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_1_dept: cert.signatory_1_dept || cert.signatory_1_org || document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
     signatory_1_sig: customUploadedSignatures[1] || cert.signatory_1_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_1_name || 'jeyasundari') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && (window.CERT_ASSETS.SIGNATURES.jeyasundari || window.CERT_ASSETS.SIGNATURES.faculty_coordinator))),
-    signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'M. Rekha',
+    signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'Ms. M. Rekha',
     signatory_2_title: cert.signatory_2_title || document.getElementById('tplSig2Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_2_dept: cert.signatory_2_dept || cert.signatory_2_org || document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
     signatory_2_sig: customUploadedSignatures[2] || cert.signatory_2_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_2_name || 'rekha') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.rekha)),
-    signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'M. Ramakrishnan',
+    signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'Mr. M. Rama Krishnan',
     signatory_3_title: cert.signatory_3_title || document.getElementById('tplSig3Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_3_dept: cert.signatory_3_dept || cert.signatory_3_org || document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
     signatory_3_sig: customUploadedSignatures[3] || cert.signatory_3_sig || (typeof getSignatoryAsset === 'function' ? getSignatoryAsset(cert.signatory_3_name || 'ramakrishnan') : (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES.ramakrishnan)),

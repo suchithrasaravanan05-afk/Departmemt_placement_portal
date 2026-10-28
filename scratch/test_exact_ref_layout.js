@@ -226,8 +226,8 @@ async function testLayout() {
 
   // 6 signatures in 4 groups
   renderSig('jeyasundari', 30, 'Dr. M. Jeya Sundari');
-  renderSig('rekha', 64, 'M. Rekha');
-  renderSig('ramakrishnan', 98, 'M. Ramakrishnan');
+  renderSig('rekha', 64, 'Ms. M. Rekha');
+  renderSig('ramakrishnan', 98, 'Mr. M. Rama Krishnan');
 
   doc.setFont('times', 'bold');
   doc.setFontSize(9.5);

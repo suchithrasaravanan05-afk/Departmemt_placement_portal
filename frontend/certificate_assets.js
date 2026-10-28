@@ -310,7 +310,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
 
   ctx.font = 'normal 16px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#B91C1C';
-  ctx.fillText('NBA Accredited UG Programs: CSE, EEE, and MECH.', width / 2, 224);
+  ctx.fillText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.', width / 2, 224);
 
   // 4. CSBS Department Logo Centered Beneath Institutional Heading
   const csbsLogoSrc = certData.csbs_logo || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.CSBS_LOGO : null) || 'certificate_logo/csbs_logo_clean.png';
@@ -388,8 +388,8 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   const sigCenters = [215, 444, 673, 963, 1293, 1623];
   const sigConfigs = [
     { name: certData.signatory_1_name || 'Dr. M. Jeya Sundari', key: 'jeyasundari' },
-    { name: certData.signatory_2_name || 'M. Rekha', key: 'rekha' },
-    { name: certData.signatory_3_name || 'M. Ramakrishnan', key: 'ramakrishnan' },
+    { name: certData.signatory_2_name || 'Ms. M. Rekha', key: 'rekha' },
+    { name: certData.signatory_3_name || 'Mr. M. Rama Krishnan', key: 'ramakrishnan' },
     { name: certData.signatory_4_name || 'Dr. D. Kesavaraja', role: 'Convenor', key: 'kesavaraja' },
     { name: certData.signatory_5_name || 'Dr. S. Rajakarunakaran', role: 'Patron', key: 'rajakarunakaran' },
     { name: certData.signatory_6_name || 'Dr. L. Ganesan', role: 'Chief Patron', key: 'ganesan' }
@@ -441,10 +441,10 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     ctx.stroke();
   }
 
-  // Group 1 label: "Faculty Coordinators" (centered beneath the 3 coordinators)
+  // Group 1 label: "Faculty Coordinator(s)" (centered beneath the 3 coordinators)
   ctx.font = 'bold 20px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#4A154B';
-  ctx.fillText('Faculty Coordinators', 444, sigLineY + 80);
+  ctx.fillText('Faculty Coordinator(s)', 444, sigLineY + 80);
 
   // Separator 1
   drawCanvasVerticalSep(801);
@@ -467,81 +467,25 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   // Separator 4
   drawCanvasVerticalSep(1784);
 
-  // 9. QR Code at Bottom-Right
-  const certId = certData.certificate_number || certData.certificate_id || 'RIT-STTP-2026-0001';
-  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin) 
-    ? window.location.origin 
-    : (certData.portal_url || (typeof process !== 'undefined' && process.env && (process.env.PUBLIC_PORTAL_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''))) || 'https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app');
-  const qrTarget = certData.verification_url || `${originUrl}/verify-certificate.html?id=${encodeURIComponent(certId)}`;
-  ritRenderQrCode(ctx, qrTarget, 1818, 1015, 128);
+  // 9. Dedicated QR Code at Bottom-Right (Plain Text Certificate ID only, no URLs)
+  const certId = certData.certificate_number || certData.certificate_id || 'RITCB 01 0001';
+  const qrTarget = certId;
+  const qrX = 1818;
+  const qrY = 960;
+  const qrSize = 160;
 
-  // 10. Unique Certificate ID in Centered Rounded Pill with Flanking Gold Lines & Diamonds
-  const pillW = 458;
-  const pillH = 46;
-  const pillX = (width - pillW) / 2;
-  const pillY = 1165;
-  const pillR = 23;
-
-  // Flanking gold lines
-  const lineLen = 215;
-  const leftStart = pillX - lineLen - 26;
-  const leftEnd = pillX - 20;
-  const rightStart = pillX + pillW + 20;
-  const rightEnd = pillX + pillW + lineLen + 26;
-  const midY = pillY + pillH / 2;
-
-  ctx.strokeStyle = gold;
-  ctx.fillStyle = gold;
-  ctx.lineWidth = 2.4;
-
-  // Left line + dots + diamond
-  ctx.beginPath();
-  ctx.moveTo(leftStart, midY);
-  ctx.lineTo(leftEnd, midY);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(leftStart, midY, 3.6, 0, Math.PI * 2);
-  ctx.fill();
-  const lMid = (leftStart + leftEnd) / 2;
-  ctx.beginPath();
-  ctx.moveTo(lMid, midY - 8);
-  ctx.lineTo(lMid + 8, midY);
-  ctx.lineTo(lMid, midY + 8);
-  ctx.lineTo(lMid - 8, midY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Right line + dots + diamond
-  ctx.beginPath();
-  ctx.moveTo(rightStart, midY);
-  ctx.lineTo(rightEnd, midY);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(rightEnd, midY, 3.6, 0, Math.PI * 2);
-  ctx.fill();
-  const rMid = (rightStart + rightEnd) / 2;
-  ctx.beginPath();
-  ctx.moveTo(rMid, midY - 8);
-  ctx.lineTo(rMid + 8, midY);
-  ctx.lineTo(rMid, midY + 8);
-  ctx.lineTo(rMid - 8, midY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Rounded Pill
+  // Clean white card behind QR and ID
   ctx.fillStyle = '#FFFFFF';
-  ctx.strokeStyle = gold;
-  ctx.lineWidth = 2.4;
-  ctx.beginPath();
-  ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
-  ctx.fill();
-  ctx.stroke();
+  ctx.fillRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 55);
 
-  // Text inside pill
-  ctx.font = 'bold 19px "Times New Roman", Georgia, serif';
-  ctx.fillStyle = '#1A1A40';
+  // Render QR
+  ritRenderQrCode(ctx, qrTarget, qrX, qrY, qrSize);
+
+  // Place Certificate ID directly underneath the QR code
+  ctx.font = 'bold 20px "Times New Roman", Georgia, serif';
+  ctx.fillStyle = '#111827';
   ctx.textAlign = 'center';
-  ctx.fillText('Certificate ID: ' + certId, width / 2, pillY + 30);
+  ctx.fillText(certId, qrX + qrSize / 2, qrY + qrSize + 30);
 
   return canvas;
 }
@@ -639,7 +583,7 @@ async function createCertificatePdf(certData = {}) {
   doc.setFont('times', 'normal');
   doc.setFontSize(8.2);
   doc.setTextColor(maroon[0], maroon[1], maroon[2]);
-  doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, ECE.'), pageWidth / 2, 38.5, { align: 'center' });
+  doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.'), pageWidth / 2, 38.5, { align: 'center' });
 
   // 4. CSBS Department Logo Centered Beneath Institutional Heading
   const csbsLogo = certData.csbs_logo || (typeof window !== 'undefined' && window.CERT_ASSETS ? window.CERT_ASSETS.CSBS_LOGO : null);
@@ -828,7 +772,7 @@ async function createCertificatePdf(certData = {}) {
   // Group 1: Faculty Coordinator(s) (3 blocks)
   renderSigBlock(certData.signatory_1_sig || certData.signatory_1_name || 'jeyasundari', 30, certData.signatory_1_name || 'Dr. M. Jeya Sundari');
   renderSigBlock(certData.signatory_2_sig || certData.signatory_2_name || 'rekha', 64, certData.signatory_2_name || 'Ms. M. Rekha');
-  renderSigBlock(certData.signatory_3_sig || certData.signatory_3_name || 'ramakrishnan', 98, certData.signatory_3_name || 'Mr. M. Rama krishnan');
+  renderSigBlock(certData.signatory_3_sig || certData.signatory_3_name || 'ramakrishnan', 98, certData.signatory_3_name || 'Mr. M. Rama Krishnan');
 
   doc.setFont('times', 'bold');
   doc.setFontSize(9.5);
