@@ -744,10 +744,6 @@
 .cert-qr-verify-label {
   display: none !important;
 }
-  letter-spacing: 0.3px;
-  margin-top: 1px;
-  text-align: center;
-}
 
 /* Template Presets Bar */
 .cert-presets-bar {
