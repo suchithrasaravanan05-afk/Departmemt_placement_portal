@@ -708,7 +708,7 @@ function applyCertificatePreset(presetKey) {
     setFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026');
     setFormParam(['tplIssueDate'], 'October 18, 2026');
     setFormParam(['tplCertWording'], 'for active participation in the One Week Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology, Rajapalayam from October 12, 2026, to October 18, 2026.');
-    setFormParam(['tplIdPrefix'], 'RIT-STTP-2026-');
+    setFormParam(['tplIdPrefix'], 'RITCB 01 ');
 
     toggleSignatoryCount(6);
     setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
@@ -827,7 +827,7 @@ async function saveCurrentTemplateAsPreset() {
     programme_dates: document.getElementById('tplProgDates')?.value?.trim() || 'October 12, 2026, to October 18, 2026',
     issue_date: document.getElementById('tplIssueDate')?.value || '2026-10-18',
     certificate_wording: document.getElementById('tplCertWording')?.value?.trim() || '',
-    id_prefix: document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026-',
+    id_prefix: document.getElementById('tplIdPrefix')?.value?.trim() || 'RITCB 01 ',
     signatory_count: parseInt(document.getElementById('tplSigCount')?.value || '6', 10),
     signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
     signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
@@ -877,7 +877,7 @@ function updateLiveCertificatePreview() {
   const institution = document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam';
   const progDates = document.getElementById('tplProgDates')?.value?.trim() || 'October 12, 2026, to October 18, 2026';
   const issueDate = document.getElementById('tplIssueDate')?.value || '2026-10-18';
-  const idPrefix = document.getElementById('tplIdPrefix')?.value?.trim() || 'RIT-STTP-2026-';
+  const idPrefix = document.getElementById('tplIdPrefix')?.value?.trim() || 'RITCB 01 ';
   const sigCount = parseInt(document.getElementById('tplSigCount')?.value || '6', 10);
 
   // Sample participant name (NO register number)
@@ -893,7 +893,7 @@ function updateLiveCertificatePreview() {
   if (document.getElementById('prevInstitution')) document.getElementById('prevInstitution').innerText = institution;
   if (document.getElementById('prevProgDates')) document.getElementById('prevProgDates').innerText = progDates;
 
-  const sampleCertId = idPrefix ? `${idPrefix}0001` : 'RITCB 01 0001';
+  const sampleCertId = (idPrefix && idPrefix.trim().startsWith('RITCB')) ? 'RITCB 01 0001' : (idPrefix ? `${idPrefix.trim()} 0001` : 'RITCB 01 0001');
   if (document.getElementById('prevCertId')) document.getElementById('prevCertId').innerText = sampleCertId;
 
   // Signatories 1 to 6
@@ -1012,7 +1012,7 @@ async function proceedWithBatchGeneration() {
     const instName = getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
     const certTitle = getFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
     const certType = getFormParam(['tplCertType'], 'STTP');
-    const idPrefix = getFormParam(['tplIdPrefix'], 'RIT-STTP-2026-');
+    const idPrefix = getFormParam(['tplIdPrefix'], 'RITCB 01 ');
 
     const payload = {
       batch_title: `Batch - ${evName} (${new Date().toLocaleDateString('en-GB')})`,
@@ -1147,7 +1147,7 @@ async function generateSingleCertificatePdfDoc(cert) {
     participant_type: cert.participant_type || 'Student',
     institution: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
     college_name: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
-    certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-STTP-2026-0001',
+    certificate_number: cert.certificate_number || cert.certificate_id || 'RITCB 01 0001',
     certificate_title: cert.certificate_title || (typeof getFormParam === 'function' ? getFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION') : (document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION')),
     programme_title: cert.programme_title || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Short-Term Training Programme (STTP)') : (document.getElementById('tplProgrammeTitle')?.value?.trim() || document.getElementById('tplProgTitle')?.value?.trim() || 'One Week Short-Term Training Programme (STTP)')),
     event_name: cert.event_name || (typeof getFormParam === 'function' ? getFormParam(['tplEventTopic', 'tplEventName'], 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives') : (document.getElementById('tplEventTopic')?.value?.trim() || document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives')),

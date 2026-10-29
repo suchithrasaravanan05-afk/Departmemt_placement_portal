@@ -381,7 +381,7 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             college_name: institution || "Ramco Institute of Technology, Rajapalayam",
             certificate_wording: certificate_wording || "",
             template_style: template_style || "rit_purple_gold",
-            id_prefix: id_prefix || "RIT-STTP-2026-",
+            id_prefix: id_prefix || "RITCB 01 ",
             certificate_title: certificate_title || "CERTIFICATE OF PARTICIPATION",
             certificate_type: certificate_type || "Participation",
             allow_duplicates: !!allow_duplicates,

@@ -1926,7 +1926,7 @@ async function generateCertificatePDF(cert, isDownload = true) {
       event_subtitle: cert.event_subtitle || 'Architectures, Applications and Research Perspectives',
       event_description: cert.event_description || 'In recognition of active participation in the Short-Term Training Programme (STTP) on',
       organization_name: cert.organization_name || 'Department of Computer Science and Business Systems, Ramco Institute of Technology',
-      certificate_number: cert.certificate_number || cert.certificate_id || 'RIT-CSBS-CERT-2026',
+      certificate_number: cert.certificate_number || cert.certificate_id || 'RITCB 01 0001',
       verification_url: cert.verification_url || ((typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app') + '/verify-certificate.html?id=' + encodeURIComponent(cert.certificate_number || cert.certificate_id || 'RIT-CSBS-CERT-2026'),
       signatory_count: cert.signatory_count ? Number(cert.signatory_count) : 4
     };

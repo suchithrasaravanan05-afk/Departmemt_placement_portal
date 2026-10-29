@@ -19,6 +19,7 @@ const DEFAULT_DATA = {
     certificate_batches: [],
     certificate_audit_logs: [],
     certificate_templates: [],
+    last_certificate_sequence: 0,
     email_config: {
         sender_email: "rajakaleeswaranhari1976@gmail.com",
         app_password: "anjjctvazinmpjtv",
@@ -62,7 +63,7 @@ const INITIAL_TEMPLATES = [
         signatory_6_title: "Chief Patron",
         signatory_6_org: "RIT",
         template_style: "rit_purple_gold",
-        id_prefix: "RIT-STTP-2026-"
+        id_prefix: "RITCB 01 "
     },
     {
         id: "tpl_workshop_fullstack",
@@ -88,7 +89,7 @@ const INITIAL_TEMPLATES = [
         signatory_3_title: "Principal / Chief Patron",
         signatory_3_org: "RIT",
         template_style: "rit_purple_gold",
-        id_prefix: "RIT-CSBS-2026-"
+        id_prefix: "RITCB 01 "
     }
 ];
 
@@ -119,6 +120,62 @@ async function ensureStorageBucket() {
     }
 }
 
+// ============================================================
+// STANDARDIZED SEQUENTIAL CERTIFICATE ID GENERATION (RITCB 01 XXXX)
+// ============================================================
+const FIXED_CERT_PREFIX = "RITCB";
+const FIXED_CERT_SERIES = "01";
+
+function parseCertificateSequenceNumber(certNumber) {
+    if (!certNumber || typeof certNumber !== "string") return null;
+    const match = certNumber.trim().match(/^RITCB\s+01\s+(\d+)$/i);
+    if (match) {
+        const val = parseInt(match[1], 10);
+        return isNaN(val) ? null : val;
+    }
+    return null;
+}
+
+function formatCertificateId(seqNumber) {
+    const num = Math.max(1, parseInt(seqNumber, 10) || 1);
+    const padded = String(num).padStart(4, "0");
+    return `${FIXED_CERT_PREFIX} ${FIXED_CERT_SERIES} ${padded}`;
+}
+
+function getHighestSequenceNumber(certificates = [], lastKnownSequence = 0) {
+    let max = typeof lastKnownSequence === "number" ? lastKnownSequence : 0;
+    (certificates || []).forEach(c => {
+        if (!c) return;
+        const seq = parseCertificateSequenceNumber(c.certificate_number || c.certificate_id);
+        if (seq !== null && seq > max) {
+            max = seq;
+        }
+    });
+    return max;
+}
+
+let allocationMutex = Promise.resolve();
+function withAllocationLock(fn) {
+    const next = allocationMutex.then(() => fn(), () => fn());
+    allocationMutex = next.catch(() => {});
+    return next;
+}
+
+async function allocateNextCertificateIds(count = 1) {
+    const numToAllocate = Math.max(1, parseInt(count, 10) || 1);
+    return withAllocationLock(async () => {
+        const data = await getAllData();
+        const currentHighest = getHighestSequenceNumber(data.certificates, data.last_certificate_sequence);
+        const allocated = [];
+        for (let i = 1; i <= numToAllocate; i++) {
+            allocated.push(formatCertificateId(currentHighest + i));
+        }
+        data.last_certificate_sequence = currentHighest + numToAllocate;
+        await commitData(data);
+        return allocated;
+    });
+}
+
 // Read local JSON file
 function readLocalData() {
     try {
@@ -133,6 +190,9 @@ function readLocalData() {
                 if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
                 if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
                 if (!Array.isArray(parsed.certificate_templates)) parsed.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
+                if (typeof parsed.last_certificate_sequence !== "number") {
+                    parsed.last_certificate_sequence = getHighestSequenceNumber(parsed.certificates);
+                }
                 return parsed;
             }
         }
@@ -169,6 +229,9 @@ async function loadFromSupabaseStorage() {
                 if (!Array.isArray(parsed.certificate_batches)) parsed.certificate_batches = [];
                 if (!Array.isArray(parsed.certificate_audit_logs)) parsed.certificate_audit_logs = [];
                 if (!Array.isArray(parsed.certificate_templates)) parsed.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
+                if (typeof parsed.last_certificate_sequence !== "number") {
+                    parsed.last_certificate_sequence = getHighestSequenceNumber(parsed.certificates);
+                }
                 return parsed;
             }
         }
@@ -320,6 +383,12 @@ async function getAllData() {
         base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
         base.notifications = (base.notifications || []).filter(n => !deletedIdsSet.has(String(n.event_id)));
     }
+    base.last_certificate_sequence = Math.max(
+        base.last_certificate_sequence || 0,
+        cloudData?.last_certificate_sequence || 0,
+        getHighestSequenceNumber(base.certificates || []),
+        getHighestSequenceNumber(cloudData?.certificates || [])
+    );
 
     inMemoryData = base;
     return inMemoryData;
@@ -360,25 +429,10 @@ async function commitData(data) {
 }
 
 // Generate standardized, institutional Certificate ID:
-// Format: RIT-[EVENT_CODE]-[YEAR]-[SEQUENCE] e.g. RIT-JAVA-2026-0001
+// Format: RITCB 01 XXXX e.g. RITCB 01 0001
 function generateCertificateNumber(eventCode = "EVT", year = new Date().getFullYear(), allCertificates = []) {
-    const cleanCode = String(eventCode).replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 6) || "EVT";
-    const yearStr = String(year).slice(-4);
-    const prefix = `RIT-${cleanCode}-${yearStr}-`;
-
-    const existingSeqNumbers = (allCertificates || [])
-        .filter(c => c && c.certificate_number && c.certificate_number.startsWith(prefix))
-        .map(c => {
-            const parts = c.certificate_number.split("-");
-            const last = parseInt(parts[parts.length - 1], 10);
-            return isNaN(last) ? 0 : last;
-        });
-
-    const maxSeq = existingSeqNumbers.length > 0 ? Math.max(...existingSeqNumbers) : 0;
-    const nextSeq = maxSeq + 1;
-    const seqStr = String(nextSeq).padStart(4, "0");
-
-    return `${prefix}${seqStr}`;
+    const highest = getHighestSequenceNumber(allCertificates);
+    return formatCertificateId(highest + 1);
 }
 
 // ============================================================
@@ -841,12 +895,22 @@ async function submitFeedbackAndGenerateCertificate({
 
     // Issue certificate if eligible
     if (certificateEligible) {
-        const allCerts = data.certificates || [];
-        const certId = Date.now() + 1;
-        const certYear = event.event_date ? new Date(event.event_date).getFullYear() : new Date().getFullYear();
-        const certNumber = generateCertificateNumber(event.event_code || "EVT", certYear, allCerts);
-        const issueDate = new Date().toISOString().split("T")[0];
-        const qrToken = crypto.randomBytes(16).toString("hex");
+        // Reuse existing certificate if already issued for this student & event
+        const existingCert = (data.certificates || []).find(c =>
+            parseInt(c.feedback_id, 10) === numFeedbackId &&
+            parseInt(c.user_id, 10) === numUserId
+        );
+
+        if (existingCert && existingCert.certificate_number) {
+            certificateRecord = existingCert;
+        } else {
+            const certId = Date.now() + 1;
+            const currentHighest = getHighestSequenceNumber(data.certificates, data.last_certificate_sequence);
+            const nextSeq = currentHighest + 1;
+            const certNumber = formatCertificateId(nextSeq);
+            data.last_certificate_sequence = nextSeq;
+            const issueDate = new Date().toISOString().split("T")[0];
+            const qrToken = crypto.randomBytes(16).toString("hex");
 
         certificateRecord = {
             id: certId,
@@ -874,7 +938,8 @@ async function submitFeedbackAndGenerateCertificate({
             qr_token: qrToken,
             created_at: new Date().toISOString()
         };
-        data.certificates.unshift(certificateRecord);
+            data.certificates.unshift(certificateRecord);
+        }
     }
 
     data.feedback_submissions.unshift(submissionRecord);
@@ -1026,9 +1091,11 @@ async function issueCertificateToStudent({
         };
     }
 
-    // 3. Generate unique certificate number
-    const certYear = targetEvent.event_date ? new Date(targetEvent.event_date).getFullYear() : new Date().getFullYear();
-    const certNumber = generateCertificateNumber(targetEvent.event_code || "EVT", certYear, data.certificates || []);
+    // 3. Generate unique sequential certificate number
+    const currentHighest = getHighestSequenceNumber(data.certificates, data.last_certificate_sequence);
+    const nextSeq = currentHighest + 1;
+    const certNumber = formatCertificateId(nextSeq);
+    data.last_certificate_sequence = nextSeq;
     const resolvedIssueDate = issue_date || new Date().toISOString().split("T")[0];
     const qrToken = crypto.randomBytes(16).toString("hex");
 
@@ -2473,27 +2540,40 @@ async function issueBulkCertificates({
     const issuedAt = new Date().toISOString();
     const issueDateStr = issuedAt.split("T")[0];
 
-    let cleanPrefix = (id_prefix || "RIT-STTP-2026-").trim();
-    if (!cleanPrefix.endsWith("-")) cleanPrefix += "-";
-    const existingIds = new Set((data.certificates || []).map(c => (c && c.certificate_number ? c.certificate_number.toUpperCase() : "")));
+    const existingMap = new Map();
+    (data.certificates || []).forEach(c => {
+        if (!c) return;
+        const reg = (c.register_number || "").trim().toUpperCase();
+        const email = (c.student_email || "").trim().toLowerCase();
+        const ev = (c.event_name || "").trim().toLowerCase();
+        if (reg) existingMap.set(`${reg}::${ev}`, c);
+        if (email) existingMap.set(`${email}::${ev}`, c);
+    });
+
+    const currentHighest = getHighestSequenceNumber(data.certificates, data.last_certificate_sequence);
+    let nextSeq = currentHighest;
 
     for (let i = 0; i < validRecords.length; i++) {
         const row = validRecords[i];
         try {
             const evDate = row.event_date || event_date || issueDateStr;
-            const certYear = evDate ? new Date(evDate).getFullYear() : new Date().getFullYear();
-            
-            // Unique certificate ID generation
-            let candidateId = `${cleanPrefix}${String(i + 1).padStart(4, '0')}`;
-            if (existingIds.has(candidateId)) {
-                candidateId = `${cleanPrefix}${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
-            }
-            existingIds.add(candidateId);
-            const certId = candidateId;
-            const qrToken = crypto.randomBytes(16).toString("hex");
-
             const regNo = String(row.register_number || "").trim().toUpperCase();
             const stuUser = studentUserMap.get(regNo) || null;
+            const studentEmail = String(row.email || (stuUser && stuUser.email) || "").trim().toLowerCase();
+            const evName = String(row.event_name || effectiveEventName).trim().toLowerCase();
+            const priorCert = (regNo ? existingMap.get(`${regNo}::${evName}`) : null) || (studentEmail ? existingMap.get(`${studentEmail}::${evName}`) : null);
+
+            let certId;
+            if (priorCert && priorCert.certificate_number && !isAllowDup) {
+                // Reuse existing assigned ID if regenerating
+                certId = priorCert.certificate_number;
+            } else if (row.certificate_number && String(row.certificate_number).trim()) {
+                certId = String(row.certificate_number).trim();
+            } else {
+                nextSeq += 1;
+                certId = formatCertificateId(nextSeq);
+            }
+            const qrToken = crypto.randomBytes(16).toString("hex");
 
             const newCert = {
                 id: timestamp + i * 10 + Math.floor(Math.random() * 9),
@@ -2582,6 +2662,7 @@ async function issueBulkCertificates({
             });
         }
     }
+    data.last_certificate_sequence = Math.max(data.last_certificate_sequence || 0, nextSeq);
 
     const batchRecord = {
         id: batchId,
@@ -3235,6 +3316,10 @@ module.exports = {
     getFeedbackSubmissionsForAdmin,
     generateCertificateNumber,
     generateUniqueCertificateId,
+    parseCertificateSequenceNumber,
+    formatCertificateId,
+    getHighestSequenceNumber,
+    allocateNextCertificateIds,
     verifyAndGetCertificateDetails,
     getAllCertificates,
     getAllStudentUsers,

@@ -794,7 +794,7 @@ async function createCertificatePdf(certData = {}) {
   doc.text('Chief Patron', sigPositions[5], sigLineY + 11.0, { align: 'center' });
 
   // 10. QR Code in Bottom Right Area
-  const certId = certData.certificate_number || certData.certificate_id || 'RIT-STTP-2026-F1F4';
+  const certId = certData.certificate_number || certData.certificate_id || 'RITCB 01 0001';
   const qrTarget = certId;
 
   const qrX = 255.5;
@@ -802,7 +802,12 @@ async function createCertificatePdf(certData = {}) {
   const qrSize = 23.0;
 
   let qrDataUrl = null;
-  if (typeof require !== 'undefined') {
+  if (typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function') {
+    try {
+      qrDataUrl = await QRCode.toDataURL(qrTarget, { width: 140, margin: 0 });
+    } catch (e) {}
+  }
+  if (!qrDataUrl && typeof require !== 'undefined') {
     try {
       const qrMod = require('qrcode');
       qrDataUrl = await qrMod.toDataURL(qrTarget, { width: 140, margin: 0 });
