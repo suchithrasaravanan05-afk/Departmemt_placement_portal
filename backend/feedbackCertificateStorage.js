@@ -47,7 +47,7 @@ const INITIAL_TEMPLATES = [
         signatory_1_name: "Dr. M. Jeya Sundari",
         signatory_1_title: "Faculty Coordinator",
         signatory_1_org: "CSBS, RIT",
-        signatory_2_name: "Ms. M. Rekha",
+        signatory_2_name: "Mrs. M. Rekha",
         signatory_2_title: "Faculty Coordinator",
         signatory_2_org: "CSBS, RIT",
         signatory_3_name: "Mr. M. Rama Krishnan",
@@ -2438,7 +2438,7 @@ async function issueBulkCertificates({
     signatory_1_name = "Dr. M. Jeya Sundari",
     signatory_1_title = "Faculty Coordinator",
     signatory_1_org = "CSBS, RIT",
-    signatory_2_name = "Ms. M. Rekha",
+    signatory_2_name = "Mrs. M. Rekha",
     signatory_2_title = "Faculty Coordinator",
     signatory_2_org = "CSBS, RIT",
     signatory_3_name = "Mr. M. Rama Krishnan",
@@ -2482,7 +2482,7 @@ async function issueBulkCertificates({
     const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Faculty Coordinator";
     const sig1Org = (signatories && signatories.signatory1 && signatories.signatory1.org) || signatory_1_org || "CSBS, RIT";
 
-    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Ms. M. Rekha";
+    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Mrs. M. Rekha";
     const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "Faculty Coordinator";
     const sig2Org = (signatories && signatories.signatory2 && signatories.signatory2.org) || signatory_2_org || "CSBS, RIT";
 
@@ -2917,8 +2917,8 @@ async function getCertificateTemplates() {
         // Safe migration: Update staff names in existing templates without overwriting unrelated admin customizations
         let changed = false;
         data.certificate_templates.forEach(tpl => {
-            if (tpl.signatory_2_name === "M. Rekha") {
-                tpl.signatory_2_name = "Ms. M. Rekha";
+            if (tpl.signatory_2_name === "M. Rekha" || tpl.signatory_2_name === "Ms. M. Rekha") {
+                tpl.signatory_2_name = "Mrs. M. Rekha";
                 changed = true;
             }
             if (tpl.signatory_3_name === "M. Ramakrishnan" || tpl.signatory_3_name === "M. Rama Krishnan") {
@@ -2934,7 +2934,7 @@ async function getCertificateTemplates() {
                 tpl.signatory_1_name = "Dr. M. Jeya Sundari";
                 tpl.signatory_1_title = "Faculty Coordinator";
                 tpl.signatory_1_org = "CSBS, RIT";
-                tpl.signatory_2_name = "Ms. M. Rekha";
+                tpl.signatory_2_name = "Mrs. M. Rekha";
                 tpl.signatory_2_title = "Faculty Coordinator";
                 tpl.signatory_2_org = "CSBS, RIT";
                 tpl.signatory_3_name = "Mr. M. Rama Krishnan";

@@ -1974,7 +1974,7 @@ async function openCertificateViewModal(cert) {
   if (el('certModalSig1Title')) el('certModalSig1Title').innerText = cert.signatory_1_title || 'Faculty Coordinator';
   if (el('certModalSig1Org')) el('certModalSig1Org').innerText = cert.signatory_1_org || cert.signatory_1_dept || 'CSBS, RIT';
 
-  if (el('certModalSig2Name')) el('certModalSig2Name').innerText = cert.signatory_2_name || 'Ms. M. Rekha';
+  if (el('certModalSig2Name')) el('certModalSig2Name').innerText = cert.signatory_2_name || 'Mrs. M. Rekha';
   if (el('certModalSig2Title')) el('certModalSig2Title').innerText = cert.signatory_2_title || 'Faculty Coordinator';
   if (el('certModalSig2Org')) el('certModalSig2Org').innerText = cert.signatory_2_org || cert.signatory_2_dept || 'CSBS, RIT';
 

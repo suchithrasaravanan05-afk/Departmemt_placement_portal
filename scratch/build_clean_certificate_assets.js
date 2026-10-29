@@ -401,8 +401,8 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   const defaultSigNames = ['Dr. M. Jeya Sundari', 'Mrs. M. Rekha', 'Mr. M. Rama Krishnan', 'Dr. D. Kesavaraja', 'Dr. S. Rajakarunakaran', 'Dr. L. Ganesan'];
 
   for (let i = 1; i <= 6; i++) {
-    const sigKey = certData['signatory_' + i + '_sig'] || certData['signatory_' + i + '_name'] || defaultSigRoles[i - 1];
-    const sigAsset = getSignatoryAsset(sigKey);
+    const sigKey = certData['signatory_' + i + '_sig'] || defaultSigRoles[i - 1];
+    const sigAsset = getSignatoryAsset(sigKey) || getSignatoryAsset(defaultSigRoles[i - 1]);
     const sigImg = await ritLoadImage(sigAsset);
     const cx = sigPositions[i - 1];
 
@@ -433,8 +433,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     // Name
     ctx.font = 'bold 16px "Times New Roman", Georgia, serif';
     ctx.fillStyle = '#111827';
-    let sName = certData['signatory_' + i + '_name'] || defaultSigNames[i - 1];
-    if (i === 2 && sName === 'Ms. M. Rekha') sName = 'Mrs. M. Rekha';
+    let sName = certData['signatory_' + i + '_name'] || certData['signatory' + i + '_name'] || defaultSigNames[i - 1];
     ctx.fillText(sName, cx, sigLineY + 20);
   }
 
@@ -747,14 +746,13 @@ async function createCertificatePdf(certData = {}) {
   }
 
   // 1, 2, 3: Faculty Coordinators
-  const sig1Name = certData.signatory_1_name || 'Dr. M. Jeya Sundari';
-  let sig2Name = certData.signatory_2_name || 'Ms. M. Rekha';
-  if (sig2Name === 'Mrs. M. Rekha') sig2Name = 'Ms. M. Rekha';
-  const sig3Name = certData.signatory_3_name || 'Mr. M. Rama Krishnan';
+  const sig1Name = certData.signatory_1_name || certData.signatory1_name || 'Dr. M. Jeya Sundari';
+  const sig2Name = certData.signatory_2_name || certData.signatory2_name || 'Mrs. M. Rekha';
+  const sig3Name = certData.signatory_3_name || certData.signatory3_name || 'Mr. M. Rama Krishnan';
 
-  renderSigBlock(certData.signatory_1_sig || certData.signatory_1_name || defaultSigRoles[0], sigPositions[0], sig1Name, 31);
-  renderSigBlock(certData.signatory_2_sig || certData.signatory_2_name || defaultSigRoles[1], sigPositions[1], sig2Name, 29);
-  renderSigBlock(certData.signatory_3_sig || certData.signatory_3_name || defaultSigRoles[2], sigPositions[2], sig3Name, 36);
+  renderSigBlock(certData.signatory_1_sig || defaultSigRoles[0], sigPositions[0], sig1Name, 31);
+  renderSigBlock(certData.signatory_2_sig || defaultSigRoles[1], sigPositions[1], sig2Name, 29);
+  renderSigBlock(certData.signatory_3_sig || defaultSigRoles[2], sigPositions[2], sig3Name, 36);
 
   doc.setFont('times', 'bold');
   doc.setFontSize(10.5);
@@ -765,8 +763,8 @@ async function createCertificatePdf(certData = {}) {
   drawVerticalSep(129.5);
 
   // 4: Convenor
-  const sig4Name = certData.signatory_4_name || 'Dr. D. Kesavaraja';
-  renderSigBlock(certData.signatory_4_sig || certData.signatory_4_name || defaultSigRoles[3], sigPositions[3], sig4Name, 29);
+  const sig4Name = certData.signatory_4_name || certData.signatory4_name || 'Dr. D. Kesavaraja';
+  renderSigBlock(certData.signatory_4_sig || defaultSigRoles[3], sigPositions[3], sig4Name, 29);
   doc.setFont('times', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
@@ -776,8 +774,8 @@ async function createCertificatePdf(certData = {}) {
   drawVerticalSep(171.8);
 
   // 5: Patron
-  const sig5Name = certData.signatory_5_name || 'Dr. S. Rajakarunakaran';
-  renderSigBlock(certData.signatory_5_sig || certData.signatory_5_name || defaultSigRoles[4], sigPositions[4], sig5Name, 25);
+  const sig5Name = certData.signatory_5_name || certData.signatory5_name || 'Dr. S. Rajakarunakaran';
+  renderSigBlock(certData.signatory_5_sig || defaultSigRoles[4], sigPositions[4], sig5Name, 25);
   doc.setFont('times', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
@@ -787,8 +785,8 @@ async function createCertificatePdf(certData = {}) {
   drawVerticalSep(211.5);
 
   // 6: Chief Patron
-  const sig6Name = certData.signatory_6_name || 'Dr. L. Ganesan';
-  renderSigBlock(certData.signatory_6_sig || certData.signatory_6_name || defaultSigRoles[5], sigPositions[5], sig6Name, 31);
+  const sig6Name = certData.signatory_6_name || certData.signatory6_name || 'Dr. L. Ganesan';
+  renderSigBlock(certData.signatory_6_sig || defaultSigRoles[5], sigPositions[5], sig6Name, 31);
   doc.setFont('times', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
