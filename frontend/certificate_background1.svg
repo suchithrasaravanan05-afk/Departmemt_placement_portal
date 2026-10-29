@@ -1,84 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794" role="img" aria-label="Purple and gold A4 landscape certificate background">
+<svg xmlns="http://www.w3.org/2000/svg" width="1479" height="1064" viewBox="0 0 1479 1064">
   <defs>
-    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f4eaff"/>
-      <stop offset="0.28" stop-color="#fffefe"/>
-      <stop offset="0.72" stop-color="#fff"/>
-      <stop offset="1" stop-color="#f6edff"/>
-    </linearGradient>
-    <linearGradient id="purpleLine" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6a16b5"/>
-      <stop offset="0.5" stop-color="#9c3be0"/>
-      <stop offset="1" stop-color="#4b087f"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#b97a13"/>
-      <stop offset="0.45" stop-color="#f6d77a"/>
-      <stop offset="1" stop-color="#b9811c"/>
-    </linearGradient>
-    <linearGradient id="lavenderWash" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#d8b6ff" stop-opacity=".55"/>
-      <stop offset="1" stop-color="#eee0ff" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="bottomWash" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#c89bfa" stop-opacity=".52"/>
-      <stop offset="1" stop-color="#f4eaff" stop-opacity="0"/>
-    </linearGradient>
-    <pattern id="fineDots" width="20" height="20" patternUnits="userSpaceOnUse">
-      <circle cx="2" cy="2" r=".7" fill="#8e52c7" opacity=".13"/>
-    </pattern>
-    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="15"/>
-    </filter>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f9f7ff"/><stop offset=".42" stop-color="#fff"/><stop offset="1" stop-color="#f7f2ff"/></linearGradient>
+    <linearGradient id="lavender" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8d52f0" stop-opacity=".72"/><stop offset=".48" stop-color="#c8aaff" stop-opacity=".42"/><stop offset="1" stop-color="#e7dcff" stop-opacity=".12"/></linearGradient>
+    <linearGradient id="lavender2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bba0ff" stop-opacity=".08"/><stop offset=".5" stop-color="#a67af7" stop-opacity=".4"/><stop offset="1" stop-color="#6b2bd9" stop-opacity=".66"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4ad"/><stop offset=".45" stop-color="#e4a928"/><stop offset="1" stop-color="#b77a08"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="15"/></filter>
   </defs>
-
-  <!-- Paper base and subtle print-safe texture -->
-  <rect width="1123" height="794" fill="url(#paper)"/>
-  <rect x="0" y="0" width="1123" height="794" fill="url(#fineDots)" opacity=".22"/>
-
-  <!-- Soft lavender corner washes, intentionally kept away from the central text area -->
-  <path d="M0 0H440C315 56 250 112 175 207C111 288 61 331 0 357Z" fill="url(#lavenderWash)"/>
-  <path d="M0 0C140 32 195 93 249 163C169 143 103 192 0 304Z" fill="#e8d5ff" opacity=".30"/>
-  <path d="M1123 794H685C805 734 883 679 954 590C1019 508 1072 465 1123 438Z" fill="url(#bottomWash)"/>
-  <path d="M1123 794C988 757 927 707 875 640C959 663 1034 614 1123 500Z" fill="#e5d0ff" opacity=".26"/>
-  <ellipse cx="75" cy="70" rx="155" ry="108" fill="#cda5f6" opacity=".14" filter="url(#softBlur)"/>
-  <ellipse cx="1060" cy="733" rx="160" ry="100" fill="#cda5f6" opacity=".14" filter="url(#softBlur)"/>
-
-  <!-- Fine flowing corner ribbons -->
-  <g fill="none" stroke-linecap="round">
-    <path d="M-22 177C74 118 116 62 221 23" stroke="#a66be0" stroke-width="2" opacity=".25"/>
-    <path d="M-22 202C73 141 129 88 245 37" stroke="#c7a0f0" stroke-width="1.5" opacity=".42"/>
-    <path d="M-25 229C69 172 146 116 270 53" stroke="#d5baf5" stroke-width="1.2" opacity=".52"/>
-    <path d="M1146 615C1051 672 1007 728 900 770" stroke="#a66be0" stroke-width="2" opacity=".25"/>
-    <path d="M1146 590C1050 650 994 705 878 757" stroke="#c7a0f0" stroke-width="1.5" opacity=".42"/>
-    <path d="M1148 562C1051 620 976 677 854 741" stroke="#d5baf5" stroke-width="1.2" opacity=".52"/>
-    <path d="M17 506C43 572 44 622 14 691" stroke="#b98be8" stroke-width="1.2" opacity=".22"/>
-    <path d="M1106 101C1080 167 1080 217 1110 286" stroke="#b98be8" stroke-width="1.2" opacity=".22"/>
+  <rect width="1479" height="1064" fill="#ece8f3"/>
+  <rect x="7" y="7" width="1465" height="1050" fill="url(#paper)"/>
+  <!-- soft background ribbons -->
+  <path d="M8 10 H690 C520 65 415 105 315 188 C205 278 120 348 8 455 Z" fill="url(#lavender)" opacity=".42"/>
+  <path d="M8 12 H525 C415 75 320 130 245 214 C165 302 92 376 8 439 Z" fill="#b69aff" opacity=".28"/>
+  <path d="M8 20 C170 100 305 63 458 13 C335 98 190 176 8 330 Z" fill="#7c40e4" opacity=".2"/>
+  <path d="M8 278 C140 168 230 113 405 35 C270 144 166 238 8 420 Z" fill="#d6c7ff" opacity=".55"/>
+  <path d="M8 420 C160 270 282 180 506 55 C340 186 190 300 8 468 Z" fill="#9a69ee" opacity=".18"/>
+  <path d="M8 440 C150 318 245 238 395 155 C255 260 140 370 8 478 Z" fill="#8d54eb" opacity=".16"/>
+  <path d="M8 740 C170 625 275 572 450 510 C270 615 160 720 8 818 Z" fill="#bba2ff" opacity=".12"/>
+  <path d="M1470 415 C1350 560 1318 670 1260 805 C1210 916 1065 986 860 1055 L1472 1055 Z" fill="url(#lavender2)" opacity=".55"/>
+  <path d="M1472 480 C1368 600 1350 720 1270 834 C1195 940 1050 1000 925 1055 L1472 1055 Z" fill="#a77cf5" opacity=".24"/>
+  <path d="M1472 575 C1375 696 1350 796 1270 887 C1190 978 1080 1018 1000 1055 L1472 1055 Z" fill="#8b4ee9" opacity=".25"/>
+  <path d="M500 1055 C740 1005 930 978 1115 880 C1265 800 1365 690 1472 570 L1472 1055 Z" fill="#c6adff" opacity=".2"/>
+  <path d="M620 1055 C850 1007 1040 958 1205 846 C1335 758 1400 672 1472 590" fill="none" stroke="#a67af4" stroke-width="5" opacity=".45"/>
+  <path d="M560 1055 C815 1000 1015 944 1185 828 C1320 735 1400 637 1472 545" fill="none" stroke="#b89aff" stroke-width="4" opacity=".5"/>
+  <path d="M500 1055 C770 985 970 928 1155 805 C1310 702 1395 596 1472 505" fill="none" stroke="#c9b5ff" stroke-width="4" opacity=".55"/>
+  <path d="M8 850 C140 755 260 695 390 650" fill="none" stroke="#c9b7ff" stroke-width="7" opacity=".22"/>
+  <path d="M8 900 C160 790 280 735 425 680" fill="none" stroke="#b9a0ff" stroke-width="5" opacity=".2"/>
+  <!-- clean white writing field -->
+  <rect x="42" y="43" width="1395" height="966" rx="2" fill="#fff" opacity=".52"/>
+  <rect x="43" y="44" width="1393" height="964" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="2"/>
+  <!-- outer frame -->
+  <rect x="8" y="8" width="1463" height="1048" fill="none" stroke="#34206c" stroke-width="2"/>
+  <rect x="22" y="22" width="1435" height="1020" fill="none" stroke="#4a178f" stroke-width="3"/>
+  <rect x="29" y="29" width="1421" height="1006" fill="none" stroke="#8c5ad9" stroke-width="1.5"/>
+  <rect x="38" y="38" width="1403" height="988" fill="none" stroke="#35106f" stroke-width="3"/>
+  <rect x="44" y="44" width="1391" height="976" fill="none" stroke="#d3b8ff" stroke-width="1"/>
+  <!-- corner ornaments, repeated with mirrored geometry -->
+  <g id="corner" stroke-linejoin="miter">
+    <path d="M24 29 H91 L29 94 V63 L63 29 Z" fill="#4b1597"/>
+    <path d="M29 95 V67 L67 29 H96 L29 96 Z" fill="none" stroke="#fff" stroke-width="8"/>
+    <path d="M29 96 V70 L70 29 H96" fill="none" stroke="url(#gold)" stroke-width="4"/>
+    <path d="M43 43 H69 L43 69 Z" fill="#fff" opacity=".95"/>
   </g>
-
-  <!-- Outer double frame -->
-  <rect x="12" y="12" width="1099" height="770" rx="1" fill="none" stroke="url(#purpleLine)" stroke-width="3"/>
-  <rect x="25" y="25" width="1073" height="744" rx="1" fill="none" stroke="#7b2bc0" stroke-width="1.5"/>
-  <rect x="33" y="33" width="1057" height="728" rx="1" fill="none" stroke="url(#gold)" stroke-width="1.4"/>
-  <rect x="41" y="41" width="1041" height="712" rx="1" fill="none" stroke="#8f4ac5" stroke-width=".8" opacity=".65"/>
-
-  <!-- Art-deco stepped corner details -->
-  <g fill="none" stroke-linejoin="miter">
-    <path d="M22 72V22H72 M30 80V30H80 M38 88V38H88" stroke="#6f20b3" stroke-width="2.4"/>
-    <path d="M26 66V26H66" stroke="url(#gold)" stroke-width="1.5"/>
-    <path d="M1051 22H1101V72 M1043 30H1093V80 M1035 38H1085V88" stroke="#6f20b3" stroke-width="2.4"/>
-    <path d="M1057 26H1097V66" stroke="url(#gold)" stroke-width="1.5"/>
-    <path d="M22 722V772H72 M30 714V764H80 M38 706V756H88" stroke="#6f20b3" stroke-width="2.4"/>
-    <path d="M26 728V768H66" stroke="url(#gold)" stroke-width="1.5"/>
-    <path d="M1051 772H1101V722 M1043 764H1093V714 M1035 756H1085V706" stroke="#6f20b3" stroke-width="2.4"/>
-    <path d="M1057 768H1097V728" stroke="url(#gold)" stroke-width="1.5"/>
-  </g>
-
-  <!-- Tiny gold corner accents -->
-  <g fill="url(#gold)">
-    <path d="M95 32l5 5-5 5-5-5z"/><path d="M1028 32l5 5-5 5-5-5z"/>
-    <path d="M95 752l5 5-5 5-5-5z"/><path d="M1028 752l5 5-5 5-5-5z"/>
-  </g>
-
-  <!-- Keep central area open for dynamic certificate content. No text, logos, signatures or QR are baked in. -->
+  <use href="#corner" transform="translate(1479 0) scale(-1 1)"/>
+  <use href="#corner" transform="translate(0 1064) scale(1 -1)"/>
+  <use href="#corner" transform="translate(1479 1064) scale(-1 -1)"/>
+  <!-- extra fine inner corner rails -->
+  <path d="M53 54 H110 M54 54 V110 M1426 54 H1369 M1425 54 V110 M53 1010 H110 M54 1010 V954 M1426 1010 H1369 M1425 1010 V954" fill="none" stroke="#6b35b4" stroke-width="2" opacity=".9"/>
 </svg>

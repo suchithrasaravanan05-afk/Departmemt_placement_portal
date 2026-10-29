@@ -19,7 +19,7 @@ const collegeLogoB64 = 'data:image/png;base64,' + collegeLogoBuf.toString('base6
 const csbsLogoBuf = fs.readFileSync(path.join(__dirname, '../frontend/certificate_logo/csbs_logo_clean.png'));
 const csbsLogoB64 = 'data:image/png;base64,' + csbsLogoBuf.toString('base64');
 
-const bgBuf = fs.readFileSync(path.join(__dirname, 'a4_bg_clean.png'));
+const bgBuf = fs.readFileSync(path.join(__dirname, '../frontend/certificate_background.png'));
 const bgB64 = 'data:image/png;base64,' + bgBuf.toString('base64');
 
 const sigs = ['jeyasundari', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
@@ -258,28 +258,26 @@ function drawCanvasArabesque(ctx, cx, cy, width = 240) {
     }
   }
 
-  drawDiamond(cx, cy, 14, 18, null, purple, 2.4);
-  ctx.fillStyle = purple;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 3.6, 0, Math.PI * 2);
-  ctx.fill();
+  // 5 diamonds matching reference
+  drawDiamond(cx - 36, cy, 5, 5, gold);
+  drawDiamond(cx + 36, cy, 5, 5, gold);
+  drawDiamond(cx - 18, cy, 7, 7, purple);
+  drawDiamond(cx + 18, cy, 7, 7, purple);
+  drawDiamond(cx, cy, 11, 11, purple, gold, 1.5);
 
-  drawDiamond(cx - 30, cy, 11, 11, gold, gold);
-  drawDiamond(cx + 30, cy, 11, 11, gold, gold);
-
-  ctx.strokeStyle = purple;
-  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(cx - 250, cy);
-  ctx.lineTo(cx - 48, cy);
-  ctx.moveTo(cx + 48, cy);
-  ctx.lineTo(cx + 250, cy);
+  ctx.moveTo(cx - 280, cy);
+  ctx.lineTo(cx - 50, cy);
+  ctx.moveTo(cx + 50, cy);
+  ctx.lineTo(cx + 280, cy);
   ctx.stroke();
 
   ctx.fillStyle = gold;
   ctx.beginPath();
-  ctx.arc(cx - 250, cy, 4.4, 0, Math.PI * 2);
-  ctx.arc(cx + 250, cy, 4.4, 0, Math.PI * 2);
+  ctx.arc(cx - 282, cy, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 282, cy, 2.5, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -319,15 +317,17 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     const logoH = Math.round(height * 0.117);
     const logoW = Math.round(logoH * (172 / 210));
     ctx.drawImage(ritLogoImg, Math.round(width * 0.061), Math.round(height * 0.067), logoW, logoH);
+  }  // 3. Institutional Heading
+  let collegeName = sanitizePdfText(certData.college_name || certData.institution || 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM').toUpperCase();
+  if (collegeName.includes('DEPARTMENT') || collegeName.includes('CSBS') || !collegeName.includes('RAMCO')) {
+    collegeName = 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM';
   }
-
-  // 3. Institutional Heading
   ctx.textAlign = 'center';
-  ctx.font = 'bold 36px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 38px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1A1A40';
-  ctx.fillText('RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM', width / 2, Math.round(height * 0.093));
+  ctx.fillText(collegeName, width / 2, Math.round(height * 0.093));
 
-  ctx.font = 'bold 18px "Times New Roman", Georgia, serif';
+  ctx.font = 'bold 19px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#B91C1C';
   ctx.fillText('(An Autonomous Institution)', width / 2, Math.round(height * 0.119));
 
@@ -364,7 +364,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   let nameFontSize = 66;
   if (participantName.length > 26) nameFontSize = 52;
   if (participantName.length > 36) nameFontSize = 42;
-  ctx.font = \`bold italic \${nameFontSize}px "Times New Roman", Georgia, serif\`;
+  ctx.font = 'bold italic ' + nameFontSize + 'px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#3B0764';
   ctx.fillText(participantName, width / 2, Math.round(height * 0.474));
 
@@ -372,15 +372,15 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   const customWording = (certData.certificate_wording || '').trim();
   const isCustomDescription = customWording && !customWording.includes('Emerging Blockchain Technolo');
 
-  ctx.font = 'normal 22px "Times New Roman", Georgia, serif';
+  ctx.font = 'normal 26px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#1F2937';
   if (isCustomDescription) {
     ctx.fillText(customWording, width / 2, Math.round(height * 0.58));
   } else {
     const lineY1 = Math.round(height * 0.545);
-    const lineY2 = Math.round(height * 0.576);
-    const lineY3 = Math.round(height * 0.607);
-    const lineY4 = Math.round(height * 0.638);
+    const lineY2 = Math.round(height * 0.578);
+    const lineY3 = Math.round(height * 0.611);
+    const lineY4 = Math.round(height * 0.644);
     ctx.fillText('for active participation in the One Week Online Short-Term Training Programme (STTP) on', width / 2, lineY1);
     ctx.fillText('“Emerging Blockchain Technologies”, organized by the Department of Computer Science and', width / 2, lineY2);
     ctx.fillText('Business Systems (CSBS) at Ramco Institute of Technology, Rajapalayam from', width / 2, lineY3);
@@ -398,9 +398,10 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ];
   const sigLineY = Math.round(height * 0.814);
   const defaultSigRoles = ['jeyasundari', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
+  const defaultSigNames = ['Dr. M. Jeya Sundari', 'Mrs. M. Rekha', 'Mr. M. Rama Krishnan', 'Dr. D. Kesavaraja', 'Dr. S. Rajakarunakaran', 'Dr. L. Ganesan'];
 
   for (let i = 1; i <= 6; i++) {
-    const sigKey = certData[\`signatory_\${i}_sig\`] || certData[\`signatory_\${i}_name\`] || defaultSigRoles[i - 1];
+    const sigKey = certData['signatory_' + i + '_sig'] || certData['signatory_' + i + '_name'] || defaultSigRoles[i - 1];
     const sigAsset = getSignatoryAsset(sigKey);
     const sigImg = await ritLoadImage(sigAsset);
     const cx = sigPositions[i - 1];
@@ -432,7 +433,9 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     // Name
     ctx.font = 'bold 16px "Times New Roman", Georgia, serif';
     ctx.fillStyle = '#111827';
-    ctx.fillText(certData[\`signatory_\${i}_name\`] || '', cx, sigLineY + 20);
+    let sName = certData['signatory_' + i + '_name'] || defaultSigNames[i - 1];
+    if (i === 2 && sName === 'Ms. M. Rekha') sName = 'Mrs. M. Rekha';
+    ctx.fillText(sName, cx, sigLineY + 20);
   }
 
   // Roles
@@ -519,106 +522,110 @@ async function createCertificatePdf(certData = {}) {
   const deepPurple = [59, 7, 100];    // #3B0764
   const darkGrey = [31, 41, 55];      // #1F2937
 
-  // 2. Approved RIT College Shield Logo at Upper Left
+  // 2. Approved College Logo at Upper Left
   const ritLogo = getLogoAsset('rit_logo');
   if (ritLogo) {
     try {
       const logoH = 24.5;
-      const logoW = logoH * (172 / 210);
-      doc.addImage(ritLogo, 'PNG', 18.0, 14.0, logoW, logoH);
+      const logoW = logoH * (172 / 210); // 20.0mm
+      doc.addImage(ritLogo, 'PNG', 15.0, 14.0, logoW, logoH);
     } catch (e) {
       console.error('[Asset Error] RIT logo embed failed:', e);
     }
-  } else {
-    console.error('[Asset Error] RIT college logo asset is missing!');
   }
 
   // 3. Centered Institutional Heading Area
+  let collegeName = sanitizePdfText(certData.college_name || certData.institution || 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM').toUpperCase();
+  if (collegeName.includes('DEPARTMENT') || collegeName.includes('CSBS') || !collegeName.includes('RAMCO')) {
+    collegeName = 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM';
+  }
   doc.setFont('times', 'bold');
-  doc.setFontSize(20.5);
+  doc.setFontSize(21.5);
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2]);
-  const collegeName = sanitizePdfText(certData.college_name || 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM').toUpperCase();
-  doc.text(collegeName, pageWidth / 2, 19.5, { align: 'center' });
+  doc.text(collegeName, pageWidth / 2, 22.8, { align: 'center' });
 
   doc.setFont('times', 'bold');
-  doc.setFontSize(10.5);
+  doc.setFontSize(11.5);
   doc.setTextColor(maroon[0], maroon[1], maroon[2]);
-  doc.text(sanitizePdfText(certData.autonomous_text || '(An Autonomous Institution)'), pageWidth / 2, 25.0, { align: 'center' });
+  doc.text(sanitizePdfText(certData.autonomous_text || '(An Autonomous Institution)'), pageWidth / 2, 29.5, { align: 'center' });
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(9.2);
+  doc.setFontSize(9.5);
   doc.setTextColor(darkGrey[0], darkGrey[1], darkGrey[2]);
-  doc.text(sanitizePdfText(certData.approval_text || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai'), pageWidth / 2, 29.5, { align: 'center' });
+  doc.text(sanitizePdfText(certData.approval_text || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai'), pageWidth / 2, 35.5, { align: 'center' });
+  doc.text(sanitizePdfText(certData.naac_text || "NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution"), pageWidth / 2, 41.2, { align: 'center' });
+  doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.'), pageWidth / 2, 46.8, { align: 'center' });
 
-  doc.text(sanitizePdfText(certData.naac_text || "NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution"), pageWidth / 2, 34.0, { align: 'center' });
-  doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.'), pageWidth / 2, 38.5, { align: 'center' });
-
-  // 4. CSBS Department Logo Centered Beneath Institutional Heading
+  // 4. CSBS Logo Centered Beneath Accreditation Details
   const csbsLogo = getLogoAsset('csbs_logo');
   if (csbsLogo) {
     try {
-      const csbsW = 58.0;
-      const csbsH = csbsW / 4.251;
+      const csbsW = 92.0;
+      const csbsH = csbsW / 4.251; // 21.6mm
       const csbsX = (pageWidth - csbsW) / 2;
-      doc.addImage(csbsLogo, 'PNG', csbsX, 42.0, csbsW, csbsH);
+      doc.addImage(csbsLogo, 'PNG', csbsX, 52.0, csbsW, csbsH);
     } catch (e) {
       console.error('[Asset Error] CSBS logo embed failed:', e);
     }
-  } else {
-    console.error('[Asset Error] CSBS department logo asset is missing!');
   }
 
-  // 5. Certificate Title
+  // 5. Title
   doc.setFont('times', 'bold');
-  doc.setFontSize(31.0);
+  doc.setFontSize(34.0);
   doc.setTextColor(74, 21, 75);
-  doc.text(sanitizePdfText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION').toUpperCase(), pageWidth / 2, 66.0, { align: 'center' });
+  doc.text(sanitizePdfText(certData.certificate_title || 'CERTIFICATE OF PARTICIPATION').toUpperCase(), pageWidth / 2, 86.0, { align: 'center' });
 
-  // Vector Ornamental Arabesque Divider matching exact reference
-  function drawArabesque(cx, cy, width = 85) {
+  // Arabesque divider matching exact reference (5 diamonds)
+  function drawRefArabesque(cx, cy, width = 120) {
     const half = width / 2;
     doc.setDrawColor(gold[0], gold[1], gold[2]);
-    doc.setLineWidth(0.4);
+    doc.setLineWidth(0.45);
 
-    // Left line with end dot
-    doc.line(cx - half + 4, cy, cx - 14, cy);
+    // Left and right horizontal gold lines with end circles
+    doc.line(cx - half, cy, cx - 18, cy);
     doc.setFillColor(gold[0], gold[1], gold[2]);
-    doc.circle(cx - half + 3, cy, 0.6, 'F');
+    doc.circle(cx - half - 0.6, cy, 0.5, 'F');
 
-    // Right line with end dot
-    doc.line(cx + 14, cy, cx + half - 4, cy);
-    doc.circle(cx + half - 3, cy, 0.6, 'F');
+    doc.line(cx + 18, cy, cx + half, cy);
+    doc.circle(cx + half + 0.6, cy, 0.5, 'F');
 
-    function drawDiamond(x, y, rx, ry, col) {
-      doc.setFillColor(col[0], col[1], col[2]);
-      doc.lines([[rx, ry], [-rx, ry], [-rx, -ry], [rx, -ry]], x - rx, y, [1, 1], 'F', true);
+    function drawDiamond(x, y, r, fillCol, strokeCol = null, strokeW = 0.3) {
+      doc.setFillColor(fillCol[0], fillCol[1], fillCol[2]);
+      if (strokeCol) {
+        doc.setDrawColor(strokeCol[0], strokeCol[1], strokeCol[2]);
+        doc.setLineWidth(strokeW);
+        doc.lines([[r, r], [-r, r], [-r, -r], [r, -r]], x - r, y, [1, 1], 'FD', true);
+      } else {
+        doc.lines([[r, r], [-r, r], [-r, -r], [r, -r]], x - r, y, [1, 1], 'F', true);
+      }
     }
-    drawDiamond(cx - 10, cy, 1.4, 1.4, gold);
-    drawDiamond(cx + 10, cy, 1.4, 1.4, gold);
-    drawDiamond(cx - 5.2, cy, 2.0, 2.0, purple);
-    drawDiamond(cx + 5.2, cy, 2.0, 2.0, purple);
-    drawDiamond(cx, cy, 3.2, 3.2, gold);
-    drawDiamond(cx, cy, 1.8, 1.8, purple);
+
+    // 5 diamonds
+    drawDiamond(cx - 14, cy, 1.5, gold);
+    drawDiamond(cx + 14, cy, 1.5, gold);
+    drawDiamond(cx - 7, cy, 2.2, purple);
+    drawDiamond(cx + 7, cy, 2.2, purple);
+    drawDiamond(cx, cy, 3.2, purple, gold, 0.45);
   }
-  drawArabesque(pageWidth / 2, 71.8, 85);
+  drawRefArabesque(pageWidth / 2, 93.0, 120);
 
-  // 6. Preamble: 'This is to certify that' at 23.0 pt!
+  // 6. Preamble: 'This is to certify that'
   doc.setFont('times', 'normal');
-  doc.setFontSize(23.0);
+  doc.setFontSize(21.0);
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2]);
-  doc.text(sanitizePdfText(certData.preamble || 'This is to certify that'), pageWidth / 2, 83.5, { align: 'center' });
+  doc.text(sanitizePdfText(certData.preamble || 'This is to certify that'), pageWidth / 2, 104.5, { align: 'center' });
 
-  // 7. Recipient Participant Name
+  // 7. Participant Name (Dynamic)
   const participantName = sanitizePdfText(certData.participant_name || certData.student_name || 'Mr./Ms. PARTICIPANT NAME');
   doc.setFont('times', 'bolditalic');
-  let nameSize = 38.0;
-  if (participantName.length > 26) nameSize = 30.0;
-  if (participantName.length > 36) nameSize = 24.0;
+  let nameSize = 34.0;
+  if (participantName.length > 26) nameSize = 28.0;
+  if (participantName.length > 36) nameSize = 22.0;
   doc.setFontSize(nameSize);
   doc.setTextColor(deepPurple[0], deepPurple[1], deepPurple[2]);
-  doc.text(participantName, pageWidth / 2, 99.5, { align: 'center' });
+  doc.text(participantName, pageWidth / 2, 119.5, { align: 'center' });
 
-  // 8. Event Description Paragraph (4 Balanced Lines)
+  // 8. Event Description Paragraph (Exact 17.0 pt font size matching reference)
   function renderStyledLine(segments, y, spaceGap = 1.8) {
     const computed = segments.map(seg => {
       doc.setFont(seg.font, seg.style);
@@ -648,16 +655,16 @@ async function createCertificatePdf(certData = {}) {
   const isCustomDescription = customWording && !customWording.includes('Emerging Blockchain Technolo');
 
   if (isCustomDescription) {
-    const wrappedLines = doc.splitTextToSize(customWording, 235);
-    let startY = 114.5;
+    const wrappedLines = doc.splitTextToSize(customWording, 240);
+    let startY = 132.5;
     doc.setFont('times', 'normal');
-    doc.setFontSize(12.5);
+    doc.setFontSize(15.0);
     doc.setTextColor(darkGrey[0], darkGrey[1], darkGrey[2]);
     wrappedLines.forEach((ln, idx) => {
-      doc.text(ln, pageWidth / 2, startY + (idx * 6.5), { align: 'center' });
+      doc.text(ln, pageWidth / 2, startY + (idx * 8.0), { align: 'center' });
     });
   } else {
-    const pSize = 12.5;
+    const pSize = 17.0;
     const progTitle = 'One Week Online Short-Term Training Programme (STTP)';
     let eventTopic = certData.event_name || 'Emerging Blockchain Technologies';
     if (eventTopic.includes('Emerging Blockchain')) {
@@ -671,38 +678,38 @@ async function createCertificatePdf(certData = {}) {
       { text: 'for active participation in the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: progTitle, font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'on', font: 'times', style: 'normal', size: pSize, color: darkGrey }
-    ], 114.5);
+    ], 132.5, 2.4);
 
     renderStyledLine([
       { text: '“' + eventTopic + '”,', font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'organized by the', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: orgDept, font: 'times', style: 'bold', size: pSize, color: deepPurple }
-    ], 121.0);
+    ], 141.0, 2.4);
 
     renderStyledLine([
       { text: 'Business Systems (CSBS)', font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'at', font: 'times', style: 'normal', size: pSize, color: darkGrey },
       { text: orgInst, font: 'times', style: 'bold', size: pSize, color: deepPurple },
       { text: 'from', font: 'times', style: 'normal', size: pSize, color: darkGrey }
-    ], 127.5);
+    ], 149.5, 2.4);
 
     renderStyledLine([
       { text: dates, font: 'times', style: 'bold', size: pSize, color: deepPurple }
-    ], 134.0);
+    ], 157.5, 2.4);
   }
 
-  // 9. Signatures Section in 4 Balanced Groups with Handwritten Signatures
-  const sigLineY = 171.0;
-  const sigPositions = [36, 70, 104, 147, 188, 227];
+  // 9. Signatures Section with all 6 authentic handwritten signatures
+  const sigLineY = 174.0;
+  const sigPositions = [30.2, 68.3, 108.5, 152.6, 188.5, 235.1];
   const defaultSigRoles = ['jeyasundari', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
 
-  function renderSigBlock(sigKey, cx, name) {
+  function renderSigBlock(sigKey, cx, name, lineWidth = 30) {
     const asset = getSignatoryAsset(sigKey);
     if (asset) {
       try {
         const props = doc.getImageProperties(asset);
         const maxW = 28;
-        const maxH = 14;
+        const maxH = 13.5;
         let w = maxW;
         let h = maxH;
         if (props && props.width && props.height) {
@@ -713,7 +720,7 @@ async function createCertificatePdf(certData = {}) {
             w = maxH * aspect;
           }
         }
-        doc.addImage(asset, 'PNG', cx - w / 2, sigLineY - h - 1.5, w, h);
+        doc.addImage(asset, 'PNG', cx - w / 2, sigLineY - h - 1.2, w, h);
       } catch (e) {
         console.error('[Asset Error] Signature image embed failed for ' + name + ':', e);
       }
@@ -723,76 +730,77 @@ async function createCertificatePdf(certData = {}) {
 
     // Baseline Line
     doc.setDrawColor(purple[0], purple[1], purple[2]);
-    doc.setLineWidth(0.4);
-    doc.line(cx - 14, sigLineY, cx + 14, sigLineY);
+    doc.setLineWidth(0.45);
+    doc.line(cx - lineWidth / 2, sigLineY, cx + lineWidth / 2, sigLineY);
 
     // Name
     doc.setFont('times', 'bold');
     doc.setFontSize(9.2);
     doc.setTextColor(17, 24, 39);
-    doc.text(sanitizePdfText(name), cx, sigLineY + 4.8, { align: 'center' });
+    doc.text(sanitizePdfText(name), cx, sigLineY + 5.0, { align: 'center' });
   }
 
   function drawVerticalSep(x) {
     doc.setDrawColor(gold[0], gold[1], gold[2]);
-    doc.setLineWidth(0.4);
-    doc.line(x, sigLineY - 10, x, sigLineY + 11);
+    doc.setLineWidth(0.45);
+    doc.line(x, sigLineY - 10, x, sigLineY + 11.5);
   }
 
   // 1, 2, 3: Faculty Coordinators
   const sig1Name = certData.signatory_1_name || 'Dr. M. Jeya Sundari';
-  const sig2Name = certData.signatory_2_name || 'Ms. M. Rekha';
+  let sig2Name = certData.signatory_2_name || 'Ms. M. Rekha';
+  if (sig2Name === 'Mrs. M. Rekha') sig2Name = 'Ms. M. Rekha';
   const sig3Name = certData.signatory_3_name || 'Mr. M. Rama Krishnan';
 
-  renderSigBlock(certData.signatory_1_sig || certData.signatory_1_name || defaultSigRoles[0], sigPositions[0], sig1Name);
-  renderSigBlock(certData.signatory_2_sig || certData.signatory_2_name || defaultSigRoles[1], sigPositions[1], sig2Name);
-  renderSigBlock(certData.signatory_3_sig || certData.signatory_3_name || defaultSigRoles[2], sigPositions[2], sig3Name);
+  renderSigBlock(certData.signatory_1_sig || certData.signatory_1_name || defaultSigRoles[0], sigPositions[0], sig1Name, 31);
+  renderSigBlock(certData.signatory_2_sig || certData.signatory_2_name || defaultSigRoles[1], sigPositions[1], sig2Name, 29);
+  renderSigBlock(certData.signatory_3_sig || certData.signatory_3_name || defaultSigRoles[2], sigPositions[2], sig3Name, 36);
 
   doc.setFont('times', 'bold');
-  doc.setFontSize(10.0);
+  doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
-  doc.text('Faculty Coordinator(s)', sigPositions[1], sigLineY + 10.5, { align: 'center' });
+  doc.text('Faculty Coordinator(s)', sigPositions[1], sigLineY + 11.0, { align: 'center' });
 
   // Separator 1
-  drawVerticalSep(125.5);
+  drawVerticalSep(129.5);
 
   // 4: Convenor
   const sig4Name = certData.signatory_4_name || 'Dr. D. Kesavaraja';
-  renderSigBlock(certData.signatory_4_sig || certData.signatory_4_name || defaultSigRoles[3], sigPositions[3], sig4Name);
+  renderSigBlock(certData.signatory_4_sig || certData.signatory_4_name || defaultSigRoles[3], sigPositions[3], sig4Name, 29);
   doc.setFont('times', 'bold');
-  doc.setFontSize(9.8);
+  doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
-  doc.text('Convenor', sigPositions[3], sigLineY + 10.2, { align: 'center' });
+  doc.text('Convenor', sigPositions[3], sigLineY + 11.0, { align: 'center' });
 
   // Separator 2
-  drawVerticalSep(167.5);
+  drawVerticalSep(171.8);
 
   // 5: Patron
   const sig5Name = certData.signatory_5_name || 'Dr. S. Rajakarunakaran';
-  renderSigBlock(certData.signatory_5_sig || certData.signatory_5_name || defaultSigRoles[4], sigPositions[4], sig5Name);
+  renderSigBlock(certData.signatory_5_sig || certData.signatory_5_name || defaultSigRoles[4], sigPositions[4], sig5Name, 25);
   doc.setFont('times', 'bold');
-  doc.setFontSize(9.8);
+  doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
-  doc.text('Patron', sigPositions[4], sigLineY + 10.2, { align: 'center' });
+  doc.text('Patron', sigPositions[4], sigLineY + 11.0, { align: 'center' });
 
   // Separator 3
-  drawVerticalSep(207.5);
+  drawVerticalSep(211.5);
 
   // 6: Chief Patron
   const sig6Name = certData.signatory_6_name || 'Dr. L. Ganesan';
-  renderSigBlock(certData.signatory_6_sig || certData.signatory_6_name || defaultSigRoles[5], sigPositions[5], sig6Name);
+  renderSigBlock(certData.signatory_6_sig || certData.signatory_6_name || defaultSigRoles[5], sigPositions[5], sig6Name, 31);
   doc.setFont('times', 'bold');
-  doc.setFontSize(9.8);
+  doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
-  doc.text('Chief Patron', sigPositions[5], sigLineY + 10.2, { align: 'center' });
+  doc.text('Chief Patron', sigPositions[5], sigLineY + 11.0, { align: 'center' });
 
-  // 10. Dedicated Plain-Text QR Code in Bottom Right Area (plain text ID only, under QR keep ID)
-  const certId = certData.certificate_number || certData.certificate_id || 'RITCB 01 0001';
-  const qrTarget = certId; // Plain text certificate ID only — no URLs, redirects, or routes
+  // 10. QR Code in Bottom Right Area
+  const certId = certData.certificate_number || certData.certificate_id || 'RIT-STTP-2026-F1F4';
+  const qrTarget = certId;
 
-  const qrX = 258.0;
-  const qrY = 160.5;
-  const qrSize = 23.5;
+  const qrX = 255.5;
+  const qrY = 162.0;
+  const qrSize = 23.0;
 
   let qrDataUrl = null;
   if (typeof require !== 'undefined') {
@@ -809,12 +817,23 @@ async function createCertificatePdf(certData = {}) {
 
   if (qrDataUrl) {
     doc.setFillColor(255, 255, 255);
-    doc.rect(qrX - 1.5, qrY - 1.5, qrSize + 3.0, qrSize + 7.5, 'F');
+    doc.rect(qrX - 2.0, qrY - 2.0, qrSize + 4.0, qrSize + 9.5, 'F');
     doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+
+    // Certificate ID capsule outline underneath QR
+    const capsuleW = qrSize + 2.0;
+    const capsuleH = 4.8;
+    const capsuleX = qrX + (qrSize - capsuleW) / 2;
+    const capsuleY = qrY + qrSize + 1.2;
+
+    doc.setDrawColor(209, 213, 219);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(capsuleX, capsuleY, capsuleW, capsuleH, 1.0, 1.0, 'S');
+
     doc.setFont('times', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(7.8);
     doc.setTextColor(17, 24, 39);
-    doc.text(certId, qrX + qrSize / 2, qrY + qrSize + 4.2, { align: 'center' });
+    doc.text(certId, qrX + qrSize / 2, capsuleY + 3.4, { align: 'center' });
   }
 
   return doc;
