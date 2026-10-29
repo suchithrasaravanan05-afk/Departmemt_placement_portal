@@ -1994,6 +1994,7 @@ async function openCertificateViewModal(cert) {
   if (el('certModalSig6Title')) el('certModalSig6Title').innerText = cert.signatory_6_title || 'Chief Patron';
   if (el('certModalSig6Org')) el('certModalSig6Org').innerText = cert.signatory_6_org || cert.signatory_6_dept || 'RIT';
 
+  const defaultSigRoles = ['jeyasundari', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
   for (let i = 1; i <= 6; i++) {
     const img = el(`certModalSig${i}Img`);
     if (img) {
@@ -2001,7 +2002,11 @@ async function openCertificateViewModal(cert) {
         img.src = cert[`signatory_${i}_sig`];
         img.style.display = 'block';
       } else {
-        img.style.display = 'none';
+        const defaultSig = (window.RIT_CERT_ASSETS && window.RIT_CERT_ASSETS.getSignatoryAsset)
+          ? window.RIT_CERT_ASSETS.getSignatoryAsset(defaultSigRoles[i - 1])
+          : `signature/${defaultSigRoles[i - 1]}.png`;
+        img.src = defaultSig;
+        img.style.display = 'block';
       }
     }
   }

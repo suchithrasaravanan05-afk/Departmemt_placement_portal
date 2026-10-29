@@ -884,6 +884,7 @@ function updateLiveCertificatePreview() {
   const sample = (certGenState.records && certGenState.records.length > 0) ? certGenState.records[0] : null;
   const participantName = (sample && (sample.participant_name || sample.student_name)) ? (sample.participant_name || sample.student_name) : 'Mr./Ms. PARTICIPANT NAME';
 
+  if (document.getElementById('prevPreamble')) document.getElementById('prevPreamble').innerText = 'This is to certify that';
   if (document.getElementById('prevCertTitle')) document.getElementById('prevCertTitle').innerText = title;
   if (document.getElementById('prevStudentName')) document.getElementById('prevStudentName').innerText = participantName;
   if (document.getElementById('prevProgTitle')) document.getElementById('prevProgTitle').innerText = progTitle;
@@ -912,7 +913,11 @@ function updateLiveCertificatePreview() {
         imgEl.src = customUploadedSignatures[i];
         imgEl.style.display = 'block';
       } else {
-        imgEl.style.display = 'none';
+        const defaultSig = (window.RIT_CERT_ASSETS && window.RIT_CERT_ASSETS.getSignatoryAsset)
+          ? window.RIT_CERT_ASSETS.getSignatoryAsset(defaultSigRoles[i - 1])
+          : `signature/${defaultSigRoles[i - 1]}.png`;
+        imgEl.src = defaultSig;
+        imgEl.style.display = 'block';
       }
     }
   }
