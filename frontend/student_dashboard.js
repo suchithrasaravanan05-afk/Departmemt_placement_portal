@@ -1994,21 +1994,17 @@ async function openCertificateViewModal(cert) {
   if (el('certModalSig6Title')) el('certModalSig6Title').innerText = cert.signatory_6_title || 'Chief Patron';
   if (el('certModalSig6Org')) el('certModalSig6Org').innerText = cert.signatory_6_org || cert.signatory_6_dept || 'RIT';
 
-  // Load signature images if available
-  const getSig = (ref, fallbackKey) => {
-    if (typeof window.getSignatoryAsset === 'function') {
-      const found = window.getSignatoryAsset(ref);
-      if (found) return found;
+  for (let i = 1; i <= 6; i++) {
+    const img = el(`certModalSig${i}Img`);
+    if (img) {
+      if (cert[`signatory_${i}_sig`]) {
+        img.src = cert[`signatory_${i}_sig`];
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
+      }
     }
-    return (window.CERT_ASSETS && window.CERT_ASSETS.SIGNATURES && window.CERT_ASSETS.SIGNATURES[fallbackKey]) || '';
-  };
-
-  if (el('certModalSig1Img')) el('certModalSig1Img').src = cert.signatory_1_sig || getSig(cert.signatory_1_name || 'faculty_coordinator', 'jeyasundari');
-  if (el('certModalSig2Img')) el('certModalSig2Img').src = cert.signatory_2_sig || getSig(cert.signatory_2_name || 'faculty_coordinator_2', 'rekha');
-  if (el('certModalSig3Img')) el('certModalSig3Img').src = cert.signatory_3_sig || getSig(cert.signatory_3_name || 'faculty_coordinator_3', 'ramakrishnan');
-  if (el('certModalSig4Img')) el('certModalSig4Img').src = cert.signatory_4_sig || getSig(cert.signatory_4_name || 'convenor', 'kesavaraja');
-  if (el('certModalSig5Img')) el('certModalSig5Img').src = cert.signatory_5_sig || getSig(cert.signatory_5_name || 'patron', 'rajakarunakaran');
-  if (el('certModalSig6Img')) el('certModalSig6Img').src = cert.signatory_6_sig || getSig(cert.signatory_6_name || 'chief_patron', 'ganesan');
+  }
 
   // Generate QR code into certModalQrCode container
   const qrContainer = el('certModalQrCode');
