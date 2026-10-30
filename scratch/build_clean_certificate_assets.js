@@ -19,6 +19,9 @@ const collegeLogoB64 = 'data:image/png;base64,' + collegeLogoBuf.toString('base6
 const csbsLogoBuf = fs.readFileSync(path.join(__dirname, '../frontend/certificate_logo/csbs_logo_clean.png'));
 const csbsLogoB64 = 'data:image/png;base64,' + csbsLogoBuf.toString('base64');
 
+const technebizLogoBuf = fs.readFileSync(path.join(__dirname, '../frontend/certificate_logo/rit_technebiz_logo.png'));
+const technebizLogoB64 = 'data:image/png;base64,' + technebizLogoBuf.toString('base64');
+
 const bgBuf = fs.readFileSync(path.join(__dirname, '../frontend/certificate_background.png'));
 const bgB64 = 'data:image/png;base64,' + bgBuf.toString('base64');
 

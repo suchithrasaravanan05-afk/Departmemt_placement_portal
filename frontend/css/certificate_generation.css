@@ -512,6 +512,21 @@
   flex-shrink: 0;
 }
 
+.cert-hdr-logo-right {
+  width: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+.cert-technebiz-logo-img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+
 /* 2. Certificate Title Section */
 .cert-title-section {
   text-align: center;
