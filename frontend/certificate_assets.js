@@ -317,9 +317,13 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     const logoW = Math.round(logoH * (172 / 210));
     ctx.drawImage(ritLogoImg, Math.round(width * 0.061), Math.round(height * 0.067), logoW, logoH);
   }  // 3. Institutional Heading
-  let collegeName = sanitizePdfText(certData.college_name || certData.institution || 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM').toUpperCase();
+  let collegeName = sanitizePdfText(certData.college_name || certData.institution || 'RAMCO INSTITUTE OF TECHNOLOGY').toUpperCase();
   if (collegeName.includes('DEPARTMENT') || collegeName.includes('CSBS') || !collegeName.includes('RAMCO')) {
-    collegeName = 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM';
+    collegeName = 'RAMCO INSTITUTE OF TECHNOLOGY';
+  } else if (collegeName.includes(', RAJAPALAYAM')) {
+    collegeName = collegeName.replace(', RAJAPALAYAM', '');
+  } else if (collegeName.includes(' RAJAPALAYAM')) {
+    collegeName = collegeName.replace(' RAJAPALAYAM', '');
   }
   ctx.textAlign = 'center';
   ctx.font = 'bold 38px "Times New Roman", Georgia, serif';
@@ -334,7 +338,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.fillStyle = '#1F2937';
   ctx.fillText('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai', width / 2, Math.round(height * 0.141));
   ctx.fillText("NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution", width / 2, Math.round(height * 0.162));
-  ctx.fillText('NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.', width / 2, Math.round(height * 0.183));
+  ctx.fillText('NBA Accredited UG Programs: CSE, EEE, MECH, ECE and CIVIL.', width / 2, Math.round(height * 0.183));
 
   // 4. CSBS Logo Centered Beneath Header
   const csbsLogoSrc = getLogoAsset('csbs_logo');
@@ -405,6 +409,16 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     const sigImg = await ritLoadImage(sigAsset);
     const cx = sigPositions[i - 1];
 
+    let sigCenterX = cx;
+    let lineCenterX = cx;
+    let lineWidth = 120;
+    if (i === 5) {
+      // Patron: adjust line slightly towards the left with signature centered above its underline
+      lineCenterX = cx - 7;
+      sigCenterX = cx - 7;
+      lineWidth = 126;
+    }
+
     if (sigImg) {
       const maxW = 120;
       const maxH = 60;
@@ -418,15 +432,15 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
           w = maxH * aspect;
         }
       }
-      ctx.drawImage(sigImg, cx - w / 2, sigLineY - h - 6, w, h);
+      ctx.drawImage(sigImg, sigCenterX - w / 2, sigLineY - h - 6, w, h);
     }
 
     // Baseline Line
     ctx.strokeStyle = '#581C87';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(cx - 60, sigLineY);
-    ctx.lineTo(cx + 60, sigLineY);
+    ctx.moveTo(lineCenterX - lineWidth / 2, sigLineY);
+    ctx.lineTo(lineCenterX + lineWidth / 2, sigLineY);
     ctx.stroke();
 
     // Name
@@ -533,9 +547,13 @@ async function createCertificatePdf(certData = {}) {
   }
 
   // 3. Centered Institutional Heading Area
-  let collegeName = sanitizePdfText(certData.college_name || certData.institution || 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM').toUpperCase();
+  let collegeName = sanitizePdfText(certData.college_name || certData.institution || 'RAMCO INSTITUTE OF TECHNOLOGY').toUpperCase();
   if (collegeName.includes('DEPARTMENT') || collegeName.includes('CSBS') || !collegeName.includes('RAMCO')) {
-    collegeName = 'RAMCO INSTITUTE OF TECHNOLOGY, RAJAPALAYAM';
+    collegeName = 'RAMCO INSTITUTE OF TECHNOLOGY';
+  } else if (collegeName.includes(', RAJAPALAYAM')) {
+    collegeName = collegeName.replace(', RAJAPALAYAM', '');
+  } else if (collegeName.includes(' RAJAPALAYAM')) {
+    collegeName = collegeName.replace(' RAJAPALAYAM', '');
   }
   doc.setFont('times', 'bold');
   doc.setFontSize(21.5);
@@ -552,7 +570,11 @@ async function createCertificatePdf(certData = {}) {
   doc.setTextColor(darkGrey[0], darkGrey[1], darkGrey[2]);
   doc.text(sanitizePdfText(certData.approval_text || 'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai'), pageWidth / 2, 35.5, { align: 'center' });
   doc.text(sanitizePdfText(certData.naac_text || "NAAC Accredited with 'A+' Grade & An ISO 9001:2015 Certified Institution"), pageWidth / 2, 41.2, { align: 'center' });
-  doc.text(sanitizePdfText(certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, CIVIL, and ECE.'), pageWidth / 2, 46.8, { align: 'center' });
+  let nbaText = certData.nba_text || 'NBA Accredited UG Programs: CSE, EEE, MECH, ECE and CIVIL.';
+  if (nbaText.includes('CIVIL, and ECE')) {
+    nbaText = nbaText.replace('CIVIL, and ECE', 'ECE and CIVIL');
+  }
+  doc.text(sanitizePdfText(nbaText), pageWidth / 2, 46.8, { align: 'center' });
 
   // 4. CSBS Logo Centered Beneath Accreditation Details
   const csbsLogo = getLogoAsset('csbs_logo');
@@ -701,7 +723,7 @@ async function createCertificatePdf(certData = {}) {
   const sigPositions = [30.2, 68.3, 108.5, 152.6, 188.5, 235.1];
   const defaultSigRoles = ['jeyasundari', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
 
-  function renderSigBlock(sigKey, cx, name, lineWidth = 30) {
+  function renderSigBlock(sigKey, cx, name, lineWidth = 30, lineCenterX = cx, sigCenterX = cx) {
     const asset = getSignatoryAsset(sigKey);
     if (asset) {
       try {
@@ -718,7 +740,7 @@ async function createCertificatePdf(certData = {}) {
             w = maxH * aspect;
           }
         }
-        doc.addImage(asset, 'PNG', cx - w / 2, sigLineY - h - 1.2, w, h);
+        doc.addImage(asset, 'PNG', sigCenterX - w / 2, sigLineY - h - 1.2, w, h);
       } catch (e) {
         console.error('[Asset Error] Signature image embed failed for ' + name + ':', e);
       }
@@ -729,7 +751,7 @@ async function createCertificatePdf(certData = {}) {
     // Baseline Line
     doc.setDrawColor(purple[0], purple[1], purple[2]);
     doc.setLineWidth(0.45);
-    doc.line(cx - lineWidth / 2, sigLineY, cx + lineWidth / 2, sigLineY);
+    doc.line(lineCenterX - lineWidth / 2, sigLineY, lineCenterX + lineWidth / 2, sigLineY);
 
     // Name
     doc.setFont('times', 'bold');
@@ -774,11 +796,14 @@ async function createCertificatePdf(certData = {}) {
 
   // 5: Patron
   const sig5Name = certData.signatory_5_name || certData.signatory5_name || 'Dr. S. Rajakarunakaran';
-  renderSigBlock(certData.signatory_5_sig || defaultSigRoles[4], sigPositions[4], sig5Name, 25);
+  // Adjust horizontal signature underline slightly towards the left with signature centered above its underline
+  const patronLineCenter = 187.5;
+  const patronLineWidth = 28;
+  renderSigBlock(certData.signatory_5_sig || defaultSigRoles[4], sigPositions[4], sig5Name, patronLineWidth, patronLineCenter, patronLineCenter);
   doc.setFont('times', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(74, 21, 75);
-  doc.text('Patron', sigPositions[4], sigLineY + 11.0, { align: 'center' });
+  doc.text('Patron', 188.0, sigLineY + 11.0, { align: 'center' });
 
   // Separator 3
   drawVerticalSep(211.5);
