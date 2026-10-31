@@ -1,6 +1,8 @@
 {
-  "sender_email": "rajakaleeswaranhari1976@gmail.com",
-  "app_password": "anjjctvazinmpjtv",
-  "sender_name": "RIT CSBS Placement & Training Cell",
-  "reply_to": "rajakaleeswaranhari1976@gmail.com"
+  "sender_email": "csbstlp@ritrjpm.ac.in",
+  "app_password": "thzm twsn upel eawo",
+  "sender_name": "Placement Portal Certificate Mailer",
+  "reply_to": "csbstlp@ritrjpm.ac.in",
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 465
 }

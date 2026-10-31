@@ -21,10 +21,10 @@ const DEFAULT_DATA = {
     certificate_templates: [],
     last_certificate_sequence: 0,
     email_config: {
-        sender_email: "rajakaleeswaranhari1976@gmail.com",
-        app_password: "anjjctvazinmpjtv",
+        sender_email: "csbstlp@ritrjpm.ac.in",
+        app_password: "thzm twsn upel eawo",
         sender_name: "RIT CSBS Placement & Training Cell",
-        reply_to: "rajakaleeswaranhari1976@gmail.com"
+        reply_to: "csbstlp@ritrjpm.ac.in"
     }
 };
 

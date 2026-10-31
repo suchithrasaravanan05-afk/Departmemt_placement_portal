@@ -9,10 +9,12 @@ const TMP_CONFIG_PATH = "/tmp/email_config.json";
 
 // Default verified institutional credentials
 const DEFAULT_EMAIL_CONFIG = {
-    sender_email: "rajakaleeswaranhari1976@gmail.com",
-    app_password: "anjjctvazinmpjtv",
-    sender_name: "RIT CSBS Placement & Training Cell",
-    reply_to: "rajakaleeswaranhari1976@gmail.com"
+    sender_email: "csbstlp@ritrjpm.ac.in",
+    app_password: "thzm twsn upel eawo",
+    sender_name: "Placement Portal Certificate Mailer",
+    reply_to: "csbstlp@ritrjpm.ac.in",
+    smtp_host: "smtp.gmail.com",
+    smtp_port: 465
 };
 
 let cachedConfig = null;
@@ -68,14 +70,20 @@ function getEmailConfig() {
         DEFAULT_EMAIL_CONFIG.sender_email
     ).trim();
 
-    const appPassword = (
+    const rawPassword = (
         stored.app_password || 
         process.env.SMTP_PASS || 
         process.env.EMAIL_PASS || 
         process.env.GMAIL_PASS || 
         process.env.GMAIL_APP_PASSWORD || 
         DEFAULT_EMAIL_CONFIG.app_password
-    ).trim().replace(/\s+/g, "");
+    ).trim();
+
+    // Support both 16-char unspaced and spaced Google App Passwords
+    const noSpaces = rawPassword.replace(/\s+/g, "");
+    const appPassword = (noSpaces.length === 16 && !rawPassword.includes(" "))
+        ? noSpaces.replace(/(.{4})(.{4})(.{4})(.{4})/, "$1 $2 $3 $4")
+        : rawPassword;
 
     const senderName = (
         stored.sender_name || 
@@ -122,7 +130,7 @@ async function saveEmailConfig(config = {}) {
     const current = getEmailConfig();
     const updated = {
         sender_email: (config.sender_email !== undefined ? config.sender_email : current.sender_email).trim(),
-        app_password: (config.app_password !== undefined ? config.app_password : current.app_password).trim().replace(/\s+/g, ""),
+        app_password: (config.app_password !== undefined ? config.app_password : current.app_password).trim(),
         sender_name: (config.sender_name || current.sender_name || DEFAULT_EMAIL_CONFIG.sender_name).trim(),
         reply_to: (config.reply_to || config.sender_email || current.reply_to).trim()
     };
@@ -166,21 +174,14 @@ function getTransporter() {
         throw new Error("Email sender is not configured. Please provide Sender Gmail/SMTP user and App Password in Email Settings or environment variables.");
     }
 
-    if (config.smtp_host && config.smtp_host !== "smtp.gmail.com") {
-        return nodemailer.createTransport({
-            host: config.smtp_host,
-            port: config.smtp_port || 587,
-            secure: (config.smtp_port === 465),
-            auth: {
-                user: config.sender_email,
-                pass: config.app_password
-            }
-        });
-    }
+    const host = config.smtp_host || "smtp.gmail.com";
+    const port = config.smtp_port || 465;
+    const secure = (port === 465);
 
-    // Default to Gmail service
     return nodemailer.createTransport({
-        service: "gmail",
+        host: host,
+        port: port,
+        secure: secure,
         auth: {
             user: config.sender_email,
             pass: config.app_password

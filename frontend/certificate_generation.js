@@ -586,7 +586,7 @@ const certEmailSettings = {
   manualSending: true,
   automaticSending: false,
   testMode: true,
-  testEmail: 'rajakaleeswaranhari1976@gmail.com'
+  testEmail: 'csbstlp@ritrjpm.ac.in'
 };
 
 function initCertEmailSettings() {
@@ -1870,7 +1870,7 @@ async function loadEmailConfigIntoModal() {
     const data = await res.json();
     if (data.success && data.config) {
       if (document.getElementById('cfgSenderEmail')) {
-        document.getElementById('cfgSenderEmail').value = data.config.sender_email || 'rajakaleeswaranhari1976@gmail.com';
+        document.getElementById('cfgSenderEmail').value = data.config.sender_email || 'csbstlp@ritrjpm.ac.in';
       }
       if (document.getElementById('cfgSenderName')) {
         document.getElementById('cfgSenderName').value = data.config.sender_name || 'RIT CSBS Placement & Training Cell';
@@ -1992,7 +1992,7 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
 
   const confirmMsg = isTest
     ? `⚠️ Test Mode is ENABLED.\n\nAll certificate emails (${total || 'batch'} participants) will be safely routed to your authorized test address:\n${testEmail}\n\nActual participants will NOT be contacted.\n\nProceed with test email dispatch?`
-    : `Are you sure you want to automatically email official certificate PDFs to all ${total} participants?\n\nSender: rajakaleeswaranhari1976@gmail.com\nAttachment: High-Resolution Print-Ready PDF`;
+    : `Are you sure you want to automatically email official certificate PDFs to all ${total} participants?\n\nSender: csbstlp@ritrjpm.ac.in\nAttachment: High-Resolution Print-Ready PDF`;
 
   if (!confirm(confirmMsg)) return;
 
