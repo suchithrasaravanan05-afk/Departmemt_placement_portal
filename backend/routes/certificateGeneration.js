@@ -885,7 +885,8 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
             });
         }
 
-        const delay = Math.max(800, Number(throttle_ms) || 1200);
+        const minDelay = (process.env.NODE_ENV === 'test' || process.env.TEST_MIN_DELAY !== undefined) ? 0 : 800;
+        const delay = Math.max(minDelay, Number(throttle_ms) || 1200);
         let sentCount = 0;
         let failedCount = 0;
         let skippedCount = 0;
@@ -928,7 +929,9 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
                 await emailService.sendSingleCertificateEmail(cert, targetEmail, { isTestMode, portalUrl });
                 sentCount++;
                 if (!isTestMode) {
-                    await feedbackCertificateStorage.updateCertificateEmailStatus(certNumber, "sent");
+                    cert.email_status = "sent";
+                    cert.email_sent_at = new Date().toISOString();
+                    cert.email_error = null;
                 }
                 results.push({
                     certificate_number: certNumber,
@@ -941,7 +944,8 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
                 failedCount++;
                 console.error(`Failed to send email to ${targetEmail}:`, sendErr.message);
                 if (!isTestMode) {
-                    await feedbackCertificateStorage.updateCertificateEmailStatus(certNumber, "failed", sendErr.message);
+                    cert.email_status = "failed";
+                    cert.email_error = sendErr.message;
                 }
                 results.push({
                     certificate_number: certNumber,
@@ -957,6 +961,12 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
             if (i < targetCerts.length - 1) {
                 await new Promise(r => setTimeout(r, delay));
             }
+        }
+        if (!isTestMode && (sentCount > 0 || failedCount > 0)) {
+            if (typeof feedbackCertificateStorage.writeLocalData === 'function') {
+                feedbackCertificateStorage.writeLocalData(data);
+            }
+            feedbackCertificateStorage.commitData(data).catch(() => {});
         }
 
         res.json({

@@ -1,4 +1,4 @@
-++++++++++++++++++++++++++++++++-- ==========================================================
+-- ==========================================================
 -- Certificate Generation & Verification Schema for Supabase (PostgreSQL)
 -- Department of Computer Science and Business Systems
 -- RAMCO INSTITUTE OF TECHNOLOGY
