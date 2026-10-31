@@ -1963,20 +1963,41 @@ async function testEmailConnectionFromModal() {
 
 // Send batch certificates via email (e.g. all participants in batch or roster)
 async function sendBatchCertificatesViaEmail(targetBatchId = null) {
-  let batchId = targetBatchId || certGenState.currentBatchId;
+  let batchId = targetBatchId !== null ? targetBatchId : certGenState.currentBatchId;
 
-  // If no current batch is selected, try to find the latest batch from batchesList
+  // If no specific batch is selected, try to find the latest batch from batchesList
   if (!batchId && Array.isArray(certGenState.batchesList) && certGenState.batchesList.length > 0) {
     batchId = certGenState.batchesList[0].batch_id || certGenState.batchesList[0].id;
   }
 
-  const batchCerts = batchId 
-    ? (certGenState.masterCertificates || []).filter(c => String(c.batch_id) === String(batchId))
-    : (certGenState.currentBatchCerts || []);
+  // Resiliently resolve target certificates across state collections
+  let batchCerts = [];
+  if (batchId === 'all') {
+    batchCerts = certGenState.masterCertificates || [];
+  } else if (batchId) {
+    const cleanId = String(batchId).trim().toUpperCase();
+    // 1. Check master certificates history
+    batchCerts = (certGenState.masterCertificates || []).filter(c => 
+      c.batch_id && String(c.batch_id).trim().toUpperCase() === cleanId
+    );
+    // 2. If not found in master list, check active session batch certificates
+    if (batchCerts.length === 0 && Array.isArray(certGenState.currentBatchCerts) && certGenState.currentBatchCerts.length > 0) {
+      batchCerts = certGenState.currentBatchCerts.filter(c => 
+        !c.batch_id || String(c.batch_id).trim().toUpperCase() === cleanId
+      );
+      if (batchCerts.length === 0) {
+        batchCerts = certGenState.currentBatchCerts;
+      }
+    }
+  } else {
+    batchCerts = (certGenState.currentBatchCerts && certGenState.currentBatchCerts.length > 0)
+      ? certGenState.currentBatchCerts
+      : (certGenState.masterCertificates || []);
+  }
 
-  const total = batchCerts.length > 0 ? batchCerts.length : (certGenState.records ? certGenState.records.filter(r => r.is_valid).length : 0);
-  if (total === 0 && !batchId) {
-    showAdminAlert('No certificates or active batch found to email. Please generate a batch first.');
+  const total = batchCerts.length;
+  if (total === 0 && (!batchId || batchId !== 'all')) {
+    showAdminAlert('No certificate records found for the selected batch. Please verify batch selection or generate certificates first.', 'warning');
     return;
   }
 
@@ -2002,18 +2023,28 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
   const counts = document.getElementById('cgEmailProgressCounts');
   const details = document.getElementById('cgEmailProgressDetails');
   const statusText = document.getElementById('cgEmailStatusText');
+  const resultsList = document.getElementById('cgEmailResultsList');
   const sendBtn = document.getElementById('btnSendBatchEmails');
   const execBtn = document.getElementById('btnExecuteSendCertificates');
+  const historyBtn = document.getElementById('btnHistoryBatchEmail');
 
-  if (progressBox) progressBox.style.display = 'block';
-  if (bar) bar.style.width = '10%';
-  if (pct) pct.innerText = '10%';
+  if (progressBox) {
+    progressBox.style.display = 'block';
+    progressBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  if (bar) bar.style.width = '15%';
+  if (pct) pct.innerText = '15%';
   if (counts) counts.innerText = isTest ? `Preparing test email dispatch to ${testEmail}...` : `Preparing email queue for ${total} participants...`;
   if (statusText) statusText.innerHTML = isTest 
     ? `<i class="fa-solid fa-flask fa-bounce"></i> Generating test PDFs &amp; routing to ${escapeHtml(testEmail)}...`
     : '<i class="fa-solid fa-paper-plane fa-bounce"></i> Generating PDFs &amp; dispatching emails via Gmail SMTP...';
+  if (resultsList) {
+    resultsList.style.display = 'none';
+    resultsList.innerHTML = '';
+  }
   if (sendBtn) sendBtn.disabled = true;
   if (execBtn) execBtn.disabled = true;
+  if (historyBtn) historyBtn.disabled = true;
 
   try {
     const authHeaders = (typeof getAdminAuthHeaders === 'function') 
@@ -2024,6 +2055,8 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
       ? `${API_BASE}/admin/certificate-generation/send-batch-emails`
       : '/api/certificates/generate/send-batch-emails';
 
+    const certIds = batchCerts.map(c => c.certificate_number || c.id).filter(Boolean);
+
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -2032,6 +2065,8 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
       },
       body: JSON.stringify({
         batch_id: batchId,
+        certificate_ids: certIds,
+        certificates: batchCerts, // Full fallback records for serverless cold lambdas
         test_mode: isTest,
         test_email: testEmail,
         throttle_ms: 1200,
@@ -2054,6 +2089,55 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
     if (details) details.innerText = `Failed: ${data.failed} • Skipped: ${data.skipped} (Test Mode: ${isTest ? 'Active' : 'Off'})`;
     if (statusText) statusText.innerHTML = `<span style="color:#059669;font-weight:700;"><i class="fa-solid fa-circle-check"></i> ${isTest ? 'Test Dispatch Successful!' : 'Email Dispatch Complete!'}</span>`;
 
+    // Render individual participant delivery status
+    if (resultsList && Array.isArray(data.results) && data.results.length > 0) {
+      resultsList.style.display = 'block';
+      let rHtml = '<div style="font-weight:700;color:#4c1d95;margin-bottom:8px;border-bottom:1px solid #ede9fe;padding-bottom:4px;display:flex;justify-content:space-between;"><span>Participant Delivery Status:</span><span style="font-weight:500;color:#6b21a8;">' + data.results.length + ' Total</span></div>';
+      rHtml += '<table style="width:100%;border-collapse:collapse;font-size:11.5px;">';
+      data.results.forEach((r, idx) => {
+        let badge = '';
+        if (r.status === 'sent' || r.status === 'sent_test_mode') {
+          badge = `<span class="badge" style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:4px;font-weight:600;"><i class="fa-solid fa-check"></i> ${r.status === 'sent_test_mode' ? 'Sent (Test)' : 'Delivered'}</span>`;
+        } else if (r.status === 'skipped') {
+          badge = `<span class="badge" style="background:#fef3c7;color:#b45309;padding:2px 7px;border-radius:4px;font-weight:600;" title="${escapeHtml(r.reason || '')}"><i class="fa-solid fa-forward"></i> Skipped</span>`;
+        } else {
+          badge = `<span class="badge" style="background:#fee2e2;color:#b91c1c;padding:2px 7px;border-radius:4px;font-weight:600;" title="${escapeHtml(r.error || '')}"><i class="fa-solid fa-xmark"></i> Failed</span>`;
+        }
+        const displayEmail = r.intended_email ? `${escapeHtml(r.intended_email)}` : escapeHtml(r.email || 'N/A');
+        const reasonHtml = (r.status === 'failed' && r.error) ? `<div style="font-size:10.5px;color:#dc2626;">Error: ${escapeHtml(r.error)}</div>` : ((r.status === 'skipped' && r.reason) ? `<div style="font-size:10.5px;color:#b45309;">${escapeHtml(r.reason)}</div>` : '');
+        rHtml += `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:6px 6px;font-weight:600;color:#1e293b;">${escapeHtml(r.name || 'Participant')}</td>
+            <td style="padding:6px 6px;color:#64748b;">${displayEmail}${reasonHtml}</td>
+            <td style="padding:6px 6px;color:#7c3aed;font-family:monospace;font-size:11px;">${escapeHtml(r.certificate_number || '')}</td>
+            <td style="padding:6px 6px;text-align:right;">${badge}</td>
+          </tr>
+        `;
+      });
+      rHtml += '</table>';
+      resultsList.innerHTML = rHtml;
+    }
+
+    // Immediately update local records status in UI
+    if (!isTest && Array.isArray(data.results)) {
+      const sentIds = new Set(data.results.filter(r => r.status === 'sent').map(r => String(r.certificate_number)));
+      if (Array.isArray(certGenState.masterCertificates)) {
+        certGenState.masterCertificates.forEach(c => {
+          if (c.certificate_number && sentIds.has(String(c.certificate_number))) {
+            c.email_status = 'sent';
+          }
+        });
+      }
+      if (Array.isArray(certGenState.currentBatchCerts)) {
+        certGenState.currentBatchCerts.forEach(c => {
+          if (c.certificate_number && sentIds.has(String(c.certificate_number))) {
+            c.email_status = 'sent';
+          }
+        });
+      }
+      renderHistoryTable();
+    }
+
     showAdminAlert(data.message || `Dispatched ${data.sent} certificate emails successfully!`, 'success');
     loadIssuedCertificatesHistoryTable();
 
@@ -2064,6 +2148,7 @@ async function sendBatchCertificatesViaEmail(targetBatchId = null) {
   } finally {
     if (sendBtn) sendBtn.disabled = false;
     if (execBtn) execBtn.disabled = false;
+    if (historyBtn) historyBtn.disabled = false;
   }
 }
 
@@ -2073,10 +2158,16 @@ function sendSelectedBatchViaEmail() {
   const batchId = sel ? sel.value : 'all';
 
   if (batchId === 'all') {
-    const confirmAll = confirm('This will email ALL issued certificates in the master database. Do you wish to proceed?');
+    const total = (certGenState.masterCertificates || []).length;
+    const confirmAll = confirm(`This will email ALL ${total} issued certificates in the master database.\n\nSender: csbstlp@ritrjpm.ac.in\nAttachment: High-Resolution Print-Ready PDF\n\nDo you wish to proceed?`);
     if (!confirmAll) return;
-    sendBatchCertificatesViaEmail(null);
+    sendBatchCertificatesViaEmail('all');
   } else {
+    const selBatch = (certGenState.batchesList || []).find(b => String(b.id || b.batch_id) === String(batchId));
+    const title = selBatch ? (selBatch.batch_title || selBatch.event_name) : batchId;
+    const count = (certGenState.masterCertificates || []).filter(c => String(c.batch_id) === String(batchId)).length;
+    const confirmBatch = confirm(`Email all ${count} certificates in batch "${title}"?\n\nSender: csbstlp@ritrjpm.ac.in\nAttachment: High-Resolution Print-Ready PDF`);
+    if (!confirmBatch) return;
     sendBatchCertificatesViaEmail(batchId);
   }
 }

@@ -787,7 +787,7 @@ const activeBatchEmailDispatches = new Set();
 // Safe rate-limited queue (1.2s delay between participants)
 // ============================================================
 router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, res) => {
-    const { batch_id, certificate_ids, throttle_ms, test_mode, test_email, resend_all } = req.body;
+    const { batch_id, certificate_ids, certificates: clientCerts, throttle_ms, test_mode, test_email, resend_all } = req.body;
     const portalUrl = resolveRequestPortalUrl(req);
     const batchLockKey = String(batch_id || (Array.isArray(certificate_ids) ? certificate_ids.join(',') : 'active_batch_dispatch'));
 
@@ -803,18 +803,63 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
 
     try {
         const data = await feedbackCertificateStorage.getAllData();
+        const allStoredCerts = data.certificates || [];
+
+        // In serverless environments (Vercel), sync client-provided records into storage if cold
+        if (Array.isArray(clientCerts) && clientCerts.length > 0) {
+            let addedAny = false;
+            clientCerts.forEach(cc => {
+                if (!cc) return;
+                const exists = allStoredCerts.some(sc => 
+                    (sc.certificate_number && cc.certificate_number && String(sc.certificate_number).toUpperCase() === String(cc.certificate_number).toUpperCase()) ||
+                    (sc.id && cc.id && String(sc.id) === String(cc.id))
+                );
+                if (!exists) {
+                    data.certificates.unshift(cc);
+                    addedAny = true;
+                }
+            });
+            if (addedAny) {
+                if (typeof feedbackCertificateStorage.writeLocalData === 'function') {
+                    feedbackCertificateStorage.writeLocalData(data);
+                }
+                feedbackCertificateStorage.commitData(data).catch(() => {});
+            }
+        }
+
         let targetCerts = [];
 
-        if (batch_id) {
-            targetCerts = (data.certificates || []).filter(c => String(c.batch_id) === String(batch_id));
-        } else if (Array.isArray(certificate_ids) && certificate_ids.length > 0) {
-            const idSet = new Set(certificate_ids.map(id => String(id).toUpperCase()));
-            targetCerts = (data.certificates || []).filter(c => 
-                idSet.has(String(c.certificate_number).toUpperCase()) || 
-                idSet.has(String(c.id))
+        // 1. If batch_id === 'all', target all available certificates in master database
+        if (batch_id && String(batch_id).trim().toLowerCase() === 'all') {
+            targetCerts = allStoredCerts.length > 0 ? allStoredCerts : (clientCerts || []);
+        }
+        // 2. If specific batch_id specified, filter with case-insensitive matching
+        else if (batch_id) {
+            const cleanBatch = String(batch_id).trim().toUpperCase();
+            targetCerts = allStoredCerts.filter(c => c.batch_id && String(c.batch_id).trim().toUpperCase() === cleanBatch);
+            if (targetCerts.length === 0 && Array.isArray(clientCerts)) {
+                targetCerts = clientCerts.filter(c => c.batch_id && String(c.batch_id).trim().toUpperCase() === cleanBatch);
+            }
+        }
+
+        // 3. If certificate_ids provided, lookup matching individual certificate records
+        if (targetCerts.length === 0 && Array.isArray(certificate_ids) && certificate_ids.length > 0) {
+            const idSet = new Set(certificate_ids.map(id => String(id).trim().toUpperCase()));
+            targetCerts = allStoredCerts.filter(c => 
+                (c.certificate_number && idSet.has(String(c.certificate_number).trim().toUpperCase())) || 
+                (c.id && idSet.has(String(c.id).trim().toUpperCase()))
             );
-        } else {
-            return res.status(400).json({ success: false, message: "Please specify batch_id or a list of certificate_ids to send." });
+            if (targetCerts.length === 0 && Array.isArray(clientCerts)) {
+                targetCerts = clientCerts.filter(c => 
+                    (c.certificate_number && idSet.has(String(c.certificate_number).trim().toUpperCase())) || 
+                    (c.id && idSet.has(String(c.id).trim().toUpperCase()))
+                );
+            }
+        }
+
+        // 4. Fallback to client certificates directly if provided
+        if (targetCerts.length === 0 && Array.isArray(clientCerts) && clientCerts.length > 0) {
+            targetCerts = clientCerts;
         }
 
         if (targetCerts.length === 0) {
@@ -889,6 +934,7 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
                     certificate_number: certNumber,
                     name: recipientName,
                     email: targetEmail,
+                    intended_email: recipientEmail,
                     status: isTestMode ? "sent_test_mode" : "sent"
                 });
             } catch (sendErr) {
@@ -901,6 +947,7 @@ router.post("/send-batch-emails", requireFacultyOrCoordinatorWrite, async (req, 
                     certificate_number: certNumber,
                     name: recipientName,
                     email: targetEmail,
+                    intended_email: recipientEmail,
                     status: "failed",
                     error: sendErr.message
                 });

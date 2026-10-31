@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const { supabase, supabaseAdmin } = require("./supabase");
 
 const DATA_FILE = path.join(__dirname, "event_feedbacks_certificates.json");
+const TMP_DATA_FILE = "/tmp/event_feedbacks_certificates.json";
 const STORAGE_BUCKET = "certificate_storage";
 const STORAGE_FILE_NAME = "certificates_db.json";
 
@@ -179,6 +180,15 @@ async function allocateNextCertificateIds(count = 1) {
 // Read local JSON file
 function readLocalData() {
     try {
+        if (fs.existsSync(TMP_DATA_FILE)) {
+            try {
+                const tmpRaw = fs.readFileSync(TMP_DATA_FILE, "utf8");
+                const tmpParsed = JSON.parse(tmpRaw);
+                if (tmpParsed && Array.isArray(tmpParsed.certificates) && tmpParsed.certificates.length > 0) {
+                    return tmpParsed;
+                }
+            } catch (e) {}
+        }
         if (fs.existsSync(DATA_FILE)) {
             const raw = fs.readFileSync(DATA_FILE, "utf8");
             const parsed = JSON.parse(raw);
@@ -207,7 +217,12 @@ function writeLocalData(data) {
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf8");
     } catch (e) {
-        console.warn("[feedbackCertificateStorage] Write local file warning:", e.message);
+        // Read-only filesystem expected on Vercel
+    }
+    try {
+        fs.writeFileSync(TMP_DATA_FILE, JSON.stringify(data, null, 2), "utf8");
+    } catch (e) {
+        console.warn("[feedbackCertificateStorage] Write to /tmp warning:", e.message);
     }
 }
 
@@ -3343,5 +3358,7 @@ module.exports = {
     getAllData,
     getAllDataSync,
     getStoredEmailConfig,
-    saveStoredEmailConfig
+    saveStoredEmailConfig,
+    writeLocalData,
+    commitData
 };

@@ -80,6 +80,22 @@
   ],
   "certificates": [
     {
+      "id": 77777,
+      "certificate_number": "RITCB 01 SENT",
+      "batch_id": "BATCH-SENT",
+      "student_name": "Delivered Student",
+      "student_email": "delivered@ritrjpm.ac.in",
+      "email_status": "sent"
+    },
+    {
+      "id": 88888,
+      "certificate_number": "RITCB 01 TEST",
+      "batch_id": "BATCH-COLD-LAMBDA",
+      "student_name": "Cold Lambda Student",
+      "student_email": "cold@ritrjpm.ac.in",
+      "email_status": "pending"
+    },
+    {
       "id": 1793289795929,
       "batch_id": "BATCH-MVTQFYAD-CA696D",
       "user_id": null,
@@ -5956,5 +5972,5 @@
     "reply_to": "csbstlp@ritrjpm.ac.in",
     "updated_at": "2026-10-28T00:24:17.671Z"
   },
-  "last_certificate_sequence": 6
+  "last_certificate_sequence": 9999
 }
