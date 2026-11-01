@@ -315,15 +315,9 @@ function buildCertificateEmailHtml(certData, portalUrl = null) {
                 </table>
               </div>
 
-              <!-- Action Button -->
-              <div style="text-align:center;margin:28px 0 20px 0;">
-                <a href="${verifyUrl}" target="_blank" style="display:inline-block;background:linear-gradient(135deg, #4c1d95, #6b21a8);color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:30px;box-shadow:0 4px 14px rgba(76,29,149,0.25);">
-                  Verify Certificate Online &rarr;
-                </a>
-              </div>
-
-              <div style="font-size:12px;color:#94a3b8;text-align:center;">
-                Verification Link: <a href="${verifyUrl}" style="color:#7c3aed;text-decoration:underline;">${verifyUrl}</a>
+              <!-- Appreciation Note -->
+              <div style="text-align:center;margin:24px 0 8px 0;font-size:14px;color:#475569;font-weight:600;">
+                Thank you for your cooperation.
               </div>
             </td>
           </tr>
