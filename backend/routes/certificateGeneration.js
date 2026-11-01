@@ -737,7 +737,7 @@ function resolveRequestPortalUrl(req) {
     if (process.env.VERCEL_URL) {
         return `https://${process.env.VERCEL_URL}`.replace(/\/+$/, "");
     }
-    return "https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app";
+    return "https://departmemt-placement-portal.vercel.app";
 }
 
 // ============================================================

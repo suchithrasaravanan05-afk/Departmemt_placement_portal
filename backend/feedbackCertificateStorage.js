@@ -340,6 +340,23 @@ async function getAllData() {
     ].map(s => String(s).trim()));
 
     if (cloudData && Array.isArray(cloudData.certificates)) {
+        // Drop any sample/test records created before the authorized system reset threshold
+        cloudData.certificates = (cloudData.certificates || []).filter(c => {
+            const t = c.created_at ? new Date(c.created_at).getTime() : (Number(c.id) || 0);
+            return t >= SYSTEM_RESET_TIME;
+        });
+        cloudData.certificate_batches = (cloudData.certificate_batches || []).filter(b => {
+            const t = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return t >= SYSTEM_RESET_TIME;
+        });
+        cloudData.certificate_audit_logs = (cloudData.certificate_audit_logs || []).filter(a => {
+            const t = a.created_at ? new Date(a.created_at).getTime() : 0;
+            return t >= SYSTEM_RESET_TIME;
+        });
+        if (cloudData.certificates.length === 0) {
+            cloudData.last_certificate_sequence = 0;
+        }
+
         // Merge records (cloud + local) while respecting deletions
         const certMap = new Map((base.certificates || []).map(c => [String(c.certificate_number || c.id), c]));
         (cloudData.certificates || []).forEach(c => certMap.set(String(c.certificate_number || c.id), c));
@@ -397,11 +414,24 @@ async function getAllData() {
 
     // Final scrub to guarantee no deleted items slipped in
     base.certificates = (base.certificates || []).filter(c => {
+        const t = c.created_at ? new Date(c.created_at).getTime() : (Number(c.id) || 0);
+        if (t < SYSTEM_RESET_TIME) return false;
         if (c.feedback_id && deletedIdsSet.has(String(c.feedback_id))) return false;
         if (c.certificate_number && deletedCertNumbersSet.has(String(c.certificate_number).trim().toUpperCase())) return false;
         if (c.batch_id && deletedBatchIdsSet.has(String(c.batch_id).trim())) return false;
         return true;
     });
+    base.certificate_batches = (base.certificate_batches || []).filter(b => {
+        const t = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return t >= SYSTEM_RESET_TIME;
+    });
+    base.certificate_audit_logs = (base.certificate_audit_logs || []).filter(a => {
+        const t = a.created_at ? new Date(a.created_at).getTime() : 0;
+        return t >= SYSTEM_RESET_TIME;
+    });
+    if (base.certificates.length === 0) {
+        base.last_certificate_sequence = 0;
+    }
     base.certificate_batches = (base.certificate_batches || []).filter(b => !deletedBatchIdsSet.has(String(b.id).trim()));
     if (deletedIdsSet.size > 0) {
         base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));

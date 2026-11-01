@@ -227,7 +227,7 @@ function buildCertificateEmailHtml(certData, portalUrl = null) {
         certData.verification_url ||
         process.env.PUBLIC_PORTAL_URL || 
         (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") || 
-        "https://departmentmt-placement-portal-git-main-vaishnavi-5441.vercel.app"
+        "https://departmemt-placement-portal.vercel.app"
     ).trim().replace(/\/+$/, "");
 
     if (!baseOrigin.startsWith("http://") && !baseOrigin.startsWith("https://")) {
