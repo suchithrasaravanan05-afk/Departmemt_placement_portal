@@ -23,8 +23,8 @@ const DEFAULT_DATA = {
     last_certificate_sequence: 0,
     email_config: {
         sender_email: "csbstlp@ritrjpm.ac.in",
-        app_password: "thzm twsn upel eawo",
-        sender_name: "RIT CSBS Placement & Training Cell",
+        app_password: "yblm sgqz ttbm niqc",
+        sender_name: "RIT CSBS",
         reply_to: "csbstlp@ritrjpm.ac.in"
     }
 };
@@ -184,7 +184,17 @@ function readLocalData() {
             try {
                 const tmpRaw = fs.readFileSync(TMP_DATA_FILE, "utf8");
                 const tmpParsed = JSON.parse(tmpRaw);
-                if (tmpParsed && Array.isArray(tmpParsed.certificates) && tmpParsed.certificates.length > 0) {
+                if (tmpParsed && Array.isArray(tmpParsed.certificates)) {
+                    if (!Array.isArray(tmpParsed.notifications)) tmpParsed.notifications = [];
+                    if (!Array.isArray(tmpParsed.deleted_event_ids)) tmpParsed.deleted_event_ids = [];
+                    if (!Array.isArray(tmpParsed.deleted_certificate_numbers)) tmpParsed.deleted_certificate_numbers = [];
+                    if (!Array.isArray(tmpParsed.deleted_batch_ids)) tmpParsed.deleted_batch_ids = [];
+                    if (!Array.isArray(tmpParsed.certificate_batches)) tmpParsed.certificate_batches = [];
+                    if (!Array.isArray(tmpParsed.certificate_audit_logs)) tmpParsed.certificate_audit_logs = [];
+                    if (!Array.isArray(tmpParsed.certificate_templates)) tmpParsed.certificate_templates = JSON.parse(JSON.stringify(INITIAL_TEMPLATES));
+                    if (typeof tmpParsed.last_certificate_sequence !== "number") {
+                        tmpParsed.last_certificate_sequence = getHighestSequenceNumber(tmpParsed.certificates);
+                    }
                     return tmpParsed;
                 }
             } catch (e) {}
@@ -733,7 +743,13 @@ async function getAllSubmissions() {
 
 async function getAllCertificates() {
     const data = await getAllData();
-    return data.certificates || [];
+    const certs = data.certificates || [];
+    return [...certs].sort((a, b) => {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : (Number(a.id) || 0);
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : (Number(b.id) || 0);
+        if (timeA !== timeB) return timeA - timeB;
+        return (Number(a.id) || 0) - (Number(b.id) || 0);
+    });
 }
 
 // Get all certificates for a student (checks by user_id OR register_number)

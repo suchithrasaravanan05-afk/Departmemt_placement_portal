@@ -1397,6 +1397,14 @@ function renderHistoryTable() {
     );
   }
 
+  // Chronological generation order: oldest generated certificate first, newest last
+  certs = [...certs].sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : (Number(a.id) || 0);
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : (Number(b.id) || 0);
+    if (timeA !== timeB) return timeA - timeB;
+    return (Number(a.id) || 0) - (Number(b.id) || 0);
+  });
+
   if (document.getElementById('cgHistoryDisplayCount')) {
     document.getElementById('cgHistoryDisplayCount').innerText = certs.length;
   }

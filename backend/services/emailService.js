@@ -10,8 +10,8 @@ const TMP_CONFIG_PATH = "/tmp/email_config.json";
 // Default verified institutional credentials
 const DEFAULT_EMAIL_CONFIG = {
     sender_email: "csbstlp@ritrjpm.ac.in",
-    app_password: "thzm twsn upel eawo",
-    sender_name: "Placement Portal Certificate Mailer",
+    app_password: "yblm sgqz ttbm niqc",
+    sender_name: "RIT CSBS",
     reply_to: "csbstlp@ritrjpm.ac.in",
     smtp_host: "smtp.gmail.com",
     smtp_port: 465
