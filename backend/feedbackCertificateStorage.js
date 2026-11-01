@@ -8,6 +8,11 @@ const TMP_DATA_FILE = "/tmp/event_feedbacks_certificates.json";
 const STORAGE_BUCKET = "certificate_storage";
 const STORAGE_FILE_NAME = "certificates_db.json";
 
+// Authorized System Reset Threshold: November 1, 2026 06:00:00 UTC
+// All legacy test/sample records created before this epoch are permanently discarded
+const SYSTEM_RESET_AT = "2026-11-01T06:00:00.000Z";
+const SYSTEM_RESET_TIME = new Date(SYSTEM_RESET_AT).getTime();
+
 // Default structure
 const DEFAULT_DATA = {
     event_feedbacks: [],
