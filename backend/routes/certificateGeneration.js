@@ -339,6 +339,8 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             certificate_title,
             certificate_type,
             allow_duplicates,
+            event_number,
+            programme_id,
             records
         } = req.body;
 
@@ -356,13 +358,13 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             category: category || "Placement Training",
             academic_year: academic_year || "2026-27",
             signatory_count: signatory_count ? Number(signatory_count) : 6,
-            signatory_1_name: signatory_1_name || "Dr. M. Jeya Sundari",
+            signatory_1_name: signatory_1_name || "Dr. S.Erana Verrappa Dinesh",
             signatory_1_title: signatory_1_title || "Faculty Coordinator",
             signatory_1_org: signatory_1_org || "CSBS, RIT",
-            signatory_2_name: signatory_2_name || "Mrs. M. Rekha",
+            signatory_2_name: signatory_2_name || "Mrs. B.Yazhini",
             signatory_2_title: signatory_2_title || "Faculty Coordinator",
             signatory_2_org: signatory_2_org || "CSBS, RIT",
-            signatory_3_name: signatory_3_name || "Mr. M. Rama Krishnan",
+            signatory_3_name: signatory_3_name || "Ms. Preethi Ram",
             signatory_3_title: signatory_3_title || "Faculty Coordinator",
             signatory_3_org: signatory_3_org || "CSBS, RIT",
             signatory_4_name: signatory_4_name || "Dr. D. Kesavaraja",
@@ -385,6 +387,8 @@ router.post("/issue-batch", requireFacultyOrCoordinatorWrite, async (req, res) =
             certificate_title: certificate_title || "CERTIFICATE OF PARTICIPATION",
             certificate_type: certificate_type || "Participation",
             allow_duplicates: !!allow_duplicates,
+            event_number: event_number || undefined,
+            programme_id: programme_id || undefined,
             records: records,
             issuer: req.user || { id: 1, full_name: "Faculty Coordinator", role: "faculty_coordinator" }
         });
@@ -432,6 +436,62 @@ router.post("/revoke/:certId", requireFacultyOrCoordinatorWrite, async (req, res
 // ============================================================
 // 5. GET BATCHES HISTORY
 // ============================================================
+
+// ============================================================
+// CERTIFICATE PROGRAMME MANAGEMENT (ADMIN & FACULTY EDITABLE)
+// ============================================================
+router.get("/programmes", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const programmes = await feedbackCertificateStorage.getAllCertificateProgrammes();
+        res.json({ success: true, programmes });
+    } catch (err) {
+        console.error("Failed to load certificate programmes:", err);
+        res.status(500).json({ success: false, message: err.message || "Failed to load programmes." });
+    }
+});
+
+router.post("/programmes", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const created = await feedbackCertificateStorage.createCertificateProgramme(req.body);
+        res.status(201).json({
+            success: true,
+            programme: created,
+            message: `Successfully created programme "${created.programme_title}" (Event ID: ${created.event_number}).`
+        });
+    } catch (err) {
+        console.error("Failed to create certificate programme:", err);
+        res.status(400).json({ success: false, message: err.message || "Failed to create programme." });
+    }
+});
+
+router.put("/programmes/:id", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const updated = await feedbackCertificateStorage.updateCertificateProgramme(req.params.id, req.body);
+        res.json({
+            success: true,
+            programme: updated,
+            message: `Successfully updated programme "${updated.programme_title}" (Event ID: ${updated.event_number}).`
+        });
+    } catch (err) {
+        console.error("Failed to update certificate programme:", err);
+        res.status(400).json({ success: false, message: err.message || "Failed to update programme." });
+    }
+});
+
+router.delete("/programmes/:id", requireStrictAdminRole, async (req, res) => {
+    try {
+        const deleted = await feedbackCertificateStorage.deleteCertificateProgramme(req.params.id);
+        res.json({
+            success: true,
+            programme: deleted,
+            message: `Successfully deleted programme "${deleted.programme_title}" (Event ID: ${deleted.event_number} archived).`
+        });
+    } catch (err) {
+        console.error("Failed to delete certificate programme:", err);
+        res.status(400).json({ success: false, message: err.message || "Failed to delete programme." });
+    }
+});
+
 router.get("/batches", checkFacultyOrAdminPermission, async (req, res) => {
     try {
         const batches = await feedbackCertificateStorage.getCertificateBatches();

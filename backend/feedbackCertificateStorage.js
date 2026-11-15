@@ -22,9 +22,12 @@ const DEFAULT_DATA = {
     deleted_event_ids: [],
     deleted_certificate_numbers: [],
     deleted_batch_ids: [],
+    deleted_event_numbers: [],
     certificate_batches: [],
     certificate_audit_logs: [],
     certificate_templates: [],
+    certificate_programmes: [],
+    event_sequences: {},
     last_certificate_sequence: 0,
     email_config: {
         sender_email: "csbstlp@ritrjpm.ac.in",
@@ -33,6 +36,41 @@ const DEFAULT_DATA = {
         reply_to: "csbstlp@ritrjpm.ac.in"
     }
 };
+
+
+// Initial Verified Institutional Certificate Programmes (STTP & FDP)
+const INITIAL_PROGRAMMES = [
+    {
+        id: "prog_01_sttp_blockchain",
+        event_number: "01",
+        programme_title: "One Week Online Short-Term Training Programme (STTP)",
+        programme_topic: "Emerging Blockchain Technologies",
+        programme_type: "STTP",
+        certificate_content: "This is to certify that [Participant Name] has actively participated in the One-Week Online Short-Term Training Programme (STTP) on \"Emerging Blockchain Technologies\", organized by the Department of Computer Science and Business Systems (CSBS), Ramco Institute of Technology, Rajapalayam, from 12 October 2026 to 18 October 2026.",
+        organizing_department: "Department of Computer Science and Business Systems (CSBS)",
+        association: "",
+        institution_name: "Ramco Institute of Technology, Rajapalayam",
+        start_date: "2026-10-12",
+        end_date: "2026-10-18",
+        status: "ACTIVE",
+        created_at: "2026-10-12T00:00:00.000Z"
+    },
+    {
+        id: "prog_02_fdp_superintelligent",
+        event_number: "02",
+        programme_title: "Two-Week International Industry-Oriented Faculty Development Programme",
+        programme_topic: "Engineering Superintelligent Systems for Sustainable Digital Transformation",
+        programme_type: "Faculty Development Programme (FDP)",
+        association: "ISTE Student Chapter",
+        certificate_content: "This is to certify that [Participant Name] has actively participated in the Two-Week International Industry-Oriented Faculty Development Programme on \"Engineering Superintelligent Systems for Sustainable Digital Transformation\", organized by the Department of Computer Science and Business Systems (CSBS), in association with the ISTE Student Chapter, Ramco Institute of Technology, Rajapalayam, from 26 October 2026 to 07 November 2026.",
+        organizing_department: "Department of Computer Science and Business Systems (CSBS)",
+        institution_name: "Ramco Institute of Technology, Rajapalayam",
+        start_date: "2026-10-26",
+        end_date: "2026-11-07",
+        status: "ACTIVE",
+        created_at: "2026-10-26T00:00:00.000Z"
+    }
+];
 
 // Initial verified RIT STTP & Workshop templates
 const INITIAL_TEMPLATES = [
@@ -127,37 +165,56 @@ async function ensureStorageBucket() {
 }
 
 // ============================================================
-// STANDARDIZED SEQUENTIAL CERTIFICATE ID GENERATION (RITCB 01 XXXX)
+// STANDARDIZED EVENT-WISE SEQUENTIAL CERTIFICATE ID GENERATION (RITCB EE NNNN)
+// Format: RITCB EE NNNN
+// Where EE = two-digit event number (01, 02, ...), NNNN = 4-digit counter per event
 // ============================================================
 const FIXED_CERT_PREFIX = "RITCB";
-const FIXED_CERT_SERIES = "01";
 
-function parseCertificateSequenceNumber(certNumber) {
+function parseEventCertificateNumber(certNumber) {
     if (!certNumber || typeof certNumber !== "string") return null;
-    const match = certNumber.trim().match(/^RITCB\s+01\s+(\d+)$/i);
+    const match = certNumber.trim().match(/^RITCB\s+(\d{2})\s+(\d+)$/i);
     if (match) {
-        const val = parseInt(match[1], 10);
-        return isNaN(val) ? null : val;
+        const eventNumber = match[1];
+        const val = parseInt(match[2], 10);
+        return isNaN(val) ? null : { eventNumber, sequence: val };
     }
     return null;
 }
 
-function formatCertificateId(seqNumber) {
-    const num = Math.max(1, parseInt(seqNumber, 10) || 1);
-    const padded = String(num).padStart(4, "0");
-    return `${FIXED_CERT_PREFIX} ${FIXED_CERT_SERIES} ${padded}`;
+function parseCertificateSequenceNumber(certNumber) {
+    const parsed = parseEventCertificateNumber(certNumber);
+    return parsed ? parsed.sequence : null;
 }
 
-function getHighestSequenceNumber(certificates = [], lastKnownSequence = 0) {
-    let max = typeof lastKnownSequence === "number" ? lastKnownSequence : 0;
+function formatCertificateId(eventNumberOrSeq, maybeSeqNumber) {
+    let ee = "01";
+    let seq = 1;
+    if (maybeSeqNumber !== undefined) {
+        ee = String(eventNumberOrSeq || "01").padStart(2, "0").slice(-2);
+        seq = Math.max(1, parseInt(maybeSeqNumber, 10) || 1);
+    } else {
+        seq = Math.max(1, parseInt(eventNumberOrSeq, 10) || 1);
+    }
+    const nnnn = String(seq).padStart(4, "0");
+    return `${FIXED_CERT_PREFIX} ${ee} ${nnnn}`;
+}
+
+function getHighestSequenceNumberForEvent(eventNumber = "01", certificates = [], eventSequences = {}) {
+    const ee = String(eventNumber || "01").padStart(2, "0").slice(-2);
+    let max = (eventSequences && typeof eventSequences[ee] === "number") ? eventSequences[ee] : 0;
     (certificates || []).forEach(c => {
         if (!c) return;
-        const seq = parseCertificateSequenceNumber(c.certificate_number || c.certificate_id);
-        if (seq !== null && seq > max) {
-            max = seq;
+        const parsed = parseEventCertificateNumber(c.certificate_number || c.certificate_id);
+        if (parsed && parsed.eventNumber === ee && parsed.sequence > max) {
+            max = parsed.sequence;
         }
     });
     return max;
+}
+
+function getHighestSequenceNumber(certificates = [], lastKnownSequence = 0) {
+    return getHighestSequenceNumberForEvent("01", certificates, { "01": lastKnownSequence });
 }
 
 let allocationMutex = Promise.resolve();
@@ -167,19 +224,27 @@ function withAllocationLock(fn) {
     return next;
 }
 
-async function allocateNextCertificateIds(count = 1) {
+async function allocateNextCertificateIdsForEvent(eventNumber = "01", count = 1) {
+    const ee = String(eventNumber || "01").padStart(2, "0").slice(-2);
     const numToAllocate = Math.max(1, parseInt(count, 10) || 1);
     return withAllocationLock(async () => {
         const data = await getAllData();
-        const currentHighest = getHighestSequenceNumber(data.certificates, data.last_certificate_sequence);
+        if (!data.event_sequences || typeof data.event_sequences !== "object") {
+            data.event_sequences = {};
+        }
+        const currentHighest = getHighestSequenceNumberForEvent(ee, data.certificates, data.event_sequences);
         const allocated = [];
         for (let i = 1; i <= numToAllocate; i++) {
-            allocated.push(formatCertificateId(currentHighest + i));
+            allocated.push(formatCertificateId(ee, currentHighest + i));
         }
-        data.last_certificate_sequence = currentHighest + numToAllocate;
+        data.event_sequences[ee] = currentHighest + numToAllocate;
         await commitData(data);
         return allocated;
     });
+}
+
+async function allocateNextCertificateIds(count = 1) {
+    return allocateNextCertificateIdsForEvent("01", count);
 }
 
 // Read local JSON file
@@ -449,6 +514,25 @@ async function getAllData() {
         getHighestSequenceNumber(base.certificates || []),
         getHighestSequenceNumber(cloudData?.certificates || [])
     );
+
+    // Initialize default programmes (Programme 01: STTP, Programme 02: FDP)
+    if (!Array.isArray(base.certificate_programmes) || base.certificate_programmes.length === 0) {
+        base.certificate_programmes = JSON.parse(JSON.stringify(INITIAL_PROGRAMMES));
+    } else {
+        INITIAL_PROGRAMMES.forEach(initP => {
+            const exists = base.certificate_programmes.some(p => p.id === initP.id || p.event_number === initP.event_number);
+            const wasDeleted = (base.deleted_event_numbers || []).includes(initP.event_number);
+            if (!exists && !wasDeleted) {
+                base.certificate_programmes.push(JSON.parse(JSON.stringify(initP)));
+            }
+        });
+    }
+    if (!base.event_sequences || typeof base.event_sequences !== "object") {
+        base.event_sequences = {};
+    }
+    if (!Array.isArray(base.deleted_event_numbers)) {
+        base.deleted_event_numbers = [];
+    }
 
     inMemoryData = base;
     return inMemoryData;
@@ -975,6 +1059,8 @@ async function submitFeedbackAndGenerateCertificate({
             const nextSeq = currentHighest + 1;
             const certNumber = formatCertificateId(nextSeq);
             data.last_certificate_sequence = nextSeq;
+    if (!data.event_sequences) data.event_sequences = {};
+    data.event_sequences[assignedEventNumber] = nextSeq;
             const issueDate = new Date().toISOString().split("T")[0];
             const qrToken = crypto.randomBytes(16).toString("hex");
 
@@ -2492,49 +2578,52 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
 // ============================================================
 // BULK CERTIFICATE ISSUANCE ENGINE
 // ============================================================
-async function issueBulkCertificates({
-    batch_title = "Bulk Certificate Generation",
-    batchName,
-    event_name,
-    eventTitle,
-    event_date,
-    category = "Placement Training",
-    academic_year = "2026-27",
-    signatory_count = 6,
-    signatory_1_name = "Dr. M. Jeya Sundari",
-    signatory_1_title = "Faculty Coordinator",
-    signatory_1_org = "CSBS, RIT",
-    signatory_2_name = "Mrs. M. Rekha",
-    signatory_2_title = "Faculty Coordinator",
-    signatory_2_org = "CSBS, RIT",
-    signatory_3_name = "Mr. M. Rama Krishnan",
-    signatory_3_title = "Faculty Coordinator",
-    signatory_3_org = "CSBS, RIT",
-    signatory_4_name = "Dr. D. Kesavaraja",
-    signatory_4_title = "Convenor",
-    signatory_4_org = "CSBS, RIT",
-    signatory_5_name = "Dr. S. Rajakarunakaran",
-    signatory_5_title = "Patron",
-    signatory_5_org = "RIT",
-    signatory_6_name = "Dr. L. Ganesan",
-    signatory_6_title = "Chief Patron",
-    signatory_6_org = "RIT",
-    programme_title = "One Week Short-Term Training Programme (STTP)",
-    programme_dates = "October 12, 2026, to October 18, 2026",
-    department = "Department of Computer Science and Business Systems",
-    institution = "Ramco Institute of Technology, Rajapalayam",
-    college_name = "Ramco Institute of Technology, Rajapalayam",
-    certificate_wording = "",
-    template_style = "rit_purple_gold",
-    id_prefix = "RIT-STTP-2026-",
-    signatories = null,
-    certificate_title = "CERTIFICATE OF PARTICIPATION",
-    certificateTitle,
-    certificate_type = "Participation",
-    allow_duplicates = false,
-    records = [],
-    issuer = {}
-}) {
+async function issueBulkCertificates(batchOptions = {}) {
+    const {
+        batch_title = "Bulk Certificate Generation",
+        batchName,
+        event_name,
+        eventTitle,
+        event_date,
+        event_number,
+        programme_id,
+        category = "Placement Training",
+        academic_year = "2026-27",
+        signatory_count = 6,
+        signatory_1_name = "Dr. S.Erana Verrappa Dinesh",
+        signatory_1_title = "Faculty Coordinator",
+        signatory_1_org = "CSBS, RIT",
+        signatory_2_name = "Mrs. B.Yazhini",
+        signatory_2_title = "Faculty Coordinator",
+        signatory_2_org = "CSBS, RIT",
+        signatory_3_name = "Ms. Preethi Ram",
+        signatory_3_title = "Faculty Coordinator",
+        signatory_3_org = "CSBS, RIT",
+        signatory_4_name = "Dr. D. Kesavaraja",
+        signatory_4_title = "Convenor",
+        signatory_4_org = "CSBS, RIT",
+        signatory_5_name = "Dr. S. Rajakarunakaran",
+        signatory_5_title = "Patron",
+        signatory_5_org = "RIT",
+        signatory_6_name = "Dr. L. Ganesan",
+        signatory_6_title = "Chief Patron",
+        signatory_6_org = "RIT",
+        programme_title = "One Week Online Short-Term Training Programme (STTP)",
+        programme_dates = "12 October 2026 to 18 October 2026",
+        department = "Department of Computer Science and Business Systems (CSBS)",
+        institution = "Ramco Institute of Technology, Rajapalayam",
+        college_name = "Ramco Institute of Technology, Rajapalayam",
+        certificate_wording = "",
+        template_style = "rit_purple_gold",
+        id_prefix = "RITCB 01 ",
+        signatories = null,
+        certificate_title = "CERTIFICATE OF PARTICIPATION",
+        certificateTitle,
+        certificate_type = "Participation",
+        allow_duplicates = false,
+        records = [],
+        issuer = {}
+    } = (batchOptions || {});
     if (!Array.isArray(records) || records.length === 0) {
         throw new Error("No student records provided for certificate generation.");
     }
@@ -2544,15 +2633,15 @@ async function issueBulkCertificates({
     const effectiveCertTitle = certificate_title || certificateTitle || "CERTIFICATE OF PARTICIPATION";
 
     const sigCount = Number(signatory_count) || (signatory_6_name ? 6 : (signatory_5_name ? 5 : 4));
-    const sig1Name = (signatories && signatories.signatory1 && signatories.signatory1.name) || signatory_1_name || "Dr. M. Jeya Sundari";
+    const sig1Name = (signatories && signatories.signatory1 && signatories.signatory1.name) || signatory_1_name || "Dr. S.Erana Verrappa Dinesh";
     const sig1Title = (signatories && signatories.signatory1 && signatories.signatory1.title) || signatory_1_title || "Faculty Coordinator";
     const sig1Org = (signatories && signatories.signatory1 && signatories.signatory1.org) || signatory_1_org || "CSBS, RIT";
 
-    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Mrs. M. Rekha";
+    const sig2Name = (signatories && signatories.signatory2 && signatories.signatory2.name) || signatory_2_name || "Mrs. B.Yazhini";
     const sig2Title = (signatories && signatories.signatory2 && signatories.signatory2.title) || signatory_2_title || "Faculty Coordinator";
     const sig2Org = (signatories && signatories.signatory2 && signatories.signatory2.org) || signatory_2_org || "CSBS, RIT";
 
-    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "Mr. M. Rama Krishnan";
+    const sig3Name = (signatories && signatories.signatory3 && signatories.signatory3.name) || signatory_3_name || "Ms. Preethi Ram";
     const sig3Title = (signatories && signatories.signatory3 && signatories.signatory3.title) || signatory_3_title || "Faculty Coordinator";
     const sig3Org = (signatories && signatories.signatory3 && signatories.signatory3.org) || signatory_3_org || "CSBS, RIT";
 
@@ -2616,8 +2705,19 @@ async function issueBulkCertificates({
         if (email) existingMap.set(`${email}::${ev}`, c);
     });
 
-    const currentHighest = getHighestSequenceNumber(data.certificates, data.last_certificate_sequence);
-    let nextSeq = currentHighest;
+    // Determine Event Number for event-wise sequencing (RITCB EE NNNN)
+    let assignedEventNumber = "01";
+    if (batchOptions && batchOptions.event_number) {
+        assignedEventNumber = String(batchOptions.event_number).padStart(2, "0").slice(-2);
+    } else if (batchOptions && batchOptions.id_prefix && batchOptions.id_prefix.match(/RITCB\s+(\d{2})/i)) {
+        assignedEventNumber = batchOptions.id_prefix.match(/RITCB\s+(\d{2})/i)[1];
+    } else if (effectiveEventName && (effectiveEventName.toLowerCase().includes("superintelligent") || effectiveEventName.toLowerCase().includes("faculty development") || effectiveEventName.toLowerCase().includes("fdp"))) {
+        assignedEventNumber = "02";
+    }
+
+    if (!data.event_sequences) data.event_sequences = {};
+    const currentHighestForEvent = getHighestSequenceNumberForEvent(assignedEventNumber, data.certificates, data.event_sequences);
+    let nextSeq = currentHighestForEvent;
 
     for (let i = 0; i < validRecords.length; i++) {
         const row = validRecords[i];
@@ -2637,7 +2737,7 @@ async function issueBulkCertificates({
                 certId = String(row.certificate_number).trim();
             } else {
                 nextSeq += 1;
-                certId = formatCertificateId(nextSeq);
+                certId = formatCertificateId(assignedEventNumber, nextSeq);
             }
             const qrToken = crypto.randomBytes(16).toString("hex");
 
@@ -2668,6 +2768,7 @@ async function issueBulkCertificates({
                 event_code: "STTP",
                 event_date: evDate,
                 event_venue: "Department Placement Lab / Online",
+                event_number: assignedEventNumber,
                 category: category,
                 academic_year: row.academic_year || academic_year || "2026-27",
                 issue_date: row.issue_date || issueDateStr,
@@ -2729,6 +2830,8 @@ async function issueBulkCertificates({
         }
     }
     data.last_certificate_sequence = Math.max(data.last_certificate_sequence || 0, nextSeq);
+    if (!data.event_sequences) data.event_sequences = {};
+    data.event_sequences[assignedEventNumber] = Math.max(data.event_sequences[assignedEventNumber] || 0, nextSeq);
 
     const batchRecord = {
         id: batchId,
@@ -2958,6 +3061,153 @@ async function getPublicCertificateDetails(certId) {
 // ============================================================
 // BATCH MANAGEMENT HELPERS
 // ============================================================
+
+// ============================================================
+// CERTIFICATE PROGRAMME MANAGEMENT (ADMIN EDITABLE)
+// ============================================================
+async function getAllCertificateProgrammes() {
+    const data = await getAllData();
+    const certs = data.certificates || [];
+    const programmes = (data.certificate_programmes || []).map(p => {
+        const ee = String(p.event_number || "01").padStart(2, "0").slice(-2);
+        // Count non-revoked issued certificates for this event
+        const count = certs.filter(c => {
+            if (!c || c.status === "REVOKED") return false;
+            if (c.event_number && String(c.event_number).padStart(2, "0").slice(-2) === ee) return true;
+            const parsed = parseEventCertificateNumber(c.certificate_number || c.certificate_id);
+            if (parsed && parsed.eventNumber === ee) return true;
+            if (p.programme_topic && c.event_name && c.event_name.toLowerCase().includes(p.programme_topic.toLowerCase())) return true;
+            return false;
+        }).length;
+
+        const highestSeq = getHighestSequenceNumberForEvent(ee, certs, data.event_sequences);
+        const nextSeq = highestSeq + 1;
+        const nextCertNumber = String(nextSeq).padStart(4, "0");
+        const nextCertId = formatCertificateId(ee, nextSeq);
+
+        return {
+            ...p,
+            event_number: ee,
+            certificates_generated: count,
+            highest_sequence: highestSeq,
+            next_sequence: nextSeq,
+            next_certificate_number: nextCertNumber,
+            next_certificate_id: nextCertId
+        };
+    });
+
+    // Sort chronologically by event_number ascending
+    programmes.sort((a, b) => parseInt(a.event_number, 10) - parseInt(b.event_number, 10));
+    return programmes;
+}
+
+async function createCertificateProgramme(progData = {}) {
+    return withAllocationLock(async () => {
+        const data = await getAllData();
+        if (!Array.isArray(data.certificate_programmes)) data.certificate_programmes = [];
+        if (!Array.isArray(data.deleted_event_numbers)) data.deleted_event_numbers = [];
+
+        // Determine all previously used event numbers
+        const usedNumbers = new Set();
+        data.certificate_programmes.forEach(p => {
+            const num = parseInt(p.event_number, 10);
+            if (!isNaN(num)) usedNumbers.add(num);
+        });
+        (data.deleted_event_numbers || []).forEach(numStr => {
+            const num = parseInt(numStr, 10);
+            if (!isNaN(num)) usedNumbers.add(num);
+        });
+        (data.certificates || []).forEach(c => {
+            const parsed = parseEventCertificateNumber(c.certificate_number || c.certificate_id);
+            if (parsed) usedNumbers.add(parseInt(parsed.eventNumber, 10));
+        });
+
+        // Next sequential event number starting from 1
+        let nextEventNum = 1;
+        while (usedNumbers.has(nextEventNum)) {
+            nextEventNum++;
+        }
+        const ee = String(nextEventNum).padStart(2, "0");
+
+        const slug = (progData.programme_topic || progData.programme_title || "event")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "_")
+            .slice(0, 30);
+        const newId = `prog_${ee}_${slug}_${Date.now().toString(36)}`;
+
+        const newProg = {
+            id: newId,
+            event_number: ee,
+            programme_title: (progData.programme_title || "").trim() || `Programme ${ee}`,
+            programme_topic: (progData.programme_topic || "").trim() || `Topic ${ee}`,
+            programme_type: (progData.programme_type || "STTP").trim(),
+            certificate_content: (progData.certificate_content || "").trim(),
+            organizing_department: (progData.organizing_department || "Department of Computer Science and Business Systems (CSBS)").trim(),
+            association: (progData.association || "").trim(),
+            institution_name: (progData.institution_name || "Ramco Institute of Technology, Rajapalayam").trim(),
+            start_date: (progData.start_date || "").trim(),
+            end_date: (progData.end_date || "").trim(),
+            status: (progData.status || "ACTIVE").toUpperCase(),
+            created_at: new Date().toISOString()
+        };
+
+        data.certificate_programmes.push(newProg);
+        await commitData(data);
+        return newProg;
+    });
+}
+
+async function updateCertificateProgramme(id, updateData = {}) {
+    return withAllocationLock(async () => {
+        const data = await getAllData();
+        const index = (data.certificate_programmes || []).findIndex(p => p.id === id || p.event_number === id);
+        if (index === -1) {
+            throw new Error(`Programme record not found: ${id}`);
+        }
+        const current = data.certificate_programmes[index];
+
+        // CRITICAL: Preserve permanent event_number permanently!
+        const updated = {
+            ...current,
+            programme_title: updateData.programme_title !== undefined ? String(updateData.programme_title).trim() : current.programme_title,
+            programme_topic: updateData.programme_topic !== undefined ? String(updateData.programme_topic).trim() : current.programme_topic,
+            programme_type: updateData.programme_type !== undefined ? String(updateData.programme_type).trim() : current.programme_type,
+            certificate_content: updateData.certificate_content !== undefined ? String(updateData.certificate_content).trim() : current.certificate_content,
+            organizing_department: updateData.organizing_department !== undefined ? String(updateData.organizing_department).trim() : current.organizing_department,
+            association: updateData.association !== undefined ? String(updateData.association).trim() : current.association,
+            institution_name: updateData.institution_name !== undefined ? String(updateData.institution_name).trim() : current.institution_name,
+            start_date: updateData.start_date !== undefined ? String(updateData.start_date).trim() : current.start_date,
+            end_date: updateData.end_date !== undefined ? String(updateData.end_date).trim() : current.end_date,
+            status: updateData.status !== undefined ? String(updateData.status).trim().toUpperCase() : current.status,
+            updated_at: new Date().toISOString()
+        };
+
+        data.certificate_programmes[index] = updated;
+        await commitData(data);
+        return updated;
+    });
+}
+
+async function deleteCertificateProgramme(id) {
+    return withAllocationLock(async () => {
+        const data = await getAllData();
+        const index = (data.certificate_programmes || []).findIndex(p => p.id === id || p.event_number === id);
+        if (index === -1) {
+            throw new Error(`Programme record not found: ${id}`);
+        }
+        const removed = data.certificate_programmes.splice(index, 1)[0];
+        // Mark event number as deleted so it is NEVER reused!
+        if (removed.event_number) {
+            if (!Array.isArray(data.deleted_event_numbers)) data.deleted_event_numbers = [];
+            if (!data.deleted_event_numbers.includes(removed.event_number)) {
+                data.deleted_event_numbers.push(removed.event_number);
+            }
+        }
+        await commitData(data);
+        return removed;
+    });
+}
+
 async function getCertificateBatches() {
     const data = await getAllData();
     const batches = data.certificate_batches || [];
@@ -3386,6 +3636,13 @@ module.exports = {
     formatCertificateId,
     getHighestSequenceNumber,
     allocateNextCertificateIds,
+    allocateNextCertificateIdsForEvent,
+    parseEventCertificateNumber,
+    getHighestSequenceNumberForEvent,
+    getAllCertificateProgrammes,
+    createCertificateProgramme,
+    updateCertificateProgramme,
+    deleteCertificateProgramme,
     verifyAndGetCertificateDetails,
     getAllCertificates,
     getAllStudentUsers,

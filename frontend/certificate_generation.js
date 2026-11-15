@@ -23,7 +23,10 @@ const certGenState = {
   allowDuplicates: false,   // Allow duplicate override toggle
   batchesList: [],          // List of historical batches
   masterCertificates: [],   // Master issued certificates
-  searchQuery: ''
+  searchQuery: '',
+  programmes: [],           // Available certificate programmes
+  selectedProgrammeId: 'prog_01_sttp_blockchain',
+  selectedEventNumber: '01'
 };
 
 // ============================================================
@@ -33,7 +36,8 @@ function initCertificateGenerationTab() {
   updateCertGenRoleNotice();
   setCertGenDefaultDates();
   initCertEmailSettings();
-  applyCertificatePreset('sttp_blockchain_2026');
+  loadCertificateProgrammes();
+  applyCertificatePreset('prog_01_sttp_blockchain');
   loadIssuedCertificatesHistoryTable();
 }
 
@@ -77,6 +81,7 @@ function jumpToCertGenSection(secId) {
 
   // Update stepper active button
   const stepMap = {
+    cgSecProgrammes: 'stepBtn0',
     cgSecUpload: 'stepBtn1',
     cgSecPreview: 'stepBtn2',
     cgSecTemplate: 'stepBtn3',
@@ -98,6 +103,282 @@ function jumpToCertGenSection(secId) {
 }
 
 // ============================================================
+
+// ============================================================
+// CERTIFICATE PROGRAMME MANAGEMENT (ADMIN & FACULTY EDITABLE)
+// ============================================================
+async function loadCertificateProgrammes() {
+  const tbody = document.getElementById('cgProgrammesTableBody');
+  const selectUpload = document.getElementById('cgEventSelectUpload');
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/programmes`, {
+      headers: getAdminAuthHeaders()
+    });
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.programmes)) {
+      throw new Error(data.message || 'Failed to load programmes');
+    }
+
+    certGenState.programmes = data.programmes;
+    renderProgrammesTable(data.programmes);
+
+    // Populate dropdown in Section 1 (Upload)
+    if (selectUpload) {
+      selectUpload.innerHTML = data.programmes.map(p => {
+        const isSel = (p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber) ? 'selected' : '';
+        return `<option value="${escapeHtml(p.id)}" ${isSel}>Event ${escapeHtml(p.event_number)}: ${escapeHtml(p.programme_title)} — ${escapeHtml(p.programme_topic)} [Next: ${escapeHtml(p.next_certificate_id)}]` + `</option>`;
+      }).join('');
+    }
+
+    // Update active badge in Section 1
+    const activeProg = data.programmes.find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber) || data.programmes[0];
+    if (activeProg) {
+      updateActiveEventBadge(activeProg);
+    }
+  } catch (err) {
+    console.error('Error loading certificate programmes:', err);
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#ef4444;padding:16px;">Failed to load programmes: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+}
+
+function renderProgrammesTable(programmes) {
+  const tbody = document.getElementById('cgProgrammesTableBody');
+  if (!tbody) return;
+
+  if (!programmes || programmes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#64748b;">No certificate programmes found. Click "Create New Programme" to add one.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = programmes.map(p => {
+    const isSelected = (p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
+    const rowBg = isSelected ? 'background:#f5f3ff;' : '';
+    const certCount = p.certificates_generated || 0;
+    const nextCert = p.next_certificate_id || ('RITCB ' + p.event_number + ' 0001');
+
+    return `
+      <tr style="${rowBg}border-bottom:1px solid #f1f5f9;">
+        <td style="text-align:center;font-weight:800;color:#6b21a8;font-size:14px;">
+          ${escapeHtml(p.event_number)}
+        </td>
+        <td style="max-width:320px;">
+          <div style="font-weight:700;color:#1e293b;">${escapeHtml(p.programme_title)}</div>
+          <div style="font-size:12px;color:#7c3aed;margin-top:2px;">“${escapeHtml(p.programme_topic)}”</div>
+        </td>
+        <td>
+          <span class="badge badge-purple" style="font-size:11px;">${escapeHtml(p.programme_type || 'STTP')}</span>
+        </td>
+        <td style="max-width:240px;font-size:12px;">
+          <div>${escapeHtml(p.organizing_department || 'Department of CSBS')}</div>
+          ${p.association ? `<div style="color:#059669;margin-top:2px;"><i class="fa-solid fa-handshake"></i> ${escapeHtml(p.association)}</div>` : ''}
+        </td>
+        <td style="text-align:center;font-size:12px;white-space:nowrap;color:#475569;">
+          ${escapeHtml(p.start_date || '-')} to<br>${escapeHtml(p.end_date || '-')}
+        </td>
+        <td style="text-align:center;">
+          <span class="badge" style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:700;padding:4px 10px;">${certCount}</span>
+        </td>
+        <td style="text-align:center;font-family:monospace;font-weight:800;color:#047857;font-size:13px;">
+          ${escapeHtml(nextCert)}
+        </td>
+        <td style="text-align:center;">
+          <span class="badge badge-green" style="font-size:11px;">${escapeHtml(p.status || 'ACTIVE')}</span>
+        </td>
+        <td style="text-align:center;">
+          <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+            <button type="button" class="btn btn-xs ${isSelected ? 'btn-success' : 'btn-primary'}" onclick="selectProgrammeForGeneration('${escapeHtml(p.id)}')" style="font-size:11px;padding:4px 8px;font-weight:700;">
+              <i class="fa-solid fa-check"></i> ${isSelected ? 'Active' : 'Select'}
+            </button>
+            <button type="button" class="btn btn-xs btn-outline-secondary" onclick="openEditProgrammeModal('${escapeHtml(p.id)}')" style="font-size:11px;padding:4px 8px;">
+              <i class="fa-solid fa-pen"></i> Edit
+            </button>
+            <button type="button" class="btn btn-xs btn-outline-info" onclick="previewProgrammeCertificate('${escapeHtml(p.id)}')" style="font-size:11px;padding:4px 8px;">
+              <i class="fa-solid fa-eye"></i> Preview
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function updateActiveEventBadge(prog) {
+  const badge = document.getElementById('cgActiveEventSummaryBadge');
+  if (badge) {
+    badge.innerHTML = `<i class="fa-solid fa-award"></i> Active Event: <strong>${escapeHtml(prog.event_number)}</strong> &bull; Next ID: <strong>${escapeHtml(prog.next_certificate_id || ('RITCB ' + prog.event_number + ' 0001'))}</strong>`;
+  }
+}
+
+function selectProgrammeForGeneration(progIdOrNumber) {
+  const prog = (certGenState.programmes || []).find(p => p.id === progIdOrNumber || p.event_number === progIdOrNumber);
+  if (!prog) return;
+
+  certGenState.selectedProgrammeId = prog.id;
+  certGenState.selectedEventNumber = prog.event_number;
+
+  // Update Section 1 Select
+  const sel = document.getElementById('cgEventSelectUpload');
+  if (sel) sel.value = prog.id;
+
+  updateActiveEventBadge(prog);
+  renderProgrammesTable(certGenState.programmes);
+
+  // Populate form fields in Section 3
+  setFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
+  setFormParam(['tplCertType'], prog.programme_type || 'STTP');
+  setFormParam(['tplProgrammeTitle', 'tplProgTitle'], prog.programme_title || '');
+  setFormParam(['tplEventTopic', 'tplEventName'], prog.programme_topic || '');
+  setFormParam(['tplDeptName', 'tplOrgDept'], prog.organizing_department || 'Department of Computer Science and Business Systems (CSBS)');
+  setFormParam(['tplInstName', 'tplInstitution'], prog.institution_name || 'Ramco Institute of Technology, Rajapalayam');
+
+  const datesStr = (prog.start_date && prog.end_date) ? `${prog.start_date} to ${prog.end_date}` : (prog.start_date || prog.end_date || '');
+  setFormParam(['tplProgrammeDates', 'tplProgDates'], datesStr);
+  if (prog.end_date) setFormParam(['tplIssueDate'], prog.end_date);
+
+  setFormParam(['tplCertWording'], prog.certificate_content || '');
+  setFormParam(['tplIdPrefix'], `RITCB ${prog.event_number} `);
+
+  toggleSignatoryCount(6);
+  setSigFields(1, 'Dr. S.Erana Verrappa Dinesh', 'Faculty Coordinator', 'CSBS, RIT');
+  setSigFields(2, 'Mrs. B.Yazhini', 'Faculty Coordinator', 'CSBS, RIT');
+  setSigFields(3, 'Ms. Preethi Ram', 'Faculty Coordinator', 'CSBS, RIT');
+  setSigFields(4, 'Dr. D. Kesavaraja', 'Convenor', 'CSBS, RIT');
+  setSigFields(5, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
+  setSigFields(6, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
+
+  updateLiveCertificatePreview();
+}
+
+function handleProgrammeSelectionChange(progId) {
+  selectProgrammeForGeneration(progId);
+}
+
+function previewProgrammeCertificate(progId) {
+  selectProgrammeForGeneration(progId);
+  jumpToCertGenSection('cgSecTemplate');
+}
+
+function openCreateProgrammeModal() {
+  const card = document.getElementById('cgProgrammeEditorCard');
+  const title = document.getElementById('cgProgEditorTitle');
+  const badge = document.getElementById('cgProgEditorEventBadge');
+  const form = document.getElementById('cgProgrammeForm');
+
+  if (form) form.reset();
+  document.getElementById('cgProgEditId').value = '';
+  document.getElementById('cgProgEditEventNumber').value = '';
+
+  // Determine next event number
+  const used = (certGenState.programmes || []).map(p => parseInt(p.event_number, 10)).filter(n => !isNaN(n));
+  let nextNum = 1;
+  while (used.includes(nextNum)) {
+    nextNum++;
+  }
+  const nextEE = String(nextNum).padStart(2, '0');
+
+  if (title) title.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Create New Certificate Programme';
+  if (badge) badge.innerText = `Next Event ID: ${nextEE}`;
+
+  document.getElementById('cgProgDept').value = 'Department of Computer Science and Business Systems (CSBS)';
+  document.getElementById('cgProgInstitution').value = 'Ramco Institute of Technology, Rajapalayam';
+  document.getElementById('cgProgContent').value = `This is to certify that [Participant Name] has actively participated in the [Programme Title] on "[Programme Topic]", organized by the Department of Computer Science and Business Systems (CSBS), Ramco Institute of Technology, Rajapalayam, from [Start Date] to [End Date].`;
+
+  if (card) {
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function openEditProgrammeModal(progId) {
+  const prog = (certGenState.programmes || []).find(p => p.id === progId);
+  if (!prog) return;
+
+  const card = document.getElementById('cgProgrammeEditorCard');
+  const title = document.getElementById('cgProgEditorTitle');
+  const badge = document.getElementById('cgProgEditorEventBadge');
+
+  document.getElementById('cgProgEditId').value = prog.id;
+  document.getElementById('cgProgEditEventNumber').value = prog.event_number;
+  document.getElementById('cgProgTitle').value = prog.programme_title || '';
+  document.getElementById('cgProgTopic').value = prog.programme_topic || '';
+  document.getElementById('cgProgType').value = prog.programme_type || 'STTP';
+  document.getElementById('cgProgDept').value = prog.organizing_department || '';
+  document.getElementById('cgProgAssociation').value = prog.association || '';
+  document.getElementById('cgProgInstitution').value = prog.institution_name || '';
+  document.getElementById('cgProgStartDate').value = prog.start_date || '';
+  document.getElementById('cgProgEndDate').value = prog.end_date || '';
+  document.getElementById('cgProgContent').value = prog.certificate_content || '';
+
+  if (title) title.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Programme: ${escapeHtml(prog.programme_title)}`;
+  if (badge) badge.innerText = `Permanent Event ID: ${escapeHtml(prog.event_number)}`;
+
+  if (card) {
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function cancelProgrammeEditing() {
+  const card = document.getElementById('cgProgrammeEditorCard');
+  if (card) card.style.display = 'none';
+}
+
+async function handleSaveProgramme(event) {
+  event.preventDefault();
+
+  const editId = document.getElementById('cgProgEditId').value;
+  const isEditing = Boolean(editId);
+
+  const payload = {
+    programme_title: document.getElementById('cgProgTitle').value.trim(),
+    programme_topic: document.getElementById('cgProgTopic').value.trim(),
+    programme_type: document.getElementById('cgProgType').value,
+    organizing_department: document.getElementById('cgProgDept').value.trim(),
+    association: document.getElementById('cgProgAssociation').value.trim(),
+    institution_name: document.getElementById('cgProgInstitution').value.trim(),
+    start_date: document.getElementById('cgProgStartDate').value,
+    end_date: document.getElementById('cgProgEndDate').value,
+    certificate_content: document.getElementById('cgProgContent').value.trim(),
+    status: 'ACTIVE'
+  };
+
+  try {
+    const url = isEditing
+      ? `${API_BASE}/admin/certificate-generation/programmes/${encodeURIComponent(editId)}`
+      : `${API_BASE}/admin/certificate-generation/programmes`;
+    const method = isEditing ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to save programme.');
+    }
+
+    showAdminAlert(data.message || 'Programme saved successfully!', 'success');
+    cancelProgrammeEditing();
+    await loadCertificateProgrammes();
+
+    // If active programme was edited, re-apply its details
+    if (data.programme) {
+      selectProgrammeForGeneration(data.programme.id);
+    }
+  } catch (err) {
+    console.error('Error saving programme:', err);
+    showAdminAlert(err.message || 'Failed to save programme.');
+  }
+}
+
 // 1. TEMPLATE DOWNLOAD
 // ============================================================
 function downloadCertificateExcelTemplate() {
@@ -698,22 +979,45 @@ function applyCertificatePreset(presetKey) {
   );
   if (activeBtn) activeBtn.classList.add('active');
 
-  if (presetKey === 'sttp_blockchain' || presetKey === 'sttp_blockchain_2026') {
+  if (presetKey === 'sttp_blockchain' || presetKey === 'sttp_blockchain_2026' || presetKey === 'prog_01_sttp_blockchain') {
+    certGenState.selectedProgrammeId = 'prog_01_sttp_blockchain';
+    certGenState.selectedEventNumber = '01';
     setFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
     setFormParam(['tplCertType'], 'STTP');
-    setFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Short-Term Training Programme (STTP)');
-    setFormParam(['tplEventTopic', 'tplEventName'], 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives');
-    setFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems');
+    setFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Online Short-Term Training Programme (STTP)');
+    setFormParam(['tplEventTopic', 'tplEventName'], 'Emerging Blockchain Technologies');
+    setFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems (CSBS)');
     setFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
-    setFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026');
-    setFormParam(['tplIssueDate'], 'October 18, 2026');
-    setFormParam(['tplCertWording'], 'for active participation in the One Week Short-Term Training Programme (STTP) on “Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives”, organized by the Department of Computer Science and Business Systems at Ramco Institute of Technology, Rajapalayam from October 12, 2026, to October 18, 2026.');
+    setFormParam(['tplProgrammeDates', 'tplProgDates'], '12 October 2026 to 18 October 2026');
+    setFormParam(['tplIssueDate'], '18 October 2026');
+    setFormParam(['tplCertWording'], 'This is to certify that [Participant Name] has actively participated in the One-Week Online Short-Term Training Programme (STTP) on "Emerging Blockchain Technologies", organized by the Department of Computer Science and Business Systems (CSBS), Ramco Institute of Technology, Rajapalayam, from 12 October 2026 to 18 October 2026.');
     setFormParam(['tplIdPrefix'], 'RITCB 01 ');
 
     toggleSignatoryCount(6);
-    setSigFields(1, 'Dr. M. Jeya Sundari', 'Faculty Coordinator', 'CSBS, RIT');
-    setSigFields(2, 'Mrs. M. Rekha', 'Faculty Coordinator', 'CSBS, RIT');
-    setSigFields(3, 'Mr. M. Rama Krishnan', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(1, 'Dr. S.Erana Verrappa Dinesh', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(2, 'Mrs. B.Yazhini', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(3, 'Ms. Preethi Ram', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(4, 'Dr. D. Kesavaraja', 'Convenor', 'CSBS, RIT');
+    setSigFields(5, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
+    setSigFields(6, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
+  } else if (presetKey === 'fdp_superintelligent' || presetKey === 'prog_02_fdp_superintelligent' || presetKey === 'workshop_fullstack' || presetKey === 'workshop_ai_2026') {
+    certGenState.selectedProgrammeId = 'prog_02_fdp_superintelligent';
+    certGenState.selectedEventNumber = '02';
+    setFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
+    setFormParam(['tplCertType'], 'Faculty Development Programme (FDP)');
+    setFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'Two-Week International Industry-Oriented Faculty Development Programme');
+    setFormParam(['tplEventTopic', 'tplEventName'], 'Engineering Superintelligent Systems for Sustainable Digital Transformation');
+    setFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems (CSBS)');
+    setFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
+    setFormParam(['tplProgrammeDates', 'tplProgDates'], '26 October 2026 to 07 November 2026');
+    setFormParam(['tplIssueDate'], '07 November 2026');
+    setFormParam(['tplCertWording'], 'This is to certify that [Participant Name] has actively participated in the Two-Week International Industry-Oriented Faculty Development Programme on "Engineering Superintelligent Systems for Sustainable Digital Transformation", organized by the Department of Computer Science and Business Systems (CSBS), in association with the ISTE Student Chapter, Ramco Institute of Technology, Rajapalayam, from 26 October 2026 to 07 November 2026.');
+    setFormParam(['tplIdPrefix'], 'RITCB 02 ');
+
+    toggleSignatoryCount(6);
+    setSigFields(1, 'Dr. S.Erana Verrappa Dinesh', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(2, 'Mrs. B.Yazhini', 'Faculty Coordinator', 'CSBS, RIT');
+    setSigFields(3, 'Ms. Preethi Ram', 'Faculty Coordinator', 'CSBS, RIT');
     setSigFields(4, 'Dr. D. Kesavaraja', 'Convenor', 'CSBS, RIT');
     setSigFields(5, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
     setSigFields(6, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
@@ -897,7 +1201,7 @@ function updateLiveCertificatePreview() {
   if (document.getElementById('prevCertId')) document.getElementById('prevCertId').innerText = sampleCertId;
 
   // Signatories 1 to 6
-  const defaultSigRoles = ['jeyasundari', 'rekha', 'ramakrishnan', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
+  const defaultSigRoles = ['dinesh', 'yazhini', 'preethiram', 'kesavaraja', 'rajakarunakaran', 'ganesan'];
   for (let i = 1; i <= 6; i++) {
     const name = document.getElementById(`tplSig${i}Name`)?.value?.trim() || '';
     const titleVal = document.getElementById(`tplSig${i}Title`)?.value?.trim() || '';
@@ -1060,6 +1364,8 @@ async function proceedWithBatchGeneration() {
       signatory_6_org: document.getElementById('tplSig6Org')?.value?.trim() || 'RIT',
       signatory_6_sig: customUploadedSignatures[6] || undefined,
       allow_duplicates: Boolean(certGenState.allowDuplicates || allowDup),
+      event_number: certGenState.selectedEventNumber || "01",
+      programme_id: certGenState.selectedProgrammeId || "prog_01_sttp_blockchain",
       records: eligibleRecords.map(r => ({
         student_name: r.student_name || r.participant_name || '',
         participant_name: r.participant_name || r.student_name || '',
@@ -1116,6 +1422,7 @@ async function proceedWithBatchGeneration() {
 
     // Reload Section 5 table
     loadIssuedCertificatesHistoryTable();
+    loadCertificateProgrammes();
     updateCertEmailSettingsUI();
     successAlert?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 

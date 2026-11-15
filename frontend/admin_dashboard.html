@@ -1919,6 +1919,21 @@
       </div>
 
       <div class="certgen-section-body">
+        <!-- Event Selection for Generation -->
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px;">
+            <label for="cgEventSelectUpload" style="font-weight: 700; color: #1e293b; font-size: 14px; margin: 0; white-space: nowrap;">
+              <i class="fa-solid fa-calendar-check" style="color: #7c3aed;"></i> Target Programme:
+            </label>
+            <select id="cgEventSelectUpload" class="form-select" onchange="handleProgrammeSelectionChange(this.value)" style="font-weight: 600; color: #334155; border-color: #a855f7;">
+              <!-- Dynamic options populated from programmes -->
+            </select>
+          </div>
+          <div id="cgActiveEventSummaryBadge" style="background: #f3e8ff; border: 1px solid #c084fc; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; color: #6b21a8;">
+            Event ID: 01 &bull; Next Certificate: RITCB 01 0001
+          </div>
+        </div>
+
         <!-- Hidden file input -->
         <input type="file" id="certGenFileInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleCertGenFileSelected(event)">
 
@@ -2237,7 +2252,7 @@
                 <!-- Signatory 1 -->
                 <div class="cert-sig-config-card" id="cardSig1">
                   <h6>Signatory 1 (Faculty Coordinator)</h6>
-                  <input type="text" id="tplSig1Name" class="form-control form-control-sm" value="Dr. M. Jeya Sundari" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig1Name" class="form-control form-control-sm" value="Dr. S.Erana Verrappa Dinesh" placeholder="Name" oninput="updateLiveCertificatePreview()">
                   <input type="text" id="tplSig1Title" class="form-control form-control-sm" value="Faculty Coordinator" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
                   <input type="text" id="tplSig1Org" class="form-control form-control-sm" value="CSBS, RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
                   <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
@@ -2249,7 +2264,7 @@
                 <!-- Signatory 2 -->
                 <div class="cert-sig-config-card" id="cardSig2">
                   <h6>Signatory 2 (Faculty Coordinator)</h6>
-                  <input type="text" id="tplSig2Name" class="form-control form-control-sm" value="Mrs. M. Rekha" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig2Name" class="form-control form-control-sm" value="Mrs. B.Yazhini" placeholder="Name" oninput="updateLiveCertificatePreview()">
                   <input type="text" id="tplSig2Title" class="form-control form-control-sm" value="Faculty Coordinator" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
                   <input type="text" id="tplSig2Org" class="form-control form-control-sm" value="CSBS, RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
                   <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
@@ -2261,7 +2276,7 @@
                 <!-- Signatory 3 -->
                 <div class="cert-sig-config-card" id="cardSig3">
                   <h6>Signatory 3 (Faculty Coordinator)</h6>
-                  <input type="text" id="tplSig3Name" class="form-control form-control-sm" value="Mr. M. Rama Krishnan" placeholder="Name" oninput="updateLiveCertificatePreview()">
+                  <input type="text" id="tplSig3Name" class="form-control form-control-sm" value="Ms. Preethi Ram" placeholder="Name" oninput="updateLiveCertificatePreview()">
                   <input type="text" id="tplSig3Title" class="form-control form-control-sm" value="Faculty Coordinator" placeholder="Designation" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
                   <input type="text" id="tplSig3Org" class="form-control form-control-sm" value="CSBS, RIT" placeholder="Org" style="margin-top:4px;" oninput="updateLiveCertificatePreview()">
                   <label class="btn btn-sm btn-outline-secondary" style="margin-top:6px;width:100%;font-size:10px;padding:3px 6px;">
@@ -2343,7 +2358,7 @@
                     </div>
                   </div>
                   <div class="cert-hdr-logo-right">
-                    <img src="certificate_logo/rit_technebiz_logo.png" alt="RIT Technebiz" class="cert-technebiz-logo-img" onerror="this.style.display='none'">
+                    <img src="certificate_logo/iste_logo.jpg" alt="ISTE Logo" class="cert-technebiz-logo-img" style="max-height:55px;width:auto;object-fit:contain;" onerror="this.style.display='none'">
                   </div>
                 </div>
 
@@ -2387,20 +2402,20 @@
                       <div class="cert-sig-item" id="prevColSig1">
                         <img id="prevSig1Img" class="cert-sig-img" alt="Signature">
                         <div class="cert-sig-line"></div>
-                        <div class="cert-sig-name" id="prevSig1Name">Dr. M. Jeya Sundari</div>
+                        <div class="cert-sig-name" id="prevSig1Name">Dr. S.Erana Verrappa Dinesh</div>
                       </div>
                       <div class="cert-sig-item" id="prevColSig2">
                         <img id="prevSig2Img" class="cert-sig-img" alt="Signature">
                         <div class="cert-sig-line"></div>
-                        <div class="cert-sig-name" id="prevSig2Name">Mrs. M. Rekha</div>
+                        <div class="cert-sig-name" id="prevSig2Name">Mrs. B.Yazhini</div>
                       </div>
                       <div class="cert-sig-item" id="prevColSig3">
                         <img id="prevSig3Img" class="cert-sig-img" alt="Signature">
                         <div class="cert-sig-line"></div>
-                        <div class="cert-sig-name" id="prevSig3Name">Mr. M. Rama Krishnan</div>
+                        <div class="cert-sig-name" id="prevSig3Name">Ms. Preethi Ram</div>
                       </div>
                     </div>
-                    <div class="cert-sig-group-label">Faculty Coordinator(s)</div>
+                    <div class="cert-sig-group-label">Faculty Coordinators</div>
                   </div>
 
                   <!-- Vertical Gold Separator 1 -->

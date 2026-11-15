@@ -388,5 +388,42 @@
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 465
   },
-  "last_certificate_sequence": 0
+  "last_certificate_sequence": 0,
+  "event_sequences": {
+    "01": 0,
+    "02": 0
+  },
+  "certificate_programmes": [
+    {
+      "id": "prog_01_sttp_blockchain",
+      "event_number": "01",
+      "programme_title": "One Week Online Short-Term Training Programme (STTP)",
+      "programme_topic": "Emerging Blockchain Technologies",
+      "programme_type": "STTP",
+      "certificate_content": "This is to certify that [Participant Name] has actively participated in the One-Week Online Short-Term Training Programme (STTP) on \"Emerging Blockchain Technologies\", organized by the Department of Computer Science and Business Systems (CSBS), Ramco Institute of Technology, Rajapalayam, from 12 October 2026 to 18 October 2026.",
+      "organizing_department": "Department of Computer Science and Business Systems (CSBS)",
+      "association": "",
+      "institution_name": "Ramco Institute of Technology, Rajapalayam",
+      "start_date": "2026-10-12",
+      "end_date": "2026-10-18",
+      "status": "ACTIVE",
+      "created_at": "2026-10-12T00:00:00.000Z"
+    },
+    {
+      "id": "prog_02_fdp_superintelligent",
+      "event_number": "02",
+      "programme_title": "Two-Week International Industry-Oriented Faculty Development Programme",
+      "programme_topic": "Engineering Superintelligent Systems for Sustainable Digital Transformation",
+      "programme_type": "Faculty Development Programme (FDP)",
+      "association": "ISTE Student Chapter",
+      "certificate_content": "This is to certify that [Participant Name] has actively participated in the Two-Week International Industry-Oriented Faculty Development Programme on \"Engineering Superintelligent Systems for Sustainable Digital Transformation\", organized by the Department of Computer Science and Business Systems (CSBS), in association with the ISTE Student Chapter, Ramco Institute of Technology, Rajapalayam, from 26 October 2026 to 07 November 2026.",
+      "organizing_department": "Department of Computer Science and Business Systems (CSBS)",
+      "institution_name": "Ramco Institute of Technology, Rajapalayam",
+      "start_date": "2026-10-26",
+      "end_date": "2026-11-07",
+      "status": "ACTIVE",
+      "created_at": "2026-10-26T00:00:00.000Z"
+    }
+  ],
+  "deleted_event_numbers": []
 }
