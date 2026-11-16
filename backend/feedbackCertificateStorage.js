@@ -28,13 +28,7 @@ const DEFAULT_DATA = {
     certificate_templates: [],
     certificate_programmes: [],
     event_sequences: {},
-    last_certificate_sequence: 0,
-    email_config: {
-        sender_email: "csbstlp@ritrjpm.ac.in",
-        app_password: "yblm sgqz ttbm niqc",
-        sender_name: "RIT CSBS",
-        reply_to: "csbstlp@ritrjpm.ac.in"
-    }
+    last_certificate_sequence: 0
 };
 
 
@@ -3307,44 +3301,6 @@ async function deleteCertificateTemplate(templateId) {
     return true;
 }
 
-async function updateCertificateEmailStatus(certNumberOrId, status, errorMsg = null) {
-    const data = await getAllData();
-    const strId = String(certNumberOrId || "").trim().toUpperCase();
-    const cert = (data.certificates || []).find(c => 
-        (c.certificate_number && String(c.certificate_number).toUpperCase() === strId) || 
-        String(c.id) === strId
-    );
-    if (!cert) return null;
-
-    cert.email_status = status; // 'sent', 'failed', 'pending'
-    if (status === 'sent') {
-        cert.email_sent_at = new Date().toISOString();
-        cert.email_error = null;
-    } else if (status === 'failed') {
-        cert.email_error = errorMsg || 'Delivery failed';
-    }
-    await commitData(data);
-    return cert;
-}
-
-async function getStoredEmailConfig() {
-    const data = await getAllData();
-    return data.email_config || null;
-}
-
-async function saveStoredEmailConfig(config) {
-    const data = await getAllData();
-    data.email_config = {
-        sender_email: (config.sender_email || "").trim(),
-        app_password: (config.app_password || "").trim().replace(/\s+/g, ""),
-        sender_name: config.sender_name || "RIT CSBS Department Placement Cell",
-        reply_to: config.reply_to || config.sender_email || "",
-        updated_at: new Date().toISOString()
-    };
-    await commitData(data);
-    return data.email_config;
-}
-
 function getAllDataSync() {
     if (inMemoryData) return inMemoryData;
     return readLocalData();
@@ -3659,14 +3615,11 @@ module.exports = {
     getCertificateTemplates,
     saveCertificateTemplate,
     deleteCertificateTemplate,
-    updateCertificateEmailStatus,
     deleteCertificateBatch,
     deleteSingleCertificateRecord,
     deleteAssociatedCertificateFiles,
     getAllData,
     getAllDataSync,
-    getStoredEmailConfig,
-    saveStoredEmailConfig,
     writeLocalData,
     commitData
 };
