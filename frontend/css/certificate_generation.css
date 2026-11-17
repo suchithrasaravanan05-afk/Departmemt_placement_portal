@@ -584,6 +584,17 @@
   letter-spacing: 0.5px;
 }
 
+.cert-student-college-name {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 14.5px;
+  color: #1A1A40;
+  margin: 2px 0 0;
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
 /* 4. Event Paragraph */
 .cert-wording-paragraph {
   font-family: 'Times New Roman', Georgia, serif;

@@ -531,7 +531,10 @@ async function uploadAndParseCertificateSpreadsheet() {
       r.participant_name = (r.participant_name || r.student_name || '').trim();
       r.student_name = r.participant_name;
       r.participant_type = r.participant_type || 'Student';
-      r.institution = r.institution || r.college_name || (selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam');
+      const colName = (r.college_name || r['College Name'] || r.institution || '').trim();
+      r.college_name = colName;
+      r.participant_college = colName;
+      r.institution = colName || (selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam');
       r.department = r.department || defDept || (selectedProg?.organizing_department || 'Department of Computer Science and Business Systems (CSBS)');
       r.email = r.email || '';
 
@@ -741,7 +744,7 @@ function renderCertGenTable() {
           <input type="text" class="certgen-table-input" value="${escapeHtml(row.department || 'Computer Science and Business Systems')}" placeholder="Department" onchange="handleCertGenCellChange(${actualIdx}, 'department', this.value)">
         </td>
         <td>
-          <input type="text" class="certgen-table-input" value="${escapeHtml(row.institution || 'Ramco Institute of Technology')}" placeholder="Institution" onchange="handleCertGenCellChange(${actualIdx}, 'institution', this.value)">
+          <input type="text" class="certgen-table-input" value="${escapeHtml(row.college_name || row.participant_college || row.institution || '')}" placeholder="College / Institution" onchange="handleCertGenCellChange(${actualIdx}, 'college_name', this.value)">
         </td>
         <td>
           <input type="text" class="certgen-table-input ${!row.event_name ? 'has-error' : ''}" value="${escapeHtml(row.event_name || '')}" placeholder="Event Name" onchange="handleCertGenCellChange(${actualIdx}, 'event_name', this.value)">
@@ -779,6 +782,11 @@ function handleCertGenCellChange(idx, field, value) {
   certGenState.records[idx][field] = value.trim();
   if (field === 'participant_name') {
     certGenState.records[idx].student_name = value.trim();
+  }
+  if (field === 'institution' || field === 'college_name' || field === 'participant_college') {
+    certGenState.records[idx].institution = value.trim();
+    certGenState.records[idx].college_name = value.trim();
+    certGenState.records[idx].participant_college = value.trim();
   }
 
   // Re-run validation for this row
@@ -1143,13 +1151,25 @@ function updateLiveCertificatePreview() {
   const idPrefix = (document.getElementById('tplIdPrefix')?.value || '').trim() || (certGenState.selectedEventNumber ? `RITCB ${certGenState.selectedEventNumber} ` : 'RITCB 02 ');
   const sigCount = parseInt(document.getElementById('tplSigCount')?.value || '6', 10);
 
-  // Sample participant name (NO register number)
+  // Sample participant name & college
   const sample = (certGenState.records && certGenState.records.length > 0) ? certGenState.records[0] : null;
   const participantName = (sample && (sample.participant_name || sample.student_name)) ? (sample.participant_name || sample.student_name) : 'Mr./Ms. PARTICIPANT NAME';
+  const participantCollege = (sample && (sample.participant_college || sample.college_name || (sample.institution && !sample.institution.toLowerCase().includes('ramco') ? sample.institution : ''))) || '';
 
   if (document.getElementById('prevPreamble')) document.getElementById('prevPreamble').innerText = 'This is to certify that';
   if (document.getElementById('prevCertTitle')) document.getElementById('prevCertTitle').innerText = title;
   if (document.getElementById('prevStudentName')) document.getElementById('prevStudentName').innerText = participantName;
+
+  const prevCollegeEl = document.getElementById('prevStudentCollege');
+  if (prevCollegeEl) {
+    if (participantCollege) {
+      prevCollegeEl.innerText = participantCollege;
+      prevCollegeEl.style.display = 'block';
+    } else {
+      prevCollegeEl.innerText = '';
+      prevCollegeEl.style.display = 'none';
+    }
+  }
 
   // Dynamic preview wording paragraph matching selected event
   if (document.getElementById('prevWordingParagraph')) {
@@ -1336,8 +1356,9 @@ async function proceedWithBatchGeneration() {
         student_name: r.student_name || r.participant_name || '',
         participant_name: r.participant_name || r.student_name || '',
         participant_type: r.participant_type || r.participants || 'Student',
-        institution: r.institution || r.college_name || instName,
-        college_name: r.college_name || r.institution || instName,
+        institution: r.institution || instName,
+        college_name: r.college_name || r.participant_college || r.institution || '',
+        participant_college: r.participant_college || r.college_name || r.institution || '',
         department: r.department || orgDept,
         event_name: evName,
         event_date: r.event_date || getFormParam(['tplIssueDate'], selectedProg?.end_date || new Date().toISOString().split('T')[0]),
@@ -1412,12 +1433,16 @@ async function generateSingleCertificatePdfDoc(cert) {
   const selectedProg = (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
   const participantName = cert.participant_name || cert.student_name || 'Participant';
   const defaultEventNumber = cert.event_number || certGenState.selectedEventNumber || '02';
+  const defaultInstName = selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam';
+  const participantCollege = cert.participant_college || cert.college_name || (cert.institution && !cert.institution.toLowerCase().includes('ramco') ? cert.institution : '');
   const certFullData = {
     participant_name: participantName,
     student_name: participantName,
     participant_type: cert.participant_type || 'Student',
-    institution: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
-    college_name: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
+    participant_college: participantCollege,
+    college_name: participantCollege,
+    institution: defaultInstName,
+    organizing_institution: defaultInstName,
     certificate_number: cert.certificate_number || cert.certificate_id || `RITCB ${defaultEventNumber} 0001`,
     certificate_title: cert.certificate_title || (typeof getFormParam === 'function' ? getFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION') : (document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION')),
     programme_title: cert.programme_title || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeTitle', 'tplProgTitle'], selectedProg?.programme_title || 'Two-Week International Industry-Oriented Faculty Development Programme') : (document.getElementById('tplProgrammeTitle')?.value?.trim() || document.getElementById('tplProgTitle')?.value?.trim() || 'Two-Week International Industry-Oriented Faculty Development Programme')),
@@ -1549,6 +1574,7 @@ function exportIssuedCertificatesExcel() {
     '#': idx + 1,
     'Certificate ID': c.certificate_number,
     'Student Name': c.student_name,
+    'College Name': c.college_name || c.participant_college || c.institution || '',
     'Department': c.department,
     'Event Name': c.event_name,
     'Achievement': c.achievement || c.certificate_type,

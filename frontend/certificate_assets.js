@@ -456,14 +456,28 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   ctx.fillStyle = '#1A1A40';
   ctx.fillText(certData.preamble || 'This is to certify that', width / 2, Math.round(height * 0.398));
 
-  // 7. Recipient Participant Name
+  // 7. Recipient Participant Name & College Name
   const participantName = certData.participant_name || certData.student_name || 'Mr./Ms. PARTICIPANT NAME';
+  const participantCollege = certData.participant_college || certData.college_name || '';
+  const hasCollege = Boolean(participantCollege && participantCollege.trim().length > 0);
+
   let nameFontSize = 66;
   if (participantName.length > 26) nameFontSize = 52;
   if (participantName.length > 36) nameFontSize = 42;
   ctx.font = 'bold italic ' + nameFontSize + 'px "Times New Roman", Georgia, serif';
   ctx.fillStyle = '#3B0764';
-  ctx.fillText(participantName, width / 2, Math.round(height * 0.474));
+
+  if (hasCollege) {
+    ctx.fillText(participantName, width / 2, Math.round(height * 0.458));
+    let collegeFontSize = 32;
+    if (participantCollege.length > 36) collegeFontSize = 26;
+    if (participantCollege.length > 55) collegeFontSize = 22;
+    ctx.font = 'italic ' + collegeFontSize + 'px "Times New Roman", Georgia, serif';
+    ctx.fillStyle = '#1A1A40';
+    ctx.fillText(participantCollege, width / 2, Math.round(height * 0.496));
+  } else {
+    ctx.fillText(participantName, width / 2, Math.round(height * 0.474));
+  }
 
   // 8. Description Paragraph: Dynamic multi-line rendering with auto-wrapping
   let canvasBodyText = "";
@@ -492,7 +506,7 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
     const eventTopic = certData.event_name || certData.programme_topic || "Emerging Blockchain Technologies";
     const orgDept = certData.department || "Department of Computer Science and Business Systems (CSBS)";
     const assoc = (certData.association || "").trim();
-    const instName = certData.institution || certData.college_name || "Ramco Institute of Technology, Rajapalayam";
+    const instName = certData.organizing_institution || certData.host_institution || (certData.institution && certData.institution.toLowerCase().includes('ramco') ? certData.institution : "Ramco Institute of Technology, Rajapalayam");
     const dates = certData.programme_dates || certData.event_date || "October 12, 2026, to October 18, 2026";
     const assocPhrase = assoc ? (", in association with the " + assoc) : "";
     canvasBodyText = "has actively participated in the " + progTitle + " on \"" + eventTopic + "\", organized by the " + orgDept + assocPhrase + ", " + instName + ", from " + dates + ".";
@@ -519,8 +533,8 @@ async function drawRitCertificate(canvas, certData = {}, options = {}) {
   }
 
   const canvasLines = wrapCanvasLines(canvasBodyText, Math.round(width * 0.78));
-  const canvasLineSpacing = 38;
-  const canvasStartY = Math.round(height * 0.540) + Math.round((4 - canvasLines.length) * 14);
+  const canvasLineSpacing = hasCollege ? 34 : 38;
+  const canvasStartY = (hasCollege ? Math.round(height * 0.550) : Math.round(height * 0.540)) + Math.round((4 - canvasLines.length) * 12);
   canvasLines.forEach((ln, idx) => {
     ctx.fillText(ln, width / 2, canvasStartY + (idx * canvasLineSpacing));
   });
@@ -789,15 +803,32 @@ async function createCertificatePdf(certData = {}) {
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2]);
   doc.text(sanitizePdfText(certData.preamble || 'This is to certify that'), pageWidth / 2, 104.5, { align: 'center' });
 
-  // 7. Participant Name (Dynamic)
+  // 7. Participant Name (Dynamic) & College Name
   const participantName = sanitizePdfText(certData.participant_name || certData.student_name || 'Mr./Ms. PARTICIPANT NAME');
+  const participantCollege = sanitizePdfText(certData.participant_college || certData.college_name || '');
+  const hasCollege = Boolean(participantCollege && participantCollege.trim().length > 0);
+
   doc.setFont('times', 'bolditalic');
   let nameSize = 34.0;
   if (participantName.length > 26) nameSize = 28.0;
   if (participantName.length > 36) nameSize = 22.0;
   doc.setFontSize(nameSize);
   doc.setTextColor(deepPurple[0], deepPurple[1], deepPurple[2]);
-  doc.text(participantName, pageWidth / 2, 119.5, { align: 'center' });
+
+  if (hasCollege) {
+    doc.text(participantName, pageWidth / 2, 117.0, { align: 'center' });
+
+    // College Name rendered directly under participant name
+    doc.setFont('times', 'italic');
+    let collegeFontSize = 13.5;
+    if (participantCollege.length > 38) collegeFontSize = 12.0;
+    if (participantCollege.length > 55) collegeFontSize = 10.5;
+    doc.setFontSize(collegeFontSize);
+    doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2]);
+    doc.text(participantCollege, pageWidth / 2, 124.5, { align: 'center' });
+  } else {
+    doc.text(participantName, pageWidth / 2, 119.5, { align: 'center' });
+  }
 
   // 8. Event Description Paragraph: Dynamic multi-line rendering with auto-wrapping & vertical centering
   let pdfBodyText = "";
@@ -826,30 +857,30 @@ async function createCertificatePdf(certData = {}) {
     const eventTopic = certData.event_name || certData.programme_topic || "Emerging Blockchain Technologies";
     const orgDept = certData.department || "Department of Computer Science and Business Systems (CSBS)";
     const assoc = (certData.association || "").trim();
-    const instName = certData.institution || certData.college_name || "Ramco Institute of Technology, Rajapalayam";
+    const instName = certData.organizing_institution || certData.host_institution || (certData.institution && certData.institution.toLowerCase().includes('ramco') ? certData.institution : "Ramco Institute of Technology, Rajapalayam");
     const dates = certData.programme_dates || certData.event_date || "October 12, 2026, to October 18, 2026";
     const assocPhrase = assoc ? (", in association with the " + assoc) : "";
     pdfBodyText = "has actively participated in the " + progTitle + " on \"" + eventTopic + "\", organized by the " + orgDept + assocPhrase + ", " + instName + ", from " + dates + ".";
   }
 
-  const availableTop = 129.0;
+  const availableTop = hasCollege ? 131.0 : 129.0;
   const availableBottom = 166.0;
   const totalAvailableHeight = availableBottom - availableTop;
 
   doc.setFont("times", "normal");
-  let bodyFontSize = 15.0;
-  if (pdfBodyText.length > 340) bodyFontSize = 13.5;
+  let bodyFontSize = 14.5;
+  if (pdfBodyText.length > 340 || hasCollege) bodyFontSize = 13.5;
   if (pdfBodyText.length > 440) bodyFontSize = 12.0;
   doc.setFontSize(bodyFontSize);
 
   const wrappedLines = doc.splitTextToSize(pdfBodyText, 236);
-  let lineSpacing = 7.5;
+  let lineSpacing = 7.2;
   if (wrappedLines.length <= 3) {
-    lineSpacing = 8.2;
+    lineSpacing = hasCollege ? 7.6 : 8.2;
   } else if (wrappedLines.length === 4) {
-    lineSpacing = 7.4;
+    lineSpacing = hasCollege ? 6.8 : 7.4;
   } else {
-    lineSpacing = 6.6;
+    lineSpacing = 6.2;
   }
   const blockHeight = (wrappedLines.length - 1) * lineSpacing;
   const startY = availableTop + (totalAvailableHeight - blockHeight) / 2;

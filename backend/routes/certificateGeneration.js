@@ -168,6 +168,7 @@ function mapSpreadsheetRow(rawRow, headerMap) {
         institution: sanitizeCellValue(instVal),
         college_name: sanitizeCellValue(instVal),
         collegeName: sanitizeCellValue(instVal),
+        participant_college: sanitizeCellValue(instVal),
         department: sanitizeCellValue(deptVal),
         email: sanitizeCellValue(emailVal),
         mail_id: sanitizeCellValue(emailVal),
