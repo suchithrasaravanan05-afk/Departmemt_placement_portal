@@ -1175,7 +1175,7 @@ function updateLiveCertificatePreview() {
     if (document.getElementById(`prevSig${i}Title`)) document.getElementById(`prevSig${i}Title`).innerText = titleVal;
     if (document.getElementById(`prevSig${i}Dept`)) document.getElementById(`prevSig${i}Dept`).innerText = deptVal;
 
-    const imgEl = document.getElementById(`prevSig${iImg}`);
+    const imgEl = document.getElementById(`prevSig${i}Img`);
     if (imgEl) {
       if (customUploadedSignatures[i]) {
         imgEl.src = customUploadedSignatures[i];
@@ -1592,27 +1592,26 @@ async function loadIssuedCertificatesHistoryTable() {
       populateBatchSelectorDropdown(bData.batches);
     }
 
-    // 2. Fetch all certificates
-    const cRes = await fetch(`${API_BASE}/admin/all-certificates`, {
+    // 2. Fetch all certificates with automatic endpoint fallback
+    let cRes = await fetch(`${API_BASE}/admin/certificate-generation/certificates`, {
       headers: { Authorization: `Bearer ${getEffectiveAdminToken()}` }
     });
-    const cData = await cRes.json();
-    if (cData.success && Array.isArray(cData.certificates)) {
-      certGenState.masterCertificates = cData.certificates;
-      renderHistoryTable();
+    if (!cRes.ok) {
+      cRes = await fetch(`${API_BASE}/admin/all-certificates`, {
+        headers: { Authorization: `Bearer ${getEffectiveAdminToken()}` }
+      });
     }
+    const cData = await cRes.json();
+    if (cData && cData.success && Array.isArray(cData.certificates)) {
+      certGenState.masterCertificates = cData.certificates;
+    } else {
+      certGenState.masterCertificates = [];
+    }
+    renderHistoryTable();
   } catch (err) {
     console.error('History load error:', err);
-    if (tbody) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="8" style="text-align:center;padding:36px;color:#dc2626;">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size:24px;display:block;margin-bottom:8px;"></i>
-            Failed to load certificate history. Please refresh.
-          </td>
-        </tr>
-      `;
-    }
+    certGenState.masterCertificates = [];
+    renderHistoryTable();
   }
 }
 

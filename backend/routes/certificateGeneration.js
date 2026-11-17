@@ -541,6 +541,26 @@ router.get("/batches", checkFacultyOrAdminPermission, async (req, res) => {
     }
 });
 
+router.get("/certificates", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const certs = await feedbackCertificateStorage.getAllCertificates();
+        res.json({ success: true, count: certs.length, certificates: certs });
+    } catch (e) {
+        console.error("Get certificates error:", e);
+        res.status(500).json({ success: false, message: "Failed to load certificates." });
+    }
+});
+
+router.get("/all-certificates", checkFacultyOrAdminPermission, async (req, res) => {
+    try {
+        const certs = await feedbackCertificateStorage.getAllCertificates();
+        res.json({ success: true, count: certs.length, certificates: certs });
+    } catch (e) {
+        console.error("Get all-certificates error:", e);
+        res.status(500).json({ success: false, message: "Failed to load certificates." });
+    }
+});
+
 // ============================================================
 // 6. GET CERTIFICATES BY BATCH ID
 // ============================================================

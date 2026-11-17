@@ -388,7 +388,7 @@
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 465
   },
-  "last_certificate_sequence": 1,
+  "last_certificate_sequence": 0,
   "event_sequences": {
     "01": 0,
     "02": 0
