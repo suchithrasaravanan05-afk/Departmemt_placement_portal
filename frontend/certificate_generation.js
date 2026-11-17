@@ -133,10 +133,10 @@ async function loadCertificateProgrammes() {
       }).join('');
     }
 
-    // Update active badge in Section 1
+    // Synchronize active programme
     const activeProg = data.programmes.find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber) || data.programmes[0];
     if (activeProg) {
-      updateActiveEventBadge(activeProg);
+      selectProgrammeForGeneration(activeProg.id);
     }
   } catch (err) {
     console.error('Error loading certificate programmes:', err);
@@ -221,16 +221,34 @@ function selectProgrammeForGeneration(progIdOrNumber) {
   certGenState.selectedProgrammeId = prog.id;
   certGenState.selectedEventNumber = prog.event_number;
 
-  // Update Section 1 Select
+  // 1. Update Section 1 Select & Badges
   const sel = document.getElementById('cgEventSelectUpload');
   if (sel) sel.value = prog.id;
 
   updateActiveEventBadge(prog);
   renderProgrammesTable(certGenState.programmes);
 
-  // Populate form fields in Section 3
+  // 2. Update Preset Buttons active state
+  document.querySelectorAll('.cert-preset-btn').forEach(b => b.classList.remove('active'));
+  if (prog.id === 'prog_01_sttp_blockchain' || prog.event_number === '01') {
+    document.getElementById('btnPresetSTTP')?.classList.add('active');
+  } else if (prog.id === 'prog_02_fdp_superintelligent' || prog.event_number === '02') {
+    document.getElementById('btnPresetFDP')?.classList.add('active');
+  }
+
+  // 3. Update Section 1 Default Fallback fields
+  const activeTopic = prog.programme_topic || prog.programme_title || '';
+  const activeDate = prog.end_date || prog.start_date || '';
+  if (document.getElementById('cgDefEventName')) {
+    document.getElementById('cgDefEventName').value = activeTopic;
+  }
+  if (document.getElementById('cgDefEventDate')) {
+    document.getElementById('cgDefEventDate').value = activeDate;
+  }
+
+  // 4. Populate form fields in Section 3
   setFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
-  setFormParam(['tplCertType'], prog.programme_type || 'STTP');
+  setFormParam(['tplCertType'], prog.programme_type || 'Faculty Development Programme (FDP)');
   setFormParam(['tplProgrammeTitle', 'tplProgTitle'], prog.programme_title || '');
   setFormParam(['tplEventTopic', 'tplEventName'], prog.programme_topic || '');
   setFormParam(['tplDeptName', 'tplOrgDept'], prog.organizing_department || 'Department of Computer Science and Business Systems (CSBS)');
@@ -243,6 +261,18 @@ function selectProgrammeForGeneration(progIdOrNumber) {
   setFormParam(['tplCertWording'], prog.certificate_content || '');
   setFormParam(['tplIdPrefix'], `RITCB ${prog.event_number} `);
 
+  // 5. Update Section 4 & 5 Event Info & ID format
+  if (document.getElementById('cgConfirmEventName')) {
+    document.getElementById('cgConfirmEventName').innerText = activeTopic || '—';
+  }
+  if (document.getElementById('prevEventName')) {
+    document.getElementById('prevEventName').innerText = `"${activeTopic}"`;
+  }
+  if (document.getElementById('cgBatchIdFormatPreview')) {
+    document.getElementById('cgBatchIdFormatPreview').innerText = `RITCB ${prog.event_number} 0001`;
+  }
+
+  // 6. Update Signatories for Event 01 / 02
   toggleSignatoryCount(6);
   setSigFields(1, 'Dr. S.Erana Verrappa Dinesh', 'Faculty Coordinator', 'CSBS, RIT');
   setSigFields(2, 'Mrs. B.Yazhini', 'Faculty Coordinator', 'CSBS, RIT');
@@ -251,6 +281,23 @@ function selectProgrammeForGeneration(progIdOrNumber) {
   setSigFields(5, 'Dr. S. Rajakarunakaran', 'Patron', 'RIT');
   setSigFields(6, 'Dr. L. Ganesan', 'Chief Patron', 'RIT');
 
+  // 7. Update loaded records if any already exist
+  if (certGenState.records && certGenState.records.length > 0) {
+    certGenState.records.forEach(r => {
+      r.event_name = activeTopic;
+      if (activeDate) r.event_date = activeDate;
+      r.programme_title = prog.programme_title;
+      r.programme_dates = datesStr;
+      const errors = [];
+      if (!r.participant_name) errors.push('Participant Name is mandatory');
+      if (!r.event_name) errors.push('Event Name is mandatory');
+      r.errors = errors;
+      r.is_valid = errors.length === 0;
+    });
+    renderCertGenTable();
+  }
+
+  // 8. Immediately update live certificate preview
   updateLiveCertificatePreview();
 }
 
@@ -448,8 +495,15 @@ async function uploadAndParseCertificateSpreadsheet() {
   if (spinner) spinner.style.display = 'inline-block';
 
   try {
+    const selectedProg = (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber) || (certGenState.programmes && certGenState.programmes[0]);
+    const activeEventName = (selectedProg && (selectedProg.programme_topic || selectedProg.programme_title)) || document.getElementById('tplEventTopic')?.value?.trim() || document.getElementById('cgDefEventName')?.value?.trim() || '';
+    const activeEventDate = (selectedProg && (selectedProg.end_date || selectedProg.start_date)) || document.getElementById('cgDefEventDate')?.value || '';
+
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('event_name', activeEventName);
+    formData.append('event_date', activeEventDate);
+    formData.append('event_number', certGenState.selectedEventNumber || '01');
 
     const res = await fetch(`${API_BASE}/admin/certificate-generation/validate`, {
       method: 'POST',
@@ -466,26 +520,31 @@ async function uploadAndParseCertificateSpreadsheet() {
     }
 
     // Apply batch default fallbacks if rows omitted them
-    const defEventName = document.getElementById('cgDefEventName')?.value?.trim();
-    const defEventDate = document.getElementById('cgDefEventDate')?.value;
+    const defEventName = document.getElementById('cgDefEventName')?.value?.trim() || activeEventName;
+    const defEventDate = document.getElementById('cgDefEventDate')?.value || activeEventDate;
     const defAcademicYear = document.getElementById('cgDefAcademicYear')?.value;
-    const defDept = document.getElementById('cgDefDepartment')?.value?.trim();
+    const defDept = document.getElementById('cgDefDepartment')?.value?.trim() || selectedProg?.organizing_department;
     const defPartType = document.getElementById('cgDefParticipationType')?.value?.trim();
-    const defIssueDate = document.getElementById('cgDefIssueDate')?.value;
+    const defIssueDate = document.getElementById('cgDefIssueDate')?.value || activeEventDate;
 
     const enriched = (data.records || []).map(r => {
       r.participant_name = (r.participant_name || r.student_name || '').trim();
       r.student_name = r.participant_name;
       r.participant_type = r.participant_type || 'Student';
-      r.institution = r.institution || r.college_name || 'Ramco Institute of Technology';
-      r.department = r.department || defDept || 'Computer Science and Business Systems';
+      r.institution = r.institution || r.college_name || (selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam');
+      r.department = r.department || defDept || (selectedProg?.organizing_department || 'Department of Computer Science and Business Systems (CSBS)');
       r.email = r.email || '';
 
-      if (!r.event_name && defEventName) r.event_name = defEventName;
-      if (!r.event_date && defEventDate) r.event_date = defEventDate;
+      // Assign the active event topic to the row
+      if (!r.event_name || r.event_name === 'Department Event') {
+        r.event_name = activeEventName || defEventName;
+      }
+      if (!r.event_date) r.event_date = activeEventDate || defEventDate;
       if ((!r.academic_year || r.academic_year === '2026-27') && defAcademicYear) r.academic_year = defAcademicYear;
       if (!r.participation_type && defPartType) r.participation_type = defPartType;
-      if (!r.issue_date && defIssueDate) r.issue_date = defIssueDate;
+      if (!r.issue_date) r.issue_date = defIssueDate || activeEventDate;
+      r.programme_title = selectedProg?.programme_title || r.programme_title;
+      r.programme_dates = (selectedProg?.start_date && selectedProg?.end_date) ? `${selectedProg.start_date} to ${selectedProg.end_date}` : r.programme_dates;
 
       // Re-evaluate validity: Participant Name and Event Name are mandatory. Register Number is optional.
       const errors = [];
@@ -501,14 +560,21 @@ async function uploadAndParseCertificateSpreadsheet() {
     renderCertGenTable();
 
     // Auto update Section 1 and template defaults
-    if (enriched.length > 0 && enriched[0].event_name) {
+    const displayEvName = activeEventName || (enriched.length > 0 ? enriched[0].event_name : '');
+    if (displayEvName) {
       if (document.getElementById('cgConfirmEventName')) {
-        document.getElementById('cgConfirmEventName').innerText = enriched[0].event_name;
+        document.getElementById('cgConfirmEventName').innerText = displayEvName;
       }
       if (document.getElementById('prevEventName')) {
-        document.getElementById('prevEventName').innerText = `"${enriched[0].event_name}"`;
+        document.getElementById('prevEventName').innerText = `"${displayEvName}"`;
       }
     }
+    if (document.getElementById('cgBatchIdFormatPreview') && certGenState.selectedEventNumber) {
+      document.getElementById('cgBatchIdFormatPreview').innerText = `RITCB ${certGenState.selectedEventNumber} 0001`;
+    }
+
+    // Refresh live certificate preview
+    updateLiveCertificatePreview();
 
     // Smooth scroll to Preview Section
     jumpToCertGenSection('cgSecPreview');
@@ -1065,14 +1131,16 @@ async function saveCurrentTemplateAsPreset() {
 }
 
 function updateLiveCertificatePreview() {
-  const title = document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION';
-  const progTitle = document.getElementById('tplProgTitle')?.value?.trim() || 'One Week Short-Term Training Programme (STTP)';
-  const eventName = document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives';
-  const orgDept = document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems';
-  const institution = document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam';
-  const progDates = document.getElementById('tplProgDates')?.value?.trim() || 'October 12, 2026, to October 18, 2026';
-  const issueDate = document.getElementById('tplIssueDate')?.value || '2026-10-18';
-  const idPrefix = document.getElementById('tplIdPrefix')?.value?.trim() || 'RITCB 01 ';
+  const selectedProg = (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
+
+  const title = (document.getElementById('tplCertTitle')?.value || '').trim() || 'CERTIFICATE OF PARTICIPATION';
+  const progTitle = (document.getElementById('tplProgrammeTitle')?.value || document.getElementById('tplProgTitle')?.value || '').trim() || selectedProg?.programme_title || 'Two-Week International Industry-Oriented Faculty Development Programme';
+  const eventName = (document.getElementById('tplEventTopic')?.value || document.getElementById('tplEventName')?.value || '').trim() || selectedProg?.programme_topic || 'Engineering Superintelligent Systems for Sustainable Digital Transformation';
+  const orgDept = (document.getElementById('tplDeptName')?.value || document.getElementById('tplOrgDept')?.value || '').trim() || selectedProg?.organizing_department || 'Department of Computer Science and Business Systems (CSBS)';
+  const institution = (document.getElementById('tplInstName')?.value || document.getElementById('tplInstitution')?.value || '').trim() || selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam';
+  const progDates = (document.getElementById('tplProgrammeDates')?.value || document.getElementById('tplProgDates')?.value || '').trim() || (selectedProg?.start_date && selectedProg?.end_date ? `${selectedProg.start_date} to ${selectedProg.end_date}` : 'October 26, 2026, to November 07, 2026');
+  const issueDate = document.getElementById('tplIssueDate')?.value || selectedProg?.end_date || '';
+  const idPrefix = (document.getElementById('tplIdPrefix')?.value || '').trim() || (certGenState.selectedEventNumber ? `RITCB ${certGenState.selectedEventNumber} ` : 'RITCB 02 ');
   const sigCount = parseInt(document.getElementById('tplSigCount')?.value || '6', 10);
 
   // Sample participant name (NO register number)
@@ -1082,13 +1150,18 @@ function updateLiveCertificatePreview() {
   if (document.getElementById('prevPreamble')) document.getElementById('prevPreamble').innerText = 'This is to certify that';
   if (document.getElementById('prevCertTitle')) document.getElementById('prevCertTitle').innerText = title;
   if (document.getElementById('prevStudentName')) document.getElementById('prevStudentName').innerText = participantName;
-  if (document.getElementById('prevProgTitle')) document.getElementById('prevProgTitle').innerText = progTitle;
-  if (document.getElementById('prevEventTopic')) document.getElementById('prevEventTopic').innerText = `“${eventName}”`;
-  if (document.getElementById('prevOrgDept')) document.getElementById('prevOrgDept').innerText = orgDept;
-  if (document.getElementById('prevInstitution')) document.getElementById('prevInstitution').innerText = institution;
-  if (document.getElementById('prevProgDates')) document.getElementById('prevProgDates').innerText = progDates;
 
-  const sampleCertId = (idPrefix && idPrefix.trim().startsWith('RITCB')) ? 'RITCB 01 0001' : (idPrefix ? `${idPrefix.trim()} 0001` : 'RITCB 01 0001');
+  // Dynamic preview wording paragraph matching selected event
+  if (document.getElementById('prevWordingParagraph')) {
+    document.getElementById('prevWordingParagraph').innerHTML = `
+      for active participation in the <span class="cert-purple-bold" id="prevProgTitle">${escapeHtml(progTitle)}</span> on<br>
+      <span class="cert-purple-bold" id="prevEventTopic">“${escapeHtml(eventName)}”</span>, organized by the <span class="cert-purple-bold" id="prevOrgDept">${escapeHtml(orgDept)}</span><br>
+      at <span class="cert-purple-bold" id="prevInstitution">${escapeHtml(institution)}</span> from<br>
+      <span class="cert-purple-bold" id="prevProgDates">${escapeHtml(progDates)}.</span>
+    `;
+  }
+
+  const sampleCertId = idPrefix ? `${idPrefix.trim()} 0001` : (certGenState.selectedEventNumber ? `RITCB ${certGenState.selectedEventNumber} 0001` : 'RITCB 02 0001');
   if (document.getElementById('prevCertId')) document.getElementById('prevCertId').innerText = sampleCertId;
 
   // Signatories 1 to 6
@@ -1102,7 +1175,7 @@ function updateLiveCertificatePreview() {
     if (document.getElementById(`prevSig${i}Title`)) document.getElementById(`prevSig${i}Title`).innerText = titleVal;
     if (document.getElementById(`prevSig${i}Dept`)) document.getElementById(`prevSig${i}Dept`).innerText = deptVal;
 
-    const imgEl = document.getElementById(`prevSig${i}Img`);
+    const imgEl = document.getElementById(`prevSig${iImg}`);
     if (imgEl) {
       if (customUploadedSignatures[i]) {
         imgEl.src = customUploadedSignatures[i];
@@ -1145,7 +1218,8 @@ function openBatchConfirmationModal() {
     return;
   }
 
-  const evName = document.getElementById('tplEventName')?.value?.trim() || eligible[0]?.event_name || 'STTP Blockchain Masterclass';
+  const selectedProg = (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
+  const evName = document.getElementById('tplEventTopic')?.value?.trim() || document.getElementById('tplEventName')?.value?.trim() || selectedProg?.programme_topic || eligible[0]?.event_name || 'Event';
   if (document.getElementById('cgModalEventName')) document.getElementById('cgModalEventName').innerText = evName;
   if (document.getElementById('cgModalEligibleCount')) document.getElementById('cgModalEligibleCount').innerText = eligible.length;
   if (document.getElementById('cgModalDuplicatesNote')) {
@@ -1199,20 +1273,21 @@ async function proceedWithBatchGeneration() {
   }
 
   try {
-    const evName = getFormParam(['tplEventTopic', 'tplEventName'], eligibleRecords[0]?.event_name || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives');
+    const selectedProg = (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
+    const evName = getFormParam(['tplEventTopic', 'tplEventName'], selectedProg?.programme_topic || eligibleRecords[0]?.event_name || 'Engineering Superintelligent Systems for Sustainable Digital Transformation');
     const sigCount = parseInt(getFormParam(['tplSigCount'], '6'), 10);
-    const progTitle = getFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Short-Term Training Programme (STTP)');
-    const progDates = getFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026');
-    const orgDept = getFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems');
-    const instName = getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam');
+    const progTitle = getFormParam(['tplProgrammeTitle', 'tplProgTitle'], selectedProg?.programme_title || 'Two-Week International Industry-Oriented Faculty Development Programme');
+    const progDates = getFormParam(['tplProgrammeDates', 'tplProgDates'], (selectedProg?.start_date && selectedProg?.end_date) ? `${selectedProg.start_date} to ${selectedProg.end_date}` : 'October 26, 2026, to November 07, 2026');
+    const orgDept = getFormParam(['tplDeptName', 'tplOrgDept'], selectedProg?.organizing_department || 'Department of Computer Science and Business Systems (CSBS)');
+    const instName = getFormParam(['tplInstName', 'tplInstitution'], selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam');
     const certTitle = getFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION');
-    const certType = getFormParam(['tplCertType'], 'STTP');
-    const idPrefix = getFormParam(['tplIdPrefix'], 'RITCB 01 ');
+    const certType = getFormParam(['tplCertType'], selectedProg?.programme_type || 'Faculty Development Programme (FDP)');
+    const idPrefix = getFormParam(['tplIdPrefix'], certGenState.selectedEventNumber ? `RITCB ${certGenState.selectedEventNumber} ` : 'RITCB 02 ');
 
     const payload = {
       batch_title: `Batch - ${evName} (${new Date().toLocaleDateString('en-GB')})`,
       event_name: evName,
-      event_date: getFormParam(['tplIssueDate'], eligibleRecords[0]?.event_date || new Date().toISOString().split('T')[0]),
+      event_date: getFormParam(['tplIssueDate'], selectedProg?.end_date || eligibleRecords[0]?.event_date || new Date().toISOString().split('T')[0]),
       academic_year: eligibleRecords[0]?.academic_year || '2026-27',
       certificate_title: certTitle,
       certificate_type: certType,
@@ -1221,20 +1296,20 @@ async function proceedWithBatchGeneration() {
       department: orgDept,
       institution: instName,
       college_name: instName,
-      certificate_wording: getFormParam(['tplCertWording'], ''),
+      certificate_wording: getFormParam(['tplCertWording'], selectedProg?.certificate_content || ''),
       id_prefix: idPrefix,
       signatory_count: sigCount,
-      signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
+      signatory_1_name: document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. S.Erana Verrappa Dinesh',
       signatory_1_title: document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
       signatory_1_dept: document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
       signatory_1_org: document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
       signatory_1_sig: customUploadedSignatures[1] || undefined,
-      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Mrs. M. Rekha',
+      signatory_2_name: document.getElementById('tplSig2Name')?.value?.trim() || 'Mrs. B.Yazhini',
       signatory_2_title: document.getElementById('tplSig2Title')?.value?.trim() || 'Faculty Coordinator',
       signatory_2_dept: document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
       signatory_2_org: document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
       signatory_2_sig: customUploadedSignatures[2] || undefined,
-      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Mr. M. Rama Krishnan',
+      signatory_3_name: document.getElementById('tplSig3Name')?.value?.trim() || 'Ms. Preethi Ram',
       signatory_3_title: document.getElementById('tplSig3Title')?.value?.trim() || 'Faculty Coordinator',
       signatory_3_dept: document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
       signatory_3_org: document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
@@ -1255,8 +1330,8 @@ async function proceedWithBatchGeneration() {
       signatory_6_org: document.getElementById('tplSig6Org')?.value?.trim() || 'RIT',
       signatory_6_sig: customUploadedSignatures[6] || undefined,
       allow_duplicates: Boolean(certGenState.allowDuplicates || allowDup),
-      event_number: certGenState.selectedEventNumber || "01",
-      programme_id: certGenState.selectedProgrammeId || "prog_01_sttp_blockchain",
+      event_number: certGenState.selectedEventNumber || "02",
+      programme_id: certGenState.selectedProgrammeId || "prog_02_fdp_superintelligent",
       records: eligibleRecords.map(r => ({
         student_name: r.student_name || r.participant_name || '',
         participant_name: r.participant_name || r.student_name || '',
@@ -1264,13 +1339,16 @@ async function proceedWithBatchGeneration() {
         institution: r.institution || r.college_name || instName,
         college_name: r.college_name || r.institution || instName,
         department: r.department || orgDept,
-        event_name: r.event_name || evName,
-        event_date: r.event_date || getFormParam(['tplIssueDate'], new Date().toISOString().split('T')[0]),
+        event_name: evName,
+        event_date: r.event_date || getFormParam(['tplIssueDate'], selectedProg?.end_date || new Date().toISOString().split('T')[0]),
         certificate_type: r.certificate_type || certType,
         achievement: r.achievement || r.participation_type || 'Participation',
         register_number: r.register_number || '',
         email: r.email || r.mail_id || '',
-        phone: r.phone || ''
+        phone: r.phone || '',
+        programme_title: progTitle,
+        programme_dates: progDates,
+        certificate_wording: getFormParam(['tplCertWording'], selectedProg?.certificate_content || '')
       }))
     };
 
@@ -1331,29 +1409,32 @@ async function generateSingleCertificatePdfDoc(cert) {
   }
 
   // 1. Prepare Certificate Data with Template Fallbacks (NO register number, NO dates, NO academic year)
+  const selectedProg = (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
   const participantName = cert.participant_name || cert.student_name || 'Participant';
+  const defaultEventNumber = cert.event_number || certGenState.selectedEventNumber || '02';
   const certFullData = {
     participant_name: participantName,
     student_name: participantName,
     participant_type: cert.participant_type || 'Student',
-    institution: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
-    college_name: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
-    certificate_number: cert.certificate_number || cert.certificate_id || 'RITCB 01 0001',
+    institution: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
+    college_name: cert.institution || cert.college_name || (typeof getFormParam === 'function' ? getFormParam(['tplInstName', 'tplInstitution'], selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam') : (document.getElementById('tplInstName')?.value?.trim() || document.getElementById('tplInstitution')?.value?.trim() || 'Ramco Institute of Technology, Rajapalayam')),
+    certificate_number: cert.certificate_number || cert.certificate_id || `RITCB ${defaultEventNumber} 0001`,
     certificate_title: cert.certificate_title || (typeof getFormParam === 'function' ? getFormParam(['tplCertTitle'], 'CERTIFICATE OF PARTICIPATION') : (document.getElementById('tplCertTitle')?.value?.trim() || 'CERTIFICATE OF PARTICIPATION')),
-    programme_title: cert.programme_title || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeTitle', 'tplProgTitle'], 'One Week Short-Term Training Programme (STTP)') : (document.getElementById('tplProgrammeTitle')?.value?.trim() || document.getElementById('tplProgTitle')?.value?.trim() || 'One Week Short-Term Training Programme (STTP)')),
-    event_name: cert.event_name || (typeof getFormParam === 'function' ? getFormParam(['tplEventTopic', 'tplEventName'], 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives') : (document.getElementById('tplEventTopic')?.value?.trim() || document.getElementById('tplEventName')?.value?.trim() || 'Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives')),
-    department: cert.department || (typeof getFormParam === 'function' ? getFormParam(['tplDeptName', 'tplOrgDept'], 'Department of Computer Science and Business Systems') : (document.getElementById('tplDeptName')?.value?.trim() || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems')),
-    programme_dates: cert.programme_dates || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeDates', 'tplProgDates'], 'October 12, 2026, to October 18, 2026') : (document.getElementById('tplProgrammeDates')?.value?.trim() || document.getElementById('tplProgDates')?.value?.trim() || 'October 12, 2026, to October 18, 2026')),
+    programme_title: cert.programme_title || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeTitle', 'tplProgTitle'], selectedProg?.programme_title || 'Two-Week International Industry-Oriented Faculty Development Programme') : (document.getElementById('tplProgrammeTitle')?.value?.trim() || document.getElementById('tplProgTitle')?.value?.trim() || 'Two-Week International Industry-Oriented Faculty Development Programme')),
+    event_name: cert.event_name || (typeof getFormParam === 'function' ? getFormParam(['tplEventTopic', 'tplEventName'], selectedProg?.programme_topic || 'Engineering Superintelligent Systems for Sustainable Digital Transformation') : (document.getElementById('tplEventTopic')?.value?.trim() || document.getElementById('tplEventName')?.value?.trim() || 'Engineering Superintelligent Systems for Sustainable Digital Transformation')),
+    department: cert.department || (typeof getFormParam === 'function' ? getFormParam(['tplDeptName', 'tplOrgDept'], selectedProg?.organizing_department || 'Department of Computer Science and Business Systems (CSBS)') : (document.getElementById('tplDeptName')?.value?.trim() || document.getElementById('tplOrgDept')?.value?.trim() || 'Department of Computer Science and Business Systems (CSBS)')),
+    programme_dates: cert.programme_dates || (typeof getFormParam === 'function' ? getFormParam(['tplProgrammeDates', 'tplProgDates'], (selectedProg?.start_date && selectedProg?.end_date) ? `${selectedProg.start_date} to ${selectedProg.end_date}` : 'October 26, 2026, to November 07, 2026') : (document.getElementById('tplProgrammeDates')?.value?.trim() || document.getElementById('tplProgDates')?.value?.trim() || 'October 26, 2026, to November 07, 2026')),
+    certificate_wording: cert.certificate_wording || (typeof getFormParam === 'function' ? getFormParam(['tplCertWording'], selectedProg?.certificate_content || '') : ''),
     signatory_count: cert.signatory_count || parseInt(document.getElementById('tplSigCount')?.value || '6', 10),
-    signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. M. Jeya Sundari',
+    signatory_1_name: cert.signatory_1_name || document.getElementById('tplSig1Name')?.value?.trim() || 'Dr. S.Erana Verrappa Dinesh',
     signatory_1_title: cert.signatory_1_title || document.getElementById('tplSig1Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_1_dept: cert.signatory_1_dept || cert.signatory_1_org || document.getElementById('tplSig1Org')?.value?.trim() || 'CSBS, RIT',
     signatory_1_sig: customUploadedSignatures[1] || cert.signatory_1_sig || undefined,
-    signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'Mrs. M. Rekha',
+    signatory_2_name: cert.signatory_2_name || document.getElementById('tplSig2Name')?.value?.trim() || 'Mrs. B.Yazhini',
     signatory_2_title: cert.signatory_2_title || document.getElementById('tplSig2Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_2_dept: cert.signatory_2_dept || cert.signatory_2_org || document.getElementById('tplSig2Org')?.value?.trim() || 'CSBS, RIT',
     signatory_2_sig: customUploadedSignatures[2] || cert.signatory_2_sig || undefined,
-    signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'Mr. M. Rama Krishnan',
+    signatory_3_name: cert.signatory_3_name || document.getElementById('tplSig3Name')?.value?.trim() || 'Ms. Preethi Ram',
     signatory_3_title: cert.signatory_3_title || document.getElementById('tplSig3Title')?.value?.trim() || 'Faculty Coordinator',
     signatory_3_dept: cert.signatory_3_dept || cert.signatory_3_org || document.getElementById('tplSig3Org')?.value?.trim() || 'CSBS, RIT',
     signatory_3_sig: customUploadedSignatures[3] || cert.signatory_3_sig || undefined,

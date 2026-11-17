@@ -294,7 +294,12 @@ router.post("/validate", checkFacultyOrAdminPermission, (req, res) => {
 
         try {
             const rawRecords = parseUploadedSpreadsheet(req.file.buffer);
-            const validation = await feedbackCertificateStorage.validateBatchRecords(rawRecords);
+            const reqEventName = (req.body && (req.body.event_name || req.body.eventName)) || "";
+            const reqEventDate = (req.body && (req.body.event_date || req.body.eventDate)) || "";
+            const validation = await feedbackCertificateStorage.validateBatchRecords(rawRecords, null, {
+                event_name: reqEventName,
+                event_date: reqEventDate
+            });
 
             res.json({
                 success: true,

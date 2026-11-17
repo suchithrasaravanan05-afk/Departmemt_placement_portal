@@ -2414,7 +2414,7 @@ async function validateBatchRecords(records, customExisting = null, defaultOptio
             row.academic_year || row['Academic Year'] || row.academicYear || row.Academic_Year || "2026-27"
         );
         let eventName = sanitizeCellValue(
-            row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || (defaultOptions && defaultOptions.event_name) || "Emerging Blockchain Technologies – Architectures, Applications and Research Perspectives"
+            row.event_name || row['Event Name'] || row.eventName || row.Event_Name || row.event || row.Event || (defaultOptions && defaultOptions.event_name) || ""
         );
         let rawEventDate = sanitizeCellValue(
             row.event_date || row['Event Date'] || row.eventDate || row.Event_Date || row.date || row.Date || (defaultOptions && defaultOptions.event_date) || ""

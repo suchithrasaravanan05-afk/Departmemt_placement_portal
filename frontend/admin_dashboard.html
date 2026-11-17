@@ -2159,11 +2159,11 @@
           <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:#581C87;margin-right:8px;">
             <i class="fa-solid fa-layer-group"></i> Event Templates:
           </div>
-          <button type="button" class="cert-preset-btn active" id="btnPresetSTTP" onclick="applyCertificatePreset('sttp_blockchain')">
-            <i class="fa-solid fa-award"></i> STTP — Blockchain (Current Reference)
+          <button type="button" class="cert-preset-btn active" id="btnPresetSTTP" onclick="selectProgrammeForGeneration('prog_01_sttp_blockchain')">
+            <i class="fa-solid fa-award"></i> Event 01 — STTP Blockchain
           </button>
-          <button type="button" class="cert-preset-btn" id="btnPresetWorkshop" onclick="applyCertificatePreset('workshop_fullstack')">
-            <i class="fa-solid fa-code"></i> Workshop — Full Stack Cloud
+          <button type="button" class="cert-preset-btn" id="btnPresetFDP" onclick="selectProgrammeForGeneration('prog_02_fdp_superintelligent')">
+            <i class="fa-solid fa-microchip"></i> Event 02 — International FDP Superintelligent Systems
           </button>
           <button type="button" class="cert-preset-btn" id="btnPresetMerit" onclick="applyCertificatePreset('merit_excellence')">
             <i class="fa-solid fa-medal"></i> Technical Symposium — Merit
@@ -2506,7 +2506,7 @@
               <span style="color:#64748b;">Batch Event:</span> <strong id="cgConfirmEventName" style="color:#3B0764;">—</strong>
             </div>
             <div style="background:#ffffff;border:1px solid #D8B4FE;border-radius:10px;padding:10px 18px;font-size:13px;">
-              <span style="color:#64748b;">ID Format:</span> <strong style="color:#7E22CE;font-family:monospace;">RIT-CSBS-YYYY-TOKEN</strong>
+              <span style="color:#64748b;">ID Format:</span> <strong id="cgBatchIdFormatPreview" style="color:#7E22CE;font-family:monospace;">RITCB 01 0001</strong>
             </div>
             <div style="background:#ffffff;border:1px solid #D8B4FE;border-radius:10px;padding:10px 18px;font-size:13px;">
               <span style="color:#64748b;">QR Destination:</span> <strong style="color:#059669;">/verify-certificate.html</strong>
@@ -3670,7 +3670,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="rit_logo_data.js"></script>
 <script src="certificate_assets.js"></script>
-<script src="certificate_generation.js?v=2.4"></script>
-<script src="admin_dashboard.js?v=2.4"></script>
+<script src="certificate_generation.js?v=2.5"></script>
+<script src="admin_dashboard.js?v=2.5"></script>
 </body>
 </html>
