@@ -213,33 +213,68 @@ function parseUploadedSpreadsheet(buffer) {
         issue_date: null
     };
 
-    const aliasRules = {
-        participant_name: ["fullnamewithinitial", "fullnamewithinitials", "fullname", "participantname", "participant", "studentname", "student", "name", "candidatename", "studentfullname", "attendee", "attendeename"],
-        student_name: ["fullnamewithinitial", "fullnamewithinitials", "fullname", "studentname", "student", "participantname", "participant", "name", "candidatename", "studentfullname"],
-        participant_type: ["participants", "participant", "participanttype", "participantcategory", "category", "designation", "role", "type", "participationtype", "achievement"],
-        department: ["department", "dept", "branch", "programme", "deptname", "discipline"],
-        institution: ["collegename", "college", "institution", "institutionname", "organization", "org", "university"],
-        email: ["mailid", "mail", "email", "emailaddress", "emailid", "mailaddress"],
-        register_number: ["registernumber", "registerno", "regno", "rollno", "rollnumber", "registrationnumber", "registrationno", "register"],
+    const exactAliases = {
+        participant_name: ["fullnamewithinitial", "fullnamewithinitials", "fullname", "participantname", "studentname", "candidatename", "studentfullname", "attendeename", "participant", "student", "name"],
+        register_number: ["registernumber", "registerno", "regno", "rollno", "rollnumber", "registrationnumber", "registrationno", "register", "reg"],
+        email: ["mailid", "email", "emailid", "emailaddress", "mail", "mailaddress"],
+        department: ["department", "dept", "branch", "discipline", "deptname"],
+        institution: ["collegename", "institutionname", "institution", "college", "organization", "org", "university", "school"],
+        event_name: ["eventname", "eventtitle", "titleoftheevent", "eventtopic", "topic", "workshop", "seminar", "programme", "program", "course", "training", "event"],
+        event_date: ["eventdate", "date", "conducteddate", "heldon", "eventconducteddate", "dates"],
+        participant_type: ["participanttype", "participationtype", "category", "designation", "role", "type", "participantcategory", "participants", "achievement"],
         academic_year: ["academicyear", "year", "batch", "class", "studyyear"],
-        event_name: ["eventname", "event", "title", "workshop", "seminar", "course", "training", "eventtitle"],
-        event_date: ["eventdate", "date", "conducteddate", "heldon", "eventconducteddate"],
-        participation_type: ["participationtype", "participants", "achievement", "award", "category", "type", "certificatetype", "role", "position"],
         issue_date: ["certificateissuedate", "issuedate", "dateofissue", "certissuedate"]
     };
 
-    sampleKeys.forEach(originalKey => {
-        const normKey = normalizeHeaderName(originalKey);
-        for (const [field, aliases] of Object.entries(aliasRules)) {
-            if (!headerMap[field] && (aliases.includes(normKey) || aliases.some(a => normKey.includes(a)))) {
-                headerMap[field] = originalKey;
+    const normKeys = sampleKeys.map(k => ({ original: k, norm: normalizeHeaderName(k) }));
+    const usedKeys = new Set();
+
+    // Pass 1: Exact matches first
+    for (const [field, aliases] of Object.entries(exactAliases)) {
+        for (const item of normKeys) {
+            if (!usedKeys.has(item.original) && !headerMap[field] && aliases.includes(item.norm)) {
+                headerMap[field] = item.original;
+                usedKeys.add(item.original);
                 break;
             }
         }
-    });
+    }
+
+    // Pass 2: Fuzzy/substring matches for remaining unmapped fields
+    for (const item of normKeys) {
+        if (usedKeys.has(item.original)) continue;
+        const n = item.norm;
+
+        if (!headerMap.event_date && n.includes("date") && !n.includes("issue")) {
+            headerMap.event_date = item.original;
+            usedKeys.add(item.original);
+        } else if (!headerMap.issue_date && n.includes("issue") && n.includes("date")) {
+            headerMap.issue_date = item.original;
+            usedKeys.add(item.original);
+        } else if (!headerMap.event_name && !n.includes("date") && (n.includes("event") || n.includes("topic") || n.includes("workshop") || n.includes("seminar") || n.includes("programme") || n.includes("title"))) {
+            headerMap.event_name = item.original;
+            usedKeys.add(item.original);
+        } else if (!headerMap.participant_name && !n.includes("college") && !n.includes("inst") && !n.includes("dept") && !n.includes("event") && !n.includes("date") && (n.includes("name") || n.includes("student") || n.includes("participant"))) {
+            headerMap.participant_name = item.original;
+            usedKeys.add(item.original);
+        } else if (!headerMap.register_number && (n.includes("reg") || n.includes("roll"))) {
+            headerMap.register_number = item.original;
+            usedKeys.add(item.original);
+        } else if (!headerMap.email && (n.includes("mail") || n.includes("email"))) {
+            headerMap.email = item.original;
+            usedKeys.add(item.original);
+        } else if (!headerMap.department && (n.includes("dept") || n.includes("department") || n.includes("branch"))) {
+            headerMap.department = item.original;
+            usedKeys.add(item.original);
+        } else if (!headerMap.institution && (n.includes("college") || n.includes("inst") || n.includes("univ") || n.includes("org"))) {
+            headerMap.institution = item.original;
+            usedKeys.add(item.original);
+        }
+    }
 
     // Fallbacks if not detected
-    if (!headerMap.participant_name && !headerMap.student_name) headerMap.student_name = sampleKeys[0];
+    if (!headerMap.participant_name && !headerMap.student_name) headerMap.participant_name = sampleKeys[0];
+    headerMap.student_name = headerMap.participant_name;
 
     const mapped = rawData.map(r => mapSpreadsheetRow(r, headerMap));
     return mapped;

@@ -1,6 +1,9 @@
 // ============================================================
-// AUTHENTICATION HELPER
+// API BASE & AUTHENTICATION HELPER
 // ============================================================
+window.API_BASE = window.API_BASE || (typeof window !== 'undefined' && window.location && window.location.origin ? `${window.location.origin}/api` : '/api');
+const API_BASE = window.API_BASE;
+
 function getEffectiveAdminToken() {
   if (typeof currentAdminToken !== 'undefined' && currentAdminToken) return currentAdminToken;
   if (typeof window !== 'undefined' && window.currentAdminToken) return window.currentAdminToken;
@@ -512,7 +515,7 @@ async function uploadAndParseCertificateSpreadsheet() {
 
   } catch (err) {
     console.error('Upload spreadsheet error:', err);
-    showAdminAlert('Network or server error while parsing spreadsheet.');
+    showAdminAlert(err.message || 'Network or server error while parsing spreadsheet.');
   } finally {
     if (btn) btn.disabled = false;
     if (text) text.style.display = 'inline-flex';
@@ -574,7 +577,6 @@ function renderCertGenTable() {
   const invalidCount = records.filter(r => !r.is_valid).length;
   const dupCount = records.filter(r => r.is_duplicate).length;
   const readyCount = records.filter(r => r.is_valid && (certGenState.allowDuplicates || !r.is_duplicate)).length;
-  updateCertEmailSettingsUI();
 
   // Update KPI counters
   if (document.getElementById('cgKpiTotal')) document.getElementById('cgKpiTotal').innerText = total;
