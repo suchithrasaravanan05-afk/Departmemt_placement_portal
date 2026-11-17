@@ -2,7 +2,8 @@
 // ADMIN DASHBOARD JS — RIT CSBS Placement Portal
 // ============================================================
 
-const API_BASE = `${window.location.origin}/api`;
+var API_BASE = window.API_BASE || `${window.location.origin}/api`;
+window.API_BASE = API_BASE;
 
 let currentAdminToken    = null;
 let currentAdminUser     = null;

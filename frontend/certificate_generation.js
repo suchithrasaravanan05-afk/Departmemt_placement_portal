@@ -2,7 +2,7 @@
 // API BASE & AUTHENTICATION HELPER
 // ============================================================
 window.API_BASE = window.API_BASE || (typeof window !== 'undefined' && window.location && window.location.origin ? `${window.location.origin}/api` : '/api');
-const API_BASE = window.API_BASE;
+var API_BASE = window.API_BASE;
 
 function getEffectiveAdminToken() {
   if (typeof currentAdminToken !== 'undefined' && currentAdminToken) return currentAdminToken;
