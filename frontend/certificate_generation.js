@@ -1401,6 +1401,13 @@ async function proceedWithBatchGeneration() {
     certGenState.currentBatchId = data.batch_id;
     certGenState.currentBatchCerts = data.certificates || [];
 
+    // Immediately merge newly issued certificates into masterCertificates for instant UI sync across all events
+    if (Array.isArray(data.certificates) && data.certificates.length > 0) {
+      const existingIds = new Set((certGenState.masterCertificates || []).map(c => String(c.certificate_number || c.id).trim().toUpperCase()));
+      const newItems = data.certificates.filter(c => !existingIds.has(String(c.certificate_number || c.id).trim().toUpperCase()));
+      certGenState.masterCertificates = [...newItems, ...(certGenState.masterCertificates || [])];
+    }
+
     // Show success alert
     const successAlert = document.getElementById('certGenSuccessAlert');
     const alertTitle = document.getElementById('cgSuccessAlertTitle');
@@ -1484,7 +1491,7 @@ async function generateSingleCertificatePdfDoc(cert) {
 
   // Fallback
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
   doc.setFont('times', 'bold');
   doc.setFontSize(18);
   doc.text('RAMCO INSTITUTE OF TECHNOLOGY', 148.5, 20, { align: 'center' });
@@ -1564,7 +1571,11 @@ async function downloadAllGeneratedCertificatesZip() {
 
 // Export issued certificates list to Excel
 function exportIssuedCertificatesExcel() {
-  const certs = certGenState.masterCertificates || [];
+  const sel = document.getElementById('cgBatchSelector');
+  const filterVal = sel ? sel.value : 'all';
+  const certs = (filterVal !== 'all' && certGenState.currentBatchCerts && certGenState.currentBatchCerts.length > 0)
+    ? certGenState.currentBatchCerts
+    : (certGenState.masterCertificates || []);
   if (certs.length === 0) {
     showAdminAlert('No certificate records available to export.');
     return;
@@ -1645,27 +1656,51 @@ function populateBatchSelectorDropdown(batches) {
   const sel = document.getElementById('cgBatchSelector');
   if (!sel) return;
 
+  const currentVal = sel.value || 'all';
+
   let opts = '<option value="all">All Issued Certificates (Master History)</option>';
-  batches.forEach(b => {
-    const dStr = b.created_at ? new Date(b.created_at).toLocaleDateString('en-GB') : '';
-    opts += `<option value="${escapeHtml(b.id)}">${escapeHtml(b.batch_title || b.event_name)} (${b.generated_count || 0} certs &bull; ${dStr})</option>`;
-  });
+
+  // Event-specific filters
+  const progs = certGenState.programmes || [];
+  if (progs.length > 0) {
+    opts += '<optgroup label="Filter by Event">';
+    progs.forEach(p => {
+      const evNum = String(p.event_number || '01').padStart(2, '0');
+      const label = p.programme_topic ? `Event ${evNum}: ${p.programme_topic}` : `Event ${evNum}: ${p.programme_title || 'Programme'}`;
+      opts += `<option value="event:${evNum}">${escapeHtml(label)}</option>`;
+    });
+    opts += '</optgroup>';
+  } else {
+    opts += '<optgroup label="Filter by Event">';
+    opts += '<option value="event:01">Event 01: Emerging Blockchain Technologies (STTP)</option>';
+    opts += '<option value="event:02">Event 02: Engineering Superintelligent Systems (FDP)</option>';
+    opts += '</optgroup>';
+  }
+
+  if (Array.isArray(batches) && batches.length > 0) {
+    opts += '<optgroup label="Filter by Generation Batch">';
+    batches.forEach(b => {
+      const dStr = b.created_at ? new Date(b.created_at).toLocaleDateString('en-GB') : '';
+      opts += `<option value="${escapeHtml(b.id)}">${escapeHtml(b.batch_title || b.event_name)} (${b.generated_count || 0} certs &bull; ${dStr})</option>`;
+    });
+    opts += '</optgroup>';
+  }
+
   sel.innerHTML = opts;
+
+  // Preserve previous selection if it exists in new options
+  const hasOpt = Array.from(sel.options).some(o => o.value === currentVal);
+  sel.value = hasOpt ? currentVal : 'all';
 }
 
 function handleCertGenBatchSelect() {
   const sel = document.getElementById('cgBatchSelector');
-  const batchId = sel ? sel.value : 'all';
+  const filterVal = sel ? sel.value : 'all';
 
   const delBtn = document.getElementById('btnDeleteSelectedBatch');
   if (delBtn) {
-    delBtn.style.display = (batchId && batchId !== 'all') ? 'inline-flex' : 'none';
-  }
-
-  if (batchId === 'all') {
-    certGenState.currentBatchCerts = certGenState.masterCertificates;
-  } else {
-    certGenState.currentBatchCerts = certGenState.masterCertificates.filter(c => String(c.batch_id) === String(batchId));
+    // Only display Delete Batch when a specific batch ID is selected, never for 'all' or event filters
+    delBtn.style.display = (filterVal && filterVal !== 'all' && !filterVal.startsWith('event:')) ? 'inline-flex' : 'none';
   }
 
   renderHistoryTable();
@@ -1680,17 +1715,39 @@ function renderHistoryTable() {
   if (!tbody) return;
 
   const sel = document.getElementById('cgBatchSelector');
-  const batchId = sel ? sel.value : 'all';
-  let certs = (batchId === 'all') ? certGenState.masterCertificates : certGenState.currentBatchCerts;
+  const filterVal = sel ? sel.value : 'all';
+
+  let certs = certGenState.masterCertificates || [];
+
+  if (filterVal === 'all') {
+    certs = certGenState.masterCertificates || [];
+  } else if (filterVal.startsWith('event:')) {
+    const evNum = filterVal.split(':')[1];
+    certs = (certGenState.masterCertificates || []).filter(c => {
+      if (c.event_number && String(c.event_number).padStart(2, '0') === evNum) return true;
+      if (c.certificate_number && (c.certificate_number.includes(` ${evNum} `) || c.certificate_number.startsWith(`RITCB ${evNum}`))) return true;
+      if (evNum === '01' && (c.event_name?.toLowerCase().includes('blockchain') || c.event_code === 'STTP')) return true;
+      if (evNum === '02' && (c.event_name?.toLowerCase().includes('superintelligent') || c.event_name?.toLowerCase().includes('faculty development') || c.event_name?.toLowerCase().includes('fdp'))) return true;
+      return false;
+    });
+  } else {
+    certs = (certGenState.masterCertificates || []).filter(c => String(c.batch_id) === String(filterVal));
+  }
+
+  certGenState.currentBatchCerts = certs;
 
   const searchInput = document.getElementById('cgHistorySearchInput');
   const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
   if (q) {
     certs = certs.filter(c =>
       (c.student_name && c.student_name.toLowerCase().includes(q)) ||
+      (c.participant_name && c.participant_name.toLowerCase().includes(q)) ||
       (c.register_number && c.register_number.toLowerCase().includes(q)) ||
       (c.certificate_number && c.certificate_number.toLowerCase().includes(q)) ||
-      (c.event_name && c.event_name.toLowerCase().includes(q))
+      (c.event_name && c.event_name.toLowerCase().includes(q)) ||
+      (c.college_name && c.college_name.toLowerCase().includes(q)) ||
+      (c.participant_college && c.participant_college.toLowerCase().includes(q)) ||
+      (c.institution && c.institution.toLowerCase().includes(q))
     );
   }
 

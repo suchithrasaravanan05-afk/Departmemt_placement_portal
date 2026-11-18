@@ -337,10 +337,13 @@ async function persistToSupabaseStorage(data) {
     try {
         await ensureStorageBucket();
         const payload = Buffer.from(JSON.stringify(data, null, 2), "utf-8");
-        await client.storage.from(STORAGE_BUCKET).upload(STORAGE_FILE_NAME, payload, {
+        const { error } = await client.storage.from(STORAGE_BUCKET).upload(STORAGE_FILE_NAME, payload, {
             upsert: true,
             contentType: "application/json"
         });
+        if (error) {
+            console.warn("[feedbackCertificateStorage] Supabase storage upload returned error:", error.message || error);
+        }
     } catch (e) {
         console.warn("[feedbackCertificateStorage] Supabase storage upload warning:", e.message);
     }
@@ -425,6 +428,16 @@ async function getAllData() {
         const certMap = new Map((base.certificates || []).map(c => [String(c.certificate_number || c.id), c]));
         (cloudData.certificates || []).forEach(c => certMap.set(String(c.certificate_number || c.id), c));
 
+        // Active valid certificates created at or after SYSTEM_RESET_TIME whose batch is not deleted must never be purged by stale tombstones
+        Array.from(certMap.values()).forEach(c => {
+            const t = c.created_at ? new Date(c.created_at).getTime() : (Number(c.id) || 0);
+            const notDeletedBatch = !c.batch_id || !deletedBatchIdsSet.has(String(c.batch_id).trim());
+            const notDeletedFeedback = !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id));
+            if (t >= SYSTEM_RESET_TIME && notDeletedBatch && notDeletedFeedback && c.certificate_number) {
+                deletedCertNumbersSet.delete(String(c.certificate_number).trim().toUpperCase());
+            }
+        });
+
         const evMap = new Map((base.event_feedbacks || []).map(e => [String(e.id), e]));
         (cloudData.event_feedbacks || []).forEach(e => evMap.set(String(e.id), e));
 
@@ -457,6 +470,16 @@ async function getAllData() {
             certificate_audit_logs: Array.from(auditMap.values())
         };
     } else {
+        // Active valid certificates in local base must never be purged by stale tombstones
+        (base.certificates || []).forEach(c => {
+            const t = c.created_at ? new Date(c.created_at).getTime() : (Number(c.id) || 0);
+            const notDeletedBatch = !c.batch_id || !deletedBatchIdsSet.has(String(c.batch_id).trim());
+            const notDeletedFeedback = !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id));
+            if (t >= SYSTEM_RESET_TIME && notDeletedBatch && notDeletedFeedback && c.certificate_number) {
+                deletedCertNumbersSet.delete(String(c.certificate_number).trim().toUpperCase());
+            }
+        });
+
         base.event_feedbacks = (base.event_feedbacks || []).filter(e => !deletedIdsSet.has(String(e.id)));
         base.feedback_submissions = (base.feedback_submissions || []).filter(s => !deletedIdsSet.has(String(s.feedback_id)));
         base.certificates = (base.certificates || []).filter(c => {
@@ -477,6 +500,16 @@ async function getAllData() {
     base = await syncFromSupabaseTables(base, deletedIdsSet);
 
     // Final scrub to guarantee no deleted items slipped in
+    (base.certificates || []).forEach(c => {
+        const t = c.created_at ? new Date(c.created_at).getTime() : (Number(c.id) || 0);
+        const notDeletedBatch = !c.batch_id || !deletedBatchIdsSet.has(String(c.batch_id).trim());
+        const notDeletedFeedback = !c.feedback_id || !deletedIdsSet.has(String(c.feedback_id));
+        if (t >= SYSTEM_RESET_TIME && notDeletedBatch && notDeletedFeedback && c.certificate_number) {
+            deletedCertNumbersSet.delete(String(c.certificate_number).trim().toUpperCase());
+        }
+    });
+    base.deleted_certificate_numbers = Array.from(deletedCertNumbersSet);
+
     base.certificates = (base.certificates || []).filter(c => {
         const t = c.created_at ? new Date(c.created_at).getTime() : (Number(c.id) || 0);
         if (t < SYSTEM_RESET_TIME) return false;
@@ -2825,6 +2858,15 @@ async function issueBulkCertificates(batchOptions = {}) {
             });
         }
     }
+
+    // Make sure newly issued certificates are never suppressed by previous deleted_certificate_numbers tombstones
+    if (Array.isArray(data.deleted_certificate_numbers) && issuedCerts.length > 0) {
+        const newlyIssuedIds = new Set(issuedCerts.map(c => String(c.certificate_number).trim().toUpperCase()));
+        data.deleted_certificate_numbers = data.deleted_certificate_numbers.filter(
+            num => !newlyIssuedIds.has(String(num).trim().toUpperCase())
+        );
+    }
+
     data.last_certificate_sequence = Math.max(data.last_certificate_sequence || 0, nextSeq);
     if (!data.event_sequences) data.event_sequences = {};
     data.event_sequences[assignedEventNumber] = Math.max(data.event_sequences[assignedEventNumber] || 0, nextSeq);
