@@ -645,6 +645,33 @@ router.delete("/record/:certNumber", requireStrictAdminRole, async (req, res) =>
 });
 
 // ============================================================
+// 6D. PERMANENTLY DELETE A RANGE OF CERTIFICATES & RESET SEQUENCE (ADMIN ONLY)
+// ============================================================
+router.post("/delete-range", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const { event_number = "02", from_seq = 6, to_seq = 168, reset_next_to = 6 } = req.body;
+        const result = await feedbackCertificateStorage.deleteCertificateRange({
+            eventNumber: event_number,
+            fromSeq: from_seq,
+            toSeq: to_seq,
+            resetNextTo: reset_next_to,
+            actor: req.user
+        });
+        res.json({
+            success: true,
+            result,
+            message: `Successfully deleted certificates in range and reset next sequence to ${result.next_certificate_id}.`
+        });
+    } catch (e) {
+        console.error("Delete range error:", e);
+        res.status(400).json({
+            success: false,
+            message: e.message || "Failed to delete certificate range."
+        });
+    }
+});
+
+// ============================================================
 // 7. REUSABLE CERTIFICATE TEMPLATES CRUD
 // ============================================================
 router.get("/templates", checkFacultyOrAdminPermission, async (req, res) => {

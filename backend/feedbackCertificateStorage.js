@@ -467,7 +467,11 @@ async function getAllData() {
             deleted_certificate_numbers: Array.from(deletedCertNumbersSet),
             deleted_batch_ids: Array.from(deletedBatchIdsSet),
             certificate_batches: Array.from(batchMap.values()).filter(b => !deletedBatchIdsSet.has(String(b.id).trim())),
-            certificate_audit_logs: Array.from(auditMap.values())
+            certificate_audit_logs: Array.from(auditMap.values()),
+            certificate_templates: Array.isArray(cloudData.certificate_templates) && cloudData.certificate_templates.length > 0 ? cloudData.certificate_templates : (base.certificate_templates || []),
+            certificate_programmes: Array.isArray(cloudData.certificate_programmes) && cloudData.certificate_programmes.length > 0 ? cloudData.certificate_programmes : (base.certificate_programmes || []),
+            event_sequences: { ...(base.event_sequences || {}), ...(cloudData.event_sequences || {}) },
+            migrations_applied: Array.from(new Set([...(base.migrations_applied || []), ...(cloudData.migrations_applied || [])]))
         };
     } else {
         // Active valid certificates in local base must never be purged by stale tombstones
@@ -559,6 +563,97 @@ async function getAllData() {
     }
     if (!Array.isArray(base.deleted_event_numbers)) {
         base.deleted_event_numbers = [];
+    }
+    if (!Array.isArray(base.migrations_applied)) {
+        base.migrations_applied = Array.isArray(cloudData?.migrations_applied) ? [...cloudData.migrations_applied] : [];
+    }
+
+    // One-time automatic migration: Purge Event 02 certificates RITCB 02 0006 through RITCB 02 0168
+    // and reset Event 02 sequence to 5 so next certificate starts strictly at RITCB 02 0006
+    const PURGE_MIGRATION_KEY = "purge_ritcb_02_0006_to_0168_reset_to_0006";
+    if (!base.migrations_applied.includes(PURGE_MIGRATION_KEY)) {
+        base.migrations_applied.push(PURGE_MIGRATION_KEY);
+        const startSeq = 6;
+        const endSeq = 168;
+        const purgedCertNumbers = [];
+        const affectedBatchIds = new Set();
+
+        base.certificates = (base.certificates || []).filter(c => {
+            const certNum = String(c.certificate_number || c.certificate_id || "").trim().toUpperCase();
+            const parsed = parseEventCertificateNumber(certNum);
+            let match = false;
+            if (parsed && parsed.eventNumber === "02" && parsed.sequence >= startSeq && parsed.sequence <= endSeq) {
+                match = true;
+            } else if (c.event_number === "02" || (c.event_name || "").toLowerCase().includes("superintelligent")) {
+                const m = certNum.match(/RITCB\s*02\s*0*(\d+)/i);
+                if (m) {
+                    const seq = parseInt(m[1], 10);
+                    if (seq >= startSeq && seq <= endSeq) {
+                        match = true;
+                    }
+                }
+            }
+            if (match) {
+                purgedCertNumbers.push(certNum);
+                if (c.batch_id) affectedBatchIds.add(String(c.batch_id).trim());
+                return false;
+            }
+            return true;
+        });
+
+        // Clean tombstones: ensure purged range is NEVER tombstoned
+        if (Array.isArray(base.deleted_certificate_numbers)) {
+            const purgedSet = new Set(purgedCertNumbers.map(s => String(s).trim().toUpperCase()));
+            for (let s = startSeq; s <= endSeq; s++) {
+                purgedSet.add(formatCertificateId("02", s));
+                purgedSet.add(`RITCB 02 ${String(s).padStart(4, "0")}`);
+            }
+            base.deleted_certificate_numbers = base.deleted_certificate_numbers.filter(n => !purgedSet.has(String(n).trim().toUpperCase()));
+        }
+
+        // Clean up empty test batches (BATCH-MWMAN2PB-975F7D, BATCH-MWMAOMRX-C0D799)
+        const emptyBatchesToRemove = ["BATCH-MWMAN2PB-975F7D", "BATCH-MWMAOMRX-C0D799"];
+        (base.certificate_batches || []).forEach(b => {
+            if (affectedBatchIds.has(String(b.id).trim())) {
+                const rem = (base.certificates || []).filter(c => String(c.batch_id).trim() === String(b.id).trim()).length;
+                b.generated_count = rem;
+                if (rem === 0 && !emptyBatchesToRemove.includes(String(b.id).trim())) {
+                    emptyBatchesToRemove.push(String(b.id).trim());
+                }
+            }
+        });
+        base.certificate_batches = (base.certificate_batches || []).filter(b => !emptyBatchesToRemove.includes(String(b.id).trim()));
+
+        // Sequence reset to 5 so next issued certificate is 6 (RITCB 02 0006)
+        base.event_sequences["02"] = 5;
+
+        if (Array.isArray(base.certificate_programmes)) {
+            base.certificate_programmes.forEach(p => {
+                if (p.event_number === "02" || p.id === "prog_02_fdp_superintelligent") {
+                    p.highest_sequence = 5;
+                    p.next_sequence = 6;
+                    p.next_certificate_number = "0006";
+                    p.next_certificate_id = "RITCB 02 0006";
+                    p.certificates_generated = (base.certificates || []).filter(c => {
+                        const parsed = parseEventCertificateNumber(c.certificate_number || c.certificate_id);
+                        return parsed && parsed.eventNumber === "02";
+                    }).length;
+                }
+            });
+        }
+
+        // Remove from PostgreSQL tables if available
+        const client = getClient();
+        if (client) {
+            purgedCertNumbers.forEach(async (certNum) => {
+                try { await client.from("certificates").delete().eq("certificate_number", certNum); } catch (e) {}
+            });
+            try { client.from("certificate_batches").delete().in("id", emptyBatchesToRemove); } catch (e) {}
+        }
+        deleteAssociatedCertificateFiles(purgedCertNumbers, emptyBatchesToRemove).catch(console.warn);
+
+        // Commit immediately to persist to Supabase Storage and file
+        await commitData(base);
     }
 
     inMemoryData = base;
@@ -3613,6 +3708,126 @@ async function deleteSingleCertificateRecord({ certificateNumber, confirmCertifi
     };
 }
 
+// Admin Action: Delete a range of certificates for an event and reset sequence
+async function deleteCertificateRange({ eventNumber = "02", fromSeq = 6, toSeq = 168, resetNextTo = 6, actor = {} }) {
+    const ee = String(eventNumber || "02").padStart(2, "0").slice(-2);
+    const start = parseInt(fromSeq, 10);
+    const end = parseInt(toSeq, 10);
+    const targetNext = parseInt(resetNextTo, 10);
+
+    return withAllocationLock(async () => {
+        const data = await getAllData();
+        const purgedCertNumbers = [];
+        const affectedBatchIds = new Set();
+
+        data.certificates = (data.certificates || []).filter(c => {
+            const certNum = String(c.certificate_number || c.certificate_id || "").trim().toUpperCase();
+            const parsed = parseEventCertificateNumber(certNum);
+            let match = false;
+            if (parsed && parsed.eventNumber === ee && parsed.sequence >= start && parsed.sequence <= end) {
+                match = true;
+            } else if (c.event_number === ee || (c.event_name || "").toLowerCase().includes("superintelligent")) {
+                const m = certNum.match(new RegExp(`RITCB\\s*${ee}\\s*0*(\\d+)`, "i"));
+                if (m) {
+                    const seq = parseInt(m[1], 10);
+                    if (seq >= start && seq <= end) {
+                        match = true;
+                    }
+                }
+            }
+            if (match) {
+                purgedCertNumbers.push(certNum);
+                if (c.batch_id) affectedBatchIds.add(String(c.batch_id).trim());
+                return false;
+            }
+            return true;
+        });
+
+        // Clean tombstones: ensure purged range is NEVER tombstoned
+        if (Array.isArray(data.deleted_certificate_numbers)) {
+            const purgedSet = new Set(purgedCertNumbers.map(s => String(s).trim().toUpperCase()));
+            for (let s = start; s <= end; s++) {
+                purgedSet.add(formatCertificateId(ee, s));
+                purgedSet.add(`RITCB ${ee} ${String(s).padStart(4, "0")}`);
+            }
+            data.deleted_certificate_numbers = data.deleted_certificate_numbers.filter(n => !purgedSet.has(String(n).trim().toUpperCase()));
+        }
+
+        // Clean up or update affected batches
+        const emptyBatchesToRemove = [];
+        (data.certificate_batches || []).forEach(b => {
+            if (affectedBatchIds.has(String(b.id).trim())) {
+                const remaining = (data.certificates || []).filter(c => String(c.batch_id).trim() === String(b.id).trim()).length;
+                b.generated_count = remaining;
+                if (remaining === 0) {
+                    emptyBatchesToRemove.push(String(b.id).trim());
+                }
+            }
+        });
+        if (emptyBatchesToRemove.length > 0) {
+            data.certificate_batches = (data.certificate_batches || []).filter(b => !emptyBatchesToRemove.includes(String(b.id).trim()));
+        }
+
+        // Reset sequence for event
+        if (!data.event_sequences) data.event_sequences = {};
+        data.event_sequences[ee] = Math.max(0, targetNext - 1);
+
+        // Update certificate programmes
+        if (Array.isArray(data.certificate_programmes)) {
+            data.certificate_programmes.forEach(p => {
+                if (p.event_number === ee || p.id === "prog_02_fdp_superintelligent") {
+                    p.highest_sequence = data.event_sequences[ee];
+                    p.next_sequence = targetNext;
+                    p.next_certificate_number = String(targetNext).padStart(4, "0");
+                    p.next_certificate_id = formatCertificateId(ee, targetNext);
+                    p.certificates_generated = (data.certificates || []).filter(c => {
+                        const parsed = parseEventCertificateNumber(c.certificate_number || c.certificate_id);
+                        return parsed && parsed.eventNumber === ee;
+                    }).length;
+                }
+            });
+        }
+
+        // Clean files
+        const fileCleanup = await deleteAssociatedCertificateFiles(purgedCertNumbers, Array.from(affectedBatchIds));
+
+        // Delete from Supabase PostgreSQL tables if available
+        const client = getClient();
+        if (client) {
+            for (const certNum of purgedCertNumbers) {
+                try { await client.from("certificates").delete().eq("certificate_number", certNum); } catch (e) {}
+            }
+            if (emptyBatchesToRemove.length > 0) {
+                try { await client.from("certificate_batches").delete().in("id", emptyBatchesToRemove); } catch (e) {}
+            }
+        }
+
+        // Audit log
+        if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
+        data.certificate_audit_logs.unshift({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            action: "RANGE_CERTIFICATE_DELETION",
+            event_number: ee,
+            purged_count: purgedCertNumbers.length,
+            purged_range: `${formatCertificateId(ee, start)} to ${formatCertificateId(ee, end)}`,
+            reset_next_id: formatCertificateId(ee, targetNext),
+            actor_name: actor.full_name || actor.name || "Administrator",
+            actor_role: actor.role || "admin",
+            created_at: new Date().toISOString()
+        });
+
+        await commitData(data);
+
+        return {
+            success: true,
+            purged_count: purgedCertNumbers.length,
+            purgedCertNumbers,
+            next_certificate_id: formatCertificateId(ee, targetNext),
+            deleted_files_count: fileCleanup.deletedFilesCount
+        };
+    });
+}
+
 module.exports = {
     createEventFeedback,
     getAllEventFeedbacks,
@@ -3661,6 +3876,7 @@ module.exports = {
     deleteCertificateTemplate,
     deleteCertificateBatch,
     deleteSingleCertificateRecord,
+    deleteCertificateRange,
     deleteAssociatedCertificateFiles,
     getAllData,
     getAllDataSync,
