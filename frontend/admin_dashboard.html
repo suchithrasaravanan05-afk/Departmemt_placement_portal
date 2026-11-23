@@ -2550,7 +2550,10 @@
           </div>
           <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
             <button type="button" class="btn btn-sm" onclick="downloadAllGeneratedCertificatesZip()" style="background:#059669;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <i class="fa-solid fa-file-zipper"></i> Download All as ZIP
+              <i class="fa-solid fa-file-zipper"></i> Download Batch ZIP
+            </button>
+            <button type="button" class="btn btn-sm" onclick="openDownloadZipFilterModal(certGenState.currentBatchId)" style="background:#7e22ce;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <i class="fa-solid fa-filter"></i> Filter &amp; Download ZIP
             </button>
             <button type="button" class="btn btn-sm" onclick="jumpToCertGenSection('cgSecHistory')" style="background:#fff;color:#065f46;border:1px solid #86efac;padding:9px 16px;border-radius:8px;font-weight:700;cursor:pointer;">
               <i class="fa-solid fa-list"></i> View Table
@@ -2575,6 +2578,9 @@
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" onclick="openDownloadZipFilterModal()" style="background:linear-gradient(135deg, #7e22ce, #9333ea);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 2px 4px rgba(126,34,206,0.25);">
+            <i class="fa-solid fa-filter"></i> Filter &amp; Download ZIP
+          </button>
           <button type="button" class="btn btn-sm" id="btnDownloadBatchZipTop" onclick="downloadAllGeneratedCertificatesZip()" style="background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
             <i class="fa-solid fa-file-zipper"></i> Download All as ZIP
           </button>
@@ -2588,21 +2594,45 @@
       </div>
 
       <div class="certgen-section-body">
-        <!-- Batches Selector Ribbon -->
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <!-- Batches & Event/Date Filters Ribbon -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;background:#f8fafc;padding:12px 14px;border-radius:10px;border:1px solid #e2e8f0;">
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <label style="font-size:12.5px;font-weight:700;color:#581C87;">Filter Certificates:</label>
-            <select id="cgBatchSelector" class="form-control" style="width:320px;height:36px;font-size:12.5px;" onchange="handleCertGenBatchSelect()">
-              <option value="all">All Issued Certificates (Master History)</option>
-            </select>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:12px;font-weight:700;color:#581C87;white-space:nowrap;"><i class="fa-solid fa-award"></i> Event:</label>
+              <select id="cgHistoryEventFilter" class="form-control" style="width:200px;height:36px;font-size:12px;" onchange="handleCertGenFiltersChange()">
+                <option value="all">All Events (Master)</option>
+                <option value="02">Event 02: FDP — Superintelligent Systems</option>
+                <option value="01">Event 01: STTP — Blockchain</option>
+              </select>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:12px;font-weight:700;color:#581C87;white-space:nowrap;"><i class="fa-solid fa-calendar-days"></i> Date:</label>
+              <select id="cgHistoryDatePreset" class="form-control" style="width:130px;height:36px;font-size:12px;" onchange="handleCertGenDatePresetChange()">
+                <option value="all">All Dates</option>
+                <option value="today">Today</option>
+                <option value="range">Date Range...</option>
+              </select>
+              <input type="date" id="cgHistoryDateFrom" class="form-control" title="From Date" style="display:none;width:130px;height:36px;font-size:12px;" onchange="handleCertGenFiltersChange()">
+              <span id="cgHistoryDateSep" style="display:none;font-size:12px;color:#64748b;">to</span>
+              <input type="date" id="cgHistoryDateTo" class="form-control" title="To Date" style="display:none;width:130px;height:36px;font-size:12px;" onchange="handleCertGenFiltersChange()">
+            </div>
+
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:12px;font-weight:700;color:#581C87;white-space:nowrap;"><i class="fa-solid fa-layer-group"></i> Batch:</label>
+              <select id="cgBatchSelector" class="form-control" style="width:240px;height:36px;font-size:12px;" onchange="handleCertGenFiltersChange()">
+                <option value="all">All Batches (Master History)</option>
+              </select>
+            </div>
+
             <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteSelectedBatch" onclick="openDeleteBatchModal()" style="display:none;align-items:center;gap:6px;font-weight:700;height:36px;border-radius:6px;font-size:12px;padding:0 12px;" title="Permanently delete this test generation batch and associated PDF files">
               <i class="fa-solid fa-trash-can"></i> Delete Batch
             </button>
           </div>
 
-          <div style="position:relative;width:240px;">
+          <div style="position:relative;width:220px;">
             <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;"></i>
-            <input type="text" id="cgHistorySearchInput" class="form-control" placeholder="Search by name, reg, ID..." oninput="handleCertGenHistorySearch()" style="padding-left:30px;font-size:12px;height:36px;">
+            <input type="text" id="cgHistorySearchInput" class="form-control" placeholder="Search by name, reg, ID..." oninput="handleCertGenFiltersChange()" style="padding-left:30px;font-size:12px;height:36px;">
           </div>
         </div>
 
@@ -2769,6 +2799,162 @@
         <button type="button" class="btn btn-secondary" onclick="closeDeleteSingleCertModal()">Cancel</button>
         <button type="button" class="btn btn-danger" id="btnConfirmDeleteSingleCert" onclick="submitDeleteSingleCert()" disabled style="display:inline-flex;align-items:center;gap:6px;background:#DC2626;color:#fff;border:none;opacity:0.6;cursor:not-allowed;">
           <i class="fa-solid fa-trash-can"></i> Delete Record
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: FILTER & DOWNLOAD ZIP ARCHIVE (EVENT & DATE-WISE)
+       ======================================================== -->
+  <div id="certGenFilterZipModal" class="modal-backdrop hidden" onclick="_closeCgFilterZipModal(event)" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;width:100%;max-width:580px;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+      <div class="modal-header" style="padding:18px 24px;border-bottom:1px solid #e9d5ff;background:linear-gradient(135deg, #faf5ff, #f3e8ff);color:#581c87;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:#7e22ce;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 4px 6px -1px rgba(126,34,206,0.3);">
+            <i class="fa-solid fa-file-zipper"></i>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:16px;font-weight:800;color:#581c87;">Filter &amp; Download Certificates as ZIP</h3>
+            <p style="margin:2px 0 0;font-size:12px;color:#7e22ce;">Select specific Event and Date filters before packaging</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeDownloadZipFilterModal()" style="background:transparent;border:none;font-size:24px;color:#7e22ce;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:22px 24px;display:flex;flex-direction:column;gap:16px;">
+        <!-- 1. Event Selection -->
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12.5px;font-weight:700;color:#0F172A;display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <i class="fa-solid fa-award" style="color:#7e22ce;"></i> Select Programme / Event:
+          </label>
+          <select id="modalZipEventSelect" class="form-control" style="font-size:13px;height:40px;" onchange="updateFilterZipModalState()">
+            <option value="all">All Events (Entire Master History)</option>
+            <option value="02" selected>Event 02: Two-Week FDP — Superintelligent Systems</option>
+            <option value="01">Event 01: One-Week STTP — Blockchain Technologies</option>
+          </select>
+        </div>
+
+        <!-- 2. Date Filtering -->
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12.5px;font-weight:700;color:#0F172A;display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <i class="fa-solid fa-calendar-days" style="color:#7e22ce;"></i> Filter Date-Wise:
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+            <select id="modalZipDateMode" class="form-control" style="font-size:13px;height:40px;" onchange="handleModalZipDateModeChange()">
+              <option value="all">All Dates</option>
+              <option value="today">Today's Generation</option>
+              <option value="single">Specific Single Date</option>
+              <option value="range">Custom Date Range</option>
+            </select>
+            <select id="modalZipDateField" class="form-control" style="font-size:13px;height:40px;" onchange="updateFilterZipModalState()">
+              <option value="issue_date">By Certificate Issue Date</option>
+              <option value="created_at">By System Generation Date</option>
+            </select>
+          </div>
+          <!-- Single Date Input -->
+          <div id="modalZipSingleDateWrap" style="display:none;">
+            <input type="date" id="modalZipSingleDate" class="form-control" style="font-size:13px;height:40px;" onchange="updateFilterZipModalState()">
+          </div>
+          <!-- Date Range Inputs -->
+          <div id="modalZipDateRangeWrap" style="display:none;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;">
+            <input type="date" id="modalZipDateFrom" class="form-control" placeholder="From Date" style="font-size:13px;height:40px;" onchange="updateFilterZipModalState()">
+            <span style="color:#64748b;font-size:13px;font-weight:700;">to</span>
+            <input type="date" id="modalZipDateTo" class="form-control" placeholder="To Date" style="font-size:13px;height:40px;" onchange="updateFilterZipModalState()">
+          </div>
+        </div>
+
+        <!-- 3. Generation Batch Selection -->
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12.5px;font-weight:700;color:#0F172A;display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <i class="fa-solid fa-layer-group" style="color:#7e22ce;"></i> Generation Batch (Optional):
+          </label>
+          <select id="modalZipBatchSelect" class="form-control" style="font-size:13px;height:40px;" onchange="updateFilterZipModalState()">
+            <option value="all">All Batches (Include All)</option>
+          </select>
+        </div>
+
+        <!-- 4. Dynamic Live Matching Count & Summary Card -->
+        <div style="background:#FAF5FF;border:1px solid #E9D5FF;border-radius:12px;padding:14px 18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:700;color:#581c87;">
+              <i class="fa-solid fa-calculator"></i> Matching Certificates:
+            </span>
+            <span id="modalZipMatchBadge" style="background:#7e22ce;color:#fff;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;">
+              0 Records
+            </span>
+          </div>
+          <div id="modalZipSummaryDetail" style="font-size:12px;color:#6b21a8;line-height:1.5;">
+            Filtering through all records...
+          </div>
+          <div id="modalZipPreviewTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-height:64px;overflow-y:auto;">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding:16px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+        <button type="button" class="btn btn-secondary" onclick="closeDownloadZipFilterModal()" style="border-radius:8px;font-weight:700;font-size:13px;padding:9px 16px;">Cancel</button>
+        <button type="button" id="btnConfirmFilteredZipDownload" class="btn" onclick="executeFilteredZipDownload()" style="background:#059669;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 2px 4px rgba(5,150,105,0.25);">
+          <i class="fa-solid fa-file-zipper"></i> Download Filtered ZIP (<span id="modalZipBtnCount">0</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL: NON-BLOCKING LIVE ZIP PACKAGING PROGRESS (NO FREEZING)
+       ======================================================== -->
+  <div id="certGenZipProgressModal" class="modal-backdrop hidden" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(4px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-dialog" style="background:#fff;border-radius:18px;width:100%;max-width:520px;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3);overflow:hidden;">
+      <div class="modal-header" style="padding:20px 24px;border-bottom:1px solid #e2e8f0;background:#ffffff;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg, #7e22ce, #9333ea);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 6px -1px rgba(126,34,206,0.3);">
+            <i class="fa-solid fa-file-zipper"></i>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:16px;font-weight:800;color:#0f172a;">Packaging Certificate ZIP Archive</h3>
+            <p style="margin:2px 0 0;font-size:12px;color:#64748b;" id="cgZipProgressSub">Generating high-fidelity PDF documents...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding:24px;">
+        <!-- Progress Bar -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:700;color:#334155;" id="cgZipProgressTitle">Packaging Certificates...</span>
+            <span style="font-size:14px;font-weight:800;color:#7e22ce;" id="cgZipProgressPercent">0%</span>
+          </div>
+          <div style="height:12px;background:#e2e8f0;border-radius:10px;overflow:hidden;position:relative;">
+            <div id="cgZipProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg, #7e22ce, #059669);border-radius:10px;transition:width 0.2s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Live Current Item Info -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+            <span style="color:#64748b;">Current Certificate:</span>
+            <span style="font-weight:700;color:#7e22ce;font-family:monospace;" id="cgZipProgressCurrentId">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+            <span style="color:#64748b;">Participant Name:</span>
+            <span style="font-weight:700;color:#0f172a;" id="cgZipProgressCurrentName">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:#64748b;">Processed:</span>
+            <span style="font-weight:700;color:#059669;" id="cgZipProgressCount">0 of 0</span>
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:#64748b;line-height:1.4;margin:0;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-circle-check" style="color:#059669;"></i>
+          <span>Non-blocking asynchronous engine active. Browser stays completely responsive.</span>
+        </p>
+      </div>
+
+      <div class="modal-footer" style="padding:14px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="cancelZipGeneration()" style="border-radius:8px;font-weight:700;font-size:13px;padding:8px 16px;">
+          <i class="fa-solid fa-xmark"></i> Cancel Download
         </button>
       </div>
     </div>
@@ -3670,8 +3856,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="rit_logo_data.js"></script>
-<script src="certificate_assets.js?v=2.8"></script>
-<script src="certificate_generation.js?v=2.8"></script>
-<script src="admin_dashboard.js?v=2.8"></script>
+<script src="certificate_assets.js?v=2.9"></script>
+<script src="certificate_generation.js?v=2.9"></script>
+<script src="admin_dashboard.js?v=2.9"></script>
 </body>
 </html>

@@ -1523,50 +1523,384 @@ async function openSingleCertificatePreview(cert) {
   }
 }
 
-// Bulk ZIP Download of all certificates in active batch
-async function downloadAllGeneratedCertificatesZip() {
-  const certsToDownload = certGenState.currentBatchCerts.length > 0
-    ? certGenState.currentBatchCerts
-    : certGenState.masterCertificates;
+// ============================================================
+// 6. ASYNC NON-BLOCKING ZIP PACKAGING & EVENT/DATE-WISE FILTER ENGINE
+// ============================================================
 
+let zipPackagingAbortController = { cancelled: false };
+let modalFilteredCertificatesCache = [];
+
+function normalizeDateToYMD(rawDate) {
+  if (!rawDate) return '';
+  if (rawDate instanceof Date) return rawDate.toISOString().split('T')[0];
+  const s = String(rawDate).trim();
+  if (s.includes('T')) return s.split('T')[0];
+  const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (dmy) {
+    return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+  }
+  const ymd = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (ymd) {
+    return `${ymd[1]}-${ymd[2].padStart(2, '0')}-${ymd[3].padStart(2, '0')}`;
+  }
+  return s.slice(0, 10);
+}
+
+function matchesEventFilter(cert, eventVal) {
+  if (!eventVal || eventVal === 'all') return true;
+  const ev = String(eventVal).padStart(2, '0').slice(-2);
+  if (cert.event_number && String(cert.event_number).padStart(2, '0').slice(-2) === ev) return true;
+  const certNum = String(cert.certificate_number || cert.certificate_id || '').toUpperCase();
+  if (certNum.includes(` ${ev} `) || certNum.startsWith(`RITCB ${ev}`) || certNum.startsWith(`RITCB${ev}`)) return true;
+  if (ev === '01' && (cert.event_name?.toLowerCase().includes('blockchain') || cert.event_code === 'STTP')) return true;
+  if (ev === '02' && (cert.event_name?.toLowerCase().includes('superintelligent') || cert.event_name?.toLowerCase().includes('faculty development') || cert.event_name?.toLowerCase().includes('fdp'))) return true;
+  return false;
+}
+
+function matchesDateFilter(cert, { mode, field, singleDate, fromDate, toDate }) {
+  if (!mode || mode === 'all') return true;
+  let rawDate = (field === 'created_at' ? cert.created_at : cert.issue_date) || cert.issue_date || cert.created_at;
+  const dateStr = normalizeDateToYMD(rawDate);
+  if (!dateStr) return false;
+
+  if (mode === 'today') {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return dateStr === todayStr;
+  }
+  if (mode === 'single') {
+    if (!singleDate) return true;
+    return dateStr === normalizeDateToYMD(singleDate);
+  }
+  if (mode === 'range') {
+    const fromYMD = fromDate ? normalizeDateToYMD(fromDate) : '';
+    const toYMD = toDate ? normalizeDateToYMD(toDate) : '';
+    if (fromYMD && dateStr < fromYMD) return false;
+    if (toYMD && dateStr > toYMD) return false;
+    return true;
+  }
+  return true;
+}
+
+// Master Non-Blocking ZIP Packaging Engine (Yields to UI thread to prevent browser freezing)
+async function packageCertificatesIntoZip(certsToDownload, customZipName = '') {
   if (!certsToDownload || certsToDownload.length === 0) {
-    showAdminAlert('No certificates available to download as ZIP archive.');
+    showAdminAlert('No certificates available to download as ZIP archive.', 'warning');
     return;
   }
 
   if (!window.JSZip) {
-    showAdminAlert('ZIP compression library is loading. Please try again in a moment.');
+    showAdminAlert('ZIP compression library is loading. Please try again in a moment.', 'warning');
     return;
   }
 
+  zipPackagingAbortController = { cancelled: false };
+  const total = certsToDownload.length;
+
+  // Open Progress Modal
+  const modal = document.getElementById('certGenZipProgressModal');
+  const bar = document.getElementById('cgZipProgressBar');
+  const pct = document.getElementById('cgZipProgressPercent');
+  const title = document.getElementById('cgZipProgressTitle');
+  const currentId = document.getElementById('cgZipProgressCurrentId');
+  const currentName = document.getElementById('cgZipProgressCurrentName');
+  const count = document.getElementById('cgZipProgressCount');
+  const sub = document.getElementById('cgZipProgressSub');
+
+  if (modal) modal.classList.remove('hidden');
+  if (bar) bar.style.width = '0%';
+  if (pct) pct.innerText = '0%';
+  if (title) title.innerText = `Packaging ${total} Certificates...`;
+  if (sub) sub.innerText = 'Assembling verified PDF documents for download...';
+  if (count) count.innerText = `0 of ${total}`;
+
   const zip = new JSZip();
-  showAdminAlert(`Generating ZIP archive for ${certsToDownload.length} certificates. Please wait...`, 'info');
 
   try {
-    for (let i = 0; i < certsToDownload.length; i++) {
+    for (let i = 0; i < total; i++) {
+      if (zipPackagingAbortController.cancelled) {
+        if (modal) modal.classList.add('hidden');
+        showAdminAlert('ZIP archive generation was cancelled.', 'info');
+        return;
+      }
+
       const cert = certsToDownload[i];
+      const participantName = cert.participant_name || cert.student_name || 'Participant';
+      const certId = cert.certificate_number || cert.certificate_id || `CERT-${i + 1}`;
+
+      // Update UI Progress smoothly
+      const percentVal = Math.round((i / total) * 90);
+      if (bar) bar.style.width = `${percentVal}%`;
+      if (pct) pct.innerText = `${percentVal}%`;
+      if (currentId) currentId.innerText = certId;
+      if (currentName) currentName.innerText = participantName;
+      if (count) count.innerText = `${i + 1} of ${total}`;
+
+      // Generate Single PDF Document
       const doc = await generateSingleCertificatePdfDoc(cert);
       const pdfArrayBuffer = doc.output('arraybuffer');
-      const filename = `${String(i + 1).padStart(3, '0')}_${(cert.student_name || 'Student').replace(/[^a-zA-Z0-9]/g, '_')}_${cert.certificate_number || 'CERT'}.pdf`;
-      zip.file(filename, pdfArrayBuffer);
+      const filename = `${String(i + 1).padStart(3, '0')}_${participantName.replace(/[^a-zA-Z0-9]/g, '_')}_${certId.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      zip.file(filename, pdfArrayBuffer, { binary: true });
+
+      // Non-blocking yield: allows browser UI to paint and handles watchdog checks
+      await new Promise(resolve => setTimeout(resolve, 20));
     }
 
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    const batchName = certGenState.currentBatchCerts[0]?.event_name || 'RIT_CSBS_Certificates';
-    const safeZipName = `${batchName.replace(/[^a-zA-Z0-9]/g, '_')}_Certificates.zip`;
+    if (zipPackagingAbortController.cancelled) {
+      if (modal) modal.classList.add('hidden');
+      return;
+    }
 
+    // Finalizing ZIP compression (90% to 100%)
+    if (title) title.innerText = 'Compressing & Finalizing ZIP Archive...';
+    if (sub) sub.innerText = 'Creating archive file for browser download...';
+    if (bar) bar.style.width = '95%';
+    if (pct) pct.innerText = '95%';
+
+    await new Promise(resolve => setTimeout(resolve, 30));
+
+    const zipBlob = await zip.generateAsync(
+      {
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 1 }
+      },
+      (meta) => {
+        const zipPercent = Math.min(100, Math.round(90 + (meta.percent * 0.1)));
+        if (bar) bar.style.width = `${zipPercent}%`;
+        if (pct) pct.innerText = `${zipPercent}%`;
+      }
+    );
+
+    if (zipPackagingAbortController.cancelled) {
+      if (modal) modal.classList.add('hidden');
+      return;
+    }
+
+    if (bar) bar.style.width = '100%';
+    if (pct) pct.innerText = '100%';
+
+    // Determine filename
+    let safeZipName = customZipName;
+    if (!safeZipName) {
+      const firstCert = certsToDownload[0];
+      const evName = (firstCert?.event_name || 'Certificates').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30);
+      const todayStr = new Date().toISOString().split('T')[0];
+      safeZipName = `${evName}_${total}_Certificates_${todayStr}.zip`;
+    }
+    if (!safeZipName.endsWith('.zip')) safeZipName += '.zip';
+
+    // Trigger browser download
     const downloadLink = document.createElement('a');
     downloadLink.href = URL.createObjectURL(zipBlob);
     downloadLink.download = safeZipName;
     document.body.appendChild(downloadLink);
     downloadLink.click();
-    document.body.removeChild(downloadLink);
+    setTimeout(() => {
+      URL.revokeObjectURL(downloadLink.href);
+      document.body.removeChild(downloadLink);
+    }, 1000);
 
-    showAdminAlert('ZIP archive downloaded successfully!', 'success');
+    if (modal) modal.classList.add('hidden');
+    showAdminAlert(`Successfully generated and downloaded ZIP archive with ${total} certificates!`, 'success');
+
   } catch (err) {
     console.error('ZIP generation error:', err);
-    showAdminAlert('Failed to generate ZIP archive.');
+    if (modal) modal.classList.add('hidden');
+    showAdminAlert('Failed to generate ZIP archive: ' + (err.message || 'Unknown error'), 'danger');
   }
+}
+
+function cancelZipGeneration() {
+  zipPackagingAbortController.cancelled = true;
+  const modal = document.getElementById('certGenZipProgressModal');
+  if (modal) modal.classList.add('hidden');
+  showAdminAlert('Cancelling ZIP archive creation...', 'info');
+}
+
+// Bulk ZIP Download of active or filtered certificates
+async function downloadAllGeneratedCertificatesZip() {
+  let certsToDownload = [];
+  let zipName = '';
+
+  if (certGenState.currentBatchCerts && certGenState.currentBatchCerts.length > 0) {
+    certsToDownload = certGenState.currentBatchCerts;
+    const batchId = certGenState.currentBatchId || certsToDownload[0]?.batch_id || 'Filtered';
+    const evNum = certsToDownload[0]?.event_number || 'Event';
+    zipName = `Event_${evNum}_${batchId}_${certsToDownload.length}_Certificates.zip`;
+  } else if (certGenState.masterCertificates && certGenState.masterCertificates.length > 0) {
+    certsToDownload = certGenState.masterCertificates;
+    zipName = `Master_All_Certificates_${certsToDownload.length}_Records.zip`;
+  }
+
+  if (!certsToDownload || certsToDownload.length === 0) {
+    showAdminAlert('No certificates available to download as ZIP archive.', 'warning');
+    return;
+  }
+
+  await packageCertificatesIntoZip(certsToDownload, zipName);
+}
+
+// ============================================================
+// FILTER & DOWNLOAD ZIP MODAL CONTROLS
+// ============================================================
+
+function openDownloadZipFilterModal(preselectedBatchId = null) {
+  const modal = document.getElementById('certGenFilterZipModal');
+  if (!modal) return;
+
+  // 1. Populate Event Options
+  const evSelect = document.getElementById('modalZipEventSelect');
+  if (evSelect) {
+    let opts = '<option value="all">All Events (Entire Master History)</option>';
+    const progs = certGenState.programmes || [];
+    if (progs.length > 0) {
+      progs.forEach(p => {
+        const evNum = String(p.event_number || '01').padStart(2, '0');
+        const label = p.programme_topic ? `Event ${evNum}: ${p.programme_topic}` : `Event ${evNum}: ${p.programme_title || 'Programme'}`;
+        opts += `<option value="${evNum}">Event ${evNum}: ${escapeHtml(label)}</option>`;
+      });
+    } else {
+      opts += '<option value="02">Event 02: Two-Week FDP — Superintelligent Systems</option>';
+      opts += '<option value="01">Event 01: One-Week STTP — Blockchain Technologies</option>';
+    }
+    evSelect.innerHTML = opts;
+
+    if (certGenState.selectedEventNumber) {
+      evSelect.value = String(certGenState.selectedEventNumber).padStart(2, '0');
+    }
+  }
+
+  // 2. Populate Batch Options
+  const batchSelect = document.getElementById('modalZipBatchSelect');
+  if (batchSelect) {
+    let bOpts = '<option value="all">All Batches (Include All)</option>';
+    const batches = certGenState.batchesList || [];
+    batches.forEach(b => {
+      const bTitle = b.batch_title || b.event_name || 'Batch';
+      const bDate = b.created_at ? new Date(b.created_at).toLocaleDateString() : '';
+      bOpts += `<option value="${escapeHtml(b.id)}">${escapeHtml(b.id)} — ${escapeHtml(bTitle)} (${b.generated_count || 0} certs${bDate ? ' • ' + bDate : ''})</option>`;
+    });
+    batchSelect.innerHTML = bOpts;
+
+    if (preselectedBatchId && batches.some(b => b.id === preselectedBatchId)) {
+      batchSelect.value = preselectedBatchId;
+    } else if (certGenState.currentBatchId && batches.some(b => b.id === certGenState.currentBatchId)) {
+      batchSelect.value = certGenState.currentBatchId;
+    }
+  }
+
+  // 3. Reset Date Inputs
+  const dateMode = document.getElementById('modalZipDateMode');
+  if (dateMode) dateMode.value = 'all';
+  handleModalZipDateModeChange();
+
+  // 4. Update Matching State
+  updateFilterZipModalState();
+
+  modal.classList.remove('hidden');
+}
+
+function closeDownloadZipFilterModal() {
+  const modal = document.getElementById('certGenFilterZipModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function _closeCgFilterZipModal(e) {
+  if (e && e.target && e.target.id === 'certGenFilterZipModal') {
+    closeDownloadZipFilterModal();
+  }
+}
+
+function handleModalZipDateModeChange() {
+  const mode = document.getElementById('modalZipDateMode')?.value || 'all';
+  const singleWrap = document.getElementById('modalZipSingleDateWrap');
+  const rangeWrap = document.getElementById('modalZipDateRangeWrap');
+
+  if (singleWrap) singleWrap.style.display = mode === 'single' ? 'block' : 'none';
+  if (rangeWrap) rangeWrap.style.display = mode === 'range' ? 'grid' : 'none';
+
+  updateFilterZipModalState();
+}
+
+function updateFilterZipModalState() {
+  const evVal = document.getElementById('modalZipEventSelect')?.value || 'all';
+  const dateMode = document.getElementById('modalZipDateMode')?.value || 'all';
+  const dateField = document.getElementById('modalZipDateField')?.value || 'issue_date';
+  const singleDate = document.getElementById('modalZipSingleDate')?.value || '';
+  const fromDate = document.getElementById('modalZipDateFrom')?.value || '';
+  const toDate = document.getElementById('modalZipDateTo')?.value || '';
+  const batchVal = document.getElementById('modalZipBatchSelect')?.value || 'all';
+
+  const allCerts = certGenState.masterCertificates || [];
+  const matched = allCerts.filter(c => {
+    if (!matchesEventFilter(c, evVal)) return false;
+    if (batchVal !== 'all' && String(c.batch_id || '') !== String(batchVal)) return false;
+    if (!matchesDateFilter(c, { mode: dateMode, field: dateField, singleDate, fromDate, toDate })) return false;
+    return true;
+  });
+
+  const badge = document.getElementById('modalZipMatchBadge');
+  const btnCount = document.getElementById('modalZipBtnCount');
+  const btnDownload = document.getElementById('btnConfirmFilteredZipDownload');
+  const detail = document.getElementById('modalZipSummaryDetail');
+  const previewTags = document.getElementById('modalZipPreviewTags');
+
+  if (badge) badge.innerText = `${matched.length} Records`;
+  if (btnCount) btnCount.innerText = matched.length;
+
+  if (btnDownload) {
+    btnDownload.disabled = matched.length === 0;
+    btnDownload.style.opacity = matched.length === 0 ? '0.5' : '1';
+    btnDownload.style.cursor = matched.length === 0 ? 'not-allowed' : 'pointer';
+  }
+
+  if (detail) {
+    if (matched.length === 0) {
+      detail.innerHTML = '<span style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i> No certificates match the selected event and date filters.</span>';
+    } else {
+      let desc = `Found <strong>${matched.length}</strong> certificates ready to pack.`;
+      if (evVal !== 'all') desc += ` Event: <strong>Event ${evVal}</strong>.`;
+      if (dateMode === 'today') desc += ` Generated: <strong>Today</strong>.`;
+      else if (dateMode === 'single' && singleDate) desc += ` Date: <strong>${singleDate}</strong>.`;
+      else if (dateMode === 'range' && (fromDate || toDate)) desc += ` Range: <strong>${fromDate || 'Any'} to ${toDate || 'Any'}</strong>.`;
+      detail.innerHTML = desc;
+    }
+  }
+
+  if (previewTags) {
+    if (matched.length === 0) {
+      previewTags.innerHTML = '';
+    } else {
+      previewTags.innerHTML = matched.slice(0, 10).map(c => 
+        `<span style="background:#ede9fe;color:#6b21a8;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;font-family:monospace;">${escapeHtml(c.certificate_number || c.certificate_id || 'CERT')}</span>`
+      ).join('') + (matched.length > 10 ? `<span style="font-size:11px;color:#7e22ce;font-weight:600;padding:2px 4px;">+${matched.length - 10} more</span>` : '');
+    }
+  }
+
+  modalFilteredCertificatesCache = matched;
+}
+
+async function executeFilteredZipDownload() {
+  if (!modalFilteredCertificatesCache || modalFilteredCertificatesCache.length === 0) {
+    showAdminAlert('No certificates to download matching the selected filters.', 'warning');
+    return;
+  }
+
+  const evVal = document.getElementById('modalZipEventSelect')?.value || 'all';
+  const dateMode = document.getElementById('modalZipDateMode')?.value || 'all';
+  const singleDate = document.getElementById('modalZipSingleDate')?.value || '';
+  const fromDate = document.getElementById('modalZipDateFrom')?.value || '';
+  const toDate = document.getElementById('modalZipDateTo')?.value || '';
+
+  let zipName = 'Certificates';
+  if (evVal !== 'all') zipName += `_Event_${evVal}`;
+  if (dateMode === 'today') zipName += `_Today_${new Date().toISOString().split('T')[0]}`;
+  else if (dateMode === 'single' && singleDate) zipName += `_Date_${singleDate}`;
+  else if (dateMode === 'range') zipName += `_From_${fromDate || 'Start'}_To_${toDate || 'End'}`;
+  zipName += `_${modalFilteredCertificatesCache.length}_Records.zip`;
+
+  closeDownloadZipFilterModal();
+  await packageCertificatesIntoZip(modalFilteredCertificatesCache, zipName);
 }
 
 // Export issued certificates list to Excel
@@ -1688,21 +2022,47 @@ function populateBatchSelectorDropdown(batches) {
 
   sel.innerHTML = opts;
 
+  // Populate History Event Filter dropdown dynamically as well
+  const evSel = document.getElementById('cgHistoryEventFilter');
+  if (evSel) {
+    const curEvVal = evSel.value || 'all';
+    let evOpts = '<option value="all">All Events (Master)</option>';
+    if (progs.length > 0) {
+      progs.forEach(p => {
+        const evNum = String(p.event_number || '01').padStart(2, '0');
+        const label = p.programme_topic ? `Event ${evNum}: ${p.programme_topic}` : `Event ${evNum}: ${p.programme_title || 'Programme'}`;
+        evOpts += `<option value="${evNum}">${escapeHtml(label)}</option>`;
+      });
+    } else {
+      evOpts += '<option value="02">Event 02: FDP — Superintelligent Systems</option>';
+      evOpts += '<option value="01">Event 01: STTP — Blockchain</option>';
+    }
+    evSel.innerHTML = evOpts;
+    if (Array.from(evSel.options).some(o => o.value === curEvVal)) {
+      evSel.value = curEvVal;
+    }
+  }
+
   // Preserve previous selection if it exists in new options
   const hasOpt = Array.from(sel.options).some(o => o.value === currentVal);
   sel.value = hasOpt ? currentVal : 'all';
 }
 
+function handleCertGenDatePresetChange() {
+  const preset = document.getElementById('cgHistoryDatePreset')?.value || 'all';
+  const fromInput = document.getElementById('cgHistoryDateFrom');
+  const toInput = document.getElementById('cgHistoryDateTo');
+  const sep = document.getElementById('cgHistoryDateSep');
+
+  const showRange = preset === 'range';
+  if (fromInput) fromInput.style.display = showRange ? 'inline-block' : 'none';
+  if (toInput) toInput.style.display = showRange ? 'inline-block' : 'none';
+  if (sep) sep.style.display = showRange ? 'inline-block' : 'none';
+
+  renderHistoryTable();
+}
+
 function handleCertGenBatchSelect() {
-  const sel = document.getElementById('cgBatchSelector');
-  const filterVal = sel ? sel.value : 'all';
-
-  const delBtn = document.getElementById('btnDeleteSelectedBatch');
-  if (delBtn) {
-    // Only display Delete Batch when a specific batch ID is selected, never for 'all' or event filters
-    delBtn.style.display = (filterVal && filterVal !== 'all' && !filterVal.startsWith('event:')) ? 'inline-flex' : 'none';
-  }
-
   renderHistoryTable();
 }
 
@@ -1710,34 +2070,58 @@ function handleCertGenHistorySearch() {
   renderHistoryTable();
 }
 
+function handleCertGenFiltersChange() {
+  renderHistoryTable();
+}
+
 function renderHistoryTable() {
   const tbody = document.getElementById('cgHistoryTableBody');
   if (!tbody) return;
 
-  const sel = document.getElementById('cgBatchSelector');
-  const filterVal = sel ? sel.value : 'all';
+  const batchSel = document.getElementById('cgBatchSelector');
+  const evSel = document.getElementById('cgHistoryEventFilter');
+  const datePreset = document.getElementById('cgHistoryDatePreset');
+  const dateFrom = document.getElementById('cgHistoryDateFrom');
+  const dateTo = document.getElementById('cgHistoryDateTo');
+  const searchInput = document.getElementById('cgHistorySearchInput');
+
+  const batchVal = batchSel ? batchSel.value : 'all';
+  const evVal = evSel ? evSel.value : 'all';
+  const dateVal = datePreset ? datePreset.value : 'all';
+  const fromVal = dateFrom ? dateFrom.value : '';
+  const toVal = dateTo ? dateTo.value : '';
+  const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+  const delBtn = document.getElementById('btnDeleteSelectedBatch');
+  if (delBtn) {
+    delBtn.style.display = (batchVal && batchVal !== 'all' && !batchVal.startsWith('event:')) ? 'inline-flex' : 'none';
+  }
 
   let certs = certGenState.masterCertificates || [];
 
-  if (filterVal === 'all') {
-    certs = certGenState.masterCertificates || [];
-  } else if (filterVal.startsWith('event:')) {
-    const evNum = filterVal.split(':')[1];
-    certs = (certGenState.masterCertificates || []).filter(c => {
-      if (c.event_number && String(c.event_number).padStart(2, '0') === evNum) return true;
-      if (c.certificate_number && (c.certificate_number.includes(` ${evNum} `) || c.certificate_number.startsWith(`RITCB ${evNum}`))) return true;
-      if (evNum === '01' && (c.event_name?.toLowerCase().includes('blockchain') || c.event_code === 'STTP')) return true;
-      if (evNum === '02' && (c.event_name?.toLowerCase().includes('superintelligent') || c.event_name?.toLowerCase().includes('faculty development') || c.event_name?.toLowerCase().includes('fdp'))) return true;
-      return false;
-    });
-  } else {
-    certs = (certGenState.masterCertificates || []).filter(c => String(c.batch_id) === String(filterVal));
+  // 1. Batch Filter
+  if (batchVal !== 'all') {
+    if (batchVal.startsWith('event:')) {
+      const eNum = batchVal.split(':')[1];
+      certs = certs.filter(c => matchesEventFilter(c, eNum));
+    } else {
+      certs = certs.filter(c => String(c.batch_id || '') === String(batchVal));
+    }
   }
 
-  certGenState.currentBatchCerts = certs;
+  // 2. Event Filter
+  if (evVal !== 'all') {
+    certs = certs.filter(c => matchesEventFilter(c, evVal));
+  }
 
-  const searchInput = document.getElementById('cgHistorySearchInput');
-  const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  // 3. Date Filter
+  if (dateVal === 'today') {
+    certs = certs.filter(c => matchesDateFilter(c, { mode: 'today' }));
+  } else if (dateVal === 'range') {
+    certs = certs.filter(c => matchesDateFilter(c, { mode: 'range', fromDate: fromVal, toDate: toVal }));
+  }
+
+  // 4. Search Filter
   if (q) {
     certs = certs.filter(c =>
       (c.student_name && c.student_name.toLowerCase().includes(q)) ||
@@ -1758,6 +2142,8 @@ function renderHistoryTable() {
     if (timeA !== timeB) return timeA - timeB;
     return (Number(a.id) || 0) - (Number(b.id) || 0);
   });
+
+  certGenState.currentBatchCerts = certs;
 
   if (document.getElementById('cgHistoryDisplayCount')) {
     document.getElementById('cgHistoryDisplayCount').innerText = certs.length;
