@@ -2348,26 +2348,126 @@ async function getStudentCertificateRecords({ category, academic_year, event_id,
     };
 }
 
-async function updateCertificateDetails(certId, updateData) {
+async function updateCertificateDetails(certId, updateData = {}, actor = {}) {
     const data = await getAllData();
     const certs = data.certificates || [];
-    const cert = certs.find(c => String(c.id) === String(certId) || String(c.certificate_number) === String(certId));
+    const query = String(certId).trim().toLowerCase();
+    const queryClean = query.replace(/[^a-z0-9]/g, "");
+
+    const cert = certs.find(c => {
+        if (!c) return false;
+        const cNum = String(c.certificate_number || "").trim().toLowerCase();
+        const cNumClean = cNum.replace(/[^a-z0-9]/g, "");
+        return String(c.id) === query || cNum === query || (queryClean.length >= 6 && cNumClean === queryClean);
+    });
+
     if (!cert) {
-        throw new Error("Certificate record not found.");
+        throw new Error(`Certificate record "${certId}" not found.`);
     }
 
-    if (updateData.student_name) cert.student_name = updateData.student_name.trim();
-    if (updateData.register_number) cert.register_number = updateData.register_number.trim();
-    if (updateData.event_name) cert.event_name = updateData.event_name.trim();
-    if (updateData.certificate_title) cert.certificate_title = updateData.certificate_title.trim();
-    if (updateData.certificate_type) cert.certificate_type = updateData.certificate_type.trim();
-    if (updateData.signatory_title) cert.signatory_title = updateData.signatory_title.trim();
-    if (updateData.coordinator) cert.coordinator = updateData.coordinator.trim();
-    if (updateData.issue_date) cert.issue_date = updateData.issue_date;
-    if (updateData.status) cert.status = updateData.status;
-    if (updateData.academic_year) cert.academic_year = updateData.academic_year;
+    // Capture historical snapshot before applying edits to preserve original version
+    const priorSnapshot = {
+        version: cert.version || 1,
+        archived_at: new Date().toISOString(),
+        updated_by: actor.full_name || actor.name || actor.email || "Faculty Coordinator",
+        student_name: cert.student_name || cert.participant_name || "",
+        participant_name: cert.participant_name || cert.student_name || "",
+        college_name: cert.college_name || cert.participant_college || cert.institution || "",
+        participant_college: cert.participant_college || cert.college_name || cert.institution || "",
+        institution: cert.institution || "",
+        event_name: cert.event_name || "",
+        programme_title: cert.programme_title || "",
+        programme_dates: cert.programme_dates || "",
+        event_date: cert.event_date || "",
+        certificate_wording: cert.certificate_wording || "",
+        certificate_title: cert.certificate_title || "CERTIFICATE OF PARTICIPATION",
+        certificate_type: cert.certificate_type || cert.achievement || "Participation",
+        achievement: cert.achievement || cert.certificate_type || "Participation",
+        issue_date: cert.issue_date || "",
+        department: cert.department || "",
+        reason: updateData.reason || updateData.update_reason || "Correction of certificate details"
+    };
 
-    cert.updated_at = new Date().toISOString();
+    if (!Array.isArray(cert.previous_versions)) {
+        cert.previous_versions = [];
+    }
+    cert.previous_versions.push(priorSnapshot);
+    cert.version = (cert.version || 1) + 1;
+
+    // Apply updated fields
+    if (updateData.student_name !== undefined || updateData.participant_name !== undefined) {
+        const nameVal = (updateData.student_name !== undefined ? updateData.student_name : updateData.participant_name).trim();
+        if (nameVal) {
+            cert.student_name = nameVal;
+            cert.participant_name = nameVal;
+        }
+    }
+    if (updateData.college_name !== undefined || updateData.participant_college !== undefined) {
+        const colVal = (updateData.college_name !== undefined ? updateData.college_name : updateData.participant_college).trim();
+        cert.college_name = colVal;
+        cert.participant_college = colVal;
+    }
+    if (updateData.institution !== undefined) {
+        cert.institution = updateData.institution.trim();
+    }
+    if (updateData.event_name !== undefined && updateData.event_name.trim()) {
+        cert.event_name = updateData.event_name.trim();
+    }
+    if (updateData.programme_title !== undefined && updateData.programme_title.trim()) {
+        cert.programme_title = updateData.programme_title.trim();
+    }
+    if (updateData.programme_dates !== undefined && updateData.programme_dates.trim()) {
+        cert.programme_dates = updateData.programme_dates.trim();
+    }
+    if (updateData.event_date !== undefined && updateData.event_date.trim()) {
+        cert.event_date = updateData.event_date.trim();
+    }
+    if (updateData.certificate_wording !== undefined) {
+        cert.certificate_wording = updateData.certificate_wording.trim();
+    }
+    if (updateData.certificate_title !== undefined && updateData.certificate_title.trim()) {
+        cert.certificate_title = updateData.certificate_title.trim();
+    }
+    if (updateData.certificate_type !== undefined && updateData.certificate_type.trim()) {
+        cert.certificate_type = updateData.certificate_type.trim();
+    }
+    if (updateData.achievement !== undefined && updateData.achievement.trim()) {
+        cert.achievement = updateData.achievement.trim();
+    }
+    if (updateData.issue_date !== undefined && updateData.issue_date.trim()) {
+        cert.issue_date = updateData.issue_date.trim();
+    }
+    if (updateData.department !== undefined && updateData.department.trim()) {
+        cert.department = updateData.department.trim();
+    }
+    if (updateData.register_number !== undefined && updateData.register_number.trim()) {
+        cert.register_number = updateData.register_number.trim();
+    }
+    if (updateData.status !== undefined && updateData.status.trim()) {
+        cert.status = updateData.status.trim();
+    }
+
+    // STRICT IMMUTABILITY SAFEGUARDS:
+    // cert.certificate_number, cert.qr_token, cert.id, cert.batch_id, cert.event_number are strictly preserved.
+
+    const nowIso = new Date().toISOString();
+    cert.updated_at = nowIso;
+    cert.last_updated_at = nowIso;
+    cert.last_updated_by = actor.full_name || actor.name || actor.email || "Faculty Coordinator";
+    cert.last_update_reason = updateData.reason || updateData.update_reason || "Admin correction";
+
+    // Institutional Audit Log entry
+    if (!Array.isArray(data.certificate_audit_logs)) data.certificate_audit_logs = [];
+    data.certificate_audit_logs.push({
+        id: `LOG-${Date.now()}-${crypto.randomBytes(3).toString("hex").toUpperCase()}`,
+        action: "CERTIFICATE_EDITED",
+        certificate_number: cert.certificate_number,
+        version: cert.version,
+        actor: cert.last_updated_by,
+        reason: cert.last_update_reason,
+        timestamp: nowIso
+    });
+
     await commitData(data);
 
     const client = getClient();
@@ -2375,14 +2475,16 @@ async function updateCertificateDetails(certId, updateData) {
         try {
             await client.from("certificates").update({
                 student_name: cert.student_name,
-                register_number: cert.register_number,
+                college_name: cert.college_name,
                 event_name: cert.event_name,
                 certificate_title: cert.certificate_title,
                 issue_date: cert.issue_date,
                 status: cert.status,
                 updated_at: cert.updated_at
             }).or(`id.eq.${cert.id},certificate_number.eq.${cert.certificate_number}`);
-        } catch (e) {}
+        } catch (e) {
+            console.warn("Supabase certificate update warning:", e.message || e);
+        }
     }
 
     return cert;

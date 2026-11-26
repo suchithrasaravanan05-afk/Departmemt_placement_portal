@@ -1565,7 +1565,7 @@ router.post("/issue-certificate", requireFacultyOrCoordinatorWrite, async (req, 
 router.put("/certificate/:id", requireFacultyOrCoordinatorWrite, async (req, res) => {
     try {
         const certId = req.params.id;
-        const updated = await feedbackCertificateStorage.updateCertificateDetails(certId, req.body);
+        const updated = await feedbackCertificateStorage.updateCertificateDetails(certId, req.body, req.user);
         res.json({
             success: true,
             message: `Certificate record for "${updated.student_name}" updated successfully.`,

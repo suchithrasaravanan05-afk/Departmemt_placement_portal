@@ -474,6 +474,28 @@ router.post("/revoke/:certId", requireFacultyOrCoordinatorWrite, async (req, res
 });
 
 // ============================================================
+// 4B. EDIT & UPDATE CERTIFICATE (FACULTY / COORDINATOR WRITE)
+// Strictly preserves Certificate ID, QR code token, and sequence numbering.
+// ============================================================
+router.put("/certificate/:certId", requireFacultyOrCoordinatorWrite, async (req, res) => {
+    try {
+        const certId = req.params.certId;
+        const updateData = req.body || {};
+        const actor = req.user || { id: 1, full_name: "Faculty Authority", role: "faculty_coordinator" };
+
+        const updated = await feedbackCertificateStorage.updateCertificateDetails(certId, updateData, actor);
+        res.json({
+            success: true,
+            message: `Certificate record ${updated.certificate_number} for "${updated.participant_name || updated.student_name}" updated successfully (Version ${updated.version || 1}).`,
+            certificate: updated
+        });
+    } catch (e) {
+        console.error("Update certificate error:", e);
+        res.status(500).json({ success: false, message: e.message || "Failed to update certificate details." });
+    }
+});
+
+// ============================================================
 // 5. GET BATCHES HISTORY
 // ============================================================
 

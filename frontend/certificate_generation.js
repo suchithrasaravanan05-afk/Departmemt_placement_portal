@@ -1436,10 +1436,12 @@ async function generateSingleCertificatePdfDoc(cert) {
     throw new Error('PDF generator library not loaded.');
   }
 
-  // 1. Prepare Certificate Data with Template Fallbacks (NO register number, NO dates, NO academic year)
-  const selectedProg = (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
+  // 1. Prepare Certificate Data with Template Fallbacks (Prioritize certificate's own event number)
+  const certEventNumber = cert.event_number || (cert.certificate_number && cert.certificate_number.match(/RITCB\s+(\d{2})/i)?.[1]) || certGenState.selectedEventNumber || '02';
+  const selectedProg = (certGenState.programmes || []).find(p => String(p.event_number).padStart(2, '0') === String(certEventNumber).padStart(2, '0')) ||
+                       (certGenState.programmes || []).find(p => p.id === certGenState.selectedProgrammeId || p.event_number === certGenState.selectedEventNumber);
   const participantName = cert.participant_name || cert.student_name || 'Participant';
-  const defaultEventNumber = cert.event_number || certGenState.selectedEventNumber || '02';
+  const defaultEventNumber = certEventNumber;
   const defaultInstName = selectedProg?.institution_name || 'Ramco Institute of Technology, Rajapalayam';
   const participantCollege = cert.participant_college || cert.college_name || (cert.institution && !cert.institution.toLowerCase().includes('ramco') ? cert.institution : '');
   const certFullData = {
@@ -2178,20 +2180,25 @@ function renderHistoryTable() {
           <span style="font-family:monospace;font-weight:800;color:#4338ca;font-size:12.5px;cursor:pointer;" onclick="navigator.clipboard.writeText('${escapeHtml(cert.certificate_number)}');showAdminAlert('Copied ID: ${escapeHtml(cert.certificate_number)}','success');" title="Click to copy ID">
             ${escapeHtml(cert.certificate_number)}
           </span>
+          ${cert.version && cert.version > 1 ? `<span class="badge" style="background:#7C3AED;color:#fff;font-size:10px;padding:2px 6px;margin-left:4px;border-radius:10px;" title="Revision ${cert.version} (Updated)">v${cert.version}</span>` : ''}
         </td>
         <td>
-          <strong>${escapeHtml(cert.student_name || 'Student')}</strong>
+          <strong>${escapeHtml(cert.student_name || cert.participant_name || 'Student')}</strong>
+          ${(cert.college_name || cert.participant_college) ? `<div style="font-size:11px;color:#475569;font-weight:600;"><i class="fa-solid fa-building-columns" style="font-size:10px;color:#7c3aed;"></i> ${escapeHtml(cert.college_name || cert.participant_college)}</div>` : ''}
           ${cert.student_email || cert.email ? `<div style="font-size:11px;color:#64748b;">${escapeHtml(cert.student_email || cert.email)}</div>` : ''}
         </td>
         <td>${escapeHtml(cert.event_name || 'Department Event')}</td>
         <td>${isDate}</td>
         <td>${statusBadge}</td>
         <td style="text-align:center;white-space:nowrap;">
-          <button type="button" class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="downloadSingleCertificatePdf(${certJson})" title="Download PDF">
+          <button type="button" class="btn btn-sm btn-outline-primary" style="padding:4px 8px;font-size:11px;" onclick="downloadSingleCertificatePdf(${certJson})" title="Download Latest PDF">
             <i class="fa-solid fa-file-pdf"></i> PDF
           </button>
           <button type="button" class="btn btn-sm btn-outline-secondary" style="padding:4px 8px;font-size:11px;" onclick="openSingleCertificatePreview(${certJson})" title="Preview Certificate">
             <i class="fa-solid fa-eye"></i> View
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-warning" style="padding:4px 8px;font-size:11px;font-weight:600;" onclick="openEditCertificateModal('${escapeHtml(cert.certificate_number)}')" title="Edit / Update Certificate Record">
+            <i class="fa-solid fa-pen-to-square"></i> Edit
           </button>
           <a href="/verify-certificate.html?id=${encodeURIComponent(cert.certificate_number)}" target="_blank" class="btn btn-sm btn-outline-secondary" style="padding:4px 8px;font-size:11px;text-decoration:none;" title="Verify in Public Portal">
             <i class="fa-solid fa-qrcode"></i> Verify
@@ -2502,6 +2509,335 @@ async function submitCertificateRevocation() {
     showAdminAlert('Failed to submit revocation.');
   } finally {
     if (btn) btn.disabled = false;
+  }
+}
+
+// ============================================================
+// 8C. EDIT & UPDATE CERTIFICATE MODAL & VERSIONING
+// ============================================================
+let activeEditCertRecord = null;
+
+function openEditCertificateModal(certNumber) {
+  const allCerts = certGenState.masterCertificates || certGenState.issuedCertificates || [];
+  const query = String(certNumber).trim().toLowerCase();
+  const cert = allCerts.find(c => {
+    if (!c) return false;
+    const num = String(c.certificate_number || '').trim().toLowerCase();
+    return num === query || String(c.id) === query;
+  });
+
+  if (!cert) {
+    showAdminAlert(`Certificate "${certNumber}" could not be found in active records.`, 'error');
+    return;
+  }
+
+  activeEditCertRecord = cert;
+
+  const idBadge = document.getElementById('cgEditModalCertId');
+  const verBadge = document.getElementById('cgEditModalVersionBadge');
+  const evNumBadge = document.getElementById('cgEditModalEventNumBadge');
+  const hiddenId = document.getElementById('cgEditHiddenCertId');
+
+  const pName = document.getElementById('cgEditParticipantName');
+  const cName = document.getElementById('cgEditCollegeName');
+  const eName = document.getElementById('cgEditEventName');
+  const progTitle = document.getElementById('cgEditProgrammeTitle');
+  const progDates = document.getElementById('cgEditProgrammeDates');
+  const issueDate = document.getElementById('cgEditIssueDate');
+  const certType = document.getElementById('cgEditCertType');
+  const dept = document.getElementById('cgEditDepartment');
+  const reason = document.getElementById('cgEditReason');
+
+  const eventNum = cert.event_number || (cert.certificate_number && cert.certificate_number.match(/RITCB\s+(\d{2})/i)?.[1]) || '02';
+
+  if (idBadge) idBadge.textContent = cert.certificate_number || '—';
+  if (verBadge) verBadge.textContent = `v${cert.version || 1}`;
+  if (evNumBadge) evNumBadge.textContent = `Event ${eventNum}`;
+  if (hiddenId) hiddenId.value = cert.certificate_number || cert.id;
+
+  if (pName) pName.value = cert.participant_name || cert.student_name || '';
+  if (cName) cName.value = cert.college_name || cert.participant_college || '';
+  if (eName) eName.value = cert.event_name || '';
+  if (progTitle) progTitle.value = cert.programme_title || '';
+  if (progDates) progDates.value = cert.programme_dates || cert.event_date || '';
+  if (issueDate) issueDate.value = cert.issue_date || '';
+  if (certType) certType.value = cert.certificate_type || cert.achievement || 'Participation';
+  if (dept) dept.value = cert.department || '';
+  if (reason) reason.value = '';
+
+  // Render Previous Versions Archive if exists
+  renderArchivedVersionsList(cert);
+
+  const modal = document.getElementById('certGenEditCertificateModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function renderArchivedVersionsList(cert) {
+  const container = document.getElementById('cgEditPreviousVersionsContainer');
+  const listEl = document.getElementById('cgEditPreviousVersionsList');
+  const countEl = document.getElementById('cgEditPreviousVersionsCount');
+
+  if (!container || !listEl) return;
+
+  const prev = cert.previous_versions || [];
+  if (prev.length === 0) {
+    container.style.display = 'none';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  container.style.display = 'block';
+  if (countEl) countEl.textContent = `${prev.length} previous archived revision${prev.length === 1 ? '' : 's'}`;
+
+  let html = '';
+  // Show in reverse chronological order
+  for (let i = prev.length - 1; i >= 0; i--) {
+    const snap = prev[i];
+    const snapDate = snap.archived_at ? new Date(snap.archived_at).toLocaleString() : 'Previous revision';
+    html += `
+      <div style="background:#ffffff;border:1px solid #E2E8F0;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div style="font-size:12px;line-height:1.4;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="badge" style="background:#64748B;color:#fff;font-size:10px;padding:2px 6px;border-radius:8px;">Version ${snap.version || (i + 1)}</span>
+            <strong style="color:#0f172a;">${escapeHtml(snap.participant_name || snap.student_name || 'Participant')}</strong>
+            ${snap.college_name ? `<span style="color:#64748B;font-size:11px;">(${escapeHtml(snap.college_name)})</span>` : ''}
+          </div>
+          <div style="font-size:11px;color:#64748B;margin-top:2px;">
+            Archived on ${snapDate} by <em>${escapeHtml(snap.updated_by || 'Admin')}</em> &bull; Reason: ${escapeHtml(snap.reason || 'Correction')}
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size:11px;white-space:nowrap;padding:3px 8px;" onclick="downloadArchivedCertificateVersion('${escapeHtml(cert.certificate_number)}', ${i})" title="Download archived PDF before this edit">
+          <i class="fa-solid fa-download"></i> Download v${snap.version || (i + 1)} PDF
+        </button>
+      </div>
+    `;
+  }
+  listEl.innerHTML = html;
+}
+
+function closeEditCertificateModal() {
+  activeEditCertRecord = null;
+  const modal = document.getElementById('certGenEditCertificateModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function _closeCgEditModal(e) {
+  if (e.target.id === 'certGenEditCertificateModal') {
+    closeEditCertificateModal();
+  }
+}
+
+function getEditedCertificateFormData() {
+  if (!activeEditCertRecord) return null;
+
+  const pName = (document.getElementById('cgEditParticipantName')?.value || '').trim();
+  const cName = (document.getElementById('cgEditCollegeName')?.value || '').trim();
+  const eName = (document.getElementById('cgEditEventName')?.value || '').trim();
+  const progTitle = (document.getElementById('cgEditProgrammeTitle')?.value || '').trim();
+  const progDates = (document.getElementById('cgEditProgrammeDates')?.value || '').trim();
+  const issueDate = (document.getElementById('cgEditIssueDate')?.value || '').trim();
+  const certType = (document.getElementById('cgEditCertType')?.value || '').trim();
+  const dept = (document.getElementById('cgEditDepartment')?.value || '').trim();
+  const reason = (document.getElementById('cgEditReason')?.value || '').trim();
+
+  return {
+    ...activeEditCertRecord,
+    student_name: pName,
+    participant_name: pName,
+    college_name: cName,
+    participant_college: cName,
+    event_name: eName,
+    programme_title: progTitle,
+    programme_dates: progDates,
+    issue_date: issueDate,
+    certificate_type: certType,
+    achievement: certType,
+    department: dept,
+    update_reason: reason,
+    reason: reason
+  };
+}
+
+async function previewEditedCertificate() {
+  const tempCert = getEditedCertificateFormData();
+  if (!tempCert) return;
+  if (!tempCert.participant_name) {
+    alert('Please enter a Participant Name to preview.');
+    return;
+  }
+  openSingleCertificatePreview(tempCert);
+}
+
+async function downloadEditedCertificateDirect() {
+  const tempCert = getEditedCertificateFormData();
+  if (!tempCert) return;
+  if (!tempCert.participant_name) {
+    alert('Please enter a Participant Name to download.');
+    return;
+  }
+  await downloadSingleCertificatePdf(tempCert);
+}
+
+async function handleCertificateEditSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
+
+  const tempCert = getEditedCertificateFormData();
+  if (!tempCert || !activeEditCertRecord) {
+    alert('No active certificate selected.');
+    return;
+  }
+
+  if (!tempCert.participant_name) {
+    alert('Participant Name is required.');
+    document.getElementById('cgEditParticipantName')?.focus();
+    return;
+  }
+
+  if (!tempCert.event_name) {
+    alert('Event Name is required.');
+    document.getElementById('cgEditEventName')?.focus();
+    return;
+  }
+
+  if (!tempCert.reason) {
+    alert('Please provide a brief reason or audit note for updating this certificate.');
+    document.getElementById('cgEditReason')?.focus();
+    return;
+  }
+
+  const certNumber = activeEditCertRecord.certificate_number;
+  const isConfirmed = confirm(
+    `Are you sure you want to update certificate ${certNumber}?\n\n` +
+    `• Certificate ID (${certNumber}) and QR code will remain strictly preserved.\n` +
+    `• Participant Name: ${tempCert.participant_name}\n` +
+    `• College Name: ${tempCert.college_name || '(Unchanged)'}\n` +
+    `• Previous version will be archived in the update history.`
+  );
+
+  if (!isConfirmed) return;
+
+  const btn = document.getElementById('btnSaveCertificateEdit');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating & Regenerating...';
+  }
+
+  try {
+    const payload = {
+      student_name: tempCert.participant_name,
+      participant_name: tempCert.participant_name,
+      college_name: tempCert.college_name,
+      participant_college: tempCert.college_name,
+      event_name: tempCert.event_name,
+      programme_title: tempCert.programme_title,
+      programme_dates: tempCert.programme_dates,
+      issue_date: tempCert.issue_date,
+      certificate_type: tempCert.certificate_type,
+      achievement: tempCert.achievement,
+      department: tempCert.department,
+      reason: tempCert.reason
+    };
+
+    const res = await fetch(`${API_BASE}/admin/certificate-generation/certificate/${encodeURIComponent(certNumber)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getEffectiveAdminToken()}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.message || 'Failed to update certificate.');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save & Update Certificate';
+      }
+      return;
+    }
+
+    const updatedCert = data.certificate || { ...activeEditCertRecord, ...payload, version: (activeEditCertRecord.version || 1) + 1 };
+
+    // Update state in memory
+    const updateInArray = arr => {
+      if (!Array.isArray(arr)) return;
+      const idx = arr.findIndex(c => c && (String(c.certificate_number) === String(certNumber) || String(c.id) === String(activeEditCertRecord.id)));
+      if (idx !== -1) arr[idx] = updatedCert;
+    };
+    updateInArray(certGenState.masterCertificates);
+    updateInArray(certGenState.issuedCertificates);
+
+    renderHistoryTable();
+
+    // Update active record in modal
+    activeEditCertRecord = updatedCert;
+    const verBadge = document.getElementById('cgEditModalVersionBadge');
+    if (verBadge) verBadge.textContent = `v${updatedCert.version || 1}`;
+    renderArchivedVersionsList(updatedCert);
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Saved Successfully!';
+      setTimeout(() => {
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save & Update Certificate';
+      }, 2500);
+    }
+
+    showAdminAlert(`Certificate ${certNumber} updated successfully! (Version ${updatedCert.version})`, 'success');
+
+  } catch (err) {
+    console.error('Update certificate error:', err);
+    alert('An unexpected error occurred while updating the certificate.');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save & Update Certificate';
+    }
+  }
+}
+
+async function downloadArchivedCertificateVersion(certNumber, versionIdx) {
+  const allCerts = certGenState.masterCertificates || certGenState.issuedCertificates || [];
+  const query = String(certNumber).trim().toLowerCase();
+  const cert = allCerts.find(c => {
+    if (!c) return false;
+    const num = String(c.certificate_number || '').trim().toLowerCase();
+    return num === query || String(c.id) === query;
+  });
+
+  if (!cert || !Array.isArray(cert.previous_versions) || !cert.previous_versions[versionIdx]) {
+    alert('Archived version snapshot not found.');
+    return;
+  }
+
+  const snap = cert.previous_versions[versionIdx];
+  const archivedCert = {
+    ...cert,
+    student_name: snap.student_name || snap.participant_name || cert.student_name,
+    participant_name: snap.participant_name || snap.student_name || cert.participant_name,
+    college_name: snap.college_name || snap.participant_college || cert.college_name,
+    participant_college: snap.participant_college || snap.college_name || cert.participant_college,
+    institution: snap.institution || cert.institution,
+    event_name: snap.event_name || cert.event_name,
+    programme_title: snap.programme_title || cert.programme_title,
+    programme_dates: snap.programme_dates || cert.programme_dates,
+    certificate_wording: snap.certificate_wording || cert.certificate_wording,
+    certificate_title: snap.certificate_title || cert.certificate_title,
+    certificate_type: snap.certificate_type || cert.certificate_type,
+    issue_date: snap.issue_date || cert.issue_date,
+    department: snap.department || cert.department
+  };
+
+  showAdminAlert(`Generating archived PDF (v${snap.version || (versionIdx + 1)})...`, 'info');
+  try {
+    const doc = await generateSingleCertificatePdfDoc(archivedCert);
+    const cleanName = (archivedCert.student_name || 'Participant').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `Certificate_${certNumber.replace(/\s+/g, '_')}_v${snap.version || (versionIdx + 1)}_${cleanName}.pdf`;
+    doc.save(filename);
+    showAdminAlert(`Archived Certificate v${snap.version || (versionIdx + 1)} downloaded!`, 'success');
+  } catch (err) {
+    console.error('Archived PDF generation error:', err);
+    alert('Failed to generate archived certificate PDF.');
   }
 }
 
